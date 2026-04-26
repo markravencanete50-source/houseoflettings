@@ -65,7 +65,7 @@ export default function AdminDashboard() {
       setAnalytics(a);
       setValuations(valSnap.docs.map(d => ({ id: d.id, ...d.data() } as Valuation)));
       setLoading(false);
-    });
+    });.catch(() => setLoading(false));
   }, [profile]);
 
   const handleDeleteUser = async (uid: string, name: string) => {

@@ -1,6 +1,6 @@
 'use client';
 // app/dashboard/landlord/page.tsx
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Navbar from '@/components/layout/Navbar';
 import PropertyForm from '@/components/property/PropertyForm';
@@ -12,7 +12,7 @@ import { Property, Chat } from '@/lib/types';
 
 type Tab = 'overview' | 'listings' | 'add' | 'inbox';
 
-export default function LandlordDashboard() {
+function LandlordDashboardInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { profile, loading: authLoading } = useAuth();
@@ -297,7 +297,6 @@ export default function LandlordDashboard() {
             <div>
               <h1 className="dash-section-title" style={{ marginBottom: 24 }}>Inbox</h1>
               <div style={{ display: 'grid', gridTemplateColumns: '300px 1fr', gap: 20, height: 600 }}>
-                {/* Chat list */}
                 <div className="dash-card" style={{ padding: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
                   <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--gray-200)', fontWeight: 600, fontSize: 14 }}>
                     Conversations ({chats.length})
@@ -337,7 +336,6 @@ export default function LandlordDashboard() {
                   </div>
                 </div>
 
-                {/* Active chat */}
                 <div style={{ height: '100%' }}>
                   {activeChatId && activeChat ? (
                     <ChatWindow chat={activeChat} chatId={activeChatId} />
@@ -359,5 +357,17 @@ export default function LandlordDashboard() {
         </main>
       </div>
     </>
+  );
+}
+
+export default function LandlordDashboard() {
+  return (
+    <Suspense fallback={
+      <div style={{ display: 'flex', justifyContent: 'center', padding: '120px 0' }}>
+        <div className="spinner" />
+      </div>
+    }>
+      <LandlordDashboardInner />
+    </Suspense>
   );
 }

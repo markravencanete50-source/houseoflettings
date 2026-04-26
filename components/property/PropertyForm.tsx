@@ -160,7 +160,7 @@ export default function PropertyForm({
 
         <div className="form-group">
           <label className="form-label">Furnishing</label>
-          <select className="form-select" value={furnished} onChange={e => setFurnished(e.target.value as "furnished" | "unfurnished" | "part-furnished")}
+          <select className="form-select" value={furnished} onChange={e => setFurnished(e.target.value as "furnished" | "unfurnished" | "part-furnished")}>
             <option value="furnished">Furnished</option>
             <option value="unfurnished">Unfurnished</option>
             <option value="part-furnished">Part Furnished</option>

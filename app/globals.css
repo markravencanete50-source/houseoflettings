@@ -6,15 +6,17 @@
 }
 
 :root {
-  --black: #0a0a0a;
+  --black: #131c2e;
   --white: #ffffff;
-  --red: #c0392b;
-  --red-dark: #96281b;
-  --red-light: #e74c3c;
-  --gray-100: #f5f4f2;
-  --gray-200: #e8e5e0;
-  --gray-400: #a09890;
-  --gray-600: #5a5450;
+  --red: #4a9fd4;
+  --red-dark: #2e7fb8;
+  --red-light: #6ab8e8;
+  --navy: #1a2540;
+  --navy-light: #1e2d4a;
+  --gray-100: #f0f3f8;
+  --gray-200: #d8e0ec;
+  --gray-400: #8a99b8;
+  --gray-600: #4a5878;
   --font-serif: var(--font-cormorant, 'Cormorant Garamond', Georgia, serif);
   --font-sans: var(--font-dm-sans, 'DM Sans', sans-serif);
 }
@@ -69,7 +71,7 @@ img {
   position: fixed;
   bottom: 32px;
   right: 32px;
-  background: var(--black);
+  background: var(--navy);
   color: #fff;
   padding: 14px 24px;
   border-radius: 6px;
@@ -127,14 +129,14 @@ img {
 }
 
 .btn-secondary:hover {
-  border-color: var(--black);
+  border-color: var(--navy);
 }
 
 .btn-danger {
   padding: 8px 16px;
   background: transparent;
-  color: var(--red);
-  border: 1px solid var(--red);
+  color: #e05c5c;
+  border: 1px solid #e05c5c;
   border-radius: 4px;
   font-size: 13px;
   font-weight: 500;
@@ -143,7 +145,7 @@ img {
 }
 
 .btn-danger:hover {
-  background: var(--red);
+  background: #e05c5c;
   color: #fff;
 }
 
@@ -180,7 +182,7 @@ img {
 }
 
 .form-input.error {
-  border-color: var(--red);
+  border-color: #e05c5c;
 }
 
 .form-textarea {
@@ -219,7 +221,7 @@ img {
 }
 
 .error-msg {
-  color: var(--red);
+  color: #e05c5c;
   font-size: 13px;
   margin-top: 8px;
 }
@@ -235,7 +237,7 @@ img {
 }
 
 .prop-card:hover {
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 12px 40px rgba(26, 37, 64, 0.15);
   transform: translateY(-3px);
 }
 
@@ -322,7 +324,7 @@ img {
 
 .dash-sidebar {
   width: 260px;
-  background: var(--black);
+  background: var(--navy);
   padding: 32px 0;
   position: fixed;
   top: 68px;
@@ -363,7 +365,7 @@ img {
 
 .dash-nav-item.active {
   color: #fff;
-  background: rgba(192, 57, 43, 0.25);
+  background: rgba(74, 159, 212, 0.25);
   border-right: 3px solid var(--red);
 }
 

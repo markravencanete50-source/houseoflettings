@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Navbar from '@/components/layout/Navbar';
-import PropertyForm from '@/components/property/PropertyForm';   // ← reuse existing form
+import PropertyForm from '@/components/property/PropertyForm';
 import { useAuth } from '@/hooks/useAuth';
 import {
   getAllUsers,
@@ -15,9 +15,24 @@ import {
 } from '@/services/admin';
 import { AppUser, Property } from '@/lib/types';
 import { format } from 'date-fns';
+import { db } from '@/lib/firebase';
+import { collection, getDocs, orderBy, query, doc, updateDoc } from 'firebase/firestore';
 
-// ── 'post' added to Tab type ──────────────────────────────────────────────────
-type Tab = 'analytics' | 'users' | 'properties' | 'post';
+type Tab = 'analytics' | 'users' | 'properties' | 'post' | 'valuations';
+
+interface Valuation {
+  id: string;
+  fullName: string;
+  email: string;
+  phone: string;
+  address: string;
+  propertyType: string;
+  bedrooms: string;
+  preferredDateTime: string;
+  notes?: string;
+  status: 'pending' | 'confirmed' | 'completed' | 'cancelled';
+  createdAt: any;
+}
 
 export default function AdminDashboard() {
   const router = useRouter();
@@ -26,11 +41,11 @@ export default function AdminDashboard() {
   const [users, setUsers] = useState<AppUser[]>([]);
   const [properties, setProperties] = useState<Property[]>([]);
   const [analytics, setAnalytics] = useState<any>(null);
+  const [valuations, setValuations] = useState<Valuation[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchUser, setSearchUser] = useState('');
   const [searchProp, setSearchProp] = useState('');
 
-  // Auth guard — admin only
   useEffect(() => {
     if (!authLoading && (!profile || profile.role !== 'admin')) {
       router.push('/admin-login');
@@ -43,10 +58,12 @@ export default function AdminDashboard() {
       getAllUsers(),
       getAllProperties(),
       getAnalytics(),
-    ]).then(([u, p, a]) => {
+      getDocs(query(collection(db, 'valuationRequests'), orderBy('createdAt', 'desc'))),
+    ]).then(([u, p, a, valSnap]) => {
       setUsers(u);
       setProperties(p);
       setAnalytics(a);
+      setValuations(valSnap.docs.map(d => ({ id: d.id, ...d.data() } as Valuation)));
       setLoading(false);
     });
   }, [profile]);
@@ -71,10 +88,14 @@ export default function AdminDashboard() {
     );
   };
 
-  // ── After admin posts, refresh list and go to properties tab ─────────────
   const handlePostSuccess = () => {
     getAllProperties().then(p => setProperties(p));
     setTab('properties');
+  };
+
+  const handleValuationStatus = async (id: string, status: Valuation['status']) => {
+    await updateDoc(doc(db, 'valuationRequests', id), { status });
+    setValuations(prev => prev.map(v => v.id === id ? { ...v, status } : v));
   };
 
   const filteredUsers = users.filter(u =>
@@ -93,13 +114,20 @@ export default function AdminDashboard() {
     </div>
   );
 
-  // ── 'Post Property' nav item added ────────────────────────────────────────
   const navItems: Array<{ id: Tab; icon: string; label: string }> = [
-    { id: 'analytics',  icon: '📊', label: 'Analytics' },
-    { id: 'users',      icon: '👥', label: `Users (${users.length})` },
-    { id: 'properties', icon: '🏠', label: `Properties (${properties.length})` },
-    { id: 'post',       icon: '➕', label: 'Post Property' },
+    { id: 'analytics',   icon: '📊', label: 'Analytics' },
+    { id: 'users',       icon: '👥', label: `Users (${users.length})` },
+    { id: 'properties',  icon: '🏠', label: `Properties (${properties.length})` },
+    { id: 'valuations',  icon: '📋', label: `Valuations (${valuations.length})` },
+    { id: 'post',        icon: '➕', label: 'Post Property' },
   ];
+
+  const statusColor: Record<Valuation['status'], { bg: string; color: string }> = {
+    pending:   { bg: '#fff8e1', color: '#f57f17' },
+    confirmed: { bg: '#e3f2fd', color: '#1565c0' },
+    completed: { bg: '#e8f5e9', color: '#2e7d32' },
+    cancelled: { bg: '#fce4ec', color: '#c62828' },
+  };
 
   return (
     <>
@@ -154,12 +182,14 @@ export default function AdminDashboard() {
                 gap: 20, marginBottom: 36,
               }}>
                 {[
-                  { label: 'Total Users',     value: analytics.totalUsers,       icon: '👥', color: '#1565C0' },
-                  { label: 'Landlords',       value: analytics.landlords,        icon: '🏠', color: '#2E7D32' },
-                  { label: 'Tenants',         value: analytics.tenants,          icon: '🔑', color: '#E65100' },
-                  { label: 'Total Listings',  value: analytics.totalProperties,  icon: '📋', color: '#6A1B9A' },
-                  { label: 'Active Listings', value: analytics.activeProperties, icon: '✅', color: '#00695C' },
-                  { label: 'Total Chats',     value: analytics.totalChats,       icon: '💬', color: '#AD1457' },
+                  { label: 'Total Users',      value: analytics.totalUsers,       icon: '👥', color: '#1565C0' },
+                  { label: 'Landlords',        value: analytics.landlords,        icon: '🏠', color: '#2E7D32' },
+                  { label: 'Tenants',          value: analytics.tenants,          icon: '🔑', color: '#E65100' },
+                  { label: 'Total Listings',   value: analytics.totalProperties,  icon: '📋', color: '#6A1B9A' },
+                  { label: 'Active Listings',  value: analytics.activeProperties, icon: '✅', color: '#00695C' },
+                  { label: 'Total Chats',      value: analytics.totalChats,       icon: '💬', color: '#AD1457' },
+                  { label: 'Valuations',       value: valuations.length,          icon: '📅', color: '#1a3c5e' },
+                  { label: 'Pending Valuations', value: valuations.filter(v => v.status === 'pending').length, icon: '⏳', color: '#f57f17' },
                 ].map(s => (
                   <div key={s.label} className="dash-card" style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
                     <div style={{
@@ -198,19 +228,31 @@ export default function AdminDashboard() {
                 </div>
 
                 <div className="dash-card">
-                  <h3 style={{ fontSize: 15, fontWeight: 700, marginBottom: 16 }}>Recent Properties</h3>
-                  {properties.slice(0, 5).map(p => (
-                    <div key={p.id} style={{
+                  <h3 style={{ fontSize: 15, fontWeight: 700, marginBottom: 16 }}>Recent Valuations</h3>
+                  {valuations.slice(0, 5).map(v => (
+                    <div key={v.id} style={{
                       display: 'flex', justifyContent: 'space-between',
                       padding: '8px 0', borderBottom: '1px solid var(--gray-100)',
                     }}>
                       <div>
-                        <div style={{ fontSize: 14, fontWeight: 500 }}>{p.title}</div>
-                        <div style={{ fontSize: 12, color: 'var(--gray-400)' }}>{p.location}</div>
+                        <div style={{ fontSize: 14, fontWeight: 500 }}>{v.fullName}</div>
+                        <div style={{ fontSize: 12, color: 'var(--gray-400)' }}>{v.address}</div>
                       </div>
-                      <span className={`status-badge ${p.status}`}>{p.status}</span>
+                      <span style={{
+                        display: 'inline-block', padding: '3px 8px', borderRadius: 20,
+                        fontSize: 11, fontWeight: 700, textTransform: 'uppercase',
+                        background: statusColor[v.status]?.bg,
+                        color: statusColor[v.status]?.color,
+                      }}>
+                        {v.status}
+                      </span>
                     </div>
                   ))}
+                  {valuations.length === 0 && (
+                    <p style={{ color: 'var(--gray-400)', fontSize: 14, textAlign: 'center', padding: '20px 0' }}>
+                      No valuations yet.
+                    </p>
+                  )}
                 </div>
               </div>
             </div>
@@ -283,7 +325,6 @@ export default function AdminDashboard() {
                     value={searchProp}
                     onChange={e => setSearchProp(e.target.value)}
                   />
-                  {/* Shortcut to post tab */}
                   <button
                     onClick={() => setTab('post')}
                     style={{
@@ -317,7 +358,6 @@ export default function AdminDashboard() {
                             <div>
                               <div style={{ fontWeight: 600, fontSize: 14 }}>
                                 {p.title}
-                                {/* Featured badge shown for admin-posted properties */}
                                 {p.featured && (
                                   <span style={{
                                     marginLeft: 8, fontSize: 10, fontWeight: 700,
@@ -371,7 +411,88 @@ export default function AdminDashboard() {
             </div>
           )}
 
-          {/* ── Post Property (NEW TAB) ── */}
+          {/* ── Valuations ── */}
+          {tab === 'valuations' && (
+            <div>
+              <h1 className="dash-section-title">Valuation Requests</h1>
+              <p style={{ color: 'var(--gray-600)', marginBottom: 24, fontSize: 15 }}>
+                All property valuation bookings from the website.
+              </p>
+
+              {valuations.length === 0 ? (
+                <div className="dash-card" style={{ textAlign: 'center', padding: 60 }}>
+                  <div style={{ fontSize: 52, marginBottom: 16 }}>📋</div>
+                  <h3 style={{ fontFamily: 'var(--font-serif)', fontSize: 24, marginBottom: 12 }}>No valuations yet</h3>
+                  <p style={{ color: 'var(--gray-400)', fontSize: 15 }}>
+                    Valuation requests will appear here when customers book through the website.
+                  </p>
+                </div>
+              ) : (
+                <div className="dash-card" style={{ padding: 0, overflow: 'hidden' }}>
+                  <table className="data-table">
+                    <thead>
+                      <tr>
+                        <th>Customer</th>
+                        <th>Property</th>
+                        <th>Type / Beds</th>
+                        <th>Preferred Date</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {valuations.map(v => (
+                        <tr key={v.id}>
+                          <td>
+                            <div style={{ fontWeight: 600, fontSize: 14 }}>{v.fullName}</div>
+                            <div style={{ fontSize: 12, color: 'var(--gray-400)' }}>{v.email}</div>
+                            <div style={{ fontSize: 12, color: 'var(--gray-400)' }}>{v.phone}</div>
+                          </td>
+                          <td style={{ fontSize: 13, color: 'var(--gray-600)', maxWidth: 200 }}>{v.address}</td>
+                          <td style={{ fontSize: 13 }}>
+                            <div>{v.propertyType}</div>
+                            <div style={{ color: 'var(--gray-400)' }}>{v.bedrooms}</div>
+                          </td>
+                          <td style={{ fontSize: 13, color: 'var(--gray-600)' }}>
+                            {v.preferredDateTime
+                              ? new Date(v.preferredDateTime).toLocaleString('en-GB', { dateStyle: 'medium', timeStyle: 'short' })
+                              : '—'}
+                          </td>
+                          <td>
+                            <span style={{
+                              display: 'inline-block', padding: '4px 10px', borderRadius: 20,
+                              fontSize: 11, fontWeight: 700, textTransform: 'uppercase',
+                              background: statusColor[v.status]?.bg,
+                              color: statusColor[v.status]?.color,
+                            }}>
+                              {v.status}
+                            </span>
+                          </td>
+                          <td>
+                            <select
+                              value={v.status}
+                              onChange={e => handleValuationStatus(v.id, e.target.value as Valuation['status'])}
+                              style={{
+                                padding: '5px 8px', border: '1px solid var(--gray-200)',
+                                borderRadius: 4, fontSize: 12, cursor: 'pointer', outline: 'none',
+                              }}
+                            >
+                              <option value="pending">Pending</option>
+                              <option value="confirmed">Confirmed</option>
+                              <option value="completed">Completed</option>
+                              <option value="cancelled">Cancelled</option>
+                            </select>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* ── Post Property ── */}
           {tab === 'post' && profile && (
             <div>
               <h1 className="dash-section-title">Post a Property</h1>
@@ -380,7 +501,6 @@ export default function AdminDashboard() {
                 <strong style={{ color: 'var(--red)' }}>Featured</strong>.
               </p>
 
-              {/* Info banner */}
               <div style={{
                 display: 'flex', alignItems: 'center', gap: 10,
                 background: 'rgba(192,57,43,0.08)',

@@ -1,4 +1,5 @@
 {
-  "buildCommand": "npx next build",
-  "installCommand": "npm install"
+  "buildCommand": "./node_modules/.bin/next build",
+  "installCommand": "npm install",
+  "framework": "nextjs"
 }

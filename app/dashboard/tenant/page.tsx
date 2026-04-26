@@ -1,6 +1,6 @@
 'use client';
 // app/dashboard/tenant/page.tsx
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import Navbar from '@/components/layout/Navbar';
@@ -12,7 +12,7 @@ import { Chat, Property } from '@/lib/types';
 
 type Tab = 'overview' | 'messages' | 'browse';
 
-export default function TenantDashboard() {
+function TenantDashboardInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { profile, loading: authLoading } = useAuth();
@@ -260,5 +260,17 @@ export default function TenantDashboard() {
         </main>
       </div>
     </>
+  );
+}
+
+export default function TenantDashboard() {
+  return (
+    <Suspense fallback={
+      <div style={{ display: 'flex', justifyContent: 'center', padding: '120px 0' }}>
+        <div className="spinner" />
+      </div>
+    }>
+      <TenantDashboardInner />
+    </Suspense>
   );
 }

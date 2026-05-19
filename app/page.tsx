@@ -12,11 +12,6 @@ import ValuationCard from '@/components/ValuationCard';
 // ── GALLERY DATA ─────────────────────────────────────────────────────────────
 const GALLERY_ITEMS = [
   {
-    img: '/images/property-exterior.jpeg',
-    label: 'Property Management. Done Right.',
-    sub: 'We handle the management; you enjoy the returns.',
-  },
-  {
     img: '/images/agent-photo.jpeg',
     label: 'Leeds & Manchester Experts',
     sub: 'Local knowledge, professional service.',
@@ -25,11 +20,6 @@ const GALLERY_ITEMS = [
     img: '/images/brand-desk.jpeg',
     label: 'We Handle the Details.',
     sub: 'You enjoy the returns.',
-  },
-  {
-    img: '/images/to-let-sign.jpeg',
-    label: 'Let Your Property Faster',
-    sub: 'Direct listings — no middlemen.',
   },
   {
     img: '/images/service-compare.png',
@@ -60,6 +50,7 @@ function ImageGallery() {
   const [isDragging, setIsDragging] = useState(false);
   const [startX, setStartX] = useState(0);
   const [scrollLeft, setScrollLeft] = useState(0);
+  const [lightbox, setLightbox] = useState<number | null>(null);
 
   const scrollToIndex = (i: number) => {
     if (!trackRef.current) return;
@@ -92,7 +83,32 @@ function ImageGallery() {
         .hol-gallery-card:hover .hol-gallery-overlay { opacity: 1 !important; }
         .hol-gallery-card:hover .hol-gallery-label { transform: translateY(0) !important; opacity: 1 !important; }
         .hol-dot { transition: all 0.2s ease; cursor: pointer; border: none; padding: 0; background: none; }
+        .hol-lightbox { position: fixed; inset: 0; background: rgba(0,0,0,0.92); z-index: 9999; display: flex; align-items: center; justify-content: center; animation: hol-fadein 0.2s ease; }
+        @keyframes hol-fadein { from { opacity: 0 } to { opacity: 1 } }
+        .hol-lightbox img { max-width: 90vw; max-height: 85vh; object-fit: contain; border-radius: 8px; box-shadow: 0 32px 80px rgba(0,0,0,0.6); }
+        .hol-lb-close { position: absolute; top: 20px; right: 28px; color: #fff; font-size: 36px; cursor: pointer; line-height: 1; background: none; border: none; opacity: 0.8; transition: opacity 0.2s; }
+        .hol-lb-close:hover { opacity: 1; }
+        .hol-lb-prev, .hol-lb-next { position: absolute; top: 50%; transform: translateY(-50%); color: #fff; font-size: 36px; cursor: pointer; background: rgba(255,255,255,0.1); border: none; border-radius: 50%; width: 52px; height: 52px; display: flex; align-items: center; justify-content: center; transition: background 0.2s; }
+        .hol-lb-prev:hover, .hol-lb-next:hover { background: rgba(255,255,255,0.25); }
+        .hol-lb-prev { left: 20px; }
+        .hol-lb-next { right: 20px; }
+        .hol-lb-caption { position: absolute; bottom: 24px; left: 50%; transform: translateX(-50%); color: #fff; font-size: 15px; font-weight: 600; text-align: center; white-space: nowrap; }
       `}</style>
+
+      {/* Lightbox */}
+      {lightbox !== null && (
+        <div className="hol-lightbox" onClick={() => setLightbox(null)}>
+          <button className="hol-lb-close" onClick={() => setLightbox(null)}>✕</button>
+          <button className="hol-lb-prev" onClick={e => { e.stopPropagation(); setLightbox((lightbox - 1 + GALLERY_ITEMS.length) % GALLERY_ITEMS.length); }}>‹</button>
+          <img
+            src={GALLERY_ITEMS[lightbox].img}
+            alt={GALLERY_ITEMS[lightbox].label}
+            onClick={e => e.stopPropagation()}
+          />
+          <button className="hol-lb-next" onClick={e => { e.stopPropagation(); setLightbox((lightbox + 1) % GALLERY_ITEMS.length); }}>›</button>
+          <div className="hol-lb-caption">{GALLERY_ITEMS[lightbox].label}</div>
+        </div>
+      )}
 
       {/* Section header */}
       <div style={{ padding: '0 5%', marginBottom: 48 }}>
@@ -133,7 +149,7 @@ function ImageGallery() {
           <div
             key={i}
             className="hol-gallery-card"
-            onClick={() => setActive(i)}
+            onClick={() => { setActive(i); setLightbox(i); }}
             style={{
               flexShrink: 0,
               width: i % 3 === 0 ? 360 : 280,

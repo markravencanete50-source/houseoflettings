@@ -583,9 +583,9 @@ export default function HomePage() {
             © {new Date().getFullYear()} House of Lettings Ltd. All rights reserved.
           </p>
           <div style={{ display: 'flex', gap: 24 }}>
-            {['Privacy', 'Terms', 'Contact'].map(l => (
-              <span key={l} style={{ color: 'rgba(255,255,255,0.35)', fontSize: 13, cursor: 'pointer' }}>{l}</span>
-            ))}
+            <Link href="/cookie-policy" style={{ color: 'rgba(255,255,255,0.35)', fontSize: 13 }}>Cookie Policy</Link>
+            <Link href="/terms" style={{ color: 'rgba(255,255,255,0.35)', fontSize: 13 }}>Terms</Link>
+            <span style={{ color: 'rgba(255,255,255,0.35)', fontSize: 13, cursor: 'pointer' }}>Contact</span>
           </div>
         </div>
       </footer>

@@ -347,6 +347,13 @@ export default function HomePage() {
               List Your Property
             </Link>
             <ValuationCard />
+            <Link href="/terms" style={{
+              padding: '16px 36px', background: 'transparent', color: '#fff',
+              border: '1px solid rgba(255,255,255,0.4)', borderRadius: 4, fontSize: 14,
+              fontWeight: 500, letterSpacing: '0.5px', textTransform: 'uppercase',
+            }}>
+              Terms &amp; Conditions
+            </Link>
           </div>
         </div>
 

@@ -26,51 +26,73 @@ const EMPTY_FORM = {
   propertyType: "", bedrooms: "", notes: "", preferredDateTime: "",
 };
 
-function usePlacesAutocomplete(onSelect: (data: { address: string; postcode: string; city: string; street: string }) => void) {
-  const inputRef = useRef<HTMLInputElement>(null);
+interface Suggestion {
+  display_name: string;
+  postcode: string;
+  city: string;
+  street: string;
+}
 
+function useAddressAutocomplete(onSelect: (data: { address: string; postcode: string; city: string; street: string }) => void) {
+  const [query, setQuery] = useState("");
+  const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [open, setOpen] = useState(false);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  const search = useCallback(async (value: string) => {
+    if (value.length < 3) { setSuggestions([]); setOpen(false); return; }
+    setLoading(true);
+    try {
+      const res = await fetch(
+        `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(value)}&countrycodes=gb&format=json&addressdetails=1&limit=6`,
+        { headers: { "Accept-Language": "en" } }
+      );
+      const data = await res.json();
+      const mapped: Suggestion[] = data.map((item: any) => {
+        const a = item.address || {};
+        return {
+          display_name: item.display_name,
+          postcode: a.postcode || "",
+          city: a.city || a.town || a.village || a.county || "",
+          street: a.road || "",
+        };
+      });
+      setSuggestions(mapped);
+      setOpen(mapped.length > 0);
+    } catch {
+      setSuggestions([]);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const handleChange = (value: string) => {
+    setQuery(value);
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => search(value), 400);
+  };
+
+  const handleSelect = (s: Suggestion) => {
+    setQuery(s.display_name);
+    setOpen(false);
+    setSuggestions([]);
+    onSelect({ address: s.display_name, postcode: s.postcode, city: s.city, street: s.street });
+  };
+
+  // Close on outside click
   useEffect(() => {
-    let ac: any = null;
-    let listener: any = null;
-
-    function initAutocomplete() {
-      if (!inputRef.current || !(window as any).google?.maps?.places) return;
-      ac = new (window as any).google.maps.places.Autocomplete(inputRef.current, {
-        types: ["address"],
-        componentRestrictions: { country: "gb" },
-        fields: ["formatted_address", "address_components"],
-      });
-      listener = ac.addListener("place_changed", () => {
-        const place = ac.getPlace();
-        if (!place?.formatted_address) return;
-        let postcode = "", city = "", street = "";
-        place.address_components?.forEach((comp: any) => {
-          if (comp.types.includes("postal_code")) postcode = comp.long_name;
-          if (comp.types.includes("postal_town") || comp.types.includes("locality")) city = comp.long_name;
-          if (comp.types.includes("route")) street = comp.long_name;
-        });
-        onSelect({ address: place.formatted_address, postcode, city, street });
-      });
-    }
-
-    if ((window as any).google?.maps?.places) {
-      initAutocomplete();
-    } else {
-      const interval = setInterval(() => {
-        if ((window as any).google?.maps?.places) {
-          clearInterval(interval);
-          initAutocomplete();
-        }
-      }, 300);
-      return () => clearInterval(interval);
-    }
-
-    return () => {
-      if (listener) (window as any).google?.maps?.event.removeListener(listener);
+    const handler = (e: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
     };
-  }, [onSelect]);
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
 
-  return inputRef;
+  return { query, setQuery: handleChange, suggestions, loading, open, containerRef, handleSelect };
 }
 
 interface ValuationModalProps {
@@ -86,20 +108,6 @@ export default function ValuationModal({ isOpen, onClose }: ValuationModalProps)
   const overlayRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (!isOpen) return;
-    if ((window as any).google?.maps?.places) return;
-    const apiKey = process.env.NEXT_PUBLIC_GOOGLE_PLACES_API_KEY;
-    if (!apiKey) return;
-    const existing = document.querySelector('script[data-hol-gmaps]');
-    if (existing) return;
-    const script = document.createElement("script");
-    script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places`;
-    script.async = true; script.defer = true;
-    (script as any).dataset.holGmaps = "1";
-    document.head.appendChild(script);
-  }, [isOpen]);
-
-  useEffect(() => {
     document.body.style.overflow = isOpen ? "hidden" : "";
     return () => { document.body.style.overflow = ""; };
   }, [isOpen]);
@@ -109,7 +117,12 @@ export default function ValuationModal({ isOpen, onClose }: ValuationModalProps)
     setErrors(e => ({ ...e, address: "" }));
   }, []);
 
-  const addressInputRef = usePlacesAutocomplete(handlePlaceSelect);
+  const { query, setQuery, suggestions, loading, open, containerRef, handleSelect } = useAddressAutocomplete(handlePlaceSelect);
+
+  // Sync query with form address when form resets
+  useEffect(() => {
+    if (!isOpen) setQuery("");
+  }, [isOpen]);
 
   const set = (key: string) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     setForm(f => ({ ...f, [key]: e.target.value }));
@@ -137,12 +150,11 @@ export default function ValuationModal({ isOpen, onClose }: ValuationModalProps)
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(form),
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message || "Submission failed");
+      if (!res.ok) throw new Error((await res.json()).error || "Failed");
       setStatus("success");
     } catch (err: any) {
-      setErrorMsg(err.message || "Something went wrong. Please try again.");
       setStatus("error");
+      setErrorMsg(err.message || "Something went wrong. Please try again.");
     }
   };
 
@@ -160,7 +172,7 @@ export default function ValuationModal({ isOpen, onClose }: ValuationModalProps)
               <p className="hol-modal__subtitle">Our local experts will provide an accurate, no-obligation valuation — usually within 48 hours.</p>
             </div>
             <button className="hol-modal__close" onClick={handleClose} aria-label="Close">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
             </button>
           </div>
 
@@ -170,27 +182,27 @@ export default function ValuationModal({ isOpen, onClose }: ValuationModalProps)
                 <div className="hol-success__icon">
                   <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="20 6 9 17 4 12"/></svg>
                 </div>
-                <h3 className="hol-success__title">Valuation Booked!</h3>
-                <p className="hol-success__msg">Thank you, {form.fullName.split(" ")[0]}. We've received your request for <strong>{form.address}</strong>.</p>
-                <p className="hol-success__sub">Our team will be in touch within 24 hours to confirm your appointment.</p>
-                <button className="hol-submit hol-submit--outline" onClick={handleClose}>Close</button>
+                <h3 className="hol-success__title">Booking Confirmed!</h3>
+                <p className="hol-success__msg">Thank you! We've received your valuation request and will be in touch within 24 hours to confirm your appointment.</p>
+                <p className="hol-success__sub">Check your email for confirmation details.</p>
+                <button className="hol-submit" onClick={handleClose}>Close</button>
               </div>
             ) : (
               <form onSubmit={handleSubmit} noValidate>
                 <div className="hol-form-grid">
                   <div className="hol-field">
                     <label className="hol-label">Full Name<span className="hol-req">*</span></label>
-                    <input type="text" className={`hol-input${errors.fullName ? " hol-input--error" : ""}`} placeholder="e.g. James Whitfield" value={form.fullName} onChange={set("fullName")} autoComplete="name"/>
+                    <input type="text" className={`hol-input${errors.fullName ? " hol-input--error" : ""}`} placeholder="e.g. James Whitfield" value={form.fullName} onChange={set("fullName")}/>
                     {errors.fullName && <p className="hol-err">{errors.fullName}</p>}
                   </div>
                   <div className="hol-field">
                     <label className="hol-label">Email Address<span className="hol-req">*</span></label>
-                    <input type="email" className={`hol-input${errors.email ? " hol-input--error" : ""}`} placeholder="james@example.co.uk" value={form.email} onChange={set("email")} autoComplete="email"/>
+                    <input type="email" className={`hol-input${errors.email ? " hol-input--error" : ""}`} placeholder="james@example.co.uk" value={form.email} onChange={set("email")}/>
                     {errors.email && <p className="hol-err">{errors.email}</p>}
                   </div>
                   <div className="hol-field">
                     <label className="hol-label">Phone Number<span className="hol-req">*</span></label>
-                    <input type="tel" className={`hol-input${errors.phone ? " hol-input--error" : ""}`} placeholder="e.g. 07700 900123" value={form.phone} onChange={set("phone")} autoComplete="tel"/>
+                    <input type="tel" className={`hol-input${errors.phone ? " hol-input--error" : ""}`} placeholder="e.g. 07700 900123" value={form.phone} onChange={set("phone")}/>
                     {errors.phone && <p className="hol-err">{errors.phone}</p>}
                   </div>
                   <div className="hol-field">
@@ -201,9 +213,36 @@ export default function ValuationModal({ isOpen, onClose }: ValuationModalProps)
 
                   <div className="hol-field hol-field--full">
                     <label className="hol-label">Property Address<span className="hol-req">*</span></label>
-                    <div style={{ position: 'relative' }}>
-                      <svg style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: '#9ca3af', pointerEvents: 'none' }} width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-                      <input ref={addressInputRef} type="text" className={`hol-input${errors.address ? " hol-input--error" : ""}`} style={{ paddingLeft: 36 }} placeholder="Start typing your UK address..." value={form.address} onChange={set("address")} autoComplete="off"/>
+                    <div ref={containerRef} style={{ position: "relative" }}>
+                      <svg style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", color: "#9ca3af", pointerEvents: "none", zIndex: 1 }} width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                      <input
+                        type="text"
+                        className={`hol-input${errors.address ? " hol-input--error" : ""}`}
+                        style={{ paddingLeft: 36 }}
+                        placeholder="Start typing your UK address..."
+                        value={query}
+                        onChange={e => {
+                          setQuery(e.target.value);
+                          setForm(f => ({ ...f, address: e.target.value }));
+                          setErrors(er => ({ ...er, address: "" }));
+                        }}
+                        autoComplete="off"
+                      />
+                      {loading && (
+                        <div style={{ position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)" }}>
+                          <svg className="hol-spinner" width="16" height="16" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="#9ca3af" strokeWidth="3" strokeOpacity=".25"/><path d="M12 2a10 10 0 0 1 10 10" stroke="#2563a8" strokeWidth="3" strokeLinecap="round"/></svg>
+                        </div>
+                      )}
+                      {open && suggestions.length > 0 && (
+                        <ul className="hol-suggestions">
+                          {suggestions.map((s, i) => (
+                            <li key={i} className="hol-suggestion-item" onMouseDown={() => handleSelect(s)}>
+                              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#2563a8" strokeWidth="2" style={{ flexShrink: 0, marginTop: 2 }}><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                              <span>{s.display_name}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      )}
                     </div>
                     {errors.address && <p className="hol-err">{errors.address}</p>}
                   </div>
@@ -238,7 +277,7 @@ export default function ValuationModal({ isOpen, onClose }: ValuationModalProps)
                   </div>
 
                   <div className="hol-field hol-field--full">
-                    <label className="hol-label">Additional Notes <span style={{ color: '#9ca3af', fontWeight: 400 }}>(optional)</span></label>
+                    <label className="hol-label">Additional Notes <span style={{ color: "#9ca3af", fontWeight: 400 }}>(optional)</span></label>
                     <textarea className="hol-input hol-textarea" rows={3} placeholder="Any specific details about the property..." value={form.notes} onChange={set("notes")}/>
                   </div>
                 </div>
@@ -302,8 +341,6 @@ const MODAL_CSS = `
   .hol-submit{display:inline-flex;align-items:center;gap:8px;background:linear-gradient(135deg,#1a3c5e 0%,#2563a8 100%);color:#fff;border:none;border-radius:10px;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:600;padding:13px 24px;cursor:pointer;transition:opacity .15s,transform .15s,box-shadow .15s;box-shadow:0 4px 16px rgba(37,99,168,.35);white-space:nowrap;}
   .hol-submit:hover:not(:disabled){opacity:.9;transform:translateY(-1px);box-shadow:0 6px 20px rgba(37,99,168,.45);}
   .hol-submit:disabled{opacity:.7;cursor:not-allowed;}
-  .hol-submit--outline{background:transparent;border:2px solid #1a3c5e;color:#1a3c5e;box-shadow:none;}
-  .hol-submit--outline:hover{background:#f0f4ff;box-shadow:none;}
   .hol-spinner{animation:hol-spin .8s linear infinite;}
   @keyframes hol-spin{to{transform:rotate(360deg);}}
   .hol-success{display:flex;flex-direction:column;align-items:center;text-align:center;padding:24px 0;}
@@ -312,9 +349,8 @@ const MODAL_CSS = `
   .hol-success__title{font-family:'Playfair Display',Georgia,serif;font-size:22px;color:#0f1f3d;margin:0 0 12px;}
   .hol-success__msg{font-size:14px;color:#374151;max-width:380px;line-height:1.6;margin:0 0 8px;}
   .hol-success__sub{font-size:13px;color:#9ca3af;margin:0 0 24px;}
-  .pac-container{border-radius:10px!important;border:1.5px solid #e5e7eb!important;box-shadow:0 8px 24px rgba(0,0,0,.12)!important;font-family:'DM Sans',sans-serif!important;z-index:99999!important;}
-  .pac-item{padding:8px 12px!important;font-size:13px!important;cursor:pointer;}
-  .pac-item:hover{background:#f0f4ff!important;}
-  .pac-icon{display:none!important;}
+  .hol-suggestions{position:absolute;top:calc(100% + 4px);left:0;right:0;background:#fff;border:1.5px solid #e5e7eb;border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.12);z-index:99999;max-height:220px;overflow-y:auto;padding:4px 0;margin:0;list-style:none;}
+  .hol-suggestion-item{display:flex;align-items:flex-start;gap:8px;padding:9px 14px;font-size:13px;color:#374151;cursor:pointer;line-height:1.4;transition:background .1s;}
+  .hol-suggestion-item:hover{background:#f0f4ff;}
   @media(max-width:600px){.hol-modal__header{padding:24px 20px 18px;}.hol-modal__title{font-size:20px;}.hol-modal__body{padding:20px 20px 24px;}.hol-form-grid{grid-template-columns:1fr;gap:14px;}.hol-form-footer{flex-direction:column;align-items:stretch;}.hol-submit{justify-content:center;}}
 `;

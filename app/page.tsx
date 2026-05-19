@@ -1,6 +1,6 @@
 'use client';
 // app/page.tsx
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Navbar from '@/components/layout/Navbar';
@@ -9,6 +9,247 @@ import { getProperties } from '@/services/property';
 import { Property } from '@/lib/types';
 import ValuationCard from '@/components/ValuationCard';
 
+// ── GALLERY DATA ─────────────────────────────────────────────────────────────
+const GALLERY_ITEMS = [
+  {
+    img: '/images/property-exterior.jpeg',
+    label: 'Property Management. Done Right.',
+    sub: 'We handle the management; you enjoy the returns.',
+  },
+  {
+    img: '/images/agent-photo.jpeg',
+    label: 'Leeds & Manchester Experts',
+    sub: 'Local knowledge, professional service.',
+  },
+  {
+    img: '/images/brand-desk.jpeg',
+    label: 'We Handle the Details.',
+    sub: 'You enjoy the returns.',
+  },
+  {
+    img: '/images/to-let-sign.jpeg',
+    label: 'Let Your Property Faster',
+    sub: 'Direct listings — no middlemen.',
+  },
+  {
+    img: '/images/service-compare.png',
+    label: 'Full Lettings & Management',
+    sub: 'AI-powered system, expert team.',
+  },
+  {
+    img: '/images/landlord-app.png',
+    label: 'Everything You Need',
+    sub: 'To succeed as a landlord.',
+  },
+  {
+    img: '/images/compliance.jpeg',
+    label: 'Stay Fully Compliant',
+    sub: 'We track the rules so you don\'t have to.',
+  },
+  {
+    img: '/images/tenant-pressure.jpeg',
+    label: 'Tenant Pressure? We Handle It.',
+    sub: 'Smart landlords choose professional management.',
+  },
+];
+
+// ── GALLERY COMPONENT ─────────────────────────────────────────────────────────
+function ImageGallery() {
+  const trackRef = useRef<HTMLDivElement>(null);
+  const [active, setActive] = useState(0);
+  const [isDragging, setIsDragging] = useState(false);
+  const [startX, setStartX] = useState(0);
+  const [scrollLeft, setScrollLeft] = useState(0);
+
+  const scrollToIndex = (i: number) => {
+    if (!trackRef.current) return;
+    const card = trackRef.current.children[i] as HTMLElement;
+    if (!card) return;
+    trackRef.current.scrollTo({ left: card.offsetLeft - 40, behavior: 'smooth' });
+    setActive(i);
+  };
+
+  const onMouseDown = (e: React.MouseEvent) => {
+    setIsDragging(true);
+    setStartX(e.pageX - (trackRef.current?.offsetLeft ?? 0));
+    setScrollLeft(trackRef.current?.scrollLeft ?? 0);
+  };
+  const onMouseMove = (e: React.MouseEvent) => {
+    if (!isDragging || !trackRef.current) return;
+    e.preventDefault();
+    const x = e.pageX - (trackRef.current.offsetLeft ?? 0);
+    trackRef.current.scrollLeft = scrollLeft - (x - startX);
+  };
+  const onMouseUp = () => setIsDragging(false);
+
+  return (
+    <section style={{ padding: '90px 0', background: '#fff', overflow: 'hidden' }}>
+      <style>{`
+        .hol-gallery-track::-webkit-scrollbar { display: none; }
+        .hol-gallery-track { -ms-overflow-style: none; scrollbar-width: none; }
+        .hol-gallery-card { transition: transform 0.35s ease, box-shadow 0.35s ease; }
+        .hol-gallery-card:hover { transform: translateY(-8px) scale(1.015); box-shadow: 0 24px 60px rgba(0,0,0,0.18) !important; }
+        .hol-gallery-card:hover .hol-gallery-overlay { opacity: 1 !important; }
+        .hol-gallery-card:hover .hol-gallery-label { transform: translateY(0) !important; opacity: 1 !important; }
+        .hol-dot { transition: all 0.2s ease; cursor: pointer; border: none; padding: 0; background: none; }
+      `}</style>
+
+      {/* Section header */}
+      <div style={{ padding: '0 5%', marginBottom: 48 }}>
+        <div style={{
+          fontSize: 11, fontWeight: 700, letterSpacing: 3, textTransform: 'uppercase',
+          color: 'var(--red)', marginBottom: 14,
+        }}>
+          Properties We Love
+        </div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: 16 }}>
+          <h2 style={{
+            fontFamily: 'var(--font-serif)', fontSize: 'clamp(28px,4vw,48px)',
+            fontWeight: 700, lineHeight: 1.1, letterSpacing: '-0.5px', margin: 0,
+          }}>
+            Homes That Inspire
+          </h2>
+          <p style={{ fontSize: 15, color: 'var(--gray-600)', maxWidth: 380, lineHeight: 1.65, margin: 0, fontWeight: 300 }}>
+            From compact city flats to sprawling countryside homes — every property listed directly by landlords across the UK.
+          </p>
+        </div>
+      </div>
+
+      {/* Scrollable track */}
+      <div
+        ref={trackRef}
+        className="hol-gallery-track"
+        onMouseDown={onMouseDown}
+        onMouseMove={onMouseMove}
+        onMouseUp={onMouseUp}
+        onMouseLeave={onMouseUp}
+        style={{
+          display: 'flex', gap: 20, padding: '8px 5% 16px',
+          overflowX: 'auto', cursor: isDragging ? 'grabbing' : 'grab',
+          userSelect: 'none',
+        }}
+      >
+        {GALLERY_ITEMS.map((item, i) => (
+          <div
+            key={i}
+            className="hol-gallery-card"
+            onClick={() => setActive(i)}
+            style={{
+              flexShrink: 0,
+              width: i % 3 === 0 ? 360 : 280,
+              height: 400,
+              borderRadius: 12,
+              overflow: 'hidden',
+              position: 'relative',
+              boxShadow: active === i
+                ? '0 20px 50px rgba(0,0,0,0.22)'
+                : '0 6px 24px rgba(0,0,0,0.08)',
+              cursor: 'pointer',
+              outline: active === i ? '2px solid var(--red)' : '2px solid transparent',
+              outlineOffset: 3,
+            }}
+          >
+            {/* Image */}
+            <img
+              src={item.img}
+              alt={item.label}
+              draggable={false}
+              style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+            />
+
+            {/* Overlay */}
+            <div
+              className="hol-gallery-overlay"
+              style={{
+                position: 'absolute', inset: 0,
+                background: 'linear-gradient(to top, rgba(10,10,20,0.85) 0%, rgba(10,10,20,0.1) 55%, transparent 100%)',
+                opacity: active === i ? 1 : 0.7,
+                transition: 'opacity 0.3s ease',
+              }}
+            />
+
+            {/* Label */}
+            <div
+              className="hol-gallery-label"
+              style={{
+                position: 'absolute', bottom: 0, left: 0, right: 0,
+                padding: '20px 20px 22px',
+                transform: active === i ? 'translateY(0)' : 'translateY(6px)',
+                opacity: active === i ? 1 : 0.85,
+                transition: 'all 0.3s ease',
+              }}
+            >
+              <div style={{ fontSize: 15, fontWeight: 700, color: '#fff', marginBottom: 4, fontFamily: 'var(--font-serif)' }}>
+                {item.label}
+              </div>
+              <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.65)', letterSpacing: 0.5 }}>
+                {item.sub}
+              </div>
+            </div>
+
+            {/* Active badge */}
+            {active === i && (
+              <div style={{
+                position: 'absolute', top: 14, right: 14,
+                background: 'var(--red)', color: '#fff',
+                fontSize: 10, fontWeight: 700, letterSpacing: 1.5,
+                textTransform: 'uppercase', padding: '4px 10px', borderRadius: 20,
+              }}>
+                Featured
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+
+      {/* Dot navigation */}
+      <div style={{ display: 'flex', gap: 8, justifyContent: 'center', marginTop: 28, padding: '0 5%' }}>
+        {GALLERY_ITEMS.map((_, i) => (
+          <button
+            key={i}
+            className="hol-dot"
+            onClick={() => scrollToIndex(i)}
+            aria-label={`Go to slide ${i + 1}`}
+            style={{
+              width: active === i ? 28 : 8,
+              height: 8,
+              borderRadius: 4,
+              background: active === i ? 'var(--red)' : 'var(--gray-200)',
+            }}
+          />
+        ))}
+      </div>
+
+      {/* Bottom CTA strip */}
+      <div style={{
+        margin: '48px 5% 0',
+        background: 'var(--gray-100)',
+        border: '1px solid var(--gray-200)',
+        borderRadius: 12,
+        padding: '28px 32px',
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 20,
+      }}>
+        <div>
+          <div style={{ fontSize: 13, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 2, color: 'var(--red)', marginBottom: 6 }}>
+            Find Your Match
+          </div>
+          <p style={{ fontSize: 16, fontWeight: 600, color: 'var(--black)', margin: 0 }}>
+            Over 12,400 properties waiting — no fees, no agents.
+          </p>
+        </div>
+        <Link href="/listings" style={{
+          padding: '14px 30px', background: 'var(--black)', color: '#fff',
+          borderRadius: 4, fontSize: 13, fontWeight: 600,
+          letterSpacing: '0.5px', textTransform: 'uppercase', whiteSpace: 'nowrap',
+        }}>
+          Browse All Properties →
+        </Link>
+      </div>
+    </section>
+  );
+}
+
+// ── PAGE ──────────────────────────────────────────────────────────────────────
 export default function HomePage() {
   const router = useRouter();
   const [featured, setFeatured] = useState<Property[]>([]);
@@ -275,6 +516,9 @@ export default function HomePage() {
           ))}
         </div>
       </section>
+
+      {/* ── IMAGE GALLERY ─────────────────────────────────────── */}
+      <ImageGallery />
 
       {/* ── CTA BANNER ───────────────────────────────────────── */}
       <section style={{

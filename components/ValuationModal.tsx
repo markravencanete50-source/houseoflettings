@@ -30,24 +30,44 @@ function usePlacesAutocomplete(onSelect: (data: { address: string; postcode: str
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    if (!inputRef.current || !(window as any).google?.maps?.places) return;
-    const ac = new (window as any).google.maps.places.Autocomplete(inputRef.current, {
-      types: ["address"],
-      componentRestrictions: { country: "gb" },
-      fields: ["formatted_address", "address_components"],
-    });
-    const listener = ac.addListener("place_changed", () => {
-      const place = ac.getPlace();
-      if (!place?.formatted_address) return;
-      let postcode = "", city = "", street = "";
-      place.address_components?.forEach((comp: any) => {
-        if (comp.types.includes("postal_code")) postcode = comp.long_name;
-        if (comp.types.includes("postal_town") || comp.types.includes("locality")) city = comp.long_name;
-        if (comp.types.includes("route")) street = comp.long_name;
+    let ac: any = null;
+    let listener: any = null;
+
+    function initAutocomplete() {
+      if (!inputRef.current || !(window as any).google?.maps?.places) return;
+      ac = new (window as any).google.maps.places.Autocomplete(inputRef.current, {
+        types: ["address"],
+        componentRestrictions: { country: "gb" },
+        fields: ["formatted_address", "address_components"],
       });
-      onSelect({ address: place.formatted_address, postcode, city, street });
-    });
-    return () => (window as any).google?.maps?.event.removeListener(listener);
+      listener = ac.addListener("place_changed", () => {
+        const place = ac.getPlace();
+        if (!place?.formatted_address) return;
+        let postcode = "", city = "", street = "";
+        place.address_components?.forEach((comp: any) => {
+          if (comp.types.includes("postal_code")) postcode = comp.long_name;
+          if (comp.types.includes("postal_town") || comp.types.includes("locality")) city = comp.long_name;
+          if (comp.types.includes("route")) street = comp.long_name;
+        });
+        onSelect({ address: place.formatted_address, postcode, city, street });
+      });
+    }
+
+    if ((window as any).google?.maps?.places) {
+      initAutocomplete();
+    } else {
+      const interval = setInterval(() => {
+        if ((window as any).google?.maps?.places) {
+          clearInterval(interval);
+          initAutocomplete();
+        }
+      }, 300);
+      return () => clearInterval(interval);
+    }
+
+    return () => {
+      if (listener) (window as any).google?.maps?.event.removeListener(listener);
+    };
   }, [onSelect]);
 
   return inputRef;
@@ -131,58 +151,51 @@ export default function ValuationModal({ isOpen, onClose }: ValuationModalProps)
   return (
     <>
       <style>{MODAL_CSS}</style>
-      <div ref={overlayRef} className={`hol-overlay${isOpen ? " hol-overlay--open" : ""}`} onClick={handleOverlayClick} role="dialog" aria-modal="true">
-        <div className="hol-modal">
-
-          {/* Header */}
+      <div ref={overlayRef} className={`hol-overlay${isOpen ? " hol-overlay--open" : ""}`} onClick={handleOverlayClick}>
+        <div className="hol-modal" role="dialog" aria-modal="true" aria-labelledby="hol-modal-title">
           <div className="hol-modal__header">
             <div>
-              <span className="hol-modal__badge">Free Valuation</span>
-              <h2 className="hol-modal__title">Book a Property Valuation</h2>
+              <div className="hol-modal__badge">Free Valuation</div>
+              <h2 id="hol-modal-title" className="hol-modal__title">Book a Property Valuation</h2>
               <p className="hol-modal__subtitle">Our local experts will provide an accurate, no-obligation valuation — usually within 48 hours.</p>
             </div>
             <button className="hol-modal__close" onClick={handleClose} aria-label="Close">
-              <svg width="16" height="16" viewBox="0 0 18 18" fill="none"><path d="M1 1l16 16M17 1L1 17" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></svg>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
             </button>
           </div>
 
-          {/* Body */}
           <div className="hol-modal__body">
             {status === "success" ? (
               <div className="hol-success">
                 <div className="hol-success__icon">
                   <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="20 6 9 17 4 12"/></svg>
                 </div>
-                <h3 className="hol-success__title">Valuation Request Received!</h3>
-                <p className="hol-success__msg">Thank you! Our team will contact you within <strong>24–48 hours</strong> to confirm your appointment.</p>
-                <p className="hol-success__sub">A confirmation email has been sent to your inbox.</p>
-                <button className="hol-submit hol-submit--outline" onClick={handleClose}>Close Window</button>
+                <h3 className="hol-success__title">Valuation Booked!</h3>
+                <p className="hol-success__msg">Thank you, {form.fullName.split(" ")[0]}. We've received your request for <strong>{form.address}</strong>.</p>
+                <p className="hol-success__sub">Our team will be in touch within 24 hours to confirm your appointment.</p>
+                <button className="hol-submit hol-submit--outline" onClick={handleClose}>Close</button>
               </div>
             ) : (
               <form onSubmit={handleSubmit} noValidate>
                 <div className="hol-form-grid">
-
                   <div className="hol-field">
                     <label className="hol-label">Full Name<span className="hol-req">*</span></label>
                     <input type="text" className={`hol-input${errors.fullName ? " hol-input--error" : ""}`} placeholder="e.g. James Whitfield" value={form.fullName} onChange={set("fullName")} autoComplete="name"/>
                     {errors.fullName && <p className="hol-err">{errors.fullName}</p>}
                   </div>
-
                   <div className="hol-field">
                     <label className="hol-label">Email Address<span className="hol-req">*</span></label>
                     <input type="email" className={`hol-input${errors.email ? " hol-input--error" : ""}`} placeholder="james@example.co.uk" value={form.email} onChange={set("email")} autoComplete="email"/>
                     {errors.email && <p className="hol-err">{errors.email}</p>}
                   </div>
-
                   <div className="hol-field">
                     <label className="hol-label">Phone Number<span className="hol-req">*</span></label>
                     <input type="tel" className={`hol-input${errors.phone ? " hol-input--error" : ""}`} placeholder="e.g. 07700 900123" value={form.phone} onChange={set("phone")} autoComplete="tel"/>
                     {errors.phone && <p className="hol-err">{errors.phone}</p>}
                   </div>
-
                   <div className="hol-field">
                     <label className="hol-label">Preferred Date & Time<span className="hol-req">*</span></label>
-                    <input type="datetime-local" className={`hol-input${errors.preferredDateTime ? " hol-input--error" : ""}`} value={form.preferredDateTime} onChange={set("preferredDateTime")} min={new Date().toISOString().slice(0, 16)}/>
+                    <input type="datetime-local" className={`hol-input${errors.preferredDateTime ? " hol-input--error" : ""}`} value={form.preferredDateTime} onChange={set("preferredDateTime")}/>
                     {errors.preferredDateTime && <p className="hol-err">{errors.preferredDateTime}</p>}
                   </div>
 
@@ -228,7 +241,6 @@ export default function ValuationModal({ isOpen, onClose }: ValuationModalProps)
                     <label className="hol-label">Additional Notes <span style={{ color: '#9ca3af', fontWeight: 400 }}>(optional)</span></label>
                     <textarea className="hol-input hol-textarea" rows={3} placeholder="Any specific details about the property..." value={form.notes} onChange={set("notes")}/>
                   </div>
-
                 </div>
 
                 {status === "error" && (

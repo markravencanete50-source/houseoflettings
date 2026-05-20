@@ -25,10 +25,26 @@ export interface Property {
   landlordName?: string;
   createdAt: Date;
   status: 'active' | 'inactive' | 'pending';
-  badge?: string;    // 'Featured' | 'New' | 'Popular' | etc.
-featured?: boolean;
+  badge?: string;         // 'Featured' | 'New' | 'Popular' | etc.
+  featured?: boolean;
   furnished?: 'furnished' | 'unfurnished' | 'part-furnished';
   availableFrom?: string;
+
+  // Listing type
+  propertyType?: 'whole' | 'room';
+
+  // Pricing
+  depositAmount?: number;
+  billsIncluded?: boolean;
+  billsNote?: string;
+
+  // Features & amenities
+  parking?: 'none' | 'allocated' | 'permit' | 'garage';
+  garden?: 'none' | 'private' | 'shared' | 'communal';
+  balcony?: boolean;
+
+  // Media
+  videoTourUrl?: string;
 }
 
 export interface Chat {

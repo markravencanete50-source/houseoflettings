@@ -268,40 +268,83 @@ export default function HomePage() {
 
       {/* ── HERO ─────────────────────────────────────────────── */}
       <section style={{
-        minHeight: '100vh', background: 'var(--black)',
+        minHeight: '100vh', background: '#0d1117',
         position: 'relative', display: 'flex', alignItems: 'center', padding: '68px 5% 0',
       }}>
+        {/* Background image */}
         <div style={{
           position: 'absolute', inset: 0,
           background: 'url(https://images.unsplash.com/photo-1486325212027-8081e485255e?w=1800&q=80) center/cover no-repeat',
-          opacity: 0.25,
+          opacity: 0.18,
         }} />
+        {/* Dark overlay */}
         <div style={{
           position: 'absolute', inset: 0,
-          background: 'linear-gradient(135deg,rgba(10,10,10,0.88) 0%,rgba(10,10,10,0.45) 100%)',
+          background: 'linear-gradient(135deg,rgba(10,10,10,0.92) 0%,rgba(10,10,10,0.5) 100%)',
         }} />
 
         <div style={{ position: 'relative', maxWidth: 700 }}>
+          {/* Logo */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 36 }}>
+            {/* HOL "H" logo mark */}
+            <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <rect width="48" height="48" rx="6" fill="#1565c0"/>
+              {/* Left pillar */}
+              <rect x="8" y="10" width="9" height="28" fill="white"/>
+              {/* Right pillar */}
+              <rect x="31" y="10" width="9" height="28" fill="white"/>
+              {/* Crossbar top-left to bottom-right diagonal (N shape) */}
+              <polygon points="8,10 17,10 40,38 31,38" fill="#1e88e5"/>
+            </svg>
+            <div style={{ lineHeight: 1.1 }}>
+              <div style={{
+                fontFamily: 'var(--font-serif)', fontSize: 20, fontWeight: 700,
+                color: '#fff', letterSpacing: '0.5px', textTransform: 'uppercase',
+              }}>
+                House of
+              </div>
+              <div style={{
+                fontFamily: 'var(--font-serif)', fontSize: 20, fontWeight: 700,
+                color: '#fff', letterSpacing: '0.5px', textTransform: 'uppercase',
+              }}>
+                Lettings
+              </div>
+            </div>
+          </div>
+
           <h1 style={{
-            fontFamily: 'var(--font-serif)', fontSize: 'clamp(42px,6vw,80px)',
-            fontWeight: 700, color: '#fff', lineHeight: 1.05, letterSpacing: '-1px', marginBottom: 22,
+            fontFamily: 'var(--font-serif)', fontSize: 'clamp(36px,5.5vw,72px)',
+            fontWeight: 700, color: '#fff', lineHeight: 1.08, letterSpacing: '-0.5px', marginBottom: 12,
+            textTransform: 'uppercase',
           }}>
-            Find Your Next{' '}
-            <span style={{ color: 'var(--red)' }}>Home.</span>
-            <br />Or Let It Faster.
+            We Handle the Details.
+          </h1>
+          <h1 style={{
+            fontFamily: 'var(--font-serif)', fontSize: 'clamp(36px,5.5vw,72px)',
+            fontWeight: 700, color: '#1e88e5', lineHeight: 1.08, letterSpacing: '-0.5px', marginBottom: 28,
+            textTransform: 'uppercase',
+          }}>
+            You Enjoy the Returns.
           </h1>
 
+          {/* Divider */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 20 }}>
+            <div style={{ width: 32, height: 1, background: 'rgba(255,255,255,0.25)' }} />
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="rgba(255,255,255,0.5)" xmlns="http://www.w3.org/2000/svg">
+              <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
+            </svg>
+          </div>
+
           <p style={{
-            fontSize: 18, color: 'rgba(255,255,255,0.65)', lineHeight: 1.65,
-            maxWidth: 520, marginBottom: 44, fontWeight: 300,
+            fontSize: 17, color: 'rgba(255,255,255,0.6)', lineHeight: 1.65,
+            maxWidth: 480, marginBottom: 44, fontWeight: 300, letterSpacing: '0.2px',
           }}>
-            The UK's premier direct rental platform. Landlords list properties,
-            tenants find homes — no agency fees, no middlemen, no nonsense.
+            Property management. Done right.
           </p>
 
           <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap' }}>
             <Link href="/listings" style={{
-              padding: '16px 36px', background: 'var(--red)', color: '#fff', border: 'none',
+              padding: '16px 36px', background: '#1e88e5', color: '#fff', border: 'none',
               borderRadius: 4, fontSize: 14, fontWeight: 600, letterSpacing: '0.5px', textTransform: 'uppercase',
             }}>
               Browse Properties

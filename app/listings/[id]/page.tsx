@@ -245,10 +245,10 @@ export default function PropertyDetailPage() {
                       {property.badge}
                     </span>
                   )}
-                  <h1 style={{ fontFamily: 'var(--font-serif)', fontSize: 30, fontWeight: 700, lineHeight: 1.25, marginBottom: 6 }}>
+                  <h1 style={{ fontFamily: 'var(--font-serif)', fontSize: 30, fontWeight: 500, lineHeight: 1.25, marginBottom: 6 }}>
                     {property.title}
                   </h1>
-                  <p style={{ color: 'var(--gray-400)', fontSize: 14, marginBottom: 14 }}>📍 {property.location}</p>
+                  <p style={{ color: 'var(--gray-600)', fontSize: 14, marginBottom: 14 }}>📍 {property.location}</p>
                   <div style={{ display: 'flex', alignItems: 'baseline', gap: 10 }}>
                     <span style={{ fontFamily: 'var(--font-serif)', fontSize: 34, fontWeight: 700, color: 'var(--red)' }}>
                       £{property.price.toLocaleString()}

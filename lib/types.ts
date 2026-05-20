@@ -39,7 +39,7 @@ export interface Property {
   billsNote?: string;
 
   // Features & amenities
-  parking?: 'none' | 'allocated' | 'permit' | 'garage';
+  parking?: 'none' | 'double-garage' | 'off-street' | 'residents' | 'single-garage' | 'underground' | 'communal-no-allocated' | 'disabled-available' | 'disabled-not-available' | 'driveway-private' | 'driveway-shared' | 'ev-private' | 'ev-shared' | 'garage' | 'garage-en-bloc' | 'garage-carport' | 'garage-detached' | 'garage-integral' | 'gated' | 'rear' | 'street-no-permit' | 'street-permit' | 'undercroft' | 'underground-allocated' | 'underground-no-allocated' | 'other';
   garden?: 'none' | 'private' | 'shared' | 'communal';
   balcony?: boolean;
 

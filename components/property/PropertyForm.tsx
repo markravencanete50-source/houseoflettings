@@ -82,7 +82,8 @@ export default function PropertyForm({
   // ── New fields ──────────────────────────────────────────────────────────
   const [propertyType, setPropertyType]   = useState<'whole' | 'room'>((existing as any)?.propertyType || 'whole');
   const [depositAmount, setDepositAmount] = useState((existing as any)?.depositAmount?.toString() || '');
-  const [parking, setParking]             = useState<'none' | 'allocated' | 'permit' | 'garage'>((existing as any)?.parking || 'none');
+  const [parking, setParking]             = useState<string>((existing as any)?.parking || 'none');
+  const [showAllParking, setShowAllParking] = useState(false);
   const [garden, setGarden]               = useState<'none' | 'private' | 'shared' | 'communal'>((existing as any)?.garden || 'none');
   const [balcony, setBalcony]             = useState<boolean>((existing as any)?.balcony || false);
   const [billsIncluded, setBillsIncluded] = useState<boolean>((existing as any)?.billsIncluded || false);
@@ -341,33 +342,78 @@ export default function PropertyForm({
       <SectionHeader icon="✨" title="Features & Amenities" subtitle="Help tenants filter for what matters to them" />
 
       {/* Parking */}
-      <div className="form-group">
-        <label className="form-label">Parking</label>
-        <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' as const, marginTop: 6 }}>
-          {[
-            { value: 'none',      label: 'No Parking' },
-            { value: 'allocated', label: '🅿️ Allocated Space' },
-            { value: 'permit',    label: '🪪 Permit Zone' },
-            { value: 'garage',    label: '🚗 Garage' },
-          ].map(opt => (
-            <button
-              key={opt.value}
-              type="button"
-              onClick={() => setParking(opt.value as typeof parking)}
-              style={{
-                padding: '8px 14px', borderRadius: 20, fontSize: 13, cursor: 'pointer',
-                border: `1.5px solid ${parking === opt.value ? 'var(--red)' : 'var(--gray-200)'}`,
-                background: parking === opt.value ? 'rgba(192,57,43,0.08)' : 'transparent',
-                color: parking === opt.value ? 'var(--red)' : 'var(--gray-600)',
-                fontWeight: parking === opt.value ? 600 : 400,
-                transition: 'all 0.15s',
-              }}
-            >
-              {opt.label}
-            </button>
-          ))}
-        </div>
-      </div>
+      {(() => {
+        const PARKING_OPTIONS = [
+          { value: 'none',                      label: 'No parking available' },
+          { value: 'off-street',                label: 'Off street parking' },
+          { value: 'residents',                 label: "Resident's parking" },
+          { value: 'street-no-permit',          label: 'Street parking, no permit required' },
+          { value: 'street-permit',             label: 'Street parking, permit required' },
+          { value: 'driveway-private',          label: 'Driveway private' },
+          { value: 'driveway-shared',           label: 'Driveway shared' },
+          { value: 'single-garage',             label: 'Single garage' },
+          { value: 'double-garage',             label: 'Double garage' },
+          { value: 'garage',                    label: 'Garage' },
+          { value: 'garage-en-bloc',            label: 'Garage en bloc' },
+          { value: 'garage-carport',            label: 'Garage carport' },
+          { value: 'garage-detached',           label: 'Garage detached' },
+          { value: 'garage-integral',           label: 'Garage integral' },
+          { value: 'gated',                     label: 'Gated parking' },
+          { value: 'rear',                      label: 'Rear of property' },
+          { value: 'undercroft',                label: 'Undercroft' },
+          { value: 'underground',               label: 'Underground' },
+          { value: 'underground-allocated',     label: 'Underground parking allocated space' },
+          { value: 'underground-no-allocated',  label: 'Underground parking no allocated space' },
+          { value: 'communal-no-allocated',     label: 'Communal car park, no allocated space' },
+          { value: 'ev-private',                label: 'EV charging private' },
+          { value: 'ev-shared',                 label: 'EV charging shared' },
+          { value: 'disabled-available',        label: 'Disabled parking available' },
+          { value: 'disabled-not-available',    label: 'Disabled parking not available' },
+          { value: 'other',                     label: 'Other' },
+        ];
+        const INITIAL_COUNT = 6;
+        const visible = showAllParking ? PARKING_OPTIONS : PARKING_OPTIONS.slice(0, INITIAL_COUNT);
+        return (
+          <div className="form-group">
+            <label className="form-label">Parking</label>
+            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' as const, marginTop: 6 }}>
+              {visible.map(opt => (
+                <button
+                  key={opt.value}
+                  type="button"
+                  onClick={() => setParking(opt.value)}
+                  style={{
+                    padding: '7px 13px', borderRadius: 20, fontSize: 13, cursor: 'pointer',
+                    border: `1.5px solid ${parking === opt.value ? 'var(--red)' : 'var(--gray-200)'}`,
+                    background: parking === opt.value ? 'rgba(192,57,43,0.08)' : 'transparent',
+                    color: parking === opt.value ? 'var(--red)' : 'var(--gray-600)',
+                    fontWeight: parking === opt.value ? 600 : 400,
+                    transition: 'all 0.15s',
+                    whiteSpace: 'nowrap' as const,
+                  }}
+                >
+                  {parking === opt.value ? '✓ ' : ''}{opt.label}
+                </button>
+              ))}
+              <button
+                type="button"
+                onClick={() => setShowAllParking(p => !p)}
+                style={{
+                  padding: '7px 13px', borderRadius: 20, fontSize: 13, cursor: 'pointer',
+                  border: '1.5px dashed var(--gray-200)',
+                  background: 'transparent',
+                  color: 'var(--gray-600)',
+                  fontWeight: 500,
+                  transition: 'all 0.15s',
+                  whiteSpace: 'nowrap' as const,
+                }}
+              >
+                {showAllParking ? '▲ Show less' : `▼ Show more (${PARKING_OPTIONS.length - INITIAL_COUNT} more)`}
+              </button>
+            </div>
+          </div>
+        );
+      })()}
 
       {/* Garden */}
       <div className="form-group">

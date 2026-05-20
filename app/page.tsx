@@ -287,7 +287,7 @@ export default function HomePage() {
           {/* Logo */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 36 }}>
             {/* HOL logo from file */}
-            <img src="/images/logo_HOL.png" alt="House of Lettings Logo" style={{ height: 60, width: 'auto' }} />
+            <img src="/logo_HOL.png" alt="House of Lettings Logo" style={{ height: 60, width: 'auto' }} />
             <div style={{ lineHeight: 1.15 }}>
               <div style={{
                 fontFamily: 'var(--font-serif)', fontSize: 18, fontWeight: 600,

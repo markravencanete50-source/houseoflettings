@@ -286,26 +286,26 @@ export default function HomePage() {
         <div style={{ position: 'relative', maxWidth: 700 }}>
           {/* Logo */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 36 }}>
-            {/* HOL "H" logo mark */}
-            <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <rect width="48" height="48" rx="6" fill="#1565c0"/>
-              {/* Left pillar */}
-              <rect x="8" y="10" width="9" height="28" fill="white"/>
-              {/* Right pillar */}
-              <rect x="31" y="10" width="9" height="28" fill="white"/>
-              {/* Crossbar top-left to bottom-right diagonal (N shape) */}
-              <polygon points="8,10 17,10 40,38 31,38" fill="#1e88e5"/>
+            {/* HOL logo mark — house + N shape, matching uploaded logo */}
+            <svg width="56" height="56" viewBox="0 0 56 56" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <rect width="56" height="56" rx="8" fill="#0a1628"/>
+              {/* House roofline — arrow pointing up */}
+              <polygon points="28,8 48,26 44,26 44,48 32,48 32,36 24,36 24,48 12,48 12,26 8,26" fill="#1e88e5"/>
+              {/* N letterform overlaid in white on lower portion */}
+              <rect x="16" y="28" width="5" height="16" fill="white"/>
+              <rect x="35" y="28" width="5" height="16" fill="white"/>
+              <polygon points="16,28 21,28 40,44 35,44" fill="white"/>
             </svg>
-            <div style={{ lineHeight: 1.1 }}>
+            <div style={{ lineHeight: 1.15 }}>
               <div style={{
-                fontFamily: 'var(--font-serif)', fontSize: 20, fontWeight: 700,
-                color: '#fff', letterSpacing: '0.5px', textTransform: 'uppercase',
+                fontFamily: 'var(--font-serif)', fontSize: 18, fontWeight: 600,
+                color: '#fff', letterSpacing: '2px', textTransform: 'uppercase',
               }}>
                 House of
               </div>
               <div style={{
-                fontFamily: 'var(--font-serif)', fontSize: 20, fontWeight: 700,
-                color: '#fff', letterSpacing: '0.5px', textTransform: 'uppercase',
+                fontFamily: 'var(--font-serif)', fontSize: 18, fontWeight: 600,
+                color: '#fff', letterSpacing: '2px', textTransform: 'uppercase',
               }}>
                 Lettings
               </div>
@@ -313,15 +313,15 @@ export default function HomePage() {
           </div>
 
           <h1 style={{
-            fontFamily: 'var(--font-serif)', fontSize: 'clamp(36px,5.5vw,72px)',
-            fontWeight: 700, color: '#fff', lineHeight: 1.08, letterSpacing: '-0.5px', marginBottom: 12,
+            fontFamily: 'var(--font-serif)', fontSize: 'clamp(32px,5vw,66px)',
+            fontWeight: 500, color: '#fff', lineHeight: 1.08, letterSpacing: '-0.5px', marginBottom: 12,
             textTransform: 'uppercase',
           }}>
             We Handle the Details.
           </h1>
           <h1 style={{
-            fontFamily: 'var(--font-serif)', fontSize: 'clamp(36px,5.5vw,72px)',
-            fontWeight: 700, color: '#1e88e5', lineHeight: 1.08, letterSpacing: '-0.5px', marginBottom: 28,
+            fontFamily: 'var(--font-serif)', fontSize: 'clamp(32px,5vw,66px)',
+            fontWeight: 500, color: '#1e88e5', lineHeight: 1.08, letterSpacing: '-0.5px', marginBottom: 28,
             textTransform: 'uppercase',
           }}>
             You Enjoy the Returns.

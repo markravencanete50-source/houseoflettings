@@ -1,6 +1,6 @@
 'use client';
 // components/property/PropertyForm.tsx
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { Property } from '@/lib/types';
 import { createProperty, updateProperty } from '@/services/property';
@@ -89,6 +89,40 @@ export default function PropertyForm({
   const [billsIncluded, setBillsIncluded] = useState<boolean>((existing as any)?.billsIncluded || false);
   const [billsNote, setBillsNote]         = useState<string>((existing as any)?.billsNote || '');
   const [videoTourUrl, setVideoTourUrl]   = useState<string>((existing as any)?.videoTourUrl || '');
+
+  // ── Postcode lookup ─────────────────────────────────────────────────────
+  const [postcode, setPostcode]           = useState('');
+  const [postcodeError, setPostcodeError] = useState('');
+  const [postcodeLoading, setPostcodeLoading] = useState(false);
+  const [addressLine1, setAddressLine1]   = useState('');
+  const [addressLine2, setAddressLine2]   = useState('');
+  const [town, setTown]                   = useState('');
+
+  // Keep location in sync with address fields
+  useEffect(() => {
+    const parts = [addressLine1, addressLine2, town, postcode.toUpperCase()].filter(Boolean);
+    if (parts.length > 0) setLocation(parts.join(', '));
+  }, [addressLine1, addressLine2, town, postcode]);
+
+  const lookupPostcode = async () => {
+    const clean = postcode.trim().toUpperCase().replace(/\s+/g, '');
+    if (!clean) { setPostcodeError('Please enter a postcode.'); return; }
+    setPostcodeError('');
+    setPostcodeLoading(true);
+    try {
+      const res = await fetch(`https://api.postcodes.io/postcodes/${encodeURIComponent(clean)}`);
+      const json = await res.json();
+      if (json.status !== 200) { setPostcodeError('Postcode not found. Please check and try again.'); return; }
+      const r = json.result;
+      setTown(r.admin_district || r.parliamentary_constituency || '');
+      setAddressLine2(r.admin_ward || '');
+      setAddressLine1('');
+    } catch {
+      setPostcodeError('Could not reach postcode service. Please enter your address manually.');
+    } finally {
+      setPostcodeLoading(false);
+    }
+  };
 
   // ── Images ──────────────────────────────────────────────────────────────
   const [imageFiles, setImageFiles] = useState<File[]>([]);
@@ -233,17 +267,81 @@ export default function PropertyForm({
         </div>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
-        <div className="form-group">
-          <label className="form-label">Location *</label>
-          <input className="form-input" value={location} onChange={e => setLocation(e.target.value)}
-            placeholder="e.g. Leeds City Centre, LS1" required />
+      {/* ── Postcode lookup ── */}
+      <div className="form-group" style={{ marginBottom: 20 }}>
+        <label className="form-label">Location *</label>
+        <p style={{ fontSize: 13, color: 'var(--gray-400)', marginBottom: 10, marginTop: 2 }}>
+          Enter the postcode below to fill in the address quickly and easily.
+        </p>
+
+        {/* Postcode row */}
+        <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start', marginBottom: 14 }}>
+          <div style={{ flex: '0 0 180px' }}>
+            <label className="form-label" style={{ fontSize: 12 }}>Postcode</label>
+            <input
+              className="form-input"
+              value={postcode}
+              onChange={e => { setPostcode(e.target.value); setPostcodeError(''); }}
+              onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), lookupPostcode())}
+              placeholder="e.g. LS1 4AP"
+              style={{ textTransform: 'uppercase' }}
+            />
+          </div>
+          <div style={{ paddingTop: 22 }}>
+            <button
+              type="button"
+              onClick={lookupPostcode}
+              disabled={postcodeLoading}
+              style={{
+                padding: '10px 20px', background: '#3b82f6', color: '#fff',
+                border: 'none', borderRadius: 4, fontSize: 13, fontWeight: 600,
+                cursor: postcodeLoading ? 'not-allowed' : 'pointer',
+                opacity: postcodeLoading ? 0.7 : 1,
+                display: 'flex', alignItems: 'center', gap: 6, whiteSpace: 'nowrap' as const,
+              }}
+            >
+              {postcodeLoading ? '⏳ Looking up…' : '🔍 Find address'}
+            </button>
+          </div>
         </div>
 
-        <div className="form-group">
-          <label className="form-label">Available From</label>
-          <input className="form-input" type="date" value={availableFrom} onChange={e => setAvailableFrom(e.target.value)} />
+        {postcodeError && (
+          <div style={{ fontSize: 13, color: '#c62828', marginBottom: 10 }}>{postcodeError}</div>
+        )}
+
+        {/* Address fields */}
+        <div style={{ display: 'flex', flexDirection: 'column' as const, gap: 10 }}>
+          <div>
+            <label className="form-label" style={{ fontSize: 12 }}>Address Line 1</label>
+            <input className="form-input" value={addressLine1} onChange={e => setAddressLine1(e.target.value)}
+              placeholder="House number and street name" />
+          </div>
+          <div>
+            <label className="form-label" style={{ fontSize: 12 }}>
+              Address Line 2 <span style={{ color: 'var(--gray-400)', fontWeight: 400 }}>optional</span>
+            </label>
+            <input className="form-input" value={addressLine2} onChange={e => setAddressLine2(e.target.value)}
+              placeholder="Area or district" />
+          </div>
+          <div>
+            <label className="form-label" style={{ fontSize: 12 }}>Town / City</label>
+            <input className="form-input" value={town} onChange={e => setTown(e.target.value)}
+              placeholder="e.g. Manchester" />
+          </div>
         </div>
+
+        <div style={{
+          marginTop: 12, padding: '10px 14px',
+          background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: 6,
+          fontSize: 13, color: '#1e40af',
+        }}>
+          ℹ️ Your exact house number will never be shown publicly — only the area and postcode.
+        </div>
+      </div>
+
+      <div className="form-group">
+        <label className="form-label">Available From</label>
+        <input className="form-input" type="date" value={availableFrom} onChange={e => setAvailableFrom(e.target.value)} />
       </div>
 
       {/* ── 2. Pricing & Deposit ──────────────────────────────────────────── */}

@@ -236,31 +236,6 @@ function ImageGallery() {
         ))}
       </div>
 
-      {/* Bottom CTA strip */}
-      <div style={{
-        margin: '48px 5% 0',
-        background: 'var(--gray-100)',
-        border: '1px solid var(--gray-200)',
-        borderRadius: 12,
-        padding: '28px 32px',
-        display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 20,
-      }}>
-        <div>
-          <div style={{ fontSize: 13, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 2, color: 'var(--red)', marginBottom: 6 }}>
-            Find Your Match
-          </div>
-          <p style={{ fontSize: 16, fontWeight: 600, color: 'var(--black)', margin: 0 }}>
-            Over 12,400 properties waiting — no fees, no agents.
-          </p>
-        </div>
-        <Link href="/listings" style={{
-          padding: '14px 30px', background: 'var(--black)', color: '#fff',
-          borderRadius: 4, fontSize: 13, fontWeight: 600,
-          letterSpacing: '0.5px', textTransform: 'uppercase', whiteSpace: 'nowrap',
-        }}>
-          Browse All Properties →
-        </Link>
-      </div>
     </section>
   );
 }
@@ -307,14 +282,6 @@ export default function HomePage() {
         }} />
 
         <div style={{ position: 'relative', maxWidth: 700 }}>
-          <span style={{
-            display: 'inline-block', background: 'var(--red)', color: '#fff',
-            fontSize: 11, fontWeight: 600, letterSpacing: 2, textTransform: 'uppercase',
-            padding: '6px 14px', borderRadius: 2, marginBottom: 28,
-          }}>
-            No Agency Fees — Direct from Landlords
-          </span>
-
           <h1 style={{
             fontFamily: 'var(--font-serif)', fontSize: 'clamp(42px,6vw,80px)',
             fontWeight: 700, color: '#fff', lineHeight: 1.05, letterSpacing: '-1px', marginBottom: 22,
@@ -355,27 +322,6 @@ export default function HomePage() {
               Terms &amp; Conditions
             </Link>
           </div>
-        </div>
-
-        {/* Stats */}
-        <div style={{
-          position: 'absolute', bottom: 60, right: '5%',
-          display: 'flex', gap: 40,
-        }}>
-          {[
-            { num: '12,400+', label: 'Properties Listed' },
-            { num: '98%', label: 'Landlord Satisfaction' },
-            { num: '£0', label: 'Agency Fees' },
-          ].map(s => (
-            <div key={s.label} style={{ textAlign: 'right' }}>
-              <div style={{ fontFamily: 'var(--font-serif)', fontSize: 36, fontWeight: 700, color: '#fff' }}>
-                {s.num}
-              </div>
-              <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', letterSpacing: 1, textTransform: 'uppercase' }}>
-                {s.label}
-              </div>
-            </div>
-          ))}
         </div>
       </section>
 

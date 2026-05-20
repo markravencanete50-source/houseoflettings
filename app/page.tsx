@@ -286,16 +286,8 @@ export default function HomePage() {
         <div style={{ position: 'relative', maxWidth: 700 }}>
           {/* Logo */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 36 }}>
-            {/* HOL logo mark — house + N shape, matching uploaded logo */}
-            <svg width="56" height="56" viewBox="0 0 56 56" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <rect width="56" height="56" rx="8" fill="#0a1628"/>
-              {/* House roofline — arrow pointing up */}
-              <polygon points="28,8 48,26 44,26 44,48 32,48 32,36 24,36 24,48 12,48 12,26 8,26" fill="#1e88e5"/>
-              {/* N letterform overlaid in white on lower portion */}
-              <rect x="16" y="28" width="5" height="16" fill="white"/>
-              <rect x="35" y="28" width="5" height="16" fill="white"/>
-              <polygon points="16,28 21,28 40,44 35,44" fill="white"/>
-            </svg>
+            {/* HOL logo from file */}
+            <img src="/images/logo_HOL.png" alt="House of Lettings Logo" style={{ height: 60, width: 'auto' }} />
             <div style={{ lineHeight: 1.15 }}>
               <div style={{
                 fontFamily: 'var(--font-serif)', fontSize: 18, fontWeight: 600,

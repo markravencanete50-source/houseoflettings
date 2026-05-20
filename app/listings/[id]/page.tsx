@@ -10,6 +10,45 @@ import { getUserProfile } from '@/services/auth';
 import { useAuth } from '@/hooks/useAuth';
 import { Property } from '@/lib/types';
 
+// ── OpenRent-style info table ─────────────────────────────────────────────────
+function InfoTable({ title, rows }: {
+  title: string;
+  rows: { label: string; value: string }[];
+}) {
+  return (
+    <div style={{
+      border: '1px solid var(--gray-200)', borderRadius: 8, overflow: 'hidden',
+    }}>
+      <div style={{
+        padding: '12px 18px', background: 'var(--gray-100)',
+        borderBottom: '1px solid var(--gray-200)',
+        fontSize: 14, fontWeight: 700, color: 'var(--black)',
+      }}>
+        {title}
+      </div>
+      <div>
+        {rows.map((row, i) => (
+          <div key={row.label} style={{
+            display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+            padding: '11px 18px',
+            borderBottom: i < rows.length - 1 ? '1px solid var(--gray-100)' : 'none',
+            fontSize: 14,
+          }}>
+            <span style={{ color: 'var(--gray-600)' }}>{row.label}</span>
+            {row.value === 'check' ? (
+              <span style={{ color: '#16a34a', fontSize: 18, fontWeight: 700 }}>✓</span>
+            ) : row.value === 'cross' ? (
+              <span style={{ color: '#dc2626', fontSize: 16, fontWeight: 700 }}>✕</span>
+            ) : (
+              <span style={{ fontWeight: 500, color: 'var(--black)', textAlign: 'right', maxWidth: '55%' }}>{row.value}</span>
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export default function PropertyDetailPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
@@ -93,7 +132,7 @@ export default function PropertyDetailPage() {
     }
   };
 
-  // ── Loading state ─────────────────────────────────────────────────────────
+  // ── Loading ───────────────────────────────────────────────────────────────
   if (loading || authLoading) return (
     <>
       <Navbar />
@@ -128,7 +167,6 @@ export default function PropertyDetailPage() {
     ? 'Studio'
     : `${property.bedrooms} Bedroom${property.bedrooms > 1 ? 's' : ''}`;
 
-  // ── Helper to render a feature pill if the value exists ───────────────────
   const prop = property as any;
 
   const PARKING_LABELS: Record<string, string> = {
@@ -143,17 +181,8 @@ export default function PropertyDetailPage() {
   };
 
   const GARDEN_LABELS: Record<string, string> = {
-    'none': '', 'private': '🌿 Private garden', 'shared': '🌳 Shared garden', 'communal': '🏞️ Communal grounds',
+    'none': 'No garden', 'private': 'Private garden', 'shared': 'Shared garden', 'communal': 'Communal grounds',
   };
-
-  const features = [
-    prop.propertyType === 'room' ? '🛏 Room in shared house' : '🏡 Whole property',
-    prop.parking && prop.parking !== 'none' ? `🅿️ ${PARKING_LABELS[prop.parking] || prop.parking}` : null,
-    prop.garden && prop.garden !== 'none' ? GARDEN_LABELS[prop.garden] : null,
-    prop.balcony ? '🏙️ Balcony / terrace' : null,
-    prop.billsIncluded ? '💡 Bills included' : '💡 Bills excluded',
-    prop.videoTourUrl ? '🎥 Video tour available' : null,
-  ].filter(Boolean) as string[];
 
   return (
     <>
@@ -202,51 +231,38 @@ export default function PropertyDetailPage() {
                 </div>
               )}
 
-              {/* Video tour */}
-              {prop.videoTourUrl && (
-                <div style={{ marginTop: 12 }}>
-                  <a href={prop.videoTourUrl} target="_blank" rel="noopener noreferrer" style={{
-                    display: 'inline-flex', alignItems: 'center', gap: 8,
-                    padding: '10px 18px', background: 'var(--black)', color: '#fff',
-                    borderRadius: 4, fontSize: 13, fontWeight: 600, textDecoration: 'none',
-                  }}>
-                    🎥 Watch Video Tour
-                  </a>
-                </div>
-              )}
-
-              {/* Details */}
+              {/* Details card */}
               <div style={{ background: '#fff', border: '1px solid var(--gray-200)', borderRadius: 8, padding: 32, marginTop: 24 }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 24, flexWrap: 'wrap', gap: 12 }}>
-                  <div>
-                    {property.badge && (
-                      <span style={{
-                        display: 'inline-block', background: 'var(--red)', color: '#fff',
-                        fontSize: 10, fontWeight: 700, letterSpacing: 1.5, textTransform: 'uppercase',
-                        padding: '4px 10px', borderRadius: 2, marginBottom: 10,
-                      }}>
-                        {property.badge}
-                      </span>
-                    )}
-                    <h1 style={{ fontFamily: 'var(--font-serif)', fontSize: 32, fontWeight: 700, lineHeight: 1.2 }}>
-                      {property.title}
-                    </h1>
-                    <p style={{ color: 'var(--gray-400)', fontSize: 15, marginTop: 6 }}>📍 {property.location}</p>
-                  </div>
-                  <div style={{ textAlign: 'right' }}>
-                    <div style={{ fontFamily: 'var(--font-serif)', fontSize: 36, fontWeight: 700, color: 'var(--red)' }}>
+
+                {/* Title + price */}
+                <div style={{ marginBottom: 24 }}>
+                  {property.badge && (
+                    <span style={{
+                      display: 'inline-block', background: 'var(--red)', color: '#fff',
+                      fontSize: 10, fontWeight: 700, letterSpacing: 1.5, textTransform: 'uppercase',
+                      padding: '4px 10px', borderRadius: 2, marginBottom: 10,
+                    }}>
+                      {property.badge}
+                    </span>
+                  )}
+                  <h1 style={{ fontFamily: 'var(--font-serif)', fontSize: 30, fontWeight: 700, lineHeight: 1.25, marginBottom: 6 }}>
+                    {property.title}
+                  </h1>
+                  <p style={{ color: 'var(--gray-400)', fontSize: 14, marginBottom: 14 }}>📍 {property.location}</p>
+                  <div style={{ display: 'flex', alignItems: 'baseline', gap: 10 }}>
+                    <span style={{ fontFamily: 'var(--font-serif)', fontSize: 34, fontWeight: 700, color: 'var(--red)' }}>
                       £{property.price.toLocaleString()}
-                    </div>
-                    <div style={{ fontSize: 14, color: 'var(--gray-400)' }}>per month</div>
-                    {prop.depositAmount && (
-                      <div style={{ fontSize: 13, color: 'var(--gray-600)', marginTop: 4 }}>
-                        Deposit: £{Number(prop.depositAmount).toLocaleString()}
-                      </div>
-                    )}
+                    </span>
+                    <span style={{ fontSize: 14, color: 'var(--gray-400)' }}>per month</span>
                   </div>
+                  {prop.depositAmount && (
+                    <div style={{ fontSize: 13, color: 'var(--gray-500)', marginTop: 4 }}>
+                      Deposit: £{Number(prop.depositAmount).toLocaleString()}
+                    </div>
+                  )}
                 </div>
 
-                {/* Key Features Grid */}
+                {/* Key feature icons — keep the symbols! */}
                 <div style={{
                   display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16,
                   padding: '20px 0', borderTop: '1px solid var(--gray-200)', borderBottom: '1px solid var(--gray-200)',
@@ -260,47 +276,77 @@ export default function PropertyDetailPage() {
                   ].map(f => (
                     <div key={f.label} style={{ textAlign: 'center' }}>
                       <div style={{ fontSize: 24, marginBottom: 6 }}>{f.icon}</div>
-                      <div style={{ fontSize: 13, color: 'var(--gray-400)', marginBottom: 2 }}>{f.label}</div>
-                      <div style={{ fontSize: 15, fontWeight: 600, color: 'var(--black)' }}>{f.value}</div>
+                      <div style={{ fontSize: 12, color: 'var(--gray-400)', marginBottom: 2 }}>{f.label}</div>
+                      <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--black)' }}>{f.value}</div>
                     </div>
                   ))}
                 </div>
 
                 {/* Description */}
-                <h3 style={{ fontSize: 16, fontWeight: 700, marginBottom: 12 }}>About this property</h3>
-                <p style={{ fontSize: 15, color: 'var(--gray-600)', lineHeight: 1.75, whiteSpace: 'pre-line' }}>
+                <h3 style={{ fontSize: 15, fontWeight: 700, marginBottom: 10 }}>About this property</h3>
+                <p style={{ fontSize: 14, color: 'var(--gray-600)', lineHeight: 1.8, whiteSpace: 'pre-line', marginBottom: 32 }}>
                   {property.description}
                 </p>
 
-                {/* Features & Amenities */}
-                {features.length > 0 && (
-                  <div style={{ marginTop: 28 }}>
-                    <h3 style={{ fontSize: 16, fontWeight: 700, marginBottom: 14 }}>Features & Amenities</h3>
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
-                      {features.map(f => (
-                        <span key={f} style={{
-                          padding: '7px 14px', borderRadius: 20,
-                          background: 'var(--gray-100)', border: '1px solid var(--gray-200)',
-                          fontSize: 13, color: 'var(--gray-600)', fontWeight: 500,
-                        }}>
-                          {f}
-                        </span>
-                      ))}
-                    </div>
-                    {prop.billsIncluded && prop.billsNote && (
-                      <p style={{ fontSize: 13, color: 'var(--gray-400)', marginTop: 10 }}>
-                        ℹ️ {prop.billsNote}
-                      </p>
-                    )}
-                  </div>
-                )}
+                {/* ── OpenRent-style info tables ── */}
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
 
-                {property.availableFrom && (
-                  <div style={{ marginTop: 24, padding: '14px 18px', background: 'var(--gray-100)', borderRadius: 6, fontSize: 14 }}>
-                    📅 <strong>Available from:</strong>{' '}
-                    {new Date(property.availableFrom).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}
-                  </div>
-                )}
+                  <InfoTable title="Price & Bills" rows={[
+                    { label: 'Rent PCM', value: `£${property.price.toLocaleString()}` },
+                    { label: 'Deposit', value: prop.depositAmount ? `£${Number(prop.depositAmount).toLocaleString()}` : '—' },
+                    { label: 'Bills Included', value: prop.billsIncluded ? 'check' : 'cross' },
+                    ...(prop.billsIncluded && prop.billsNote ? [{ label: 'Bills Detail', value: prop.billsNote }] : []),
+                  ]} />
+
+                  <InfoTable title="Availability" rows={[
+                    {
+                      label: 'Available From',
+                      value: property.availableFrom
+                        ? new Date(property.availableFrom).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })
+                        : 'Now',
+                    },
+                    {
+                      label: 'Listing Type',
+                      value: prop.propertyType === 'room' ? 'Room in shared house' : 'Whole property',
+                    },
+                  ]} />
+
+                  <InfoTable title="Features" rows={[
+                    {
+                      label: 'Garden',
+                      value: prop.garden && prop.garden !== 'none' ? GARDEN_LABELS[prop.garden] || prop.garden : 'cross',
+                    },
+                    {
+                      label: 'Parking',
+                      value: prop.parking && prop.parking !== 'none' ? PARKING_LABELS[prop.parking] || prop.parking : 'cross',
+                    },
+                    { label: 'Balcony / Terrace', value: prop.balcony ? 'check' : 'cross' },
+                    {
+                      label: 'Furnishing',
+                      value: property.furnished
+                        ? property.furnished.charAt(0).toUpperCase() + property.furnished.slice(1)
+                        : '—',
+                    },
+                  ]} />
+
+                  {prop.videoTourUrl && (
+                    <div style={{ display: 'flex', alignItems: 'flex-end' }}>
+                      <a
+                        href={prop.videoTourUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{
+                          display: 'inline-flex', alignItems: 'center', gap: 8,
+                          padding: '11px 20px', background: 'var(--black)', color: '#fff',
+                          borderRadius: 4, fontSize: 13, fontWeight: 600, textDecoration: 'none',
+                        }}
+                      >
+                        🎥 Watch Video Tour
+                      </a>
+                    </div>
+                  )}
+
+                </div>
               </div>
             </div>
 

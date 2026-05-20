@@ -189,7 +189,7 @@ export default function PropertyDetailClient() {
                     </div>
                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8, fontSize: 14 }}>
                       <span style={{ color: '#444' }}>Deposit</span>
-                      <span style={{ fontWeight: 600, color: '#222' }}>£{property.deposit ? property.deposit.toLocaleString() : 'N/A'}</span>
+                      <span style={{ fontWeight: 600, color: '#222' }}>£{property.depositAmount ? property.depositAmount.toLocaleString() : 'N/A'}</span>
                     </div>
                     <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 14 }}>
                       <span style={{ color: '#444' }}>Bills Included</span>
@@ -213,7 +213,7 @@ export default function PropertyDetailClient() {
                     <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 14 }}>
                       <span style={{ color: '#444' }}>Listing Type</span>
                       <span style={{ fontWeight: 600, color: '#222' }}>
-                        {property.type ? property.type.charAt(0).toUpperCase() + property.type.slice(1) : 'N/A'}
+                        {property.propertyType ? property.propertyType.charAt(0).toUpperCase() + property.propertyType.slice(1) : 'N/A'}
                       </span>
                     </div>
                   </div>
@@ -224,9 +224,9 @@ export default function PropertyDetailClient() {
                   <h4 style={{ fontSize: 13, fontWeight: 700, color: '#222', marginBottom: 12, textTransform: 'uppercase', letterSpacing: 0.5 }}>Features</h4>
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '8px 24px' }}>
                     {[
-                      { label: 'Garden', value: property.garden },
-                      { label: 'Parking', value: property.parking },
-                      { label: 'Balcony / Terrace', value: property.balcony },
+                      { label: 'Garden', value: property.garden && property.garden !== 'none', isText: false },
+                      { label: 'Parking', value: property.parking && property.parking !== 'none', isText: false },
+                      { label: 'Balcony / Terrace', value: property.balcony, isText: false },
                       { label: 'Furnishing', value: property.furnished ? property.furnished.charAt(0).toUpperCase() + property.furnished.slice(1) : null, isText: true },
                     ].map(feat => (
                       <div key={feat.label} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 14 }}>

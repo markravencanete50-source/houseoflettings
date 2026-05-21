@@ -191,12 +191,23 @@ export default function TermsAndConditions() {
       content: (
         <>
           <p className="hol-body">If you have any questions about these Terms, please contact us:</p>
-          <div className="hol-card">
-            <p className="hol-card-name">House of Lettings</p>
-            <p>Peter House, Oxford Street, Manchester</p>
-            <p>Email: <a href="mailto:info@houseoflettings.co.uk" className="hol-link">info@houseoflettings.co.uk</a></p>
-            <p>Phone: <a href="tel:01617681758" className="hol-link">0161 768 1758</a></p>
-            <p>Office Hours: Monday – Friday, 9:00am – 5:30pm</p>
+          <div className="hol-offices-grid">
+            <div className="hol-card">
+              <p className="hol-card-label">Manchester Office</p>
+              <p className="hol-card-name">House of Lettings</p>
+              <p>Peter House, Oxford Street, Manchester</p>
+              <p>Email: <a href="mailto:info@houseoflettings.co.uk" className="hol-link">info@houseoflettings.co.uk</a></p>
+              <p>Phone: <a href="tel:01617681758" className="hol-link">0161 768 1758</a></p>
+              <p>Office Hours: Monday – Friday, 9:00am – 5:30pm</p>
+            </div>
+            <div className="hol-card">
+              <p className="hol-card-label">Leeds Office</p>
+              <p className="hol-card-name">House of Lettings Leeds</p>
+              <p>199 Roundhay Rd, Harehills, Leeds LS8 5PL, United Kingdom</p>
+              <p>Email: <a href="mailto:info@houseoflettings.co.uk" className="hol-link">info@houseoflettings.co.uk</a></p>
+              <p>Phone: <a href="tel:+441138689212" className="hol-link">+44 113 868 9212</a></p>
+              <p>Office Hours: Open · Closes 7 PM</p>
+            </div>
           </div>
         </>
       ),
@@ -372,7 +383,7 @@ export default function TermsAndConditions() {
           font-size: 11px;
           font-weight: 800;
           letter-spacing: 0.12em;
-          color: var(--gold);
+          color: #1a56db;
           min-width: 28px;
         }
         .hol-section-title {
@@ -413,7 +424,7 @@ export default function TermsAndConditions() {
           top: 14px;
           width: 6px;
           height: 6px;
-          background: var(--gold);
+          background: #1a56db;
           border-radius: 50%;
         }
         .hol-link {
@@ -469,6 +480,23 @@ export default function TermsAndConditions() {
           margin-bottom: 4px;
         }
         .hol-card a { color: var(--gold-light); }
+        .hol-offices-grid {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 16px;
+          margin-top: 16px;
+        }
+        @media (max-width: 560px) {
+          .hol-offices-grid { grid-template-columns: 1fr; }
+        }
+        .hol-card-label {
+          font-size: 10px;
+          font-weight: 700;
+          letter-spacing: 0.12em;
+          text-transform: uppercase;
+          color: var(--gold);
+          margin-bottom: 8px;
+        }
 
         /* ── Footer note ── */
         .hol-foot {
@@ -490,7 +518,7 @@ export default function TermsAndConditions() {
             <p className="hol-hero-eyebrow">Legal</p>
             <h1 className="hol-hero-title">Terms &amp; Conditions</h1>
             <div className="hol-hero-meta">
-              <span>Effective Date: May 2025</span>
+              <span>Effective Date: May 2026</span>
               <span>Version 1.0</span>
               <span>England &amp; Wales</span>
             </div>
@@ -539,8 +567,8 @@ export default function TermsAndConditions() {
 
           {/* Footer note */}
           <div className="hol-foot">
-            <p>Last reviewed: May 2025 · Version 1.0</p>
-            <p>© 2025 House of Lettings Ltd. All rights reserved.</p>
+            <p>Last reviewed: May 2026 · Version 1.1</p>
+            <p>© 2026 House of Lettings Ltd. All rights reserved.</p>
           </div>
 
         </div>

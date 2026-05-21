@@ -200,8 +200,8 @@ export default function PropertyDetailPage() {
           </span>
         </div>
 
-        <div style={{ padding: '40px 5%', maxWidth: 1100, margin: '0 auto' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 340px', gap: 40, alignItems: 'start' }}>
+        <div style={{ padding: '40px 5%', maxWidth: 1400, margin: '0 auto' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 380px', gap: 48, alignItems: 'start' }}>
 
             {/* ── Left Column ── */}
             <div>

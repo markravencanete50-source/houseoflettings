@@ -132,8 +132,70 @@ export default function PropertyDetailClient() {
                 </div>
               )}
 
+              {/* ── Price & Bills / Availability / Features — TOP OF LISTING ── */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginTop: 24 }}>
+                {/* Price & Bills */}
+                <div style={{ background: '#fff', border: '1px solid var(--gray-200)', borderRadius: 8, padding: '16px 20px' }}>
+                  <h4 style={{ fontSize: 13, fontWeight: 700, color: '#222', marginBottom: 12, textTransform: 'uppercase', letterSpacing: 0.5 }}>Price &amp; Bills</h4>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8, fontSize: 14 }}>
+                    <span style={{ color: '#444' }}>Rent PCM</span>
+                    <span style={{ fontWeight: 600, color: '#222' }}>£{property.price.toLocaleString()}</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8, fontSize: 14 }}>
+                    <span style={{ color: '#444' }}>Deposit</span>
+                    <span style={{ fontWeight: 600, color: '#222' }}>£{property.depositAmount ? property.depositAmount.toLocaleString() : 'N/A'}</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 14 }}>
+                    <span style={{ color: '#444' }}>Bills Included</span>
+                    <span style={{ color: property.billsIncluded ? '#166534' : '#c62828', fontWeight: 600 }}>
+                      {property.billsIncluded ? '✓' : '✗'}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Availability */}
+                <div style={{ background: '#fff', border: '1px solid var(--gray-200)', borderRadius: 8, padding: '16px 20px' }}>
+                  <h4 style={{ fontSize: 13, fontWeight: 700, color: '#222', marginBottom: 12, textTransform: 'uppercase', letterSpacing: 0.5 }}>Availability</h4>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8, fontSize: 14 }}>
+                    <span style={{ color: '#444' }}>Available From</span>
+                    <span style={{ fontWeight: 600, color: '#222' }}>
+                      {property.availableFrom
+                        ? new Date(property.availableFrom).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
+                        : 'Now'}
+                    </span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 14 }}>
+                    <span style={{ color: '#444' }}>Listing Type</span>
+                    <span style={{ fontWeight: 600, color: '#222' }}>
+                      {property.propertyType ? property.propertyType.charAt(0).toUpperCase() + property.propertyType.slice(1) : 'N/A'}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Features */}
+              <div style={{ background: '#fff', border: '1px solid var(--gray-200)', borderRadius: 8, padding: '16px 20px', marginTop: 16 }}>
+                <h4 style={{ fontSize: 13, fontWeight: 700, color: '#222', marginBottom: 12, textTransform: 'uppercase', letterSpacing: 0.5 }}>Features</h4>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '8px 24px' }}>
+                  {[
+                    { label: 'Garden', value: property.garden && property.garden !== 'none', isText: false },
+                    { label: 'Parking', value: property.parking && property.parking !== 'none', isText: false },
+                    { label: 'Balcony / Terrace', value: property.balcony, isText: false },
+                    { label: 'Furnishing', value: property.furnished ? property.furnished.charAt(0).toUpperCase() + property.furnished.slice(1) : null, isText: true },
+                  ].map(feat => (
+                    <div key={feat.label} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 14 }}>
+                      <span style={{ color: '#444' }}>{feat.label}</span>
+                      {feat.isText
+                        ? <span style={{ fontWeight: 600, color: '#222' }}>{feat.value || 'N/A'}</span>
+                        : <span style={{ color: feat.value ? '#166534' : '#c62828', fontWeight: 600 }}>{feat.value ? '✓' : '✗'}</span>
+                      }
+                    </div>
+                  ))}
+                </div>
+              </div>
+
               {/* Details */}
-              <div style={{ background: '#fff', border: '1px solid var(--gray-200)', borderRadius: 8, padding: 32, marginTop: 24 }}>
+              <div style={{ background: '#fff', border: '1px solid var(--gray-200)', borderRadius: 8, padding: 32, marginTop: 16 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 24, flexWrap: 'wrap', gap: 12 }}>
                   <div>
                     {property.badge && (
@@ -176,68 +238,6 @@ export default function PropertyDetailClient() {
                       <div style={{ fontSize: 15, fontWeight: 600, color: 'var(--black)' }}>{f.value}</div>
                     </div>
                   ))}
-                </div>
-
-                {/* Price & Bills / Availability / Features */}
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 28 }}>
-                  {/* Price & Bills */}
-                  <div style={{ border: '1px solid var(--gray-200)', borderRadius: 8, padding: '16px 20px' }}>
-                    <h4 style={{ fontSize: 13, fontWeight: 700, color: '#222', marginBottom: 12, textTransform: 'uppercase', letterSpacing: 0.5 }}>Price &amp; Bills</h4>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8, fontSize: 14 }}>
-                      <span style={{ color: '#444' }}>Rent PCM</span>
-                      <span style={{ fontWeight: 600, color: '#222' }}>£{property.price.toLocaleString()}</span>
-                    </div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8, fontSize: 14 }}>
-                      <span style={{ color: '#444' }}>Deposit</span>
-                      <span style={{ fontWeight: 600, color: '#222' }}>£{property.depositAmount ? property.depositAmount.toLocaleString() : 'N/A'}</span>
-                    </div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 14 }}>
-                      <span style={{ color: '#444' }}>Bills Included</span>
-                      <span style={{ color: property.billsIncluded ? '#166534' : '#c62828', fontWeight: 600 }}>
-                        {property.billsIncluded ? '✓' : '✗'}
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Availability */}
-                  <div style={{ border: '1px solid var(--gray-200)', borderRadius: 8, padding: '16px 20px' }}>
-                    <h4 style={{ fontSize: 13, fontWeight: 700, color: '#222', marginBottom: 12, textTransform: 'uppercase', letterSpacing: 0.5 }}>Availability</h4>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8, fontSize: 14 }}>
-                      <span style={{ color: '#444' }}>Available From</span>
-                      <span style={{ fontWeight: 600, color: '#222' }}>
-                        {property.availableFrom
-                          ? new Date(property.availableFrom).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
-                          : 'Now'}
-                      </span>
-                    </div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 14 }}>
-                      <span style={{ color: '#444' }}>Listing Type</span>
-                      <span style={{ fontWeight: 600, color: '#222' }}>
-                        {property.propertyType ? property.propertyType.charAt(0).toUpperCase() + property.propertyType.slice(1) : 'N/A'}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Features */}
-                <div style={{ border: '1px solid var(--gray-200)', borderRadius: 8, padding: '16px 20px', marginBottom: 28 }}>
-                  <h4 style={{ fontSize: 13, fontWeight: 700, color: '#222', marginBottom: 12, textTransform: 'uppercase', letterSpacing: 0.5 }}>Features</h4>
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '8px 24px' }}>
-                    {[
-                      { label: 'Garden', value: property.garden && property.garden !== 'none', isText: false },
-                      { label: 'Parking', value: property.parking && property.parking !== 'none', isText: false },
-                      { label: 'Balcony / Terrace', value: property.balcony, isText: false },
-                      { label: 'Furnishing', value: property.furnished ? property.furnished.charAt(0).toUpperCase() + property.furnished.slice(1) : null, isText: true },
-                    ].map(feat => (
-                      <div key={feat.label} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 14 }}>
-                        <span style={{ color: '#444' }}>{feat.label}</span>
-                        {feat.isText
-                          ? <span style={{ fontWeight: 600, color: '#222' }}>{feat.value || 'N/A'}</span>
-                          : <span style={{ color: feat.value ? '#166534' : '#c62828', fontWeight: 600 }}>{feat.value ? '✓' : '✗'}</span>
-                        }
-                      </div>
-                    ))}
-                  </div>
                 </div>
 
                 {/* Description */}

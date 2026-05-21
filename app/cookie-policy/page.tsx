@@ -43,9 +43,9 @@ export default function CookiePolicyPage() {
           </p>
           <div style={{ marginTop: 28, display: 'flex', gap: 24, flexWrap: 'wrap' }}>
             {[
-              { label: 'Last Updated', value: 'May 2025' },
+              { label: 'Last Updated', value: 'May 2026' },
               { label: 'Version', value: '1.0' },
-              { label: 'Applies To', value: 'houseoflettings.co.uk' },
+              { label: 'Applies To', value: 'houseoflettingsrent.vercel.app' },
             ].map(item => (
               <div key={item.label} style={{ borderLeft: '2px solid var(--red)', paddingLeft: 14 }}>
                 <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 4 }}>{item.label}</div>
@@ -152,7 +152,7 @@ export default function CookiePolicyPage() {
             <p>If you have questions or comments about our Cookie Policy, or wish to exercise your data rights, please contact us:</p>
             <div style={{ background: 'var(--gray-100)', border: '1px solid var(--gray-200)', borderRadius: 10, padding: '24px 28px', marginTop: 16 }}>
               {[
-                { label: 'Email', value: 'info@houseoflettings.co.uk' },
+                { label: 'Email', value: 'info@houseoflettingsrent.vercel.app' },
                 { label: 'Address', value: 'Peter House, Oxford Street, Manchester' },
                 { label: 'Telephone', value: '0161 768 1758' },
                 { label: 'Office Hours', value: 'Monday – Friday, 9:00am – 5:30pm' },
@@ -171,7 +171,7 @@ export default function CookiePolicyPage() {
               By continuing to use our website, you consent to our use of cookies in accordance with this policy.
             </p>
             <p style={{ color: 'rgba(255,255,255,0.3)', fontSize: 13, margin: 0 }}>
-              Last reviewed: May 2025 · © 2025 House of Lettings Ltd. All rights reserved.
+              Last reviewed: May 2026 · © 2026 House of Lettings Ltd. All rights reserved.
             </p>
           </div>
         </div>

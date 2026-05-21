@@ -231,66 +231,6 @@ export default function PropertyDetailPage() {
                 </div>
               )}
 
-              {/* ── OpenRent-style info tables — TOP of listing ── */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20, marginTop: 24 }}>
-
-                <InfoTable title="Price & Bills" rows={[
-                  { label: 'Rent PCM', value: `£${property.price.toLocaleString()}` },
-                  { label: 'Deposit', value: prop.depositAmount ? `£${Number(prop.depositAmount).toLocaleString()}` : '—' },
-                  { label: 'Bills Included', value: prop.billsIncluded ? 'check' : 'cross' },
-                  ...(prop.billsIncluded && prop.billsNote ? [{ label: 'Bills Detail', value: prop.billsNote }] : []),
-                ]} />
-
-                <InfoTable title="Availability" rows={[
-                  {
-                    label: 'Available From',
-                    value: property.availableFrom
-                      ? new Date(property.availableFrom).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })
-                      : 'Now',
-                  },
-                  {
-                    label: 'Listing Type',
-                    value: prop.propertyType === 'room' ? 'Room in shared house' : 'Whole property',
-                  },
-                ]} />
-
-                <InfoTable title="Features" rows={[
-                  {
-                    label: 'Garden',
-                    value: prop.garden && prop.garden !== 'none' ? GARDEN_LABELS[prop.garden] || prop.garden : 'cross',
-                  },
-                  {
-                    label: 'Parking',
-                    value: prop.parking && prop.parking !== 'none' ? PARKING_LABELS[prop.parking] || prop.parking : 'cross',
-                  },
-                  { label: 'Balcony / Terrace', value: prop.balcony ? 'check' : 'cross' },
-                  {
-                    label: 'Furnishing',
-                    value: property.furnished
-                      ? property.furnished.charAt(0).toUpperCase() + property.furnished.slice(1)
-                      : '—',
-                  },
-                ]} />
-
-                {prop.videoTourUrl && (
-                  <div style={{ display: 'flex', alignItems: 'flex-end' }}>
-                    <a
-                      href={prop.videoTourUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      style={{
-                        display: 'inline-flex', alignItems: 'center', gap: 8,
-                        padding: '11px 20px', background: 'var(--black)', color: '#fff',
-                        borderRadius: 4, fontSize: 13, fontWeight: 600, textDecoration: 'none',
-                      }}
-                    >
-                      🎥 Watch Video Tour
-                    </a>
-                  </div>
-                )}
-
-              </div>
-
               {/* Details card */}
               <div style={{ background: '#fff', border: '1px solid var(--gray-200)', borderRadius: 8, padding: 32, marginTop: 24 }}>
 
@@ -350,69 +290,10 @@ export default function PropertyDetailPage() {
 
               </div>
 
-              {/* ── OpenRent-style info tables — TOP of listing ── */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20, marginTop: 16 }}>
-
-                <InfoTable title="Price & Bills" rows={[
-                  { label: 'Rent PCM', value: `£${property.price.toLocaleString()}` },
-                  { label: 'Deposit', value: prop.depositAmount ? `£${Number(prop.depositAmount).toLocaleString()}` : '—' },
-                  { label: 'Bills Included', value: prop.billsIncluded ? 'check' : 'cross' },
-                  ...(prop.billsIncluded && prop.billsNote ? [{ label: 'Bills Detail', value: prop.billsNote }] : []),
-                ]} />
-
-                <InfoTable title="Availability" rows={[
-                  {
-                    label: 'Available From',
-                    value: property.availableFrom
-                      ? new Date(property.availableFrom).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })
-                      : 'Now',
-                  },
-                  {
-                    label: 'Listing Type',
-                    value: prop.propertyType === 'room' ? 'Room in shared house' : 'Whole property',
-                  },
-                ]} />
-
-                <InfoTable title="Features" rows={[
-                  {
-                    label: 'Garden',
-                    value: prop.garden && prop.garden !== 'none' ? GARDEN_LABELS[prop.garden] || prop.garden : 'cross',
-                  },
-                  {
-                    label: 'Parking',
-                    value: prop.parking && prop.parking !== 'none' ? PARKING_LABELS[prop.parking] || prop.parking : 'cross',
-                  },
-                  { label: 'Balcony / Terrace', value: prop.balcony ? 'check' : 'cross' },
-                  {
-                    label: 'Furnishing',
-                    value: property.furnished
-                      ? property.furnished.charAt(0).toUpperCase() + property.furnished.slice(1)
-                      : '—',
-                  },
-                ]} />
-
-                {prop.videoTourUrl && (
-                  <div style={{ display: 'flex', alignItems: 'flex-end' }}>
-                    <a
-                      href={prop.videoTourUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      style={{
-                        display: 'inline-flex', alignItems: 'center', gap: 8,
-                        padding: '11px 20px', background: 'var(--black)', color: '#fff',
-                        borderRadius: 4, fontSize: 13, fontWeight: 600, textDecoration: 'none',
-                      }}
-                    >
-                      🎥 Watch Video Tour
-                    </a>
-                  </div>
-                )}
-
-              </div>
             </div>
 
             {/* ── Right Column — Contact Card ── */}
-            <div style={{ position: 'sticky', top: 88 }}>
+            <div style={{ alignSelf: 'start' }}>
               <div style={{ background: '#fff', border: '1px solid var(--gray-200)', borderRadius: 8, padding: 28 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 24 }}>
                   <div style={{
@@ -484,6 +365,64 @@ export default function PropertyDetailPage() {
               }}>
                 ← Back to listings
               </Link>
+
+              {/* ── Info panels below Back to listings ── */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 16, marginTop: 24 }}>
+
+                <InfoTable title="Price & Bills" rows={[
+                  { label: 'Rent PCM', value: `£${property.price.toLocaleString()}` },
+                  { label: 'Deposit', value: prop.depositAmount ? `£${Number(prop.depositAmount).toLocaleString()}` : '—' },
+                  { label: 'Bills Included', value: prop.billsIncluded ? 'check' : 'cross' },
+                  ...(prop.billsIncluded && prop.billsNote ? [{ label: 'Bills Detail', value: prop.billsNote }] : []),
+                ]} />
+
+                <InfoTable title="Availability" rows={[
+                  {
+                    label: 'Available From',
+                    value: property.availableFrom
+                      ? new Date(property.availableFrom).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })
+                      : 'Now',
+                  },
+                  {
+                    label: 'Listing Type',
+                    value: prop.propertyType === 'room' ? 'Room in shared house' : 'Whole property',
+                  },
+                ]} />
+
+                <InfoTable title="Features" rows={[
+                  {
+                    label: 'Garden',
+                    value: prop.garden && prop.garden !== 'none' ? GARDEN_LABELS[prop.garden] || prop.garden : 'cross',
+                  },
+                  {
+                    label: 'Parking',
+                    value: prop.parking && prop.parking !== 'none' ? PARKING_LABELS[prop.parking] || prop.parking : 'cross',
+                  },
+                  { label: 'Balcony / Terrace', value: prop.balcony ? 'check' : 'cross' },
+                  {
+                    label: 'Furnishing',
+                    value: property.furnished
+                      ? property.furnished.charAt(0).toUpperCase() + property.furnished.slice(1)
+                      : '—',
+                  },
+                ]} />
+
+                {prop.videoTourUrl && (
+                  <a
+                    href={prop.videoTourUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{
+                      display: 'inline-flex', alignItems: 'center', gap: 8,
+                      padding: '11px 20px', background: 'var(--black)', color: '#fff',
+                      borderRadius: 4, fontSize: 13, fontWeight: 600, textDecoration: 'none',
+                    }}
+                  >
+                    🎥 Watch Video Tour
+                  </a>
+                )}
+
+              </div>
             </div>
 
           </div>

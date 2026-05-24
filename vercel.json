@@ -1,5 +1,10 @@
 {
   "buildCommand": "chmod +x ./node_modules/.bin/next && ./node_modules/.bin/next build",
   "installCommand": "npm install",
-  "framework": "nextjs"
+  "framework": "nextjs",
+  "functions": {
+    "app/api/upload/route.ts": {
+      "maxDuration": 60
+    }
+  }
 }

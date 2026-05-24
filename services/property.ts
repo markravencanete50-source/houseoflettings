@@ -50,7 +50,7 @@ export async function createProperty(
   // First create the doc to get an ID
   const docRef = await addDoc(collection(db, 'properties'), {
     ...data,
-    images: [],
+    images: data.images || [],
     createdAt: serverTimestamp(),
     status: 'active',
   });

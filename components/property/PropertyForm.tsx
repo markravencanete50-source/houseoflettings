@@ -127,6 +127,7 @@ export default function PropertyForm({
   // ── Images ──────────────────────────────────────────────────────────────
   const [imageFiles, setImageFiles] = useState<File[]>([]);
   const [previews, setPreviews]     = useState<string[]>(existing?.images || []);
+  const [uploadProgress, setUploadProgress] = useState<string>('');
   const [loading, setLoading]       = useState(false);
   const [error, setError]           = useState('');
 
@@ -164,6 +165,27 @@ export default function PropertyForm({
 
     setLoading(true);
     try {
+      // Upload new image files to Cloudinary
+      let uploadedUrls: string[] = [];
+      if (imageFiles.length > 0) {
+        setUploadProgress(`Uploading 0 of ${imageFiles.length} images...`);
+        const uploadPromises = imageFiles.map(async (file, i) => {
+          const formData = new FormData();
+          formData.append('file', file);
+          const res = await fetch('/api/upload', { method: 'POST', body: formData });
+          const json = await res.json();
+          if (!res.ok) throw new Error(json.error || 'Upload failed');
+          setUploadProgress(`Uploaded ${i + 1} of ${imageFiles.length} images...`);
+          return json.url as string;
+        });
+        uploadedUrls = await Promise.all(uploadPromises);
+        setUploadProgress('');
+      }
+
+      // Merge existing already-uploaded images with new Cloudinary URLs
+      const existingUrls = (existing?.images || []).filter(img => !img.startsWith('blob:'));
+      const allImages = [...existingUrls, ...uploadedUrls];
+
       const data: Omit<Property, 'id' | 'createdAt'> = {
         title,
         description,
@@ -174,11 +196,10 @@ export default function PropertyForm({
         sqft: sqft ? Number(sqft) : null,
         furnished: furnished as Property['furnished'],
         availableFrom,
-        images: existing?.images || [],
+        images: allImages,
         landlordId,
         landlordName,
         status: 'active',
-        // new fields
         propertyType,
         depositAmount: depositAmount ? Number(depositAmount) : null,
         parking,
@@ -192,9 +213,9 @@ export default function PropertyForm({
       } as any;
 
       if (existing?.id) {
-        await updateProperty(existing.id, data, imageFiles);
+        await updateProperty(existing.id, data, []);
       } else {
-        await createProperty(data, imageFiles);
+        await createProperty(data, []);
       }
 
       onSuccess();
@@ -202,6 +223,7 @@ export default function PropertyForm({
       setError(err.message || 'Failed to save property.');
     } finally {
       setLoading(false);
+      setUploadProgress('');
     }
   };
 
@@ -629,9 +651,12 @@ export default function PropertyForm({
             padding: '13px 32px', background: 'var(--red)', color: '#fff',
             border: 'none', borderRadius: 4, fontSize: 14, fontWeight: 600,
             cursor: loading ? 'not-allowed' : 'pointer', opacity: loading ? 0.6 : 1,
+            minWidth: 180,
           }}
         >
-          {loading ? 'Saving...' : existing ? 'Update Property' : 'Publish Listing'}
+          {loading
+            ? uploadProgress || 'Saving...'
+            : existing ? 'Update Property' : 'Publish Listing'}
         </button>
         <button
           type="button"

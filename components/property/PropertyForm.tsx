@@ -140,7 +140,7 @@ export default function PropertyForm({
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
     accept: { 'image/*': [] },
-    maxFiles: 8,
+    maxFiles: 20,
   });
 
   const removeImage = (idx: number) => {
@@ -607,7 +607,7 @@ export default function PropertyForm({
           <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--black)', marginBottom: 4 }}>
             {isDragActive ? 'Drop images here...' : 'Drag & drop images, or click to select'}
           </div>
-          <div style={{ fontSize: 13, color: 'var(--gray-400)' }}>Up to 8 images · JPG / PNG / WebP</div>
+          <div style={{ fontSize: 13, color: 'var(--gray-400)' }}>Up to 20 images · JPG / PNG / WebP</div>
         </div>
 
         {previews.length > 0 && (

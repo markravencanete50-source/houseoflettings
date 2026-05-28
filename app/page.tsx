@@ -1,143 +1,290 @@
-import Link from "next/link";
-import Navbar from "@/components/layout/Navbar";
+'use client';
+
+import Link from 'next/link';
+
+const colors = {
+  navy: '#0a1f44',
+  navyLight: '#1a3a6b',
+  charcoal: '#0d0d0d',
+  white: '#ffffff',
+  bgAlt: '#f7f8fa',
+  textMuted: '#6b7280',
+  border: '#e5e7eb',
+};
+
+const properties = [
+  {
+    id: 1,
+    title: 'Spacious 3-Bed Semi',
+    location: 'Coventry, CV2',
+    price: '£1,100 pcm',
+    beds: 3,
+    baths: 1,
+    image: '/images/property1.jpg',
+  },
+  {
+    id: 2,
+    title: 'Modern 2-Bed Apartment',
+    location: 'Coventry, CV1',
+    price: '£875 pcm',
+    beds: 2,
+    baths: 1,
+    image: '/images/property2.jpg',
+  },
+  {
+    id: 3,
+    title: 'Cosy 1-Bed Flat',
+    location: 'Coventry, CV3',
+    price: '£650 pcm',
+    beds: 1,
+    baths: 1,
+    image: '/images/property3.jpg',
+  },
+];
+
+const testimonials = [
+  {
+    name: 'Sarah M.',
+    text: 'House of Lettings made finding our home completely stress-free. Responsive, professional and genuinely caring.',
+  },
+  {
+    name: 'James T.',
+    text: 'As a landlord I\'ve used many agents — none come close to the communication and reliability here.',
+  },
+  {
+    name: 'Priya K.',
+    text: 'From viewing to moving in took under two weeks. Incredible service from start to finish.',
+  },
+];
 
 export default function Home() {
   return (
-    <main className="min-h-screen bg-white">
-      <Navbar />
+    <main>
 
       {/* ── HERO ── */}
       <section
-        className="relative min-h-screen flex items-center justify-center px-4 pt-20"
-        style={{ backgroundColor: "#0d0d0d" }}
+        style={{
+          background: colors.charcoal,
+          minHeight: '92vh',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          textAlign: 'center',
+          padding: '80px 24px',
+          position: 'relative',
+          overflow: 'hidden',
+        }}
       >
-        {/* Subtle background texture overlay */}
+        {/* Subtle background pattern */}
         <div
-          className="absolute inset-0 opacity-10"
+          aria-hidden="true"
           style={{
+            position: 'absolute',
+            inset: 0,
             backgroundImage:
-              "radial-gradient(circle at 20% 50%, #0a1f44 0%, transparent 50%), radial-gradient(circle at 80% 20%, #1a3a6b 0%, transparent 40%)",
+              'radial-gradient(circle at 20% 50%, rgba(10,31,68,0.4) 0%, transparent 60%), radial-gradient(circle at 80% 20%, rgba(10,31,68,0.3) 0%, transparent 50%)',
+            pointerEvents: 'none',
           }}
         />
 
-        <div className="relative z-10 max-w-4xl mx-auto text-center">
+        <div style={{ position: 'relative', maxWidth: 760, margin: '0 auto' }}>
           <p
-            className="text-xs font-semibold tracking-widest uppercase mb-6"
-            style={{ color: "#c9a84c" }}
+            style={{
+              color: colors.white,
+              opacity: 0.55,
+              fontSize: 13,
+              letterSpacing: '0.18em',
+              textTransform: 'uppercase',
+              marginBottom: 24,
+              fontFamily: 'system-ui, sans-serif',
+            }}
           >
-            Trusted Lettings Agency · Est. 2018
+            Coventry's Trusted Letting Agent
           </p>
 
-          <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold text-white leading-tight mb-6">
-            Find Your Perfect
-            <br />
-            <span style={{ color: "#c9a84c" }}>Rental Home</span>
+          <h1
+            style={{
+              color: colors.white,
+              fontSize: 'clamp(2.4rem, 6vw, 4.2rem)',
+              fontFamily: 'Georgia, "Times New Roman", serif',
+              fontWeight: 700,
+              lineHeight: 1.15,
+              marginBottom: 24,
+              letterSpacing: '-0.01em',
+            }}
+          >
+            Find Your Perfect Home <br />in Coventry
           </h1>
 
-          <p className="text-lg text-gray-300 max-w-2xl mx-auto mb-10">
-            House of Lettings connects landlords and tenants across the UK with
-            a personal, professional service you can trust.
+          <p
+            style={{
+              color: colors.white,
+              opacity: 0.75,
+              fontSize: 'clamp(1rem, 2vw, 1.2rem)',
+              maxWidth: 540,
+              margin: '0 auto 40px',
+              fontFamily: 'system-ui, sans-serif',
+              lineHeight: 1.7,
+            }}
+          >
+            We take the stress out of renting — for tenants and landlords alike.
+            Professional, personal, and always on your side.
           </p>
 
-          {/* CTA Buttons — includes Terms & Conditions */}
-          <div className="flex flex-wrap justify-center gap-3">
+          <div
+            style={{
+              display: 'flex',
+              gap: 16,
+              flexWrap: 'wrap',
+              justifyContent: 'center',
+            }}
+          >
             <Link
               href="/properties"
-              className="px-7 py-3 rounded-md font-semibold text-white text-sm transition-opacity hover:opacity-90"
-              style={{ backgroundColor: "#0a1f44" }}
+              style={{
+                background: colors.navy,
+                color: colors.white,
+                padding: '16px 36px',
+                borderRadius: 4,
+                fontFamily: 'system-ui, sans-serif',
+                fontWeight: 600,
+                fontSize: 15,
+                letterSpacing: '0.04em',
+                display: 'inline-block',
+                transition: 'background 0.2s',
+              }}
+              onMouseEnter={(e) =>
+                ((e.currentTarget as HTMLAnchorElement).style.background = colors.navyLight)
+              }
+              onMouseLeave={(e) =>
+                ((e.currentTarget as HTMLAnchorElement).style.background = colors.navy)
+              }
             >
-              Browse Properties
+              View Properties
             </Link>
-            <Link
-              href="/landlords"
-              className="px-7 py-3 rounded-md font-semibold text-sm border transition-colors hover:bg-white/10"
-              style={{ color: "#fff", borderColor: "rgba(255,255,255,0.4)" }}
-            >
-              List Your Property
-            </Link>
+
             <Link
               href="/terms"
-              className="px-7 py-3 rounded-md font-semibold text-sm border transition-colors hover:bg-white/10"
-              style={{ color: "#c9a84c", borderColor: "rgba(201,168,76,0.5)" }}
+              style={{
+                background: 'transparent',
+                color: colors.white,
+                padding: '15px 36px',
+                borderRadius: 4,
+                border: `1px solid rgba(255,255,255,0.35)`,
+                fontFamily: 'system-ui, sans-serif',
+                fontWeight: 500,
+                fontSize: 15,
+                letterSpacing: '0.04em',
+                display: 'inline-block',
+                transition: 'border-color 0.2s',
+              }}
+              onMouseEnter={(e) =>
+                ((e.currentTarget as HTMLAnchorElement).style.borderColor = 'rgba(255,255,255,0.7)')
+              }
+              onMouseLeave={(e) =>
+                ((e.currentTarget as HTMLAnchorElement).style.borderColor = 'rgba(255,255,255,0.35)')
+              }
             >
               Terms &amp; Conditions
             </Link>
           </div>
         </div>
-
-        {/* Scroll indicator */}
-        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 opacity-40">
-          <span className="text-white text-xs tracking-widest uppercase">
-            Scroll
-          </span>
-          <div className="w-px h-10 bg-white/40" />
-        </div>
       </section>
 
       {/* ── WHY CHOOSE US ── */}
-      <section className="py-20 px-4 bg-white">
-        <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-14">
-            <p
-              className="text-xs font-semibold tracking-widest uppercase mb-3"
-              style={{ color: "#c9a84c" }}
-            >
-              Why Choose Us
-            </p>
-            <h2
-              className="text-3xl sm:text-4xl font-bold"
-              style={{ color: "#0a1f44" }}
-            >
-              A Lettings Service Built on Trust
-            </h2>
-          </div>
+      <section
+        style={{
+          background: colors.white,
+          padding: '96px 24px',
+        }}
+      >
+        <div style={{ maxWidth: 1080, margin: '0 auto' }}>
+          <h2
+            style={{
+              color: colors.navy,
+              fontSize: 'clamp(1.8rem, 4vw, 2.8rem)',
+              fontFamily: 'Georgia, "Times New Roman", serif',
+              fontWeight: 700,
+              textAlign: 'center',
+              marginBottom: 16,
+            }}
+          >
+            Why Choose Us
+          </h2>
+          <p
+            style={{
+              color: colors.textMuted,
+              textAlign: 'center',
+              fontFamily: 'system-ui, sans-serif',
+              fontSize: 16,
+              marginBottom: 64,
+              maxWidth: 520,
+              margin: '0 auto 64px',
+            }}
+          >
+            Honest, straightforward letting — no hidden fees, no runaround.
+          </p>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
+              gap: 32,
+            }}
+          >
             {[
               {
-                icon: "🏡",
-                title: "Handpicked Properties",
-                desc: "Every listing is verified and presented with accurate details — no surprises.",
+                icon: '🏠',
+                title: 'Local Expertise',
+                body: 'Deep knowledge of the Coventry market means we find the right tenant or home, fast.',
               },
               {
-                icon: "🤝",
-                title: "Dedicated Support",
-                desc: "Our team is available to guide landlords and tenants through every step.",
+                icon: '📞',
+                title: 'Always Reachable',
+                body: 'We pick up the phone. Real people, real responses — no automated queues.',
               },
               {
-                icon: "📋",
-                title: "Transparent Process",
-                desc: "Clear contracts, fair fees, and honest communication from day one.",
+                icon: '📋',
+                title: 'Transparent Fees',
+                body: 'No surprise charges. Everything is explained upfront so you know exactly where you stand.',
               },
               {
-                icon: "⚡",
-                title: "Fast Turnaround",
-                desc: "Properties filled quickly with reliable, referenced tenants.",
-              },
-              {
-                icon: "🔒",
-                title: "Fully Compliant",
-                desc: "All lettings meet current UK regulations and safety standards.",
-              },
-              {
-                icon: "📍",
-                title: "Local Expertise",
-                desc: "Deep knowledge of the local market to get you the best outcome.",
+                icon: '🔑',
+                title: 'Hassle-Free Process',
+                body: 'From listing to keys in hand — we manage every step so you don\'t have to.',
               },
             ].map((item) => (
               <div
                 key={item.title}
-                className="p-6 rounded-xl border border-gray-100 hover:shadow-lg transition-shadow"
+                style={{
+                  background: colors.bgAlt,
+                  borderRadius: 8,
+                  padding: '36px 28px',
+                  borderTop: `3px solid ${colors.navy}`,
+                }}
               >
-                <div className="text-3xl mb-4">{item.icon}</div>
+                <div style={{ fontSize: 32, marginBottom: 16 }}>{item.icon}</div>
                 <h3
-                  className="text-lg font-semibold mb-2"
-                  style={{ color: "#0a1f44" }}
+                  style={{
+                    color: colors.navy,
+                    fontFamily: 'Georgia, "Times New Roman", serif',
+                    fontSize: 20,
+                    fontWeight: 700,
+                    marginBottom: 10,
+                  }}
                 >
                   {item.title}
                 </h3>
-                <p className="text-gray-500 text-sm leading-relaxed">
-                  {item.desc}
+                <p
+                  style={{
+                    color: colors.textMuted,
+                    fontFamily: 'system-ui, sans-serif',
+                    fontSize: 15,
+                    lineHeight: 1.65,
+                  }}
+                >
+                  {item.body}
                 </p>
               </div>
             ))}
@@ -146,169 +293,208 @@ export default function Home() {
       </section>
 
       {/* ── FEATURED PROPERTIES ── */}
-      <section className="py-20 px-4" style={{ backgroundColor: "#f7f8fa" }}>
-        <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-14">
-            <p
-              className="text-xs font-semibold tracking-widest uppercase mb-3"
-              style={{ color: "#c9a84c" }}
-            >
-              Available Now
-            </p>
-            <h2
-              className="text-3xl sm:text-4xl font-bold"
-              style={{ color: "#0a1f44" }}
-            >
-              Featured Properties
-            </h2>
-          </div>
+      <section
+        style={{
+          background: colors.bgAlt,
+          padding: '96px 24px',
+        }}
+      >
+        <div style={{ maxWidth: 1080, margin: '0 auto' }}>
+          <h2
+            style={{
+              color: colors.navy,
+              fontSize: 'clamp(1.8rem, 4vw, 2.8rem)',
+              fontFamily: 'Georgia, "Times New Roman", serif',
+              fontWeight: 700,
+              textAlign: 'center',
+              marginBottom: 16,
+            }}
+          >
+            Featured Properties
+          </h2>
+          <p
+            style={{
+              color: colors.textMuted,
+              textAlign: 'center',
+              fontFamily: 'system-ui, sans-serif',
+              fontSize: 16,
+              marginBottom: 64,
+              maxWidth: 480,
+              margin: '0 auto 64px',
+            }}
+          >
+            A selection of our current available lets across Coventry.
+          </p>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {[
-              {
-                type: "2 Bed Apartment",
-                location: "City Centre",
-                price: "£950 pcm",
-                tag: "Available Now",
-              },
-              {
-                type: "3 Bed House",
-                location: "Suburban Area",
-                price: "£1,200 pcm",
-                tag: "Just Listed",
-              },
-              {
-                type: "1 Bed Studio",
-                location: "Town Centre",
-                price: "£650 pcm",
-                tag: "Available Now",
-              },
-            ].map((prop) => (
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+              gap: 28,
+            }}
+          >
+            {properties.map((p) => (
               <div
-                key={prop.type + prop.location}
-                className="bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow"
+                key={p.id}
+                style={{
+                  background: colors.white,
+                  borderRadius: 8,
+                  overflow: 'hidden',
+                  boxShadow: '0 2px 16px rgba(10,31,68,0.08)',
+                }}
               >
                 <div
-                  className="h-48 flex items-center justify-center"
-                  style={{ backgroundColor: "#e8ecf5" }}
+                  style={{
+                    height: 210,
+                    background: `linear-gradient(135deg, ${colors.navy} 0%, ${colors.navyLight} 100%)`,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: colors.white,
+                    fontSize: 48,
+                  }}
                 >
-                  <span className="text-4xl">🏠</span>
+                  🏘️
                 </div>
-                <div className="p-5">
-                  <div className="flex items-center justify-between mb-2">
+                <div style={{ padding: '24px 20px' }}>
+                  <h3
+                    style={{
+                      color: colors.navy,
+                      fontFamily: 'Georgia, "Times New Roman", serif',
+                      fontSize: 18,
+                      fontWeight: 700,
+                      marginBottom: 6,
+                    }}
+                  >
+                    {p.title}
+                  </h3>
+                  <p
+                    style={{
+                      color: colors.textMuted,
+                      fontFamily: 'system-ui, sans-serif',
+                      fontSize: 14,
+                      marginBottom: 16,
+                    }}
+                  >
+                    📍 {p.location}
+                  </p>
+                  <div
+                    style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                    }}
+                  >
                     <span
-                      className="text-xs font-semibold px-2.5 py-1 rounded-full text-white"
-                      style={{ backgroundColor: "#0a1f44" }}
+                      style={{
+                        color: colors.navy,
+                        fontFamily: 'system-ui, sans-serif',
+                        fontWeight: 700,
+                        fontSize: 17,
+                      }}
                     >
-                      {prop.tag}
+                      {p.price}
                     </span>
                     <span
-                      className="text-lg font-bold"
-                      style={{ color: "#c9a84c" }}
+                      style={{
+                        color: colors.textMuted,
+                        fontFamily: 'system-ui, sans-serif',
+                        fontSize: 13,
+                      }}
                     >
-                      {prop.price}
+                      {p.beds} bed · {p.baths} bath
                     </span>
                   </div>
-                  <h3
-                    className="font-semibold text-base"
-                    style={{ color: "#0a1f44" }}
-                  >
-                    {prop.type}
-                  </h3>
-                  <p className="text-gray-500 text-sm mt-1">{prop.location}</p>
-                  <Link
-                    href="/properties"
-                    className="mt-4 block text-center py-2.5 rounded-md text-sm font-semibold text-white transition-opacity hover:opacity-90"
-                    style={{ backgroundColor: "#0a1f44" }}
-                  >
-                    View Details
-                  </Link>
                 </div>
               </div>
             ))}
           </div>
 
-          <div className="text-center mt-10">
+          <div style={{ textAlign: 'center', marginTop: 48 }}>
             <Link
               href="/properties"
-              className="inline-block px-8 py-3 rounded-md font-semibold text-sm border-2 transition-colors hover:text-white hover:bg-[#0a1f44]"
-              style={{ color: "#0a1f44", borderColor: "#0a1f44" }}
+              style={{
+                background: colors.navy,
+                color: colors.white,
+                padding: '15px 40px',
+                borderRadius: 4,
+                fontFamily: 'system-ui, sans-serif',
+                fontWeight: 600,
+                fontSize: 15,
+                display: 'inline-block',
+                letterSpacing: '0.04em',
+              }}
             >
-              View All Properties
+              See All Properties
             </Link>
           </div>
         </div>
       </section>
 
       {/* ── TESTIMONIALS ── */}
-      <section className="py-20 px-4 bg-white">
-        <div className="max-w-5xl mx-auto">
-          <div className="text-center mb-14">
-            <p
-              className="text-xs font-semibold tracking-widest uppercase mb-3"
-              style={{ color: "#c9a84c" }}
-            >
-              What People Say
-            </p>
-            <h2
-              className="text-3xl sm:text-4xl font-bold"
-              style={{ color: "#0a1f44" }}
-            >
-              Trusted by Hundreds
-            </h2>
-          </div>
+      <section
+        style={{
+          background: colors.navy,
+          padding: '96px 24px',
+        }}
+      >
+        <div style={{ maxWidth: 1080, margin: '0 auto' }}>
+          <h2
+            style={{
+              color: colors.white,
+              fontSize: 'clamp(1.8rem, 4vw, 2.8rem)',
+              fontFamily: 'Georgia, "Times New Roman", serif',
+              fontWeight: 700,
+              textAlign: 'center',
+              marginBottom: 56,
+            }}
+          >
+            What Our Clients Say
+          </h2>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {[
-              {
-                quote:
-                  "The whole process was smooth and stress-free. I found my flat within a week!",
-                name: "Sarah M.",
-                role: "Tenant",
-              },
-              {
-                quote:
-                  "My property was rented out within days. Professional and reliable team.",
-                name: "James K.",
-                role: "Landlord",
-              },
-              {
-                quote:
-                  "Excellent communication throughout. Would recommend to anyone.",
-                name: "Priya T.",
-                role: "Tenant",
-              },
-              {
-                quote:
-                  "They handled everything — I had zero headaches as a landlord.",
-                name: "David L.",
-                role: "Landlord",
-              },
-            ].map((t) => (
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+              gap: 24,
+            }}
+          >
+            {testimonials.map((t) => (
               <div
                 key={t.name}
-                className="p-6 rounded-xl border border-gray-100"
+                style={{
+                  background: 'rgba(255,255,255,0.07)',
+                  borderRadius: 8,
+                  padding: '32px 28px',
+                  border: '1px solid rgba(255,255,255,0.12)',
+                }}
               >
-                <p className="text-gray-600 text-sm leading-relaxed mb-5">
-                  &ldquo;{t.quote}&rdquo;
+                <p
+                  style={{
+                    color: colors.white,
+                    fontFamily: 'Georgia, "Times New Roman", serif',
+                    fontSize: 16,
+                    lineHeight: 1.7,
+                    fontStyle: 'italic',
+                    marginBottom: 24,
+                    opacity: 0.9,
+                  }}
+                >
+                  "{t.text}"
                 </p>
-                <div className="flex items-center gap-3">
-                  <div
-                    className="w-9 h-9 rounded-full flex items-center justify-center text-white text-sm font-bold"
-                    style={{ backgroundColor: "#0a1f44" }}
-                  >
-                    {t.name[0]}
-                  </div>
-                  <div>
-                    <p
-                      className="font-semibold text-sm"
-                      style={{ color: "#0a1f44" }}
-                    >
-                      {t.name}
-                    </p>
-                    <p className="text-gray-400 text-xs">{t.role}</p>
-                  </div>
-                </div>
+                <p
+                  style={{
+                    color: colors.white,
+                    fontFamily: 'system-ui, sans-serif',
+                    fontSize: 14,
+                    fontWeight: 600,
+                    opacity: 0.6,
+                    letterSpacing: '0.06em',
+                    textTransform: 'uppercase',
+                  }}
+                >
+                  — {t.name}
+                </p>
               </div>
             ))}
           </div>
@@ -317,53 +503,212 @@ export default function Home() {
 
       {/* ── CTA BANNER ── */}
       <section
-        className="py-20 px-4 text-center"
-        style={{ backgroundColor: "#0a1f44" }}
+        style={{
+          background: colors.charcoal,
+          padding: '88px 24px',
+          textAlign: 'center',
+        }}
       >
-        <div className="max-w-2xl mx-auto">
-          <h2 className="text-3xl sm:text-4xl font-bold text-white mb-4">
+        <div style={{ maxWidth: 640, margin: '0 auto' }}>
+          <h2
+            style={{
+              color: colors.white,
+              fontSize: 'clamp(1.6rem, 4vw, 2.4rem)',
+              fontFamily: 'Georgia, "Times New Roman", serif',
+              fontWeight: 700,
+              marginBottom: 16,
+            }}
+          >
             Ready to Get Started?
           </h2>
-          <p className="text-gray-300 mb-8">
-            Whether you&apos;re searching for a home or looking to let your
-            property — we&apos;re here to help.
+          <p
+            style={{
+              color: colors.white,
+              opacity: 0.65,
+              fontFamily: 'system-ui, sans-serif',
+              fontSize: 16,
+              marginBottom: 40,
+              lineHeight: 1.7,
+            }}
+          >
+            Whether you're looking for your next home or need a trusted agent for
+            your property — we're here to help.
           </p>
-          <div className="flex flex-wrap justify-center gap-4">
-            <Link
-              href="/properties"
-              className="px-7 py-3 rounded-md font-semibold text-sm text-white border-2 border-white transition-colors hover:bg-white hover:text-[#0a1f44]"
-            >
-              Find a Home
-            </Link>
-            <Link
-              href="/contact"
-              className="px-7 py-3 rounded-md font-semibold text-sm transition-opacity hover:opacity-90"
-              style={{ backgroundColor: "#c9a84c", color: "#0a1f44" }}
-            >
-              Contact Us
-            </Link>
-          </div>
+          <Link
+            href="/contact"
+            style={{
+              background: colors.white,
+              color: colors.navy,
+              padding: '16px 44px',
+              borderRadius: 4,
+              fontFamily: 'system-ui, sans-serif',
+              fontWeight: 700,
+              fontSize: 15,
+              display: 'inline-block',
+              letterSpacing: '0.04em',
+            }}
+          >
+            Contact Us
+          </Link>
         </div>
       </section>
 
       {/* ── FOOTER ── */}
       <footer
-        className="py-10 px-4 text-center text-sm"
-        style={{ backgroundColor: "#0d0d0d", color: "#888" }}
+        style={{
+          background: colors.navy,
+          padding: '56px 24px 32px',
+          color: colors.white,
+        }}
       >
-        <p className="mb-3">
-          © {new Date().getFullYear()} House of Lettings. All rights reserved.
-        </p>
-        <div className="flex flex-wrap justify-center gap-4 text-xs">
-          <Link href="/privacy" className="hover:text-white transition-colors">
-            Privacy Policy
-          </Link>
-          <Link href="/terms" className="hover:text-white transition-colors">
-            Terms &amp; Conditions
-          </Link>
-          <Link href="/contact" className="hover:text-white transition-colors">
-            Contact
-          </Link>
+        <div
+          style={{
+            maxWidth: 1080,
+            margin: '0 auto',
+          }}
+        >
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+              gap: 40,
+              marginBottom: 48,
+            }}
+          >
+            <div>
+              <h3
+                style={{
+                  fontFamily: 'Georgia, "Times New Roman", serif',
+                  fontSize: 20,
+                  fontWeight: 700,
+                  marginBottom: 12,
+                }}
+              >
+                House of Lettings
+              </h3>
+              <p
+                style={{
+                  opacity: 0.6,
+                  fontFamily: 'system-ui, sans-serif',
+                  fontSize: 14,
+                  lineHeight: 1.7,
+                }}
+              >
+                Coventry's trusted letting agent. <br />
+                Professional, personal, reliable.
+              </p>
+            </div>
+
+            <div>
+              <h4
+                style={{
+                  fontFamily: 'system-ui, sans-serif',
+                  fontSize: 13,
+                  fontWeight: 600,
+                  letterSpacing: '0.1em',
+                  textTransform: 'uppercase',
+                  opacity: 0.5,
+                  marginBottom: 16,
+                }}
+              >
+                Quick Links
+              </h4>
+              {['Properties', 'Landlords', 'Tenants', 'Contact'].map((link) => (
+                <div key={link} style={{ marginBottom: 10 }}>
+                  <Link
+                    href={`/${link.toLowerCase()}`}
+                    style={{
+                      fontFamily: 'system-ui, sans-serif',
+                      fontSize: 15,
+                      opacity: 0.75,
+                    }}
+                  >
+                    {link}
+                  </Link>
+                </div>
+              ))}
+            </div>
+
+            <div>
+              <h4
+                style={{
+                  fontFamily: 'system-ui, sans-serif',
+                  fontSize: 13,
+                  fontWeight: 600,
+                  letterSpacing: '0.1em',
+                  textTransform: 'uppercase',
+                  opacity: 0.5,
+                  marginBottom: 16,
+                }}
+              >
+                Legal
+              </h4>
+              {[
+                { label: 'Terms & Conditions', href: '/terms' },
+                { label: 'Privacy Policy', href: '/privacy' },
+              ].map((item) => (
+                <div key={item.label} style={{ marginBottom: 10 }}>
+                  <Link
+                    href={item.href}
+                    style={{
+                      fontFamily: 'system-ui, sans-serif',
+                      fontSize: 15,
+                      opacity: 0.75,
+                    }}
+                  >
+                    {item.label}
+                  </Link>
+                </div>
+              ))}
+            </div>
+
+            <div>
+              <h4
+                style={{
+                  fontFamily: 'system-ui, sans-serif',
+                  fontSize: 13,
+                  fontWeight: 600,
+                  letterSpacing: '0.1em',
+                  textTransform: 'uppercase',
+                  opacity: 0.5,
+                  marginBottom: 16,
+                }}
+              >
+                Contact
+              </h4>
+              <p
+                style={{
+                  fontFamily: 'system-ui, sans-serif',
+                  fontSize: 15,
+                  opacity: 0.75,
+                  lineHeight: 1.8,
+                }}
+              >
+                Coventry, UK<br />
+                <a href="mailto:info@houseoflettings.uk" style={{ opacity: 1 }}>
+                  info@houseoflettings.uk
+                </a>
+              </p>
+            </div>
+          </div>
+
+          <div
+            style={{
+              borderTop: '1px solid rgba(255,255,255,0.12)',
+              paddingTop: 24,
+              textAlign: 'center',
+            }}
+          >
+            <p
+              style={{
+                fontFamily: 'system-ui, sans-serif',
+                fontSize: 13,
+                opacity: 0.4,
+              }}
+            >
+              © {new Date().getFullYear()} House of Lettings. All rights reserved.
+            </p>
+          </div>
         </div>
       </footer>
     </main>

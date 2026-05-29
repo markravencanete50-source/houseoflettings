@@ -21,7 +21,7 @@ function ValuationInlineButton() {
           padding: '16px 48px', background: '#2563eb', color: '#fff',
           border: 'none', borderRadius: 6, fontSize: 16, fontWeight: 700,
           letterSpacing: '0.5px', cursor: 'pointer', transition: 'background 0.2s',
-          fontFamily: "Georgia, "Times New Roman", serif",
+          fontFamily: 'Georgia, "Times New Roman", serif',
         }}
         onMouseEnter={e => (e.currentTarget.style.background = '#1d4ed8')}
         onMouseLeave={e => (e.currentTarget.style.background = '#2563eb')}

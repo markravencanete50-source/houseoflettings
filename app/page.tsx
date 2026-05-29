@@ -114,7 +114,7 @@ function ImageGallery() {
       <div style={{ padding: '0 5%', marginBottom: 48 }}>
         <div style={{
           fontSize: 11, fontWeight: 700, letterSpacing: 3, textTransform: 'uppercase',
-          color: '#c9a96e', marginBottom: 14,
+          color: '#2563eb', marginBottom: 14,
         }}>
           Properties We Love
         </div>
@@ -163,7 +163,7 @@ function ImageGallery() {
                 ? '0 20px 50px rgba(15,31,61,0.22)'
                 : '0 6px 24px rgba(0,0,0,0.08)',
               cursor: 'pointer',
-              outline: active === i ? '2px solid #c9a96e' : '2px solid transparent',
+              outline: active === i ? '2px solid #2563eb' : '2px solid transparent',
               outlineOffset: 3,
             }}
           >
@@ -208,7 +208,7 @@ function ImageGallery() {
             {active === i && (
               <div style={{
                 position: 'absolute', top: 14, right: 14,
-                background: '#c9a96e', color: '#fff',
+                background: '#1e3a6e', color: '#fff',
                 fontSize: 10, fontWeight: 700, letterSpacing: 1.5,
                 textTransform: 'uppercase', padding: '4px 10px', borderRadius: 20,
               }}>
@@ -231,7 +231,7 @@ function ImageGallery() {
               width: active === i ? 28 : 8,
               height: 8,
               borderRadius: 4,
-              background: active === i ? '#c9a96e' : '#e5e7eb',
+              background: active === i ? '#2563eb' : '#e5e7eb',
             }}
           />
         ))}
@@ -286,7 +286,7 @@ export default function HomePage() {
         {/* Gold accent radial */}
         <div style={{
           position: 'absolute', inset: 0,
-          background: 'radial-gradient(ellipse at 70% 50%, rgba(201,169,110,0.07) 0%, transparent 60%)',
+          background: 'radial-gradient(ellipse at 70% 50%, rgba(30,58,110,0.15) 0%, transparent 60%)',
           pointerEvents: 'none',
         }} />
 
@@ -321,7 +321,7 @@ export default function HomePage() {
           <h1 style={{
             fontFamily: 'Georgia, "Times New Roman", serif',
             fontSize: 'clamp(32px,5vw,66px)',
-            fontWeight: 500, color: '#c9a96e', lineHeight: 1.08, letterSpacing: '-0.5px', marginBottom: 28,
+            fontWeight: 500, color: '#4a90d9', lineHeight: 1.08, letterSpacing: '-0.5px', marginBottom: 28,
             textTransform: 'uppercase',
           }}>
             You Enjoy the Returns.
@@ -329,8 +329,8 @@ export default function HomePage() {
 
           {/* Divider */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 20 }}>
-            <div style={{ width: 32, height: 1, background: 'rgba(201,169,110,0.4)' }} />
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="rgba(201,169,110,0.6)" xmlns="http://www.w3.org/2000/svg">
+            <div style={{ width: 32, height: 1, background: 'rgba(255,255,255,0.25)' }} />
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="rgba(255,255,255,0.4)" xmlns="http://www.w3.org/2000/svg">
               <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
             </svg>
           </div>
@@ -344,7 +344,7 @@ export default function HomePage() {
 
           <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap' }}>
             <Link href="/listings" style={{
-              padding: '16px 36px', background: '#c9a96e', color: '#0f1f3d', border: 'none',
+              padding: '16px 36px', background: '#1e3a6e', color: '#ffffff', border: 'none',
               borderRadius: 4, fontSize: 14, fontWeight: 700, letterSpacing: '0.5px', textTransform: 'uppercase',
               textDecoration: 'none',
             }}>
@@ -424,7 +424,7 @@ export default function HomePage() {
               borderRadius: 4, fontSize: 14, fontWeight: 600, whiteSpace: 'nowrap',
               textTransform: 'uppercase', letterSpacing: '0.5px', cursor: 'pointer', transition: 'background .2s',
             }}
-              onMouseEnter={e => (e.currentTarget.style.background = '#c9a96e')}
+              onMouseEnter={e => (e.currentTarget.style.background = '#162849')}
               onMouseLeave={e => (e.currentTarget.style.background = '#0f1f3d')}
             >
               Search
@@ -437,7 +437,7 @@ export default function HomePage() {
       <section style={{ padding: '90px 5%' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 56 }}>
           <div>
-            <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 3, textTransform: 'uppercase', color: '#c9a96e', marginBottom: 14 }}>
+            <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 3, textTransform: 'uppercase', color: '#2563eb', marginBottom: 14 }}>
               Latest Listings
             </div>
             <h2 style={{ fontFamily: 'Georgia, "Times New Roman", serif', fontSize: 'clamp(32px,4vw,52px)', fontWeight: 700, lineHeight: 1.1, letterSpacing: '-0.5px', color: '#0f1f3d' }}>
@@ -464,7 +464,7 @@ export default function HomePage() {
             <p style={{ fontSize: 14, marginTop: 8 }}>Be the first to list a property!</p>
             <Link href="/register" style={{
               display: 'inline-block', marginTop: 20, padding: '12px 24px',
-              background: '#c9a96e', color: '#0f1f3d', borderRadius: 4, fontSize: 14, fontWeight: 700,
+              background: '#1e3a6e', color: '#ffffff', borderRadius: 4, fontSize: 14, fontWeight: 700,
               textDecoration: 'none',
             }}>
               List Your Property →
@@ -476,7 +476,7 @@ export default function HomePage() {
       {/* ── HOW IT WORKS ─────────────────────────────────────── */}
       <section style={{ padding: '90px 5%', background: '#f7f8fa', borderTop: '1px solid #e5e7eb' }}>
         <div style={{ marginBottom: 56 }}>
-          <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 3, textTransform: 'uppercase', color: '#c9a96e', marginBottom: 14 }}>
+          <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 3, textTransform: 'uppercase', color: '#2563eb', marginBottom: 14 }}>
             How It Works
           </div>
           <h2 style={{ fontFamily: 'Georgia, "Times New Roman", serif', fontSize: 'clamp(32px,4vw,52px)', fontWeight: 700, color: '#0f1f3d' }}>
@@ -509,7 +509,7 @@ export default function HomePage() {
               <div style={{
                 fontSize: 11, fontWeight: 700, letterSpacing: 3, textTransform: 'uppercase',
                 color: '#0f1f3d', marginBottom: 28, paddingBottom: 12,
-                borderBottom: '2px solid #c9a96e', display: 'inline-block',
+                borderBottom: '2px solid #2563eb', display: 'inline-block',
               }}>
                 {col.role}
               </div>
@@ -544,12 +544,12 @@ export default function HomePage() {
       }}>
         <div style={{
           position: 'absolute', inset: 0,
-          background: 'radial-gradient(ellipse at 20% 50%, rgba(201,169,110,0.08) 0%, transparent 60%)',
+          background: 'radial-gradient(ellipse at 20% 50%, rgba(30,58,110,0.2) 0%, transparent 60%)',
           pointerEvents: 'none',
         }} />
         <div style={{ position: 'relative' }}>
           <h2 style={{ fontFamily: 'Georgia, "Times New Roman", serif', fontSize: 'clamp(28px,3.5vw,48px)', fontWeight: 700, color: '#fff', marginBottom: 12 }}>
-            Ready to find your<br /><span style={{ color: '#c9a96e' }}>perfect home?</span>
+            Ready to find your<br /><span style={{ color: '#4a90d9' }}>perfect home?</span>
           </h2>
           <p style={{ color: 'rgba(255,255,255,0.55)', fontSize: 16, fontWeight: 300 }}>
             Join thousands of landlords and tenants already using House of Lettings.
@@ -557,7 +557,7 @@ export default function HomePage() {
         </div>
         <div style={{ display: 'flex', gap: 14, position: 'relative' }}>
           <Link href="/register" style={{
-            padding: '16px 36px', background: '#c9a96e', color: '#0f1f3d',
+            padding: '16px 36px', background: '#1e3a6e', color: '#ffffff',
             borderRadius: 4, fontSize: 14, fontWeight: 700, letterSpacing: '0.5px', textTransform: 'uppercase',
             textDecoration: 'none',
           }}>
@@ -576,7 +576,7 @@ export default function HomePage() {
 
       {/* ── FOOTER ───────────────────────────────────────────── */}
       <footer style={{
-        background: '#050a12', borderTop: '1px solid rgba(201,169,110,0.12)',
+        background: '#050a12', borderTop: '1px solid rgba(255,255,255,0.06)',
         padding: '48px 5%',
       }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 20 }}>
@@ -584,7 +584,7 @@ export default function HomePage() {
             fontFamily: 'Georgia, "Times New Roman", serif', fontSize: 20, fontWeight: 700,
             color: '#fff', display: 'flex', alignItems: 'center', gap: 10,
           }}>
-            <span style={{ width: 7, height: 7, background: '#c9a96e', borderRadius: '50%', display: 'inline-block' }} />
+            <span style={{ width: 7, height: 7, background: '#2563eb', borderRadius: '50%', display: 'inline-block' }} />
             House of Lettings
           </div>
           <p style={{ color: 'rgba(255,255,255,0.25)', fontSize: 13 }}>

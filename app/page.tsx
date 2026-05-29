@@ -403,7 +403,7 @@ export default function HomePage() {
 
       {/* ── BOOK A VALUATION ─────────────────────────────────── */}
       <section style={{
-        padding: '100px 8%',
+        padding: '100px 5%',
         position: 'relative',
         overflow: 'hidden',
       }}>

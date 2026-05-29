@@ -10,64 +10,32 @@ import { Property } from '@/lib/types';
 
 const ValuationModal = lazy(() => import('@/components/ValuationModal'));
 
-// ── STICKY VALUATION BAR ──────────────────────────────────────────────────────
-function StickyValuationBar() {
+// ── INLINE VALUATION BUTTON ───────────────────────────────────────────────────
+function ValuationInlineButton() {
   const [open, setOpen] = useState(false);
-  const [visible, setVisible] = useState(false);
-
-  useEffect(() => {
-    const onScroll = () => setVisible(window.scrollY > 300);
-    window.addEventListener('scroll', onScroll);
-    return () => window.removeEventListener('scroll', onScroll);
-  }, []);
-
   return (
     <>
-      <div style={{
-        position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 999,
-        background: '#0f1f3d',
-        borderTop: '1px solid rgba(255,255,255,0.1)',
-        padding: '18px 5%',
-        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        gap: 24, flexWrap: 'wrap',
-        transform: visible ? 'translateY(0)' : 'translateY(100%)',
-        transition: 'transform 0.35s ease',
-        boxShadow: '0 -4px 32px rgba(0,0,0,0.35)',
-      }}>
-        <div>
-          <div style={{
-            fontFamily: 'Georgia, "Times New Roman", serif',
-            fontSize: 'clamp(15px,2vw,20px)', fontWeight: 700,
-            color: '#fff', marginBottom: 4,
-          }}>
-            Are you ready to sell or let your property?
-          </div>
-          <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.55)', fontWeight: 300, maxWidth: 560 }}>
-            Book a free sales or lettings valuation with your local agent — they'll give you the most accurate valuation.
-          </div>
-        </div>
-        <button
-          onClick={() => setOpen(true)}
-          style={{
-            padding: '14px 36px', background: '#2563eb', color: '#fff',
-            border: 'none', borderRadius: 4, fontSize: 14, fontWeight: 700,
-            letterSpacing: '0.5px', textTransform: 'uppercase', cursor: 'pointer',
-            whiteSpace: 'nowrap', flexShrink: 0,
-            transition: 'background 0.2s ease',
-          }}
-          onMouseEnter={e => (e.currentTarget.style.background = '#1d4ed8')}
-          onMouseLeave={e => (e.currentTarget.style.background = '#2563eb')}
-        >
-          Book a Valuation
-        </button>
-      </div>
-
+      <button
+        onClick={() => setOpen(true)}
+        style={{
+          padding: '16px 48px', background: '#2563eb', color: '#fff',
+          border: 'none', borderRadius: 6, fontSize: 16, fontWeight: 700,
+          letterSpacing: '0.5px', cursor: 'pointer', transition: 'background 0.2s',
+          fontFamily: 'Georgia, "Times New Roman", serif',
+        }}
+        onMouseEnter={e => (e.currentTarget.style.background = '#1d4ed8')}
+        onMouseLeave={e => (e.currentTarget.style.background = '#2563eb')}
+      >
+        Book a valuation
+      </button>
       <Suspense fallback={null}>
         {open && <ValuationModal isOpen={open} onClose={() => setOpen(false)} />}
       </Suspense>
     </>
   );
 }
+
+
 
 // ── GALLERY DATA ─────────────────────────────────────────────────────────────
 const GALLERY_ITEMS = [
@@ -432,24 +400,58 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* ── BOOK A VALUATION ─────────────────────────────────── */}
+      <section style={{ background: '#162849', padding: '64px 5%' }}>
+        <div style={{ maxWidth: 680 }}>
+          <h2 style={{
+            fontFamily: 'Georgia, "Times New Roman", serif',
+            fontSize: 'clamp(24px,4vw,40px)', fontWeight: 700,
+            color: '#fff', lineHeight: 1.2, marginBottom: 20,
+          }}>
+            Are you ready to sell or let your property?
+          </h2>
+          <p style={{
+            fontSize: 16, color: 'rgba(255,255,255,0.65)', lineHeight: 1.8,
+            marginBottom: 36, fontWeight: 300, maxWidth: 560,
+          }}>
+            Book a free sales or lettings valuation with your local agent, and they will use their local knowledge and expertise to give you the most accurate sales or lettings valuation.
+          </p>
+          <ValuationInlineButton />
+        </div>
+      </section>
+
       {/* ── SEARCH BAR ───────────────────────────────────────── */}
-      <section style={{ background: '#f7f8fa', padding: '40px 5%', borderBottom: '1px solid #e5e7eb' }}>
+      <section style={{ background: '#f7f8fa', padding: '56px 5%', borderBottom: '1px solid #e5e7eb' }}>
         <div style={{
-          background: '#fff', borderRadius: 8, padding: '28px 32px',
-          boxShadow: '0 4px 24px rgba(0,0,0,0.06)', border: '1px solid #e5e7eb',
+          background: '#fff', borderRadius: 10, padding: '40px 40px',
+          boxShadow: '0 4px 32px rgba(0,0,0,0.08)', border: '1px solid #e5e7eb',
         }}>
-          <div style={{ fontSize: 14, fontWeight: 600, letterSpacing: 1, textTransform: 'uppercase', color: '#9ca3af', marginBottom: 20 }}>
+          <div style={{ fontSize: 13, fontWeight: 700, letterSpacing: 2, textTransform: 'uppercase', color: '#9ca3af', marginBottom: 28 }}>
             Search Properties
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr auto', gap: 12, alignItems: 'end' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr auto', gap: 16, alignItems: 'end' }}>
             <div>
-              <label className="form-label">Location</label>
-              <input className="form-input" value={location} onChange={e => setLocation(e.target.value)}
-                placeholder="City, postcode or area…" onKeyDown={e => e.key === 'Enter' && handleSearch()} />
+              <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#6b7280', marginBottom: 8, textTransform: 'uppercase', letterSpacing: 1 }}>Location</label>
+              <input
+                value={location} onChange={e => setLocation(e.target.value)}
+                placeholder="City, postcode or area…"
+                onKeyDown={e => e.key === 'Enter' && handleSearch()}
+                style={{
+                  width: '100%', padding: '14px 16px', fontSize: 15,
+                  border: '1px solid #d1d5db', borderRadius: 6, outline: 'none',
+                  fontFamily: 'Georgia, "Times New Roman", serif', color: '#0f1f3d',
+                  boxSizing: 'border-box',
+                }}
+              />
             </div>
             <div>
-              <label className="form-label">Min Price</label>
-              <select className="form-select" value={minPrice} onChange={e => setMinPrice(e.target.value)}>
+              <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#6b7280', marginBottom: 8, textTransform: 'uppercase', letterSpacing: 1 }}>Min Price</label>
+              <select value={minPrice} onChange={e => setMinPrice(e.target.value)} style={{
+                width: '100%', padding: '14px 16px', fontSize: 15,
+                border: '1px solid #d1d5db', borderRadius: 6, outline: 'none',
+                fontFamily: 'Georgia, "Times New Roman", serif', color: '#0f1f3d',
+                background: '#fff', cursor: 'pointer',
+              }}>
                 <option value="">No min</option>
                 <option value="500">£500/mo</option>
                 <option value="800">£800/mo</option>
@@ -459,8 +461,13 @@ export default function HomePage() {
               </select>
             </div>
             <div>
-              <label className="form-label">Max Price</label>
-              <select className="form-select" value={maxPrice} onChange={e => setMaxPrice(e.target.value)}>
+              <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#6b7280', marginBottom: 8, textTransform: 'uppercase', letterSpacing: 1 }}>Max Price</label>
+              <select value={maxPrice} onChange={e => setMaxPrice(e.target.value)} style={{
+                width: '100%', padding: '14px 16px', fontSize: 15,
+                border: '1px solid #d1d5db', borderRadius: 6, outline: 'none',
+                fontFamily: 'Georgia, "Times New Roman", serif', color: '#0f1f3d',
+                background: '#fff', cursor: 'pointer',
+              }}>
                 <option value="">No max</option>
                 <option value="1000">£1,000/mo</option>
                 <option value="1500">£1,500/mo</option>
@@ -470,8 +477,13 @@ export default function HomePage() {
               </select>
             </div>
             <div>
-              <label className="form-label">Bedrooms</label>
-              <select className="form-select" value={bedrooms} onChange={e => setBedrooms(e.target.value)}>
+              <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#6b7280', marginBottom: 8, textTransform: 'uppercase', letterSpacing: 1 }}>Bedrooms</label>
+              <select value={bedrooms} onChange={e => setBedrooms(e.target.value)} style={{
+                width: '100%', padding: '14px 16px', fontSize: 15,
+                border: '1px solid #d1d5db', borderRadius: 6, outline: 'none',
+                fontFamily: 'Georgia, "Times New Roman", serif', color: '#0f1f3d',
+                background: '#fff', cursor: 'pointer',
+              }}>
                 <option value="">Any</option>
                 <option value="0">Studio</option>
                 <option value="1">1+</option>
@@ -481,9 +493,9 @@ export default function HomePage() {
               </select>
             </div>
             <button onClick={handleSearch} style={{
-              padding: '13px 28px', background: '#0f1f3d', color: '#fff', border: 'none',
-              borderRadius: 4, fontSize: 14, fontWeight: 600, whiteSpace: 'nowrap',
-              textTransform: 'uppercase', letterSpacing: '0.5px', cursor: 'pointer', transition: 'background .2s',
+              padding: '14px 32px', background: '#0f1f3d', color: '#fff', border: 'none',
+              borderRadius: 6, fontSize: 15, fontWeight: 700, whiteSpace: 'nowrap',
+              textTransform: 'uppercase', letterSpacing: '1px', cursor: 'pointer', transition: 'background .2s',
             }}
               onMouseEnter={e => (e.currentTarget.style.background = '#162849')}
               onMouseLeave={e => (e.currentTarget.style.background = '#0f1f3d')}
@@ -491,6 +503,200 @@ export default function HomePage() {
               Search
             </button>
           </div>
+        </div>
+      </section>
+
+      {/* ── INFO CARDS ───────────────────────────────────────── */}
+      <section style={{ padding: '90px 5%', background: '#0f1f3d' }}>
+        <div style={{ marginBottom: 56, textAlign: 'center' }}>
+          <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 3, textTransform: 'uppercase', color: '#4a90d9', marginBottom: 14 }}>
+            Our Services
+          </div>
+          <h2 style={{ fontFamily: 'Georgia, "Times New Roman", serif', fontSize: 'clamp(28px,4vw,48px)', fontWeight: 700, color: '#fff', margin: 0 }}>
+            How We Can Help
+          </h2>
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 24 }}>
+          {[
+            {
+              title: 'For Landlords',
+              body: 'Renting your property should feel straightforward and cost-effective. Our service keeps the process clear with transparent pricing and flexible options, from free tools to low-cost packages including advertising, enquiry handling, and professional tenancy setup.',
+            },
+            {
+              title: 'For Tenants',
+              body: 'Our goal is to make finding your next home straightforward, safe, and comfortable. We offer flexible search options for different needs — pet-friendly homes, student accommodation, and properties suitable for a range of lifestyles. No pressure, no unnecessary office visits.',
+            },
+            {
+              title: 'Property Management',
+              body: 'From accurate valuations and professional photography to comprehensive tenant screening and 12-month guarantee insurance, we ensure your property is in the best hands at every stage of the letting process.',
+            },
+          ].map(card => (
+            <div key={card.title} style={{
+              background: '#162849',
+              borderRadius: 10, padding: '32px 28px',
+              border: '1px solid rgba(255,255,255,0.08)',
+            }}>
+              <h3 style={{
+                fontFamily: 'Georgia, "Times New Roman", serif',
+                fontSize: 20, fontWeight: 700, color: '#fff',
+                marginBottom: 16,
+              }}>
+                {card.title}
+              </h3>
+              <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.65)', lineHeight: 1.8, margin: 0 }}>
+                {card.body}
+              </p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* ── PRICING TABLE ─────────────────────────────────────── */}
+      <section style={{ padding: '90px 5%', background: '#0a1628' }}>
+        <div style={{ marginBottom: 56, textAlign: 'center' }}>
+          <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 3, textTransform: 'uppercase', color: '#4a90d9', marginBottom: 14 }}>
+            Transparent Pricing
+          </div>
+          <h2 style={{ fontFamily: 'Georgia, "Times New Roman", serif', fontSize: 'clamp(28px,4vw,48px)', fontWeight: 700, color: '#fff', margin: 0 }}>
+            Choose Your Package
+          </h2>
+        </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 24, maxWidth: 1100, margin: '0 auto' }}>
+
+          {/* £399 Virtual Tenant Find */}
+          <div style={{
+            background: '#162849', borderRadius: 10, padding: '36px 28px',
+            border: '1px solid rgba(255,255,255,0.08)', display: 'flex', flexDirection: 'column',
+          }}>
+            <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.45)', marginBottom: 8, textTransform: 'uppercase', letterSpacing: 1 }}>One-time fee</div>
+            <div style={{ fontFamily: 'Georgia, "Times New Roman", serif', fontSize: 52, fontWeight: 700, color: '#fff', lineHeight: 1, marginBottom: 4 }}>£399</div>
+            <div style={{ fontFamily: 'Georgia, "Times New Roman", serif', fontSize: 18, fontWeight: 700, color: '#fff', marginBottom: 24, paddingBottom: 24, borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
+              Virtual Tenant Find
+            </div>
+            {[
+              'Expert property valuation',
+              'Advertising your property on major portals',
+              'Enquiries, Screening & Viewings Arrangement',
+              'Schedule Viewing with the Landlord',
+              'Viewing Feedback & Offer Negotiation',
+              'Document Request & Holding Deposit Collection',
+              'Credit & Right to Rent Checks',
+              'Binding ASAT tenancy agreement',
+              'First Rent & Deposit Collection',
+              'Arranging transfer of utilities and council tax',
+            ].map(item => (
+              <div key={item} style={{ display: 'flex', gap: 10, marginBottom: 12, alignItems: 'flex-start' }}>
+                <span style={{ color: '#2563eb', fontWeight: 700, fontSize: 15, marginTop: 1, flexShrink: 0 }}>✓</span>
+                <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.7)', lineHeight: 1.5 }}>{item}</span>
+              </div>
+            ))}
+            <div style={{ marginTop: 'auto', paddingTop: 28 }}>
+              <Link href="/register" style={{
+                display: 'block', textAlign: 'center',
+                padding: '14px 24px', background: '#2563eb', color: '#fff',
+                borderRadius: 4, fontSize: 14, fontWeight: 700,
+                letterSpacing: '0.5px', textTransform: 'uppercase', textDecoration: 'none',
+              }}>
+                Add Listing Now
+              </Link>
+            </div>
+          </div>
+
+          {/* £599 Expert Tenant Find — Most Popular */}
+          <div style={{
+            background: '#0f1f3d', borderRadius: 10, padding: '36px 28px',
+            border: '2px solid #2563eb', display: 'flex', flexDirection: 'column',
+            position: 'relative',
+          }}>
+            <div style={{
+              position: 'absolute', top: -14, left: '50%', transform: 'translateX(-50%)',
+              background: '#2563eb', color: '#fff', fontSize: 10, fontWeight: 800,
+              letterSpacing: 2, textTransform: 'uppercase', padding: '5px 16px', borderRadius: 20,
+              whiteSpace: 'nowrap',
+            }}>
+              Most Popular
+            </div>
+            <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.45)', marginBottom: 8, textTransform: 'uppercase', letterSpacing: 1 }}>One-time fee</div>
+            <div style={{ fontFamily: 'Georgia, "Times New Roman", serif', fontSize: 52, fontWeight: 700, color: '#4a90d9', lineHeight: 1, marginBottom: 4 }}>£599</div>
+            <div style={{ fontFamily: 'Georgia, "Times New Roman", serif', fontSize: 18, fontWeight: 700, color: '#fff', marginBottom: 24, paddingBottom: 24, borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
+              Expert Tenant Find
+            </div>
+            {[
+              'Professional property photography',
+              'Expert property valuation',
+              'Advertising your property on major portals',
+              'Enquiries, Screening & Viewings Arrangement',
+              'Viewings conducted by our experienced agent',
+              'Viewing Feedback & Offer Negotiation',
+              'Document Request & Holding Deposit Collection',
+              'Credit & Right to Rent Checks',
+              'Binding ASAT tenancy agreement',
+              'First Rent & Deposit Collection',
+              'Comprehensive handover key to the tenant',
+            ].map(item => (
+              <div key={item} style={{ display: 'flex', gap: 10, marginBottom: 12, alignItems: 'flex-start' }}>
+                <span style={{ color: '#4a90d9', fontWeight: 700, fontSize: 15, marginTop: 1, flexShrink: 0 }}>✓</span>
+                <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.7)', lineHeight: 1.5 }}>{item}</span>
+              </div>
+            ))}
+            <div style={{ marginTop: 'auto', paddingTop: 28 }}>
+              <Link href="/register" style={{
+                display: 'block', textAlign: 'center',
+                padding: '14px 24px', background: '#2563eb', color: '#fff',
+                borderRadius: 4, fontSize: 14, fontWeight: 700,
+                letterSpacing: '0.5px', textTransform: 'uppercase', textDecoration: 'none',
+              }}>
+                Add Listing Now
+              </Link>
+            </div>
+          </div>
+
+          {/* 8% Full Management */}
+          <div style={{
+            background: '#162849', borderRadius: 10, padding: '36px 28px',
+            border: '1px solid rgba(255,255,255,0.08)', display: 'flex', flexDirection: 'column',
+          }}>
+            <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.45)', marginBottom: 8, textTransform: 'uppercase', letterSpacing: 1 }}>Monthly percentage</div>
+            <div style={{ fontFamily: 'Georgia, "Times New Roman", serif', fontSize: 52, fontWeight: 700, color: '#fff', lineHeight: 1, marginBottom: 4 }}>8%</div>
+            <div style={{ fontFamily: 'Georgia, "Times New Roman", serif', fontSize: 18, fontWeight: 700, color: '#fff', marginBottom: 24, paddingBottom: 24, borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
+              Full Management
+            </div>
+            {[
+              'Rental Invoice to Tenant & Rent Collection',
+              'Account Statement & Rent Transfer to Landlord',
+              'Maintenance Payment Handling',
+              'Annual Expense and Income Summary',
+              'Deposit Protection (DPS/TDS)',
+              'Gas, Electric & EPC Certificate Renewal Reminders',
+              'Move-In Inventory Report',
+              'Move-Out Inventory Report',
+              'Check-in / Check-out Comparison',
+              'Tenant enquiry handling',
+              'Maintenance Reporting & Oversight',
+              'Contractor Coordination (with approval)',
+              'Maintenance Record Keeping',
+              'Key Holding Management',
+              'Final Utility & Council Tax Coordination',
+              'Compliance Certificate Management',
+            ].map(item => (
+              <div key={item} style={{ display: 'flex', gap: 10, marginBottom: 12, alignItems: 'flex-start' }}>
+                <span style={{ color: '#2563eb', fontWeight: 700, fontSize: 15, marginTop: 1, flexShrink: 0 }}>✓</span>
+                <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.7)', lineHeight: 1.5 }}>{item}</span>
+              </div>
+            ))}
+            <div style={{ marginTop: 'auto', paddingTop: 28 }}>
+              <Link href="/register" style={{
+                display: 'block', textAlign: 'center',
+                padding: '14px 24px', background: '#2563eb', color: '#fff',
+                borderRadius: 4, fontSize: 14, fontWeight: 700,
+                letterSpacing: '0.5px', textTransform: 'uppercase', textDecoration: 'none',
+              }}>
+                Add Listing Now
+              </Link>
+            </div>
+          </div>
+
         </div>
       </section>
 
@@ -659,11 +865,6 @@ export default function HomePage() {
         </div>
       </footer>
 
-      {/* ── STICKY VALUATION BAR ─────────────────────────────── */}
-      <StickyValuationBar />
-
-      {/* Bottom padding so footer isn't hidden behind sticky bar */}
-      <div style={{ height: 80 }} />
     </>
   );
 }

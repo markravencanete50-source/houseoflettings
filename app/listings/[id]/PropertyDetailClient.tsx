@@ -148,7 +148,7 @@ export default function PropertyDetailClient() {
             {' → '}
             <Link href="/listings" style={{ color: '#555555' }}>Listings</Link>
             {' → '}
-            <span style={{ color: 'var(--black)', fontWeight: 500 }}>{property.title}</span>
+            <span style={{ color: 'var(--black)', fontWeight: 500 }}>{property.location}</span>
           </span>
         </div>
 
@@ -311,9 +311,25 @@ export default function PropertyDetailClient() {
 
                 {/* Description */}
                 <h3 style={{ fontSize: 16, fontWeight: 700, marginBottom: 12 }}>About this property</h3>
-                <p style={{ fontSize: 15, color: '#333333', lineHeight: 1.75, whiteSpace: 'pre-line' }}>
-                  {property.description}
-                </p>
+                <div style={{ fontSize: 15, color: '#333333', lineHeight: 1.75 }}>
+                  {property.description.split('\n').map((line, i) => {
+                    const isBullet = line.trim().startsWith('•');
+                    const isHeading = line.trim().endsWith(':') && line.trim().length < 40;
+                    if (!line.trim()) return <div key={i} style={{ height: 10 }} />;
+                    if (isHeading) return (
+                      <div key={i} style={{ fontWeight: 700, color: '#1a2e4a', marginTop: 16, marginBottom: 4, fontSize: 14, textTransform: 'uppercase', letterSpacing: 0.5 }}>
+                        {line.trim()}
+                      </div>
+                    );
+                    if (isBullet) return (
+                      <div key={i} style={{ display: 'flex', gap: 10, alignItems: 'flex-start', marginBottom: 4 }}>
+                        <span style={{ color: '#0f1f3d', fontWeight: 700, marginTop: 2, flexShrink: 0 }}>•</span>
+                        <span>{line.trim().replace(/^•\s*/, '')}</span>
+                      </div>
+                    );
+                    return <p key={i} style={{ marginBottom: 8 }}>{line}</p>;
+                  })}
+                </div>
 
               </div>
             </div>
@@ -330,10 +346,10 @@ export default function PropertyDetailClient() {
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                     color: '#fff', fontFamily: 'var(--font-serif)', fontSize: 18, fontWeight: 700,
                   }}>
-                    {landlordName.charAt(0).toUpperCase()}
+                    {landlordName ? landlordName.charAt(0).toUpperCase() : '🏠'}
                   </div>
                   <div>
-                    <div style={{ fontWeight: 600, fontSize: 15, color: 'var(--black)' }}>{landlordName}</div>
+                    <div style={{ fontWeight: 600, fontSize: 15, color: 'var(--black)' }}>{landlordName || 'Property Owner'}</div>
                     <div style={{ fontSize: 13, color: '#555555' }}>Property Owner</div>
                   </div>
                 </div>

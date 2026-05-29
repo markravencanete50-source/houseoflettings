@@ -342,7 +342,7 @@ export default function HomePage() {
           </div>
 
           <h1 style={{
-            fontFamily: "'DM Sans', sans-serif",
+            fontFamily: "Georgia, "Times New Roman", serif",
             fontSize: 'clamp(32px,5vw,66px)',
             fontWeight: 700, color: '#fff', lineHeight: 1.08, letterSpacing: '-0.5px', marginBottom: 12,
             textTransform: 'uppercase',
@@ -350,7 +350,7 @@ export default function HomePage() {
             We Handle the Details.
           </h1>
           <h1 style={{
-            fontFamily: "'DM Sans', sans-serif",
+            fontFamily: "Georgia, "Times New Roman", serif",
             fontSize: 'clamp(32px,5vw,66px)',
             fontWeight: 700, color: '#4a90d9', lineHeight: 1.08, letterSpacing: '-0.5px', marginBottom: 28,
             textTransform: 'uppercase',

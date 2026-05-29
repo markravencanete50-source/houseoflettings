@@ -20,6 +20,14 @@ export default function PropertyDetailClient() {
   const [activeImg, setActiveImg] = useState(0);
   const [contacting, setContacting] = useState(false);
   const [error, setError] = useState('');
+  const [mounted, setMounted] = useState(false);
+  const [btnHovered, setBtnHovered] = useState(false);
+  const [imgFading, setImgFading] = useState(false);
+
+  useEffect(() => {
+    const t = setTimeout(() => setMounted(true), 50);
+    return () => clearTimeout(t);
+  }, []);
 
   useEffect(() => {
     if (!id) { setLoading(false); return; }
@@ -87,9 +95,51 @@ export default function PropertyDetailClient() {
 
   const bedsLabel = property.bedrooms === 0 ? 'Studio' : `${property.bedrooms} Bedroom${property.bedrooms > 1 ? 's' : ''}`;
 
+  const switchImage = (i: number) => {
+    if (i === activeImg) return;
+    setImgFading(true);
+    setTimeout(() => {
+      setActiveImg(i);
+      setImgFading(false);
+    }, 180);
+  };
+
   return (
     <>
       <Navbar />
+      <style>{`
+        @keyframes hol-fadeUp {
+          from { opacity: 0; transform: translateY(18px); }
+          to   { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes hol-fadeIn {
+          from { opacity: 0; }
+          to   { opacity: 1; }
+        }
+        .hol-panel {
+          transition: box-shadow 0.25s, transform 0.25s;
+        }
+        .hol-panel:hover {
+          box-shadow: 0 6px 24px rgba(15,31,61,0.13) !important;
+          transform: translateY(-2px);
+        }
+        .hol-thumb {
+          transition: border 0.2s, opacity 0.2s, transform 0.2s;
+        }
+        .hol-thumb:hover {
+          opacity: 0.85;
+          transform: scale(1.05);
+        }
+        .hol-feature-item {
+          transition: background 0.2s, transform 0.2s;
+          border-radius: 8px;
+          padding: 8px 4px;
+        }
+        .hol-feature-item:hover {
+          background: rgba(15,31,61,0.04);
+          transform: translateY(-2px);
+        }
+      `}</style>
       <div style={{ paddingTop: 68, minHeight: '100vh', background: 'var(--gray-100)' }}>
         {/* Breadcrumb */}
         <div style={{ background: '#fff', borderBottom: '1px solid var(--gray-200)', padding: '14px 5%' }}>
@@ -103,14 +153,22 @@ export default function PropertyDetailClient() {
         </div>
 
         <div style={{ padding: '40px 5%', maxWidth: 1100, margin: '0 auto' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 340px', gap: 40, alignItems: 'start' }}>
+          <div style={{
+            display: 'grid', gridTemplateColumns: '1fr 340px', gap: 40, alignItems: 'start',
+            opacity: mounted ? 1 : 0,
+            animation: mounted ? 'hol-fadeUp 0.5s ease both' : 'none',
+          }}>
             {/* Left Column */}
             <div>
               {/* Image Gallery */}
               <div style={{ borderRadius: 10, overflow: 'hidden', marginBottom: 8, background: 'var(--gray-200)', height: 420 }}>
                 {property.images?.[activeImg] ? (
                   <img src={property.images[activeImg]} alt={property.title}
-                    style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    style={{
+                      width: '100%', height: '100%', objectFit: 'cover',
+                      opacity: imgFading ? 0 : 1,
+                      transition: 'opacity 0.18s ease',
+                    }} />
                 ) : (
                   <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--gray-400)', fontSize: 14 }}>
                     No Image Available
@@ -121,10 +179,9 @@ export default function PropertyDetailClient() {
               {property.images?.length > 1 && (
                 <div style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 4 }}>
                   {property.images.map((img, i) => (
-                    <div key={i} onClick={() => setActiveImg(i)} style={{
+                    <div key={i} onClick={() => switchImage(i)} className="hol-thumb" style={{
                       width: 80, height: 60, flexShrink: 0, borderRadius: 6, overflow: 'hidden',
                       cursor: 'pointer', border: `2px solid ${i === activeImg ? 'var(--red)' : 'transparent'}`,
-                      transition: 'border .2s',
                     }}>
                       <img src={img} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                     </div>
@@ -135,7 +192,10 @@ export default function PropertyDetailClient() {
               {/* ── Price & Bills / Availability / Features — TOP OF LISTING ── */}
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginTop: 24 }}>
                 {/* Price & Bills */}
-                <div style={{ background: '#fff', border: '1px solid var(--gray-200)', borderRadius: 8, padding: '16px 20px' }}>
+                <div className="hol-panel" style={{
+                  background: '#fff', border: '1px solid var(--gray-200)', borderRadius: 8, padding: '16px 20px',
+                  animation: mounted ? 'hol-fadeUp 0.5s ease 0.1s both' : 'none',
+                }}>
                   <h4 style={{ fontSize: 13, fontWeight: 700, color: '#222', marginBottom: 12, textTransform: 'uppercase', letterSpacing: 0.5 }}>Price &amp; Bills</h4>
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8, fontSize: 14 }}>
                     <span style={{ color: '#444' }}>Rent PCM</span>
@@ -154,7 +214,10 @@ export default function PropertyDetailClient() {
                 </div>
 
                 {/* Availability */}
-                <div style={{ background: '#fff', border: '1px solid var(--gray-200)', borderRadius: 8, padding: '16px 20px' }}>
+                <div className="hol-panel" style={{
+                  background: '#fff', border: '1px solid var(--gray-200)', borderRadius: 8, padding: '16px 20px',
+                  animation: mounted ? 'hol-fadeUp 0.5s ease 0.2s both' : 'none',
+                }}>
                   <h4 style={{ fontSize: 13, fontWeight: 700, color: '#222', marginBottom: 12, textTransform: 'uppercase', letterSpacing: 0.5 }}>Availability</h4>
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8, fontSize: 14 }}>
                     <span style={{ color: '#444' }}>Available From</span>
@@ -174,7 +237,10 @@ export default function PropertyDetailClient() {
               </div>
 
               {/* Features */}
-              <div style={{ background: '#fff', border: '1px solid var(--gray-200)', borderRadius: 8, padding: '16px 20px', marginTop: 16 }}>
+              <div className="hol-panel" style={{
+                background: '#fff', border: '1px solid var(--gray-200)', borderRadius: 8, padding: '16px 20px', marginTop: 16,
+                animation: mounted ? 'hol-fadeUp 0.5s ease 0.3s both' : 'none',
+              }}>
                 <h4 style={{ fontSize: 13, fontWeight: 700, color: '#222', marginBottom: 12, textTransform: 'uppercase', letterSpacing: 0.5 }}>Features</h4>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '8px 24px' }}>
                   {[
@@ -195,7 +261,10 @@ export default function PropertyDetailClient() {
               </div>
 
               {/* Details */}
-              <div style={{ background: '#fff', border: '1px solid var(--gray-200)', borderRadius: 8, padding: 32, marginTop: 16 }}>
+              <div className="hol-panel" style={{
+                background: '#fff', border: '1px solid var(--gray-200)', borderRadius: 8, padding: 32, marginTop: 16,
+                animation: mounted ? 'hol-fadeUp 0.5s ease 0.4s both' : 'none',
+              }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 24, flexWrap: 'wrap', gap: 12 }}>
                   <div>
                     {property.badge && (
@@ -232,7 +301,7 @@ export default function PropertyDetailClient() {
                     { icon: '📐', label: 'Size', value: property.sqft ? `${property.sqft} sqft` : 'N/A' },
                     { icon: '🪑', label: 'Furnished', value: property.furnished ? property.furnished.charAt(0).toUpperCase() + property.furnished.slice(1) : 'N/A' },
                   ].map(f => (
-                    <div key={f.label} style={{ textAlign: 'center' }}>
+                    <div key={f.label} className="hol-feature-item" style={{ textAlign: 'center' }}>
                       <div style={{ fontSize: 24, marginBottom: 6 }}>{f.icon}</div>
                       <div style={{ fontSize: 13, color: '#555555', marginBottom: 2 }}>{f.label}</div>
                       <div style={{ fontSize: 15, fontWeight: 600, color: 'var(--black)' }}>{f.value}</div>
@@ -251,7 +320,10 @@ export default function PropertyDetailClient() {
 
             {/* Right Column — Contact Card */}
             <div style={{ position: 'sticky', top: 88 }}>
-              <div style={{ background: '#fff', border: '1px solid var(--gray-200)', borderRadius: 8, padding: 28 }}>
+              <div className="hol-panel" style={{
+                background: '#fff', border: '1px solid var(--gray-200)', borderRadius: 8, padding: 28,
+                animation: mounted ? 'hol-fadeUp 0.5s ease 0.2s both' : 'none',
+              }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 24 }}>
                   <div style={{
                     width: 48, height: 48, background: 'var(--black)', borderRadius: '50%',
@@ -285,11 +357,16 @@ export default function PropertyDetailClient() {
                 <button
                   onClick={handleContact}
                   disabled={contacting}
+                  onMouseEnter={() => setBtnHovered(true)}
+                  onMouseLeave={() => setBtnHovered(false)}
                   style={{
                     width: '100%', padding: 14, background: 'var(--red)', color: '#fff',
                     border: 'none', borderRadius: 4, fontSize: 14, fontWeight: 600,
                     letterSpacing: '0.5px', textTransform: 'uppercase', cursor: 'pointer',
                     opacity: contacting ? 0.7 : 1, marginBottom: 12,
+                    transform: btnHovered && !contacting ? 'scale(1.02)' : 'scale(1)',
+                    boxShadow: btnHovered && !contacting ? '0 4px 16px rgba(198,40,40,0.35)' : 'none',
+                    transition: 'transform 0.2s, box-shadow 0.2s, opacity 0.2s',
                   }}
                 >
                   {contacting ? 'Opening Chat…' : '💬 Message Landlord'}

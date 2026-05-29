@@ -1,7 +1,7 @@
 'use client';
 // components/property/PropertyCard.tsx
-import Image from 'next/image';
 import { useRouter } from 'next/navigation';
+import { useState } from 'react';
 import { Property } from '@/lib/types';
 
 interface PropertyCardProps {
@@ -10,58 +10,127 @@ interface PropertyCardProps {
 
 export default function PropertyCard({ property }: PropertyCardProps) {
   const router = useRouter();
+  const [hovered, setHovered] = useState(false);
+  const [btnHovered, setBtnHovered] = useState(false);
+
   const bedsLabel = property.bedrooms === 0 ? 'Studio' :
     `${property.bedrooms} Bed${property.bedrooms > 1 ? 's' : ''}`;
 
   return (
     <div
-      className="prop-card"
       onClick={() => router.push(`/listings/${property.id}`)}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      style={{
+        background: '#ffffff',
+        borderRadius: 8,
+        overflow: 'hidden',
+        boxShadow: hovered
+          ? '0 8px 32px rgba(15,31,61,0.18)'
+          : '0 2px 12px rgba(15,31,61,0.10)',
+        cursor: 'pointer',
+        transition: 'box-shadow 0.2s, transform 0.2s',
+        transform: hovered ? 'translateY(-3px)' : 'translateY(0)',
+        display: 'flex',
+        flexDirection: 'column',
+        fontFamily: 'Georgia, serif',
+      }}
     >
-      <div className="prop-img">
+      {/* Image */}
+      <div style={{ position: 'relative', width: '100%', height: 200, flexShrink: 0 }}>
         {property.images?.[0] ? (
           <img
             src={property.images[0]}
             alt={property.title}
-            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+            style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
           />
         ) : (
           <div style={{
-            width: '100%', height: '100%', background: 'var(--gray-200)',
+            width: '100%', height: '100%', background: '#e8edf3',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            color: 'var(--gray-400)', fontSize: 14,
+            color: '#8a99b3', fontSize: 14, fontFamily: 'Georgia, serif',
           }}>
-            No Image
+            No Image Available
           </div>
         )}
         {property.badge && (
-          <span className="prop-badge">{property.badge}</span>
+          <span style={{
+            position: 'absolute', top: 12, left: 12,
+            background: '#0f1f3d', color: '#fff',
+            fontSize: 11, fontWeight: 700, fontFamily: 'Georgia, serif',
+            padding: '4px 10px', borderRadius: 3,
+            textTransform: 'uppercase', letterSpacing: '0.6px',
+          }}>
+            {property.badge}
+          </span>
         )}
       </div>
 
-      <div className="prop-body">
-        <div className="prop-price">
+      {/* Body */}
+      <div style={{
+        padding: '18px 20px 20px',
+        display: 'flex', flexDirection: 'column', gap: 6, flex: 1,
+      }}>
+        {/* Price */}
+        <div style={{
+          fontSize: 22, fontWeight: 700, color: '#0f1f3d',
+          fontFamily: 'Georgia, serif',
+        }}>
           £{property.price.toLocaleString()}
-          <span> / month</span>
+          <span style={{ fontSize: 13, fontWeight: 400, color: '#5a6a80' }}> / month</span>
         </div>
-        <div className="prop-title">{property.title}</div>
-        <div className="prop-loc">📍 {property.location}</div>
-        <div className="prop-features">
+
+        {/* Title */}
+        <div style={{
+          fontSize: 15, fontWeight: 600, color: '#1a2e4a',
+          fontFamily: 'Georgia, serif', lineHeight: 1.4,
+          display: '-webkit-box', WebkitLineClamp: 2,
+          WebkitBoxOrient: 'vertical', overflow: 'hidden',
+        }}>
+          {property.title}
+        </div>
+
+        {/* Location */}
+        <div style={{ fontSize: 13, color: '#5a6a80', fontFamily: 'Georgia, serif' }}>
+          📍 {property.location}
+        </div>
+
+        {/* Features */}
+        <div style={{
+          display: 'flex', gap: 12, flexWrap: 'wrap',
+          fontSize: 13, color: '#3a4f6a', marginTop: 4,
+          fontFamily: 'Georgia, serif',
+        }}>
           <span>🛏 {bedsLabel}</span>
           <span>🚿 {property.bathrooms} Bath</span>
           {property.sqft && <span>📐 {property.sqft} sqft</span>}
         </div>
+
+        {/* Spacer */}
+        <div style={{ flex: 1 }} />
+
+        {/* Button */}
         <button
-          className="btn-view"
+          onClick={e => { e.stopPropagation(); router.push(`/listings/${property.id}`); }}
+          onMouseEnter={() => setBtnHovered(true)}
+          onMouseLeave={() => setBtnHovered(false)}
           style={{
-            display: 'block', width: '100%', marginTop: 14,
-            padding: 11, background: 'var(--black)', color: '#fff',
-            border: 'none', borderRadius: 4, fontSize: 13, fontWeight: 600,
-            textAlign: 'center', letterSpacing: '0.5px', textTransform: 'uppercase',
-            cursor: 'pointer', transition: 'background .2s',
+            marginTop: 14,
+            width: '100%',
+            padding: '11px 0',
+            background: btnHovered ? '#c0392b' : '#0f1f3d',
+            color: '#fff',
+            border: 'none',
+            borderRadius: 4,
+            fontSize: 13,
+            fontWeight: 600,
+            fontFamily: 'Georgia, serif',
+            textAlign: 'center',
+            letterSpacing: '0.5px',
+            textTransform: 'uppercase',
+            cursor: 'pointer',
+            transition: 'background 0.2s',
           }}
-          onMouseEnter={e => (e.currentTarget.style.background = 'var(--red)')}
-          onMouseLeave={e => (e.currentTarget.style.background = 'var(--black)')}
         >
           View Details →
         </button>

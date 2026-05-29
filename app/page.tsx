@@ -403,7 +403,7 @@ export default function HomePage() {
 
       {/* ── BOOK A VALUATION ─────────────────────────────────── */}
       <section style={{
-        padding: '64px 5%',
+        padding: '100px 8%',
         position: 'relative',
         overflow: 'hidden',
       }}>
@@ -419,17 +419,17 @@ export default function HomePage() {
           position: 'absolute', inset: 0,
           background: 'rgba(8, 18, 40, 0.78)',
         }} />
-        <div style={{ maxWidth: 680, position: 'relative', zIndex: 1 }}>
+        <div style={{ maxWidth: 780, position: 'relative', zIndex: 1 }}>
           <h2 style={{
             fontFamily: 'Georgia, "Times New Roman", serif',
-            fontSize: 'clamp(24px,4vw,40px)', fontWeight: 700,
-            color: '#fff', lineHeight: 1.2, marginBottom: 20,
+            fontSize: 'clamp(32px,5vw,56px)', fontWeight: 700,
+            color: '#fff', lineHeight: 1.2, marginBottom: 24,
           }}>
             Are you ready to sell or let your property?
           </h2>
           <p style={{
-            fontSize: 16, color: 'rgba(255,255,255,0.65)', lineHeight: 1.8,
-            marginBottom: 36, fontWeight: 300, maxWidth: 560,
+            fontSize: 18, color: 'rgba(255,255,255,0.75)', lineHeight: 1.8,
+            marginBottom: 44, fontWeight: 300, maxWidth: 620,
           }}>
             Book a free sales or lettings valuation with your local agent, and they will use their local knowledge and expertise to give you the most accurate sales or lettings valuation.
           </p>

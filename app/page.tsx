@@ -303,7 +303,7 @@ export default function HomePage() {
         {/* Hero background image - Leeds city */}
         <div style={{
           position: 'absolute', inset: 0,
-          backgroundImage: 'url(/images/Background of the Homepage.png)',
+          backgroundImage: 'url(/images/Background_of_the_Homepage.png)',
           backgroundSize: 'cover', backgroundPosition: 'center',
           backgroundRepeat: 'no-repeat',
         }} />
@@ -410,7 +410,7 @@ export default function HomePage() {
         {/* Valuation background image - luxury interior */}
         <div style={{
           position: 'absolute', inset: 0,
-          backgroundImage: 'url(/images/Background Book Valuation.png)',
+          backgroundImage: 'url(/images/Background_Book_Valuation.png)',
           backgroundSize: 'cover', backgroundPosition: 'center',
           backgroundRepeat: 'no-repeat',
         }} />
@@ -528,7 +528,7 @@ export default function HomePage() {
         {/* Services background image - agent with clients */}
         <div style={{
           position: 'absolute', inset: 0,
-          backgroundImage: 'url(/images/Background of the services.png)',
+          backgroundImage: 'url(/images/Background_of_the_services.png)',
           backgroundSize: 'cover', backgroundPosition: 'center top',
           backgroundRepeat: 'no-repeat',
         }} />
@@ -587,7 +587,7 @@ export default function HomePage() {
         {/* Pricing background - same services image, different angle */}
         <div style={{
           position: 'absolute', inset: 0,
-          backgroundImage: 'url(/images/Background of the services.png)',
+          backgroundImage: 'url(/images/Background_of_the_services.png)',
           backgroundSize: 'cover', backgroundPosition: 'center bottom',
           backgroundRepeat: 'no-repeat',
         }} />

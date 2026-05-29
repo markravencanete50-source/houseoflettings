@@ -298,7 +298,7 @@ export default function HomePage() {
       {/* ── HERO ─────────────────────────────────────────────── */}
       <section style={{
         minHeight: '100vh', background: '#0f1f3d',
-        position: 'relative', display: 'flex', alignItems: 'center', padding: '68px 5% 0',
+        position: 'relative', display: 'flex', alignItems: 'center', padding: '0 5%',
       }}>
         {/* Hero background image - Leeds city */}
         <div style={{
@@ -577,7 +577,7 @@ export default function HomePage() {
             </div>
             <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.45)', marginBottom: 8, textTransform: 'uppercase', letterSpacing: 1 }}>One-time fee</div>
             <div style={{ fontFamily: 'Georgia, "Times New Roman", serif', fontSize: 52, fontWeight: 700, color: '#4a90d9', lineHeight: 1, marginBottom: 4 }}>£599</div>
-            <div style={{ fontFamily: 'Georgia, "Times New Roman", serif', fontSize: 18, fontWeight: 700, color: '#fff', marginBottom: 24, paddingBottom: 24, borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
+            <div style={{ fontFamily: 'Georgia, "Times New Roman", serif', fontSize: 18, fontWeight: 700, fontStyle: 'normal', color: '#fff', marginBottom: 24, paddingBottom: 24, borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
               Expert Tenant Find
             </div>
             {[

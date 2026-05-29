@@ -38,21 +38,22 @@ export default function AdminLoginPage() {
     <div style={{
       minHeight: '100vh', background: '#0a0a0a', display: 'flex',
       alignItems: 'center', justifyContent: 'center', padding: 24,
+      fontFamily: 'Georgia, "Times New Roman", serif',
     }}>
       <div style={{ width: '100%', maxWidth: 400 }}>
         <div style={{ textAlign: 'center', marginBottom: 40 }}>
           <div style={{
-            width: 56, height: 56, background: 'var(--red)', borderRadius: '50%',
+            width: 56, height: 56, background: '#c0392b', borderRadius: '50%',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             fontSize: 24, margin: '0 auto 16px',
           }}>🔒</div>
           <h1 style={{
-            fontFamily: 'var(--font-serif)', fontSize: 28, fontWeight: 700,
+            fontFamily: 'Georgia, "Times New Roman", serif', fontSize: 28, fontWeight: 700,
             color: '#fff', marginBottom: 8,
           }}>
             Admin Access
           </h1>
-          <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 14 }}>
+          <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 14, fontFamily: 'Georgia, "Times New Roman", serif' }}>
             Restricted to authorised administrators only
           </p>
         </div>
@@ -65,15 +66,19 @@ export default function AdminLoginPage() {
             <div style={{
               background: 'rgba(192,57,43,0.15)', border: '1px solid rgba(192,57,43,0.4)',
               color: '#ff6b6b', padding: '12px 16px', borderRadius: 6,
-              marginBottom: 24, fontSize: 14,
+              marginBottom: 24, fontSize: 14, fontFamily: 'Georgia, "Times New Roman", serif',
             }}>
               🚫 {error}
             </div>
           )}
 
           <form onSubmit={handleSubmit}>
-            <div className="form-group">
-              <label style={{ display: 'block', fontSize: 12, fontWeight: 600, letterSpacing: '0.5px', textTransform: 'uppercase', color: 'rgba(255,255,255,0.45)', marginBottom: 8 }}>
+            <div style={{ marginBottom: 16 }}>
+              <label style={{
+                display: 'block', fontSize: 12, fontWeight: 600, letterSpacing: '0.5px',
+                textTransform: 'uppercase', color: 'rgba(255,255,255,0.45)', marginBottom: 8,
+                fontFamily: 'Georgia, "Times New Roman", serif',
+              }}>
                 Admin Email
               </label>
               <input
@@ -83,18 +88,22 @@ export default function AdminLoginPage() {
                 placeholder="admin@houseoflettings.co.uk"
                 required
                 style={{
-                  width: '100%', padding: '12px 16px',
+                  width: '100%', padding: '12px 16px', boxSizing: 'border-box',
                   background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)',
                   borderRadius: 4, fontSize: 14, color: '#fff', outline: 'none',
-                  fontFamily: 'var(--font-sans)',
+                  fontFamily: 'Georgia, "Times New Roman", serif',
                 }}
-                onFocus={e => e.target.style.borderColor = 'var(--red)'}
-                onBlur={e => e.target.style.borderColor = 'rgba(255,255,255,0.12)'}
+                onFocus={e => e.currentTarget.style.borderColor = '#c0392b'}
+                onBlur={e => e.currentTarget.style.borderColor = 'rgba(255,255,255,0.12)'}
               />
             </div>
 
-            <div className="form-group" style={{ marginBottom: 28 }}>
-              <label style={{ display: 'block', fontSize: 12, fontWeight: 600, letterSpacing: '0.5px', textTransform: 'uppercase', color: 'rgba(255,255,255,0.45)', marginBottom: 8 }}>
+            <div style={{ marginBottom: 28 }}>
+              <label style={{
+                display: 'block', fontSize: 12, fontWeight: 600, letterSpacing: '0.5px',
+                textTransform: 'uppercase', color: 'rgba(255,255,255,0.45)', marginBottom: 8,
+                fontFamily: 'Georgia, "Times New Roman", serif',
+              }}>
                 Password
               </label>
               <input
@@ -104,13 +113,13 @@ export default function AdminLoginPage() {
                 placeholder="••••••••"
                 required
                 style={{
-                  width: '100%', padding: '12px 16px',
+                  width: '100%', padding: '12px 16px', boxSizing: 'border-box',
                   background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)',
                   borderRadius: 4, fontSize: 14, color: '#fff', outline: 'none',
-                  fontFamily: 'var(--font-sans)',
+                  fontFamily: 'Georgia, "Times New Roman", serif',
                 }}
-                onFocus={e => e.target.style.borderColor = 'var(--red)'}
-                onBlur={e => e.target.style.borderColor = 'rgba(255,255,255,0.12)'}
+                onFocus={e => e.currentTarget.style.borderColor = '#c0392b'}
+                onBlur={e => e.currentTarget.style.borderColor = 'rgba(255,255,255,0.12)'}
               />
             </div>
 
@@ -118,19 +127,22 @@ export default function AdminLoginPage() {
               type="submit"
               disabled={loading}
               style={{
-                width: '100%', padding: 14, background: 'var(--red)', color: '#fff',
+                width: '100%', padding: '14px', background: '#0f1f3d', color: '#fff',
                 border: 'none', borderRadius: 4, fontSize: 14, fontWeight: 600,
-                letterSpacing: '0.5px', textTransform: 'uppercase', cursor: 'pointer',
-                opacity: loading ? 0.7 : 1,
+                letterSpacing: '0.5px', textTransform: 'uppercase', cursor: loading ? 'not-allowed' : 'pointer',
+                opacity: loading ? 0.7 : 1, transition: 'background 0.2s',
+                fontFamily: 'Georgia, "Times New Roman", serif',
               }}
+              onMouseEnter={e => { if (!loading) e.currentTarget.style.background = '#c0392b'; }}
+              onMouseLeave={e => { e.currentTarget.style.background = '#0f1f3d'; }}
             >
               {loading ? 'Verifying…' : 'Enter Admin Panel →'}
             </button>
           </form>
         </div>
 
-        <p style={{ textAlign: 'center', marginTop: 24, fontSize: 13, color: 'rgba(255,255,255,0.25)' }}>
-          <Link href="/login" style={{ color: 'rgba(255,255,255,0.4)' }}>← Back to main login</Link>
+        <p style={{ textAlign: 'center', marginTop: 24, fontSize: 13, color: 'rgba(255,255,255,0.25)', fontFamily: 'Georgia, "Times New Roman", serif' }}>
+          <Link href="/login" style={{ color: 'rgba(255,255,255,0.4)', textDecoration: 'none' }}>← Back to main login</Link>
         </p>
       </div>
     </div>

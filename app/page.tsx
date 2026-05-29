@@ -1,13 +1,73 @@
 'use client';
 // app/page.tsx
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, lazy, Suspense } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Navbar from '@/components/layout/Navbar';
 import PropertyCard from '@/components/property/PropertyCard';
 import { getProperties } from '@/services/property';
 import { Property } from '@/lib/types';
-import ValuationCard from '@/components/ValuationCard';
+
+const ValuationModal = lazy(() => import('@/components/ValuationModal'));
+
+// ── STICKY VALUATION BAR ──────────────────────────────────────────────────────
+function StickyValuationBar() {
+  const [open, setOpen] = useState(false);
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    const onScroll = () => setVisible(window.scrollY > 300);
+    window.addEventListener('scroll', onScroll);
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+
+  return (
+    <>
+      <div style={{
+        position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 999,
+        background: '#0f1f3d',
+        borderTop: '1px solid rgba(255,255,255,0.1)',
+        padding: '18px 5%',
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        gap: 24, flexWrap: 'wrap',
+        transform: visible ? 'translateY(0)' : 'translateY(100%)',
+        transition: 'transform 0.35s ease',
+        boxShadow: '0 -4px 32px rgba(0,0,0,0.35)',
+      }}>
+        <div>
+          <div style={{
+            fontFamily: 'Georgia, "Times New Roman", serif',
+            fontSize: 'clamp(15px,2vw,20px)', fontWeight: 700,
+            color: '#fff', marginBottom: 4,
+          }}>
+            Are you ready to sell or let your property?
+          </div>
+          <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.55)', fontWeight: 300, maxWidth: 560 }}>
+            Book a free sales or lettings valuation with your local agent — they'll give you the most accurate valuation.
+          </div>
+        </div>
+        <button
+          onClick={() => setOpen(true)}
+          style={{
+            padding: '14px 36px', background: '#2563eb', color: '#fff',
+            border: 'none', borderRadius: 4, fontSize: 14, fontWeight: 700,
+            letterSpacing: '0.5px', textTransform: 'uppercase', cursor: 'pointer',
+            whiteSpace: 'nowrap', flexShrink: 0,
+            transition: 'background 0.2s ease',
+          }}
+          onMouseEnter={e => (e.currentTarget.style.background = '#1d4ed8')}
+          onMouseLeave={e => (e.currentTarget.style.background = '#2563eb')}
+        >
+          Book a Valuation
+        </button>
+      </div>
+
+      <Suspense fallback={null}>
+        {open && <ValuationModal isOpen={open} onClose={() => setOpen(false)} />}
+      </Suspense>
+    </>
+  );
+}
 
 // ── GALLERY DATA ─────────────────────────────────────────────────────────────
 const GALLERY_ITEMS = [
@@ -293,19 +353,21 @@ export default function HomePage() {
         <div style={{ position: 'relative', maxWidth: 700 }}>
           {/* Logo */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 36 }}>
-            <img src="/images/logo_HOL.png" alt="House of Lettings Logo" style={{ height: 60, width: 'auto' }} />
+            <img
+              src="/images/logo_HOL.png"
+              alt="House of Lettings Logo"
+              style={{ height: 60, width: 'auto', display: 'block' }}
+              onError={e => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
+            />
             <div style={{ lineHeight: 1.15 }}>
               <div style={{
-                fontFamily: 'Georgia, "Times New Roman", serif', fontSize: 18, fontWeight: 600,
+                fontFamily: 'Georgia, "Times New Roman", serif', fontSize: 18, fontWeight: 700,
                 color: '#fff', letterSpacing: '2px', textTransform: 'uppercase',
               }}>
-                House of
+                House of Lettings
               </div>
-              <div style={{
-                fontFamily: 'Georgia, "Times New Roman", serif', fontSize: 18, fontWeight: 600,
-                color: '#fff', letterSpacing: '2px', textTransform: 'uppercase',
-              }}>
-                Lettings
+              <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.45)', letterSpacing: '1px', textTransform: 'uppercase', marginTop: 2 }}>
+                Leeds &amp; Manchester
               </div>
             </div>
           </div>
@@ -358,7 +420,6 @@ export default function HomePage() {
             }}>
               List Your Property
             </Link>
-            <ValuationCard />
             <Link href="/terms" style={{
               padding: '16px 36px', background: 'transparent', color: '#fff',
               border: '1px solid rgba(255,255,255,0.4)', borderRadius: 4, fontSize: 14,
@@ -597,6 +658,12 @@ export default function HomePage() {
           </div>
         </div>
       </footer>
+
+      {/* ── STICKY VALUATION BAR ─────────────────────────────── */}
+      <StickyValuationBar />
+
+      {/* Bottom padding so footer isn't hidden behind sticky bar */}
+      <div style={{ height: 80 }} />
     </>
   );
 }

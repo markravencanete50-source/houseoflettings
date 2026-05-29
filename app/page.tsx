@@ -21,7 +21,7 @@ function ValuationInlineButton() {
           padding: '16px 48px', background: '#2563eb', color: '#fff',
           border: 'none', borderRadius: 6, fontSize: 16, fontWeight: 700,
           letterSpacing: '0.5px', cursor: 'pointer', transition: 'background 0.2s',
-          fontFamily: 'Georgia, "Times New Roman", serif',
+          fontFamily: "'DM Sans', sans-serif",
         }}
         onMouseEnter={e => (e.currentTarget.style.background = '#1d4ed8')}
         onMouseLeave={e => (e.currentTarget.style.background = '#2563eb')}
@@ -148,7 +148,7 @@ function ImageGallery() {
         </div>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: 16 }}>
           <h2 style={{
-            fontFamily: 'Georgia, "Times New Roman", serif',
+            fontFamily: "'DM Sans', sans-serif",
             fontSize: 'clamp(28px,4vw,48px)',
             fontWeight: 700, lineHeight: 1.1, letterSpacing: '-0.5px', margin: 0,
             color: '#0f1f3d',
@@ -330,7 +330,7 @@ export default function HomePage() {
             />
             <div style={{ lineHeight: 1.15 }}>
               <div style={{
-                fontFamily: 'Georgia, "Times New Roman", serif', fontSize: 18, fontWeight: 700,
+                fontFamily: "'DM Sans', sans-serif", fontSize: 18, fontWeight: 700,
                 color: '#fff', letterSpacing: '2px', textTransform: 'uppercase',
               }}>
                 House of Lettings
@@ -342,7 +342,7 @@ export default function HomePage() {
           </div>
 
           <h1 style={{
-            fontFamily: 'Georgia, "Times New Roman", serif',
+            fontFamily: "'DM Sans', sans-serif",
             fontSize: 'clamp(32px,5vw,66px)',
             fontWeight: 500, color: '#fff', lineHeight: 1.08, letterSpacing: '-0.5px', marginBottom: 12,
             textTransform: 'uppercase',
@@ -350,7 +350,7 @@ export default function HomePage() {
             We Handle the Details.
           </h1>
           <h1 style={{
-            fontFamily: 'Georgia, "Times New Roman", serif',
+            fontFamily: "'DM Sans', sans-serif",
             fontSize: 'clamp(32px,5vw,66px)',
             fontWeight: 500, color: '#4a90d9', lineHeight: 1.08, letterSpacing: '-0.5px', marginBottom: 28,
             textTransform: 'uppercase',
@@ -421,7 +421,7 @@ export default function HomePage() {
         }} />
         <div style={{ maxWidth: 780, position: 'relative', zIndex: 1 }}>
           <h2 style={{
-            fontFamily: 'Georgia, "Times New Roman", serif',
+            fontFamily: "'DM Sans', sans-serif",
             fontSize: 'clamp(32px,5vw,56px)', fontWeight: 700,
             color: '#fff', lineHeight: 1.2, marginBottom: 24,
           }}>
@@ -456,7 +456,7 @@ export default function HomePage() {
           <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 3, textTransform: 'uppercase', color: '#4a90d9', marginBottom: 14 }}>
             Our Services
           </div>
-          <h2 style={{ fontFamily: 'Georgia, "Times New Roman", serif', fontSize: 'clamp(28px,4vw,48px)', fontWeight: 700, color: '#fff', margin: 0 }}>
+          <h2 style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 'clamp(28px,4vw,48px)', fontWeight: 700, color: '#fff', margin: 0 }}>
             How We Can Help
           </h2>
         </div>
@@ -481,7 +481,7 @@ export default function HomePage() {
               border: '1px solid rgba(255,255,255,0.08)',
             }}>
               <h3 style={{
-                fontFamily: 'Georgia, "Times New Roman", serif',
+                fontFamily: "'DM Sans', sans-serif",
                 fontSize: 20, fontWeight: 700, color: '#fff',
                 marginBottom: 16,
               }}>
@@ -515,7 +515,7 @@ export default function HomePage() {
           <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 3, textTransform: 'uppercase', color: '#4a90d9', marginBottom: 14 }}>
             Transparent Pricing
           </div>
-          <h2 style={{ fontFamily: 'Georgia, "Times New Roman", serif', fontSize: 'clamp(28px,4vw,48px)', fontWeight: 700, color: '#fff', margin: 0 }}>
+          <h2 style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 'clamp(28px,4vw,48px)', fontWeight: 700, color: '#fff', margin: 0 }}>
             Choose Your Package
           </h2>
         </div>
@@ -528,8 +528,8 @@ export default function HomePage() {
             border: '1px solid rgba(255,255,255,0.08)', display: 'flex', flexDirection: 'column',
           }}>
             <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.45)', marginBottom: 8, textTransform: 'uppercase', letterSpacing: 1 }}>One-time fee</div>
-            <div style={{ fontFamily: 'Georgia, "Times New Roman", serif', fontSize: 52, fontWeight: 700, color: '#fff', lineHeight: 1, marginBottom: 4 }}>£399</div>
-            <div style={{ fontFamily: 'Georgia, "Times New Roman", serif', fontSize: 18, fontWeight: 700, color: '#fff', marginBottom: 24, paddingBottom: 24, borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
+            <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 52, fontWeight: 700, color: '#fff', lineHeight: 1, marginBottom: 4 }}>£399</div>
+            <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 18, fontWeight: 700, color: '#fff', marginBottom: 24, paddingBottom: 24, borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
               Virtual Tenant Find
             </div>
             {[
@@ -576,8 +576,8 @@ export default function HomePage() {
               Most Popular
             </div>
             <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.45)', marginBottom: 8, textTransform: 'uppercase', letterSpacing: 1 }}>One-time fee</div>
-            <div style={{ fontFamily: 'Georgia, "Times New Roman", serif', fontSize: 52, fontWeight: 700, color: '#4a90d9', lineHeight: 1, marginBottom: 4 }}>£599</div>
-            <div style={{ fontFamily: 'Georgia, "Times New Roman", serif', fontSize: 18, fontWeight: 700, fontStyle: 'normal', color: '#fff', marginBottom: 24, paddingBottom: 24, borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
+            <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 52, fontWeight: 700, color: '#4a90d9', lineHeight: 1, marginBottom: 4 }}>£599</div>
+            <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 18, fontWeight: 700, fontStyle: 'normal', color: '#fff', marginBottom: 24, paddingBottom: 24, borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
               Expert Tenant Find
             </div>
             {[
@@ -616,8 +616,8 @@ export default function HomePage() {
             border: '1px solid rgba(255,255,255,0.08)', display: 'flex', flexDirection: 'column',
           }}>
             <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.45)', marginBottom: 8, textTransform: 'uppercase', letterSpacing: 1 }}>Monthly percentage</div>
-            <div style={{ fontFamily: 'Georgia, "Times New Roman", serif', fontSize: 52, fontWeight: 700, color: '#fff', lineHeight: 1, marginBottom: 4 }}>8%</div>
-            <div style={{ fontFamily: 'Georgia, "Times New Roman", serif', fontSize: 18, fontWeight: 700, color: '#fff', marginBottom: 24, paddingBottom: 24, borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
+            <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 52, fontWeight: 700, color: '#fff', lineHeight: 1, marginBottom: 4 }}>8%</div>
+            <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 18, fontWeight: 700, color: '#fff', marginBottom: 24, paddingBottom: 24, borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
               Full Management
             </div>
             {[
@@ -678,7 +678,7 @@ export default function HomePage() {
                 style={{
                   width: '100%', padding: '14px 16px', fontSize: 15,
                   border: '1px solid #d1d5db', borderRadius: 6, outline: 'none',
-                  fontFamily: 'Georgia, "Times New Roman", serif', color: '#0f1f3d',
+                  fontFamily: "'DM Sans', sans-serif", color: '#0f1f3d',
                   boxSizing: 'border-box',
                 }}
               />
@@ -688,7 +688,7 @@ export default function HomePage() {
               <select value={minPrice} onChange={e => setMinPrice(e.target.value)} style={{
                 width: '100%', padding: '14px 16px', fontSize: 15,
                 border: '1px solid #d1d5db', borderRadius: 6, outline: 'none',
-                fontFamily: 'Georgia, "Times New Roman", serif', color: '#0f1f3d',
+                fontFamily: "'DM Sans', sans-serif", color: '#0f1f3d',
                 background: '#fff', cursor: 'pointer',
               }}>
                 <option value="">No min</option>
@@ -704,7 +704,7 @@ export default function HomePage() {
               <select value={maxPrice} onChange={e => setMaxPrice(e.target.value)} style={{
                 width: '100%', padding: '14px 16px', fontSize: 15,
                 border: '1px solid #d1d5db', borderRadius: 6, outline: 'none',
-                fontFamily: 'Georgia, "Times New Roman", serif', color: '#0f1f3d',
+                fontFamily: "'DM Sans', sans-serif", color: '#0f1f3d',
                 background: '#fff', cursor: 'pointer',
               }}>
                 <option value="">No max</option>
@@ -720,7 +720,7 @@ export default function HomePage() {
               <select value={bedrooms} onChange={e => setBedrooms(e.target.value)} style={{
                 width: '100%', padding: '14px 16px', fontSize: 15,
                 border: '1px solid #d1d5db', borderRadius: 6, outline: 'none',
-                fontFamily: 'Georgia, "Times New Roman", serif', color: '#0f1f3d',
+                fontFamily: "'DM Sans', sans-serif", color: '#0f1f3d',
                 background: '#fff', cursor: 'pointer',
               }}>
                 <option value="">Any</option>
@@ -752,7 +752,7 @@ export default function HomePage() {
             <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 3, textTransform: 'uppercase', color: '#2563eb', marginBottom: 14 }}>
               Latest Listings
             </div>
-            <h2 style={{ fontFamily: 'Georgia, "Times New Roman", serif', fontSize: 'clamp(32px,4vw,52px)', fontWeight: 700, lineHeight: 1.1, letterSpacing: '-0.5px', color: '#0f1f3d' }}>
+            <h2 style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 'clamp(32px,4vw,52px)', fontWeight: 700, lineHeight: 1.1, letterSpacing: '-0.5px', color: '#0f1f3d' }}>
               Recently Added
             </h2>
           </div>
@@ -791,7 +791,7 @@ export default function HomePage() {
           <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 3, textTransform: 'uppercase', color: '#2563eb', marginBottom: 14 }}>
             How It Works
           </div>
-          <h2 style={{ fontFamily: 'Georgia, "Times New Roman", serif', fontSize: 'clamp(32px,4vw,52px)', fontWeight: 700, color: '#0f1f3d' }}>
+          <h2 style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 'clamp(32px,4vw,52px)', fontWeight: 700, color: '#0f1f3d' }}>
             Simple, Direct, Transparent
           </h2>
         </div>
@@ -860,7 +860,7 @@ export default function HomePage() {
           pointerEvents: 'none',
         }} />
         <div style={{ position: 'relative' }}>
-          <h2 style={{ fontFamily: 'Georgia, "Times New Roman", serif', fontSize: 'clamp(28px,3.5vw,48px)', fontWeight: 700, color: '#fff', marginBottom: 12 }}>
+          <h2 style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 'clamp(28px,3.5vw,48px)', fontWeight: 700, color: '#fff', marginBottom: 12 }}>
             Ready to find your<br /><span style={{ color: '#4a90d9' }}>perfect home?</span>
           </h2>
           <p style={{ color: 'rgba(255,255,255,0.55)', fontSize: 16, fontWeight: 300 }}>
@@ -893,7 +893,7 @@ export default function HomePage() {
       }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 20 }}>
           <div style={{
-            fontFamily: 'Georgia, "Times New Roman", serif', fontSize: 20, fontWeight: 700,
+            fontFamily: "'DM Sans', sans-serif", fontSize: 20, fontWeight: 700,
             color: '#fff', display: 'flex', alignItems: 'center', gap: 10,
           }}>
             <span style={{ width: 7, height: 7, background: '#2563eb', borderRadius: '50%', display: 'inline-block' }} />

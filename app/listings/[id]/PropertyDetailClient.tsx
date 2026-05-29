@@ -279,7 +279,7 @@ export default function PropertyDetailClient() {
                     <h1 style={{ fontFamily: 'var(--font-serif)', fontSize: 32, fontWeight: 700, lineHeight: 1.2 }}>
                       {property.title}
                     </h1>
-                    <p style={{ color: '#444444', fontSize: 15, marginTop: 6, fontWeight: 500 }}>📍 {property.location}</p>
+                    <p style={{ color: '#333333', fontSize: 17, marginTop: 8, fontWeight: 600, fontFamily: 'Georgia, "Times New Roman", serif' }}>📍 {property.location}</p>
                   </div>
                   <div style={{ textAlign: 'right' }}>
                     <div style={{ fontFamily: 'var(--font-serif)', fontSize: 36, fontWeight: 700, color: 'var(--red)' }}>
@@ -376,12 +376,12 @@ export default function PropertyDetailClient() {
                   onMouseEnter={() => setBtnHovered(true)}
                   onMouseLeave={() => setBtnHovered(false)}
                   style={{
-                    width: '100%', padding: 14, background: 'var(--red)', color: '#fff',
+                    width: '100%', padding: 14, background: '#0f1f3d', color: '#fff',
                     border: 'none', borderRadius: 4, fontSize: 14, fontWeight: 600,
                     letterSpacing: '0.5px', textTransform: 'uppercase', cursor: 'pointer',
                     opacity: contacting ? 0.7 : 1, marginBottom: 12,
                     transform: btnHovered && !contacting ? 'scale(1.02)' : 'scale(1)',
-                    boxShadow: btnHovered && !contacting ? '0 4px 16px rgba(198,40,40,0.35)' : 'none',
+                    boxShadow: btnHovered && !contacting ? '0 4px 16px rgba(15,31,61,0.35)' : 'none',
                     transition: 'transform 0.2s, box-shadow 0.2s, opacity 0.2s',
                   }}
                 >

@@ -437,92 +437,6 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ── SEARCH BAR ───────────────────────────────────────── */}
-      <section style={{ background: '#f7f8fa', padding: '56px 5%', borderBottom: '1px solid #e5e7eb' }}>
-        <div style={{
-          background: '#fff', borderRadius: 10, padding: '40px 40px',
-          boxShadow: '0 4px 32px rgba(0,0,0,0.08)', border: '1px solid #e5e7eb',
-        }}>
-          <div style={{ fontSize: 13, fontWeight: 700, letterSpacing: 2, textTransform: 'uppercase', color: '#9ca3af', marginBottom: 28 }}>
-            Search Properties
-          </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr auto', gap: 16, alignItems: 'end' }}>
-            <div>
-              <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#6b7280', marginBottom: 8, textTransform: 'uppercase', letterSpacing: 1 }}>Location</label>
-              <input
-                value={location} onChange={e => setLocation(e.target.value)}
-                placeholder="City, postcode or area…"
-                onKeyDown={e => e.key === 'Enter' && handleSearch()}
-                style={{
-                  width: '100%', padding: '14px 16px', fontSize: 15,
-                  border: '1px solid #d1d5db', borderRadius: 6, outline: 'none',
-                  fontFamily: 'Georgia, "Times New Roman", serif', color: '#0f1f3d',
-                  boxSizing: 'border-box',
-                }}
-              />
-            </div>
-            <div>
-              <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#6b7280', marginBottom: 8, textTransform: 'uppercase', letterSpacing: 1 }}>Min Price</label>
-              <select value={minPrice} onChange={e => setMinPrice(e.target.value)} style={{
-                width: '100%', padding: '14px 16px', fontSize: 15,
-                border: '1px solid #d1d5db', borderRadius: 6, outline: 'none',
-                fontFamily: 'Georgia, "Times New Roman", serif', color: '#0f1f3d',
-                background: '#fff', cursor: 'pointer',
-              }}>
-                <option value="">No min</option>
-                <option value="500">£500/mo</option>
-                <option value="800">£800/mo</option>
-                <option value="1000">£1,000/mo</option>
-                <option value="1500">£1,500/mo</option>
-                <option value="2000">£2,000/mo</option>
-              </select>
-            </div>
-            <div>
-              <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#6b7280', marginBottom: 8, textTransform: 'uppercase', letterSpacing: 1 }}>Max Price</label>
-              <select value={maxPrice} onChange={e => setMaxPrice(e.target.value)} style={{
-                width: '100%', padding: '14px 16px', fontSize: 15,
-                border: '1px solid #d1d5db', borderRadius: 6, outline: 'none',
-                fontFamily: 'Georgia, "Times New Roman", serif', color: '#0f1f3d',
-                background: '#fff', cursor: 'pointer',
-              }}>
-                <option value="">No max</option>
-                <option value="1000">£1,000/mo</option>
-                <option value="1500">£1,500/mo</option>
-                <option value="2000">£2,000/mo</option>
-                <option value="3000">£3,000/mo</option>
-                <option value="5000">£5,000/mo</option>
-              </select>
-            </div>
-            <div>
-              <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#6b7280', marginBottom: 8, textTransform: 'uppercase', letterSpacing: 1 }}>Bedrooms</label>
-              <select value={bedrooms} onChange={e => setBedrooms(e.target.value)} style={{
-                width: '100%', padding: '14px 16px', fontSize: 15,
-                border: '1px solid #d1d5db', borderRadius: 6, outline: 'none',
-                fontFamily: 'Georgia, "Times New Roman", serif', color: '#0f1f3d',
-                background: '#fff', cursor: 'pointer',
-              }}>
-                <option value="">Any</option>
-                <option value="0">Studio</option>
-                <option value="1">1+</option>
-                <option value="2">2+</option>
-                <option value="3">3+</option>
-                <option value="4">4+</option>
-              </select>
-            </div>
-            <button onClick={handleSearch} style={{
-              padding: '14px 32px', background: '#0f1f3d', color: '#fff', border: 'none',
-              borderRadius: 6, fontSize: 15, fontWeight: 700, whiteSpace: 'nowrap',
-              textTransform: 'uppercase', letterSpacing: '1px', cursor: 'pointer', transition: 'background .2s',
-            }}
-              onMouseEnter={e => (e.currentTarget.style.background = '#162849')}
-              onMouseLeave={e => (e.currentTarget.style.background = '#0f1f3d')}
-            >
-              Search
-            </button>
-          </div>
-        </div>
-      </section>
-
       {/* ── INFO CARDS ───────────────────────────────────────── */}
       <section style={{ padding: '90px 5%', position: 'relative', overflow: 'hidden' }}>
         {/* Services background image - agent with clients */}
@@ -742,6 +656,92 @@ export default function HomePage() {
           </div>
 
         </div>
+        </div>
+      </section>
+
+      {/* ── SEARCH BAR ───────────────────────────────────────── */}
+      <section style={{ background: '#f7f8fa', padding: '56px 5%', borderBottom: '1px solid #e5e7eb' }}>
+        <div style={{
+          background: '#fff', borderRadius: 10, padding: '40px 40px',
+          boxShadow: '0 4px 32px rgba(0,0,0,0.08)', border: '1px solid #e5e7eb',
+        }}>
+          <div style={{ fontSize: 13, fontWeight: 700, letterSpacing: 2, textTransform: 'uppercase', color: '#9ca3af', marginBottom: 28 }}>
+            Search Properties
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr auto', gap: 16, alignItems: 'end' }}>
+            <div>
+              <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#6b7280', marginBottom: 8, textTransform: 'uppercase', letterSpacing: 1 }}>Location</label>
+              <input
+                value={location} onChange={e => setLocation(e.target.value)}
+                placeholder="City, postcode or area…"
+                onKeyDown={e => e.key === 'Enter' && handleSearch()}
+                style={{
+                  width: '100%', padding: '14px 16px', fontSize: 15,
+                  border: '1px solid #d1d5db', borderRadius: 6, outline: 'none',
+                  fontFamily: 'Georgia, "Times New Roman", serif', color: '#0f1f3d',
+                  boxSizing: 'border-box',
+                }}
+              />
+            </div>
+            <div>
+              <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#6b7280', marginBottom: 8, textTransform: 'uppercase', letterSpacing: 1 }}>Min Price</label>
+              <select value={minPrice} onChange={e => setMinPrice(e.target.value)} style={{
+                width: '100%', padding: '14px 16px', fontSize: 15,
+                border: '1px solid #d1d5db', borderRadius: 6, outline: 'none',
+                fontFamily: 'Georgia, "Times New Roman", serif', color: '#0f1f3d',
+                background: '#fff', cursor: 'pointer',
+              }}>
+                <option value="">No min</option>
+                <option value="500">£500/mo</option>
+                <option value="800">£800/mo</option>
+                <option value="1000">£1,000/mo</option>
+                <option value="1500">£1,500/mo</option>
+                <option value="2000">£2,000/mo</option>
+              </select>
+            </div>
+            <div>
+              <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#6b7280', marginBottom: 8, textTransform: 'uppercase', letterSpacing: 1 }}>Max Price</label>
+              <select value={maxPrice} onChange={e => setMaxPrice(e.target.value)} style={{
+                width: '100%', padding: '14px 16px', fontSize: 15,
+                border: '1px solid #d1d5db', borderRadius: 6, outline: 'none',
+                fontFamily: 'Georgia, "Times New Roman", serif', color: '#0f1f3d',
+                background: '#fff', cursor: 'pointer',
+              }}>
+                <option value="">No max</option>
+                <option value="1000">£1,000/mo</option>
+                <option value="1500">£1,500/mo</option>
+                <option value="2000">£2,000/mo</option>
+                <option value="3000">£3,000/mo</option>
+                <option value="5000">£5,000/mo</option>
+              </select>
+            </div>
+            <div>
+              <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#6b7280', marginBottom: 8, textTransform: 'uppercase', letterSpacing: 1 }}>Bedrooms</label>
+              <select value={bedrooms} onChange={e => setBedrooms(e.target.value)} style={{
+                width: '100%', padding: '14px 16px', fontSize: 15,
+                border: '1px solid #d1d5db', borderRadius: 6, outline: 'none',
+                fontFamily: 'Georgia, "Times New Roman", serif', color: '#0f1f3d',
+                background: '#fff', cursor: 'pointer',
+              }}>
+                <option value="">Any</option>
+                <option value="0">Studio</option>
+                <option value="1">1+</option>
+                <option value="2">2+</option>
+                <option value="3">3+</option>
+                <option value="4">4+</option>
+              </select>
+            </div>
+            <button onClick={handleSearch} style={{
+              padding: '14px 32px', background: '#0f1f3d', color: '#fff', border: 'none',
+              borderRadius: 6, fontSize: 15, fontWeight: 700, whiteSpace: 'nowrap',
+              textTransform: 'uppercase', letterSpacing: '1px', cursor: 'pointer', transition: 'background .2s',
+            }}
+              onMouseEnter={e => (e.currentTarget.style.background = '#162849')}
+              onMouseLeave={e => (e.currentTarget.style.background = '#0f1f3d')}
+            >
+              Search
+            </button>
+          </div>
         </div>
       </section>
 

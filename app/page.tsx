@@ -297,7 +297,7 @@ export default function HomePage() {
 
       {/* ── HERO ─────────────────────────────────────────────── */}
       <section style={{
-        minHeight: '100vh', background: '#0f1f3d', marginTop: '-80px',
+        minHeight: '100vh', background: '#0f1f3d', 
         position: 'relative', display: 'flex', alignItems: 'center', padding: '0 5%',
       }}>
         {/* Hero background image - Leeds city */}

@@ -300,21 +300,22 @@ export default function HomePage() {
         minHeight: '100vh', background: '#0f1f3d',
         position: 'relative', display: 'flex', alignItems: 'center', padding: '68px 5% 0',
       }}>
-        {/* Background image */}
+        {/* Hero background image - Leeds city */}
         <div style={{
           position: 'absolute', inset: 0,
-          background: 'url(https://images.unsplash.com/photo-1486325212027-8081e485255e?w=1800&q=80) center/cover no-repeat',
-          opacity: 0.12,
+          backgroundImage: 'url(/images/Background_of_the_Homepage.png)',
+          backgroundSize: 'cover', backgroundPosition: 'center',
+          backgroundRepeat: 'no-repeat',
         }} />
-        {/* Dark overlay */}
+        {/* Dark overlay for text readability */}
         <div style={{
           position: 'absolute', inset: 0,
-          background: 'linear-gradient(135deg,rgba(15,31,61,0.95) 0%,rgba(15,31,61,0.6) 100%)',
+          background: 'linear-gradient(135deg,rgba(10,20,50,0.88) 0%,rgba(10,20,50,0.65) 60%, rgba(10,20,50,0.4) 100%)',
         }} />
-        {/* Gold accent radial */}
+        {/* Subtle radial accent */}
         <div style={{
           position: 'absolute', inset: 0,
-          background: 'radial-gradient(ellipse at 70% 50%, rgba(30,58,110,0.15) 0%, transparent 60%)',
+          background: 'radial-gradient(ellipse at 70% 50%, rgba(30,58,110,0.12) 0%, transparent 60%)',
           pointerEvents: 'none',
         }} />
 
@@ -401,8 +402,24 @@ export default function HomePage() {
       </section>
 
       {/* ── BOOK A VALUATION ─────────────────────────────────── */}
-      <section style={{ background: '#162849', padding: '64px 5%' }}>
-        <div style={{ maxWidth: 680 }}>
+      <section style={{
+        padding: '64px 5%',
+        position: 'relative',
+        overflow: 'hidden',
+      }}>
+        {/* Valuation background image - luxury interior */}
+        <div style={{
+          position: 'absolute', inset: 0,
+          backgroundImage: 'url(/images/Background_Book_Valuation.png)',
+          backgroundSize: 'cover', backgroundPosition: 'center',
+          backgroundRepeat: 'no-repeat',
+        }} />
+        {/* Dark overlay */}
+        <div style={{
+          position: 'absolute', inset: 0,
+          background: 'rgba(8, 18, 40, 0.78)',
+        }} />
+        <div style={{ maxWidth: 680, position: 'relative', zIndex: 1 }}>
           <h2 style={{
             fontFamily: 'Georgia, "Times New Roman", serif',
             fontSize: 'clamp(24px,4vw,40px)', fontWeight: 700,
@@ -507,7 +524,20 @@ export default function HomePage() {
       </section>
 
       {/* ── INFO CARDS ───────────────────────────────────────── */}
-      <section style={{ padding: '90px 5%', background: '#0f1f3d' }}>
+      <section style={{ padding: '90px 5%', position: 'relative', overflow: 'hidden' }}>
+        {/* Services background image - agent with clients */}
+        <div style={{
+          position: 'absolute', inset: 0,
+          backgroundImage: 'url(/images/Background_of_the_services.png)',
+          backgroundSize: 'cover', backgroundPosition: 'center top',
+          backgroundRepeat: 'no-repeat',
+        }} />
+        {/* Dark overlay */}
+        <div style={{
+          position: 'absolute', inset: 0,
+          background: 'rgba(8, 18, 40, 0.82)',
+        }} />
+        <div style={{ position: 'relative', zIndex: 1 }}>
         <div style={{ marginBottom: 56, textAlign: 'center' }}>
           <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 3, textTransform: 'uppercase', color: '#4a90d9', marginBottom: 14 }}>
             Our Services
@@ -549,10 +579,24 @@ export default function HomePage() {
             </div>
           ))}
         </div>
+        </div>
       </section>
 
       {/* ── PRICING TABLE ─────────────────────────────────────── */}
-      <section style={{ padding: '90px 5%', background: '#0a1628' }}>
+      <section style={{ padding: '90px 5%', position: 'relative', overflow: 'hidden' }}>
+        {/* Pricing background - same services image, different angle */}
+        <div style={{
+          position: 'absolute', inset: 0,
+          backgroundImage: 'url(/images/Background_of_the_services.png)',
+          backgroundSize: 'cover', backgroundPosition: 'center bottom',
+          backgroundRepeat: 'no-repeat',
+        }} />
+        {/* Darker overlay for pricing readability */}
+        <div style={{
+          position: 'absolute', inset: 0,
+          background: 'rgba(5, 12, 30, 0.88)',
+        }} />
+        <div style={{ position: 'relative', zIndex: 1 }}>
         <div style={{ marginBottom: 56, textAlign: 'center' }}>
           <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 3, textTransform: 'uppercase', color: '#4a90d9', marginBottom: 14 }}>
             Transparent Pricing
@@ -697,6 +741,7 @@ export default function HomePage() {
             </div>
           </div>
 
+        </div>
         </div>
       </section>
 

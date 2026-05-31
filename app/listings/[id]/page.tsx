@@ -27,25 +27,14 @@ export default function PropertyDetailPage() {
 
   useEffect(() => {
     if (!id) return;
-    (async () => {
-      try {
-        const prop = await getProperty(id);
-        setProperty(prop);
-        if (prop?.landlordId) {
-          try {
-            const landlord = await getUserProfile(prop.landlordId);
-            setLandlordName(landlord?.name || 'Landlord');
-          } catch {
-            setLandlordName('Landlord');
-          }
-        }
-      } catch (err) {
-        console.error('Failed to load property:', err);
-        setProperty(null);
-      } finally {
-        setLoading(false);
+    getProperty(id).then(async (prop) => {
+      setProperty(prop);
+      if (prop?.landlordId) {
+        const landlord = await getUserProfile(prop.landlordId);
+        setLandlordName(landlord?.name || 'Landlord');
       }
-    })();
+      setLoading(false);
+    });
   }, [id]);
 
   const handleContact = async () => {

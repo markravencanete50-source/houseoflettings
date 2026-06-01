@@ -27,14 +27,32 @@ export default function PropertyDetailPage() {
 
   useEffect(() => {
     if (!id) return;
-    getProperty(id).then(async (prop) => {
-      setProperty(prop);
-      if (prop?.landlordId) {
-        const landlord = await getUserProfile(prop.landlordId);
-        setLandlordName(landlord?.name || 'Landlord');
+
+    let cancelled = false;
+
+    const load = async () => {
+      try {
+        const prop = await getProperty(id);
+        if (cancelled) return;
+        setProperty(prop);
+        if (prop?.landlordId) {
+          const landlord = await getUserProfile(prop.landlordId);
+          if (cancelled) return;
+          setLandlordName(landlord?.name || 'Landlord');
+        }
+      } catch (err: any) {
+        if (cancelled) return;
+        console.error('Failed to load property:', err);
+        setError(err?.message || 'Failed to load property. Please try again.');
+        setProperty(null);
+      } finally {
+        if (!cancelled) setLoading(false);
       }
-      setLoading(false);
-    });
+    };
+
+    load();
+
+    return () => { cancelled = true; };
   }, [id]);
 
   const handleContact = async () => {
@@ -79,7 +97,12 @@ export default function PropertyDetailPage() {
     <>
       <Navbar />
       <div style={{ paddingTop: 68, textAlign: 'center', padding: '120px 5%' }}>
-        <h2 style={{ fontFamily: 'var(--font-serif)', fontSize: 32 }}>Property not found</h2>
+        <h2 style={{ fontFamily: 'var(--font-serif)', fontSize: 32 }}>
+          {error ? 'Something went wrong' : 'Property not found'}
+        </h2>
+        {error && (
+          <p style={{ color: 'var(--gray-400)', fontSize: 15, marginTop: 10 }}>{error}</p>
+        )}
         <Link href="/listings" style={{ color: 'var(--red)', fontWeight: 600, marginTop: 16, display: 'inline-block' }}>
           ← Back to listings
         </Link>

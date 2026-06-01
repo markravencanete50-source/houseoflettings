@@ -276,6 +276,8 @@ export default function Navbar() {
         <div style={innerStyle}>
           {/* Logo */}
           <Link href="/" style={logoStyle}>
+            <span style={dotStyle} />
+            House of Lettings
           </Link>
 
           {/* Desktop Nav Links */}

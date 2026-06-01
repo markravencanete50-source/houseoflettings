@@ -117,14 +117,16 @@ export default function PropertyDetailPage() {
       <div style={{ paddingTop: 68, minHeight: '100vh', background: 'var(--gray-100)' }}>
 
         {/* Breadcrumb */}
-        <div style={{ background: '#fff', borderBottom: '1px solid var(--gray-200)', padding: '14px 5%' }}>
-          <span style={{ fontSize: 13, color: 'var(--gray-400)' }}>
-            <Link href="/" style={{ color: 'var(--gray-400)' }}>Home</Link>
-            {' → '}
-            <Link href="/listings" style={{ color: 'var(--gray-400)' }}>Listings</Link>
-            {' → '}
-            <span style={{ color: 'var(--black)', fontWeight: 500 }}>{property.title}</span>
-          </span>
+        <div style={{ background: '#fff', borderBottom: '1px solid var(--gray-200)', padding: '14px 5%', display: 'flex', gap: 10, alignItems: 'center' }}>
+          <Link href="/" style={{
+            background: '#0f1f3d', color: '#fff', padding: '8px 20px',
+            borderRadius: 999, fontSize: 15, fontWeight: 600, textDecoration: 'none',
+          }}>Home</Link>
+          <span style={{ color: 'var(--gray-400)', fontSize: 14 }}>→</span>
+          <Link href="/listings" style={{
+            background: '#0f1f3d', color: '#fff', padding: '8px 20px',
+            borderRadius: 999, fontSize: 15, fontWeight: 600, textDecoration: 'none',
+          }}>Listings</Link>
         </div>
 
         <div style={{ padding: '40px 5%', maxWidth: 1100, margin: '0 auto' }}>
@@ -174,7 +176,7 @@ export default function PropertyDetailPage() {
                     <h1 style={{ fontFamily: 'var(--font-serif)', fontSize: 32, fontWeight: 700, lineHeight: 1.2 }}>
                       {property.title}
                     </h1>
-                    <p style={{ color: 'var(--gray-400)', fontSize: 15, marginTop: 6 }}>📍 {property.location}</p>
+                    <p style={{ color: '#000000', fontSize: 17, fontWeight: 600, marginTop: 6 }}>📍 {property.location}</p>
                   </div>
                   <div style={{ textAlign: 'right' }}>
                     <div style={{ fontFamily: 'var(--font-serif)', fontSize: 36, fontWeight: 700, color: 'var(--red)' }}>
@@ -209,74 +211,6 @@ export default function PropertyDetailPage() {
                 <p style={{ fontSize: 15, color: 'var(--gray-600)', lineHeight: 1.75, whiteSpace: 'pre-line' }}>
                   {property.description}
                 </p>
-
-                {/* Pricing Details */}
-                <div style={{ marginTop: 28, borderTop: '1px solid var(--gray-200)', paddingTop: 24 }}>
-                  <h3 style={{ fontSize: 16, fontWeight: 700, marginBottom: 16 }}>Pricing Details</h3>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-                    <div style={{ background: 'var(--gray-100)', borderRadius: 6, padding: '14px 18px' }}>
-                      <div style={{ fontSize: 12, color: 'var(--gray-400)', marginBottom: 4 }}>MONTHLY RENT</div>
-                      <div style={{ fontSize: 18, fontWeight: 700, color: 'var(--black)' }}>£{property.price.toLocaleString()}</div>
-                    </div>
-                    {property.depositAmount ? (
-                      <div style={{ background: 'var(--gray-100)', borderRadius: 6, padding: '14px 18px' }}>
-                        <div style={{ fontSize: 12, color: 'var(--gray-400)', marginBottom: 4 }}>DEPOSIT</div>
-                        <div style={{ fontSize: 18, fontWeight: 700, color: 'var(--black)' }}>£{property.depositAmount.toLocaleString()}</div>
-                      </div>
-                    ) : null}
-                  </div>
-                  <div style={{
-                    marginTop: 12, padding: '10px 14px', borderRadius: 6, fontSize: 13,
-                    background: property.billsIncluded ? '#f0fdf4' : '#fafafa',
-                    border: `1px solid ${property.billsIncluded ? '#bbf7d0' : 'var(--gray-200)'}`,
-                    color: property.billsIncluded ? '#166534' : 'var(--gray-600)',
-                  }}>
-                    {property.billsIncluded ? '✓ Bills included' : '✗ Bills not included'}
-                    {property.billsNote ? <span style={{ marginLeft: 8, fontStyle: 'italic' }}>{property.billsNote}</span> : null}
-                  </div>
-                </div>
-
-                {/* Availability */}
-                {property.availableFrom ? (
-                  <div style={{ marginTop: 16, padding: '14px 18px', background: 'var(--gray-100)', borderRadius: 6, fontSize: 14 }}>
-                    📅 <strong>Available from:</strong>{' '}
-                    {new Date(property.availableFrom).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}
-                  </div>
-                ) : null}
-
-                {/* Features & Amenities */}
-                {(property.parking || property.garden || property.balcony) ? (
-                  <div style={{ marginTop: 28, borderTop: '1px solid var(--gray-200)', paddingTop: 24 }}>
-                    <h3 style={{ fontSize: 16, fontWeight: 700, marginBottom: 16 }}>Features & Amenities</h3>
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12 }}>
-                      {property.parking ? (
-                        <div style={{ background: 'var(--gray-100)', borderRadius: 6, padding: '14px 16px', textAlign: 'center' }}>
-                          <div style={{ fontSize: 22, marginBottom: 6 }}>🚗</div>
-                          <div style={{ fontSize: 12, color: 'var(--gray-400)', marginBottom: 2 }}>PARKING</div>
-                          <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--black)' }}>{parkingLabel(property.parking)}</div>
-                        </div>
-                      ) : null}
-                      {property.garden ? (
-                        <div style={{ background: 'var(--gray-100)', borderRadius: 6, padding: '14px 16px', textAlign: 'center' }}>
-                          <div style={{ fontSize: 22, marginBottom: 6 }}>🌿</div>
-                          <div style={{ fontSize: 12, color: 'var(--gray-400)', marginBottom: 2 }}>GARDEN</div>
-                          <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--black)' }}>
-                            {property.garden === 'none' ? 'No Garden' :
-                             property.garden === 'private' ? 'Private Garden' :
-                             property.garden === 'shared' ? 'Shared Garden' : 'Communal Grounds'}
-                          </div>
-                        </div>
-                      ) : null}
-                      {property.balcony ? (
-                        <div style={{ background: 'var(--gray-100)', borderRadius: 6, padding: '14px 16px', textAlign: 'center' }}>
-                          <div style={{ fontSize: 22, marginBottom: 6 }}>🏠</div>
-                          <div style={{ fontSize: 12, color: 'var(--gray-400)', marginBottom: 2 }}>BALCONY</div>
-                          <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--black)' }}>Has Balcony / Terrace</div>
-                        </div>
-                      ) : null}
-                    </div>
-                  </div>
-                ) : null}
 
                 {/* Video Tour */}
                 {property.videoTourUrl ? (
@@ -357,6 +291,72 @@ export default function PropertyDetailPage() {
               <Link href="/listings" style={{ display: 'block', textAlign: 'center', marginTop: 14, color: 'var(--gray-400)', fontSize: 13 }}>
                 ← Back to listings
               </Link>
+
+              {/* Pricing Details */}
+              <div style={{ background: '#fff', border: '1px solid var(--gray-200)', borderRadius: 8, padding: 24, marginTop: 20 }}>
+                <h3 style={{ fontSize: 16, fontWeight: 700, marginBottom: 16 }}>Pricing Details</h3>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                  <div style={{ background: 'var(--gray-100)', borderRadius: 6, padding: '14px 18px' }}>
+                    <div style={{ fontSize: 12, color: 'var(--gray-400)', marginBottom: 4 }}>MONTHLY RENT</div>
+                    <div style={{ fontSize: 18, fontWeight: 700, color: 'var(--black)' }}>£{property.price.toLocaleString()}</div>
+                  </div>
+                  {property.depositAmount ? (
+                    <div style={{ background: 'var(--gray-100)', borderRadius: 6, padding: '14px 18px' }}>
+                      <div style={{ fontSize: 12, color: 'var(--gray-400)', marginBottom: 4 }}>DEPOSIT</div>
+                      <div style={{ fontSize: 18, fontWeight: 700, color: 'var(--black)' }}>£{property.depositAmount.toLocaleString()}</div>
+                    </div>
+                  ) : null}
+                </div>
+                <div style={{
+                  marginTop: 12, padding: '10px 14px', borderRadius: 6, fontSize: 13,
+                  background: property.billsIncluded ? '#f0fdf4' : '#fafafa',
+                  border: `1px solid ${property.billsIncluded ? '#bbf7d0' : 'var(--gray-200)'}`,
+                  color: property.billsIncluded ? '#166534' : 'var(--gray-600)',
+                }}>
+                  {property.billsIncluded ? '✓ Bills included' : '✗ Bills not included'}
+                  {property.billsNote ? <span style={{ marginLeft: 8, fontStyle: 'italic' }}>{property.billsNote}</span> : null}
+                </div>
+                {property.availableFrom ? (
+                  <div style={{ marginTop: 12, padding: '14px 18px', background: 'var(--gray-100)', borderRadius: 6, fontSize: 14 }}>
+                    📅 <strong>Available from:</strong>{' '}
+                    {new Date(property.availableFrom).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}
+                  </div>
+                ) : null}
+              </div>
+
+              {/* Features & Amenities */}
+              {(property.parking || property.garden || property.balcony) ? (
+                <div style={{ background: '#fff', border: '1px solid var(--gray-200)', borderRadius: 8, padding: 24, marginTop: 16 }}>
+                  <h3 style={{ fontSize: 16, fontWeight: 700, marginBottom: 16 }}>Features & Amenities</h3>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12 }}>
+                    {property.parking ? (
+                      <div style={{ background: 'var(--gray-100)', borderRadius: 6, padding: '14px 16px', textAlign: 'center' }}>
+                        <div style={{ fontSize: 22, marginBottom: 6 }}>🚗</div>
+                        <div style={{ fontSize: 12, color: 'var(--gray-400)', marginBottom: 2 }}>PARKING</div>
+                        <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--black)' }}>{parkingLabel(property.parking)}</div>
+                      </div>
+                    ) : null}
+                    {property.garden ? (
+                      <div style={{ background: 'var(--gray-100)', borderRadius: 6, padding: '14px 16px', textAlign: 'center' }}>
+                        <div style={{ fontSize: 22, marginBottom: 6 }}>🌿</div>
+                        <div style={{ fontSize: 12, color: 'var(--gray-400)', marginBottom: 2 }}>GARDEN</div>
+                        <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--black)' }}>
+                          {property.garden === 'none' ? 'No Garden' :
+                           property.garden === 'private' ? 'Private Garden' :
+                           property.garden === 'shared' ? 'Shared Garden' : 'Communal Grounds'}
+                        </div>
+                      </div>
+                    ) : null}
+                    {property.balcony ? (
+                      <div style={{ background: 'var(--gray-100)', borderRadius: 6, padding: '14px 16px', textAlign: 'center' }}>
+                        <div style={{ fontSize: 22, marginBottom: 6 }}>🏠</div>
+                        <div style={{ fontSize: 12, color: 'var(--gray-400)', marginBottom: 2 }}>BALCONY</div>
+                        <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--black)' }}>Has Balcony / Terrace</div>
+                      </div>
+                    ) : null}
+                  </div>
+                </div>
+              ) : null}
             </div>
 
           </div>

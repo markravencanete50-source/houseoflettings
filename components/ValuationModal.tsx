@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
+import { createPortal } from "react-dom";
 
 const UK_PHONE_REGEX = /^(\+44|0)[\s-]?[1-9][\d\s-]{8,11}$/;
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -83,7 +84,10 @@ export default function ValuationModal({ isOpen, onClose }: ValuationModalProps)
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [errorMsg, setErrorMsg] = useState("");
+  const [mounted, setMounted] = useState(false);
   const overlayRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => { setMounted(true); }, []);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -146,9 +150,9 @@ export default function ValuationModal({ isOpen, onClose }: ValuationModalProps)
     }
   };
 
-  if (!isOpen) return null;
+  if (!mounted || !isOpen) return null;
 
-  return (
+  return createPortal(
     <>
       <style>{MODAL_CSS}</style>
       <div ref={overlayRef} className={`hol-overlay${isOpen ? " hol-overlay--open" : ""}`} onClick={handleOverlayClick}>
@@ -268,13 +272,14 @@ export default function ValuationModal({ isOpen, onClose }: ValuationModalProps)
           </div>
         </div>
       </div>
-    </>
+    </>,
+    document.body
   );
 }
 
 const MODAL_CSS = `
   @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600&family=DM+Sans:wght@400;500;600&display=swap');
-  .hol-overlay{position:fixed;inset:0;z-index:9999;background:rgba(10,15,28,.75);backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;padding:16px;opacity:0;pointer-events:none;transition:opacity .25s ease;}
+  .hol-overlay{position:fixed;inset:0;z-index:99999;background:rgba(10,15,28,.75);backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;padding:16px;opacity:0;pointer-events:none;transition:opacity .25s ease;}
   .hol-overlay--open{opacity:1;pointer-events:all;}
   .hol-modal{background:#fff;border-radius:20px;width:100%;max-width:680px;max-height:92vh;overflow-y:auto;box-shadow:0 32px 80px rgba(0,0,0,.28);transform:scale(.94) translateY(10px);transition:transform .3s cubic-bezier(.34,1.56,.64,1);font-family:'DM Sans',sans-serif;scrollbar-width:thin;scrollbar-color:#e2e5ed transparent;}
   .hol-overlay--open .hol-modal{transform:scale(1) translateY(0);}

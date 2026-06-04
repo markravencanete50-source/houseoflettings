@@ -9,6 +9,7 @@ import { getOrCreateChat } from '@/services/chat';
 import { getUserProfile } from '@/services/auth';
 import { useAuth } from '@/hooks/useAuth';
 import { Property } from '@/lib/types';
+import TenantEnquiryModal from '@/components/property/TenantEnquiryModal';
 
 export default function PropertyDetailClient() {
   const { id } = useParams<{ id: string }>();
@@ -22,7 +23,9 @@ export default function PropertyDetailClient() {
   const [error, setError] = useState('');
   const [mounted, setMounted] = useState(false);
   const [btnHovered, setBtnHovered] = useState(false);
+  const [viewingHovered, setViewingHovered] = useState(false);
   const [imgFading, setImgFading] = useState(false);
+  const [enquiryOpen, setEnquiryOpen] = useState(false);
 
   useEffect(() => {
     const t = setTimeout(() => setMounted(true), 50);
@@ -316,6 +319,30 @@ export default function PropertyDetailClient() {
                   ✓ No agency fees — contact landlord directly
                 </div>
 
+                {/* Book a Viewing button */}
+                <button
+                  onClick={() => setEnquiryOpen(true)}
+                  onMouseEnter={() => setViewingHovered(true)}
+                  onMouseLeave={() => setViewingHovered(false)}
+                  style={{
+                    width: '100%', padding: 14,
+                    background: viewingHovered
+                      ? 'linear-gradient(135deg,#142f4a,#1a56a0)'
+                      : 'linear-gradient(135deg,#1a3c5e,#2563a8)',
+                    color: '#fff',
+                    border: 'none', borderRadius: 6, fontSize: 14, fontWeight: 600,
+                    letterSpacing: '0.5px', textTransform: 'uppercase', cursor: 'pointer',
+                    marginBottom: 10,
+                    transform: viewingHovered ? 'scale(1.02)' : 'scale(1)',
+                    boxShadow: viewingHovered ? '0 4px 16px rgba(37,99,168,0.4)' : '0 2px 8px rgba(37,99,168,0.25)',
+                    transition: 'all 0.2s',
+                    fontFamily: 'Georgia, serif',
+                  }}
+                >
+                  🏠 Book a Viewing
+                </button>
+
+                {/* Message Landlord button */}
                 <button
                   onClick={handleContact}
                   disabled={contacting}
@@ -416,6 +443,14 @@ export default function PropertyDetailClient() {
           </div>
         </div>
       </div>
+
+      {/* Tenant Enquiry Modal */}
+      <TenantEnquiryModal
+        isOpen={enquiryOpen}
+        onClose={() => setEnquiryOpen(false)}
+        propertyTitle={property.title}
+        propertyPrice={property.price}
+      />
     </>
   );
 }

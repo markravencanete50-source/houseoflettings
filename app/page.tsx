@@ -476,17 +476,17 @@ export default function HomePage() {
         position: 'relative',
         overflow: 'hidden',
       }}>
-        {/* Background image - tenant focused */}
+        {/* Background image - agent photo */}
         <div style={{
           position: 'absolute', inset: 0,
-          backgroundImage: 'url(/images/tenant-pressure.jpeg)',
-          backgroundSize: 'cover', backgroundPosition: 'center',
+          backgroundImage: 'url(/images/agent-photo.jpeg)',
+          backgroundSize: 'cover', backgroundPosition: 'center right',
           backgroundRepeat: 'no-repeat',
         }} />
         {/* Dark overlay */}
         <div style={{
           position: 'absolute', inset: 0,
-          background: 'rgba(8, 18, 40, 0.78)',
+          background: 'rgba(8, 18, 40, 0.82)',
         }} />
         <div style={{ maxWidth: 780, position: 'relative', zIndex: 1 }}>
           <h2 style={{

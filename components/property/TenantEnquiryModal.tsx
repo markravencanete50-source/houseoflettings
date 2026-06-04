@@ -14,7 +14,9 @@ const EMPTY_FORM = {
   postcode: "",
   // About your move
   moveBy: "",
+  moveByOther: "",
   stayDuration: "",
+  stayDurationOther: "",
   whoMovingIn: "",
   // About the tenancy
   firstTimeRenting: "",
@@ -62,6 +64,7 @@ function RadioGroup({ options, value, onChange, columns = 2 }: RadioGroupProps) 
       {options.map((opt) => (
         <label
           key={opt}
+          onClick={() => onChange(opt)}
           style={{
             display: "flex",
             alignItems: "center",
@@ -76,6 +79,7 @@ function RadioGroup({ options, value, onChange, columns = 2 }: RadioGroupProps) 
             fontWeight: value === opt ? 600 : 400,
             transition: "all 0.15s",
             fontFamily: "'DM Sans', sans-serif",
+            userSelect: "none",
           }}
         >
           <span style={{
@@ -83,6 +87,7 @@ function RadioGroup({ options, value, onChange, columns = 2 }: RadioGroupProps) 
             border: `2px solid ${value === opt ? "#2563a8" : "#d1d5db"}`,
             background: value === opt ? "#2563a8" : "#fff",
             display: "flex", alignItems: "center", justifyContent: "center",
+            flexShrink: 0,
           }}>
             {value === opt && (
               <span style={{ width: 7, height: 7, borderRadius: "50%", background: "#fff", display: "block" }} />
@@ -284,21 +289,41 @@ export default function TenantEnquiryModal({
                   <label className="hol-label">When do you want to move in by?<span className="hol-req">*</span></label>
                   {errors.moveBy && <p className="hol-err">{errors.moveBy}</p>}
                   <RadioGroup
-                    options={["Within 2 weeks", "Within 1 month", "Within 3 months", "Within 3–6 months", "More than 6 months", "I'm flexible"]}
+                    options={["Within 2 weeks", "Within 1 month", "Other"]}
                     value={form.moveBy}
                     onChange={(v) => setRadio("moveBy", v)}
-                    columns={2}
+                    columns={3}
                   />
+                  {form.moveBy === "Other" && (
+                    <input
+                      type="text"
+                      className="hol-input"
+                      placeholder="Please specify your move-in timeframe"
+                      value={form.moveByOther}
+                      onChange={set("moveByOther")}
+                      style={{ marginTop: 8 }}
+                    />
+                  )}
                 </div>
 
                 <div className="hol-field hol-field--mb">
                   <label className="hol-label">How long do you plan to live in the property?</label>
                   <RadioGroup
-                    options={["6 months", "12 months", "18 months", "24 months", "Over 24 months"]}
+                    options={["6 months", "12 months", "Other"]}
                     value={form.stayDuration}
                     onChange={(v) => setRadio("stayDuration", v)}
-                    columns={2}
+                    columns={3}
                   />
+                  {form.stayDuration === "Other" && (
+                    <input
+                      type="text"
+                      className="hol-input"
+                      placeholder="Please specify how long you plan to stay"
+                      value={form.stayDurationOther}
+                      onChange={set("stayDurationOther")}
+                      style={{ marginTop: 8 }}
+                    />
+                  )}
                 </div>
 
                 <div className="hol-field hol-field--mb">

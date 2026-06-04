@@ -1,10 +1,92 @@
 'use client';
 // components/layout/Navbar.tsx
-import { useState, useEffect } from 'react';
+import { useState, useEffect, lazy, Suspense } from 'react';
 import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
 import { signOut } from '@/services/auth';
+
+const ValuationModal = lazy(() => import('@/components/ValuationModal'));
+const TenantEnquiryModal = lazy(() => import('@/components/property/TenantEnquiryModal'));
+
+function NavValuationButton() {
+  const [open, setOpen] = useState(false);
+  return (
+    <>
+      <button
+        onClick={() => setOpen(true)}
+        style={{
+          padding: '8px 16px',
+          background: '#2563eb',
+          color: '#fff',
+          border: 'none',
+          borderRadius: 4,
+          fontFamily: "'DM Sans', sans-serif",
+          fontSize: 12,
+          fontWeight: 600,
+          letterSpacing: '0.07em',
+          textTransform: 'uppercase',
+          cursor: 'pointer',
+          transition: 'background 0.2s',
+          whiteSpace: 'nowrap',
+        }}
+        onMouseEnter={e => (e.currentTarget.style.background = '#1d4ed8')}
+        onMouseLeave={e => (e.currentTarget.style.background = '#2563eb')}
+      >
+        Book a Valuation
+      </button>
+      <Suspense fallback={null}>
+        {open && <ValuationModal isOpen={open} onClose={() => setOpen(false)} />}
+      </Suspense>
+    </>
+  );
+}
+
+function NavViewingButton() {
+  const [open, setOpen] = useState(false);
+  return (
+    <>
+      <button
+        onClick={() => setOpen(true)}
+        style={{
+          padding: '8px 16px',
+          background: 'transparent',
+          color: '#fff',
+          border: '1.5px solid rgba(255,255,255,0.6)',
+          borderRadius: 4,
+          fontFamily: "'DM Sans', sans-serif",
+          fontSize: 12,
+          fontWeight: 600,
+          letterSpacing: '0.07em',
+          textTransform: 'uppercase',
+          cursor: 'pointer',
+          transition: 'all 0.2s',
+          whiteSpace: 'nowrap',
+        }}
+        onMouseEnter={e => {
+          e.currentTarget.style.background = '#2563eb';
+          e.currentTarget.style.borderColor = '#2563eb';
+        }}
+        onMouseLeave={e => {
+          e.currentTarget.style.background = 'transparent';
+          e.currentTarget.style.borderColor = 'rgba(255,255,255,0.6)';
+        }}
+      >
+        Book a Viewing
+      </button>
+      <Suspense fallback={null}>
+        {open && (
+          <TenantEnquiryModal
+            isOpen={open}
+            onClose={() => setOpen(false)}
+            propertyTitle="House of Lettings"
+            propertyPrice={0}
+          />
+        )}
+      </Suspense>
+    </>
+  );
+}
 
 export default function Navbar() {
   const { profile, loading } = useAuth();
@@ -19,12 +101,8 @@ export default function Navbar() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // Close menu on route change
-  useEffect(() => {
-    setMenuOpen(false);
-  }, [pathname]);
+  useEffect(() => { setMenuOpen(false); }, [pathname]);
 
-  // Lock body scroll when mobile menu is open
   useEffect(() => {
     document.body.style.overflow = menuOpen ? 'hidden' : '';
     return () => { document.body.style.overflow = ''; };
@@ -40,23 +118,17 @@ export default function Navbar() {
     profile?.role === 'landlord' ? '/dashboard/landlord' :
     profile?.role === 'tenant'   ? '/dashboard/tenant'   : '/admin';
 
-  // ── Styles ────────────────────────────────────────────────
-
   const navStyle: React.CSSProperties = {
     position: 'fixed',
-    top: 0,
-    left: 0,
-    right: 0,
+    top: 0, left: 0, right: 0,
     zIndex: 100,
     height: 72,
     display: 'flex',
     alignItems: 'center',
     padding: '0 5%',
-    background: scrolled
-      ? 'rgba(15,31,61,0.97)'
-      : 'transparent',
+    background: scrolled ? 'rgba(10,22,47,0.97)' : 'rgba(10,22,47,0.85)',
     borderBottom: scrolled ? '1px solid rgba(255,255,255,0.08)' : 'none',
-    boxShadow: scrolled ? '0 2px 16px rgba(0,0,0,0.2)' : 'none',
+    boxShadow: scrolled ? '0 2px 16px rgba(0,0,0,0.3)' : 'none',
     transition: 'box-shadow 0.3s ease, background 0.3s ease',
   };
 
@@ -71,31 +143,45 @@ export default function Navbar() {
   };
 
   const logoStyle: React.CSSProperties = {
-    fontFamily: "'Playfair Display', Georgia, serif",
-    fontSize: 20,
-    fontWeight: 700,
-    color: '#1d3557',
-    letterSpacing: '-0.4px',
     display: 'flex',
-    alignItems: 'center',
-    gap: 10,
+    flexDirection: 'column',
     textDecoration: 'none',
     flexShrink: 0,
+    lineHeight: 1.2,
+  };
+
+  const logoTopStyle: React.CSSProperties = {
+    fontFamily: "'Playfair Display', Georgia, serif",
+    fontSize: 18,
+    fontWeight: 700,
+    color: '#ffffff',
+    letterSpacing: '-0.2px',
+  };
+
+  const logoSubStyle: React.CSSProperties = {
+    fontFamily: "'DM Sans', sans-serif",
+    fontSize: 10,
+    fontWeight: 500,
+    color: 'rgba(255,255,255,0.55)',
+    letterSpacing: '0.18em',
+    textTransform: 'uppercase',
   };
 
   const dotStyle: React.CSSProperties = {
-    width: 8,
-    height: 8,
+    display: 'inline-block',
+    width: 6,
+    height: 6,
     background: '#c9a96e',
     borderRadius: '50%',
-    display: 'inline-block',
-    flexShrink: 0,
+    marginLeft: 4,
+    verticalAlign: 'middle',
+    marginBottom: 2,
   };
 
   const desktopLinksStyle: React.CSSProperties = {
     display: 'flex',
     alignItems: 'center',
-    gap: 32,
+    gap: 24,
   };
 
   const linkStyle: React.CSSProperties = {
@@ -108,12 +194,11 @@ export default function Navbar() {
     textDecoration: 'none',
     transition: 'color 0.2s',
     padding: '4px 0',
-    borderBottom: '1.5px solid transparent',
   };
 
   const btnOutlineStyle: React.CSSProperties = {
-    padding: '9px 20px',
-    border: '1.5px solid rgba(255,255,255,0.6)',
+    padding: '8px 16px',
+    border: '1.5px solid rgba(255,255,255,0.5)',
     color: '#ffffff',
     background: 'transparent',
     borderRadius: 4,
@@ -128,38 +213,6 @@ export default function Navbar() {
     transition: 'all 0.2s',
   };
 
-  const btnPrimaryStyle: React.CSSProperties = {
-    padding: '9px 20px',
-    background: '#1d3557',
-    color: '#fff',
-    border: '1.5px solid #1d3557',
-    borderRadius: 4,
-    fontFamily: "'DM Sans', sans-serif",
-    fontSize: 12,
-    fontWeight: 600,
-    letterSpacing: '0.07em',
-    textTransform: 'uppercase' as const,
-    cursor: 'pointer',
-    textDecoration: 'none',
-    display: 'inline-block',
-    transition: 'all 0.2s',
-  };
-
-  const hamburgerStyle: React.CSSProperties = {
-    display: 'none',
-    flexDirection: 'column' as const,
-    justifyContent: 'center',
-    gap: 5,
-    width: 40,
-    height: 40,
-    background: 'none',
-    border: 'none',
-    cursor: 'pointer',
-    padding: 8,
-    borderRadius: 4,
-    flexShrink: 0,
-  };
-
   const barStyle = (open: boolean, nth: 1|2|3): React.CSSProperties => ({
     width: '100%',
     height: 2,
@@ -169,33 +222,24 @@ export default function Navbar() {
     transformOrigin: 'center',
     transform:
       open && nth === 1 ? 'translateY(7px) rotate(45deg)' :
-      open && nth === 2 ? 'scaleX(0) translateX(20px)' :
-      open && nth === 3 ? 'translateY(-7px) rotate(-45deg)' :
-      'none',
+      open && nth === 2 ? 'scaleX(0)' :
+      open && nth === 3 ? 'translateY(-7px) rotate(-45deg)' : 'none',
     opacity: open && nth === 2 ? 0 : 1,
   });
 
-  // Mobile menu overlay
   const overlayStyle: React.CSSProperties = {
-    position: 'fixed',
-    inset: 0,
-    zIndex: 99,
-    background: 'rgba(0,0,0,0.4)',
+    position: 'fixed', inset: 0, zIndex: 99,
+    background: 'rgba(0,0,0,0.5)',
     opacity: menuOpen ? 1 : 0,
     pointerEvents: menuOpen ? 'auto' : 'none',
     transition: 'opacity 0.3s ease',
   };
 
-  // Mobile drawer
   const drawerStyle: React.CSSProperties = {
-    position: 'fixed',
-    top: 0,
-    right: 0,
-    bottom: 0,
-    zIndex: 101,
+    position: 'fixed', top: 0, right: 0, bottom: 0, zIndex: 101,
     width: 'min(320px, 85vw)',
-    background: '#fff',
-    boxShadow: '-4px 0 24px rgba(0,0,0,0.12)',
+    background: '#0a162f',
+    boxShadow: '-4px 0 24px rgba(0,0,0,0.3)',
     transform: menuOpen ? 'translateX(0)' : 'translateX(100%)',
     transition: 'transform 0.35s cubic-bezier(0.4, 0, 0.2, 1)',
     overflowY: 'auto',
@@ -209,7 +253,7 @@ export default function Navbar() {
     alignItems: 'center',
     justifyContent: 'space-between',
     padding: '20px 24px',
-    borderBottom: '1px solid #e5e3dd',
+    borderBottom: '1px solid rgba(255,255,255,0.1)',
   };
 
   const drawerLinkStyle: React.CSSProperties = {
@@ -218,9 +262,9 @@ export default function Navbar() {
     fontFamily: "'DM Sans', sans-serif",
     fontSize: 15,
     fontWeight: 500,
-    color: '#1a1a1a',
+    color: '#ffffff',
     textDecoration: 'none',
-    borderBottom: '1px solid #f3f2ef',
+    borderBottom: '1px solid rgba(255,255,255,0.07)',
     letterSpacing: '0.01em',
   };
 
@@ -233,115 +277,77 @@ export default function Navbar() {
   };
 
   const drawerBtnPrimary: React.CSSProperties = {
-    width: '100%',
-    padding: '14px 20px',
-    background: '#1d3557',
-    color: '#fff',
-    border: 'none',
-    borderRadius: 4,
+    width: '100%', padding: '14px 20px',
+    background: '#2563eb', color: '#fff',
+    border: 'none', borderRadius: 4,
     fontFamily: "'DM Sans', sans-serif",
-    fontSize: 13,
-    fontWeight: 600,
+    fontSize: 13, fontWeight: 600,
     letterSpacing: '0.07em',
     textTransform: 'uppercase' as const,
-    cursor: 'pointer',
-    textDecoration: 'none',
-    display: 'block',
-    textAlign: 'center' as const,
-    transition: 'background 0.2s',
+    cursor: 'pointer', textDecoration: 'none',
+    display: 'block', textAlign: 'center' as const,
   };
 
   const drawerBtnOutline: React.CSSProperties = {
-    width: '100%',
-    padding: '14px 20px',
-    background: 'transparent',
-    color: '#1d3557',
-    border: '1.5px solid #1d3557',
+    width: '100%', padding: '14px 20px',
+    background: 'transparent', color: '#fff',
+    border: '1.5px solid rgba(255,255,255,0.4)',
     borderRadius: 4,
     fontFamily: "'DM Sans', sans-serif",
-    fontSize: 13,
-    fontWeight: 600,
+    fontSize: 13, fontWeight: 600,
     letterSpacing: '0.07em',
     textTransform: 'uppercase' as const,
-    cursor: 'pointer',
-    textDecoration: 'none',
-    display: 'block',
-    textAlign: 'center' as const,
-    transition: 'all 0.2s',
+    cursor: 'pointer', textDecoration: 'none',
+    display: 'block', textAlign: 'center' as const,
   };
 
   return (
     <>
       <nav style={navStyle}>
         <div style={innerStyle}>
+
           {/* Logo */}
           <Link href="/" style={logoStyle}>
-            
+            <span style={logoTopStyle}>
+              House of Lettings<span style={dotStyle} />
+            </span>
+            <span style={logoSubStyle}>Leeds &amp; Manchester</span>
           </Link>
 
-          {/* Desktop Nav Links */}
-          <div
-            style={desktopLinksStyle}
-            className="desktop-nav"
-          >
+          {/* Desktop Nav */}
+          <div style={desktopLinksStyle} className="desktop-nav">
             <Link href="/listings" style={linkStyle}>Browse</Link>
 
             {!loading && profile && (
               <Link href={dashLink} style={linkStyle}>Dashboard</Link>
             )}
 
+            {/* CTA buttons always visible */}
+            <NavValuationButton />
+            <NavViewingButton />
+
             {!loading && (
               profile ? (
-                <button
-                  onClick={handleSignOut}
-                  style={btnOutlineStyle}
-                  onMouseEnter={e => {
-                    (e.currentTarget as HTMLElement).style.background = '#1d3557';
-                    (e.currentTarget as HTMLElement).style.color = '#fff';
-                  }}
-                  onMouseLeave={e => {
-                    (e.currentTarget as HTMLElement).style.background = 'transparent';
-                    (e.currentTarget as HTMLElement).style.color = '#1d3557';
-                  }}
+                <button onClick={handleSignOut} style={btnOutlineStyle}
+                  onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.1)'; }}
+                  onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; }}
                 >
                   Sign Out
                 </button>
               ) : (
-                <>
-                  <Link
-                    href="/login"
-                    style={btnOutlineStyle}
-                    onMouseEnter={e => {
-                      (e.currentTarget as HTMLElement).style.background = '#1d3557';
-                      (e.currentTarget as HTMLElement).style.color = '#fff';
-                    }}
-                    onMouseLeave={e => {
-                      (e.currentTarget as HTMLElement).style.background = 'transparent';
-                      (e.currentTarget as HTMLElement).style.color = '#1d3557';
-                    }}
-                  >
-                    Sign In
-                  </Link>
-                  <Link
-                    href="/register"
-                    style={btnPrimaryStyle}
-                    onMouseEnter={e => {
-                      (e.currentTarget as HTMLElement).style.background = '#0f1f36';
-                    }}
-                    onMouseLeave={e => {
-                      (e.currentTarget as HTMLElement).style.background = '#1d3557';
-                    }}
-                  >
-                    List Property
-                  </Link>
-                </>
+                <Link href="/login" style={btnOutlineStyle}
+                  onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.1)'; }}
+                  onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
+                >
+                  Sign In
+                </Link>
               )
             )}
           </div>
 
-          {/* Hamburger — visible on mobile via CSS */}
+          {/* Hamburger */}
           <button
-            style={hamburgerStyle}
+            style={{ display: 'none', flexDirection: 'column' as const, justifyContent: 'center', gap: 5, width: 40, height: 40, background: 'none', border: 'none', cursor: 'pointer', padding: 8, borderRadius: 4, flexShrink: 0 }}
             className="hamburger-btn"
             onClick={() => setMenuOpen(v => !v)}
             aria-label={menuOpen ? 'Close menu' : 'Open menu'}
@@ -353,44 +359,29 @@ export default function Navbar() {
           </button>
         </div>
 
-        {/* Inline responsive CSS */}
         <style>{`
-          @media (max-width: 768px) {
+          @media (max-width: 900px) {
             .desktop-nav { display: none !important; }
             .hamburger-btn { display: flex !important; }
           }
-          @media (min-width: 769px) {
+          @media (min-width: 901px) {
             .hamburger-btn { display: none !important; }
           }
         `}</style>
       </nav>
 
       {/* Mobile Overlay */}
-      <div
-        style={overlayStyle}
-        onClick={() => setMenuOpen(false)}
-        aria-hidden="true"
-      />
+      <div style={overlayStyle} onClick={() => setMenuOpen(false)} aria-hidden="true" />
 
       {/* Mobile Drawer */}
-      <aside
-        style={drawerStyle}
-        role="dialog"
-        aria-label="Navigation menu"
-        aria-modal="true"
-      >
+      <aside style={drawerStyle} role="dialog" aria-label="Navigation menu" aria-modal="true">
         <div style={drawerHeaderStyle}>
-          <Link href="/" style={{ ...logoStyle, fontSize: 18 }} onClick={() => setMenuOpen(false)}>
-            
+          <Link href="/" style={{ ...logoStyle }} onClick={() => setMenuOpen(false)}>
+            <span style={{ ...logoTopStyle, fontSize: 16 }}>House of Lettings<span style={dotStyle} /></span>
+            <span style={logoSubStyle}>Leeds &amp; Manchester</span>
           </Link>
-          <button
-            onClick={() => setMenuOpen(false)}
-            aria-label="Close menu"
-            style={{
-              background: 'none', border: 'none', cursor: 'pointer',
-              width: 36, height: 36, display: 'flex', alignItems: 'center',
-              justifyContent: 'center', borderRadius: 4, color: '#4a4844',
-            }}
+          <button onClick={() => setMenuOpen(false)} aria-label="Close menu"
+            style={{ background: 'none', border: 'none', cursor: 'pointer', width: 36, height: 36, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 4, color: '#fff' }}
           >
             <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
               <path d="M1 1l16 16M17 1L1 17" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
@@ -398,27 +389,19 @@ export default function Navbar() {
           </button>
         </div>
 
-        <Link href="/listings" style={drawerLinkStyle}>Browse Properties</Link>
-
+        <Link href="/listings" style={drawerLinkStyle} onClick={() => setMenuOpen(false)}>Browse Properties</Link>
         {!loading && profile && (
-          <Link href={dashLink} style={drawerLinkStyle}>Dashboard</Link>
+          <Link href={dashLink} style={drawerLinkStyle} onClick={() => setMenuOpen(false)}>Dashboard</Link>
         )}
 
         <div style={drawerActionsStyle}>
+          <NavValuationButton />
+          <NavViewingButton />
           {!loading && (
             profile ? (
-              <button onClick={handleSignOut} style={drawerBtnOutline}>
-                Sign Out
-              </button>
+              <button onClick={handleSignOut} style={drawerBtnOutline}>Sign Out</button>
             ) : (
-              <>
-                <Link href="/register" style={drawerBtnPrimary}>
-                  List Your Property
-                </Link>
-                <Link href="/login" style={drawerBtnOutline}>
-                  Sign In
-                </Link>
-              </>
+              <Link href="/login" style={drawerBtnOutline} onClick={() => setMenuOpen(false)}>Sign In</Link>
             )
           )}
         </div>

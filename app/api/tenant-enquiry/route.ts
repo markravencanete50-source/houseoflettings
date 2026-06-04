@@ -14,7 +14,7 @@ function getFirestoreClient() {
   return getFirestore();
 }
 
-async function sendEmail({ to, subject, html }: { to: string; subject: string; html: string }) {
+async function sendEmail({ to, subject, html, reply_to }: { to: string; subject: string; html: string; reply_to?: string }) {
   const res = await fetch("https://api.resend.com/emails", {
     method: "POST",
     headers: {
@@ -24,6 +24,7 @@ async function sendEmail({ to, subject, html }: { to: string; subject: string; h
     body: JSON.stringify({
       from: process.env.FROM_EMAIL || "onboarding@resend.dev",
       to, subject, html,
+      reply_to,
     }),
   });
   if (!res.ok) console.error("Email failed:", await res.json().catch(() => ({})));
@@ -34,7 +35,7 @@ function confirmationEmailHtml(data: any) {
 }
 
 function adminNotificationHtml(data: any) {
-  return `<!DOCTYPE html><html><head><meta charset="utf-8"/><style>body{font-family:Arial,sans-serif;background:#f4f6f9;margin:0;padding:0;}.wrap{max-width:600px;margin:32px auto;background:#fff;border-radius:14px;overflow:hidden;}.header{background:#1a3c5e;padding:24px 32px;color:#fff;}.header h2{margin:0;font-size:20px;}.body{padding:28px 32px;}table{width:100%;border-collapse:collapse;font-size:14px;}td{padding:10px 12px;border-bottom:1px solid #eef0f5;}td:first-child{font-weight:600;color:#6b7280;width:38%;}td:last-child{color:#111;}</style></head><body><div class="wrap"><div class="header"><h2>🏠 New Viewing Request</h2><p style="margin:4px 0 0;opacity:.8;font-size:13px;">${new Date().toLocaleString("en-GB")}</p></div><div class="body"><table>${data.propertyTitle ? `<tr><td>Property</td><td>${data.propertyTitle}</td></tr>` : ''}<tr><td>Name</td><td>${data.firstName} ${data.lastName}</td></tr><tr><td>Email</td><td>${data.email}</td></tr><tr><td>Phone</td><td>${data.phone}</td></tr>${data.postcode ? `<tr><td>Postcode</td><td>${data.postcode}</td></tr>` : ''}<tr><td>Move by</td><td>${data.moveBy || '—'}</td></tr><tr><td>Stay duration</td><td>${data.stayDuration || '—'}</td></tr><tr><td>Who's moving in</td><td>${data.whoMovingIn || '—'}</td></tr><tr><td>First time renting</td><td>${data.firstTimeRenting || '—'}</td></tr><tr><td>Employment</td><td>${data.employmentStatus || '—'}</td></tr><tr><td>Pets</td><td>${data.hasPets || '—'}</td></tr><tr><td>Smokers</td><td>${data.hasSmokers || '—'}</td></tr><tr><td>Income &gt; £52,500</td><td>${data.incomeExceedsThreshold || '—'}</td></tr><tr><td>Adverse credit</td><td>${data.adverseCredit || '—'}</td></tr>${data.message ? `<tr><td>Message</td><td>${data.message}</td></tr>` : ''}</table></div></div></body></html>`;
+  return `<!DOCTYPE html><html><head><meta charset="utf-8"/><style>body{font-family:Arial,sans-serif;background:#f4f6f9;margin:0;padding:0;}.wrap{max-width:600px;margin:32px auto;background:#fff;border-radius:14px;overflow:hidden;}.header{background:#1a3c5e;padding:24px 32px;color:#fff;}.header h2{margin:0;font-size:20px;}.body{padding:28px 32px;}table{width:100%;border-collapse:collapse;font-size:14px;}td{padding:10px 12px;border-bottom:1px solid #eef0f5;}td:first-child{font-weight:600;color:#6b7280;width:38%;}td:last-child{color:#111;}</style></head><body><div class="wrap"><div class="header"><h2>🏠 New Viewing Request</h2><p style="margin:4px 0 0;opacity:.8;font-size:13px;">${new Date().toLocaleString("en-GB")}</p></div><div class="body"><table>${data.propertyTitle ? `<tr><td>Property</td><td>${data.propertyTitle}</td></tr>` : ''}<tr><td>Name</td><td>${data.firstName} ${data.lastName}</td></tr><tr><td>Email</td><td>${data.email}</td></tr><tr><td>Phone</td><td>${data.phone}</td></tr>${data.postcode ? `<tr><td>Postcode</td><td>${data.postcode}</td></tr>` : ''}<tr><td>Move by</td><td>${data.moveBy || '—'}</td></tr><tr><td>Stay duration</td><td>${data.stayDuration || '—'}</td></tr><tr><td>Who's moving in</td><td>${data.whoMovingIn || '—'}</td></tr><tr><td>First time renting</td><td>${data.firstTimeRenting || '—'}</td></tr><tr><td>Employment</td><td>${data.employmentStatus || '—'}</td></tr><tr><td>Pets</td><td>${data.hasPets || '—'}</td></tr><tr><td>Smokers</td><td>${data.hasSmokers || '—'}</td></tr><tr><td>Annual income</td><td>${data.totalAnnualIncome || '—'}</td></tr><tr><td>Children</td><td>${data.numberOfChildren || '—'}${data.child1Age ? \` (ages: ${[data.child1Age, data.child2Age, data.child3Age].filter(Boolean).join(', ')})` : ''}</td></tr><tr><td>Viewing availability</td><td>${data.viewingAvailability || '—'}${data.viewingAvailabilityOther ? \` — ${data.viewingAvailabilityOther}\` : ''}</td></tr><tr><td>Adverse credit</td><td>${data.adverseCredit || '—'}</td></tr>${data.message ? `<tr><td>Message</td><td>${data.message}</td></tr>` : ''}</table></div></div></body></html>`;
 }
 
 export async function POST(request: Request) {
@@ -67,6 +68,7 @@ export async function POST(request: Request) {
         to: process.env.ADMIN_EMAIL || "info@houseoflettings.co.uk",
         subject: `🏠 New Viewing Request — ${data.firstName} ${data.lastName}`,
         html: adminNotificationHtml(data),
+        reply_to: data.email,
       }),
     ]);
 

@@ -26,9 +26,12 @@ const EMPTY_FORM = {
   // About you
   location: "",
   viewingAvailability: "",
+  viewingAvailabilityOther: "",
   totalAnnualIncome: "",
-  hasChildren: "",
-  childrenAges: "",
+  numberOfChildren: "",
+  child1Age: "",
+  child2Age: "",
+  child3Age: "",
   adverseCredit: "",
   message: "",
 };
@@ -395,11 +398,21 @@ export default function TenantEnquiryModal({
                 <div className="hol-field hol-field--mb">
                   <label className="hol-label">What days and times are you available for a viewing?</label>
                   <RadioGroup
-                    options={["Weekday mornings", "Weekday afternoons", "Weekday evenings", "Weekends"]}
+                    options={["Weekdays", "Weekends", "Other"]}
                     value={form.viewingAvailability}
                     onChange={(v) => setRadio("viewingAvailability", v)}
-                    columns={2}
+                    columns={3}
                   />
+                  {form.viewingAvailability === "Other" && (
+                    <input
+                      type="text"
+                      className="hol-input"
+                      style={{ marginTop: 10 }}
+                      placeholder="Please describe your availability..."
+                      value={form.viewingAvailabilityOther}
+                      onChange={set("viewingAvailabilityOther")}
+                    />
+                  )}
                 </div>
 
                 <div className="hol-field hol-field--mb">
@@ -408,8 +421,35 @@ export default function TenantEnquiryModal({
                 </div>
 
                 <div className="hol-field hol-field--mb">
-                  <label className="hol-label">Do you have children? If so, please provide their ages.</label>
-                  <input type="text" className="hol-input" placeholder="e.g. Yes – ages 4 and 7, or No" value={form.hasChildren} onChange={set("hasChildren")} />
+                  <label className="hol-label">Do you have children?</label>
+                  <RadioGroup
+                    options={["No", "1 child", "2 children", "3 children"]}
+                    value={form.numberOfChildren}
+                    onChange={(v) => setRadio("numberOfChildren", v)}
+                    columns={2}
+                  />
+                  {form.numberOfChildren && form.numberOfChildren !== "No" && (
+                    <div style={{ marginTop: 12, display: "flex", flexDirection: "column", gap: 10 }}>
+                      {["1 child", "2 children", "3 children"].includes(form.numberOfChildren) && (
+                        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                          <label style={{ fontSize: 14, color: "#374151", minWidth: 70 }}>Child 1 age</label>
+                          <input type="text" className="hol-input" style={{ flex: 1 }} placeholder="e.g. 4" value={form.child1Age} onChange={set("child1Age")} />
+                        </div>
+                      )}
+                      {["2 children", "3 children"].includes(form.numberOfChildren) && (
+                        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                          <label style={{ fontSize: 14, color: "#374151", minWidth: 70 }}>Child 2 age</label>
+                          <input type="text" className="hol-input" style={{ flex: 1 }} placeholder="e.g. 7" value={form.child2Age} onChange={set("child2Age")} />
+                        </div>
+                      )}
+                      {form.numberOfChildren === "3 children" && (
+                        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                          <label style={{ fontSize: 14, color: "#374151", minWidth: 70 }}>Child 3 age</label>
+                          <input type="text" className="hol-input" style={{ flex: 1 }} placeholder="e.g. 10" value={form.child3Age} onChange={set("child3Age")} />
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
 
                 <div className="hol-field hol-field--mb">

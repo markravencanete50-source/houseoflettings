@@ -333,7 +333,8 @@ export default function HomePage() {
       {/* ── HERO ─────────────────────────────────────────────── */}
       <section style={{
         minHeight: '100vh', background: '#0f1f3d', 
-        position: 'relative', display: 'flex', alignItems: 'center', padding: '0 5%',
+        position: 'relative', display: 'flex', alignItems: 'center',
+        padding: '100px 5% 60px',
       }}>
         {/* Hero background image - Leeds city */}
         <div style={{
@@ -390,29 +391,43 @@ export default function HomePage() {
             Property management. Done right.
           </p>
 
-          <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap' }}>
-            <Link href="/listings" style={{
-              padding: '16px 36px', background: '#2563eb', color: '#ffffff', border: 'none',
-              borderRadius: 6, fontSize: 14, fontWeight: 700, letterSpacing: '0.5px', textTransform: 'uppercase',
-              textDecoration: 'none', fontFamily: "'Poppins', sans-serif",
-            }}>
+          <style>{`
+            .hero-btns { display: flex; gap: 12px; flex-wrap: wrap; }
+            .hero-btn {
+              padding: 14px 28px;
+              background: #2563eb; color: #fff; border: none;
+              border-radius: 6px; font-size: 13px; font-weight: 700;
+              letter-spacing: 0.5px; text-transform: uppercase;
+              text-decoration: none; font-family: 'Poppins', sans-serif;
+              white-space: nowrap; display: inline-block;
+              transition: background 0.2s;
+            }
+            .hero-btn:hover { background: #1d4ed8; }
+            .hero-btn-outline {
+              padding: 14px 28px;
+              background: transparent; color: #fff;
+              border: 1.5px solid rgba(255,255,255,0.5);
+              border-radius: 6px; font-size: 13px; font-weight: 700;
+              letter-spacing: 0.5px; text-transform: uppercase;
+              text-decoration: none; font-family: 'Poppins', sans-serif;
+              white-space: nowrap; display: inline-block;
+              transition: all 0.2s;
+            }
+            .hero-btn-outline:hover { background: rgba(255,255,255,0.1); }
+            @media (max-width: 480px) {
+              .hero-btns { gap: 10px; }
+              .hero-btn, .hero-btn-outline {
+                padding: 11px 18px;
+                font-size: 11px;
+              }
+            }
+          `}</style>
+          <div className="hero-btns">
+            <Link href="/listings" className="hero-btn">
               Browse Properties
             </Link>
-            <Link href="/register" style={{
-              padding: '16px 36px', background: '#2563eb', color: '#fff',
-              border: 'none', borderRadius: 6, fontSize: 14,
-              fontWeight: 700, letterSpacing: '0.5px', textTransform: 'uppercase',
-              textDecoration: 'none', fontFamily: "'Poppins', sans-serif",
-            }}>
+            <Link href="/register" className="hero-btn-outline">
               List Your Property
-            </Link>
-            <Link href="/terms" style={{
-              padding: '16px 36px', background: '#2563eb', color: '#fff',
-              border: 'none', borderRadius: 6, fontSize: 14,
-              fontWeight: 700, letterSpacing: '0.5px', textTransform: 'uppercase',
-              textDecoration: 'none', fontFamily: "'Poppins', sans-serif",
-            }}>
-              Terms &amp; Conditions
             </Link>
           </div>
         </div>
@@ -423,6 +438,8 @@ export default function HomePage() {
         padding: '100px 5%',
         position: 'relative',
         overflow: 'hidden',
+        background: '#08122a',
+        isolation: 'isolate',
       }}>
         {/* Valuation background image - luxury interior */}
         <div style={{

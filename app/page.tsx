@@ -66,7 +66,7 @@ function BookViewingInlineButton() {
             isOpen={open}
             onClose={() => setOpen(false)}
             propertyTitle="House of Lettings"
-            propertyPrice=""
+            propertyPrice={0}
           />
         )}
       </Suspense>

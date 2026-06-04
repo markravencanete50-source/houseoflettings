@@ -152,7 +152,7 @@ export default function PropertyDetailClient() {
           transform: translateY(-2px);
         }
       `}</style>
-      <div style={{ paddingTop: 68, minHeight: '100vh', background: 'var(--gray-100)' }}>
+      <div style={{ minHeight: '100vh', background: 'var(--gray-100)' }}>
         {/* Breadcrumb */}
         <div style={{ background: '#fff', borderBottom: '1px solid var(--gray-200)', padding: '12px 5%' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -173,11 +173,24 @@ export default function PropertyDetailClient() {
         </div>
 
         <div style={{ padding: '40px 5%', maxWidth: 1100, margin: '0 auto' }}>
-          <div style={{
-            display: 'grid', gridTemplateColumns: '1fr 340px', gap: 40, alignItems: 'start',
-            opacity: mounted ? 1 : 0,
-            animation: mounted ? 'hol-fadeUp 0.5s ease both' : 'none',
-          }}>
+        <style>{`
+          .hol-detail-grid {
+            display: grid;
+            grid-template-columns: 1fr 340px;
+            gap: 40px;
+            align-items: start;
+          }
+          @media (max-width: 768px) {
+            .hol-detail-grid {
+              grid-template-columns: 1fr;
+              gap: 24px;
+            }
+          }
+        `}</style>
+        <div className="hol-detail-grid" style={{
+          opacity: mounted ? 1 : 0,
+          animation: mounted ? 'hol-fadeUp 0.5s ease both' : 'none',
+        }}>
             {/* Left Column */}
             <div>
               {/* Image Gallery */}
@@ -211,7 +224,8 @@ export default function PropertyDetailClient() {
 
               {/* Details */}
               <div className="hol-panel" style={{
-                background: '#fff', border: '1px solid var(--gray-200)', borderRadius: 8, padding: 32, marginTop: 24,
+                background: '#fff', border: '1px solid var(--gray-200)', borderRadius: 8,
+                padding: 'clamp(16px, 4%, 32px)', marginTop: 24,
                 animation: mounted ? 'hol-fadeUp 0.5s ease 0.4s both' : 'none',
               }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 24, flexWrap: 'wrap', gap: 12 }}>
@@ -225,7 +239,7 @@ export default function PropertyDetailClient() {
                         {property.badge}
                       </span>
                     )}
-                    <h1 style={{ fontFamily: "'Poppins', sans-serif", fontSize: 32, fontWeight: 700, lineHeight: 1.2 }}>
+                    <h1 style={{ fontFamily: "'Poppins', sans-serif", fontSize: 'clamp(20px, 5vw, 32px)', fontWeight: 700, lineHeight: 1.2, wordBreak: 'break-word' }}>
                       {property.title}
                     </h1>
                     <p style={{ color: '#000000', fontSize: 17, marginTop: 8, fontWeight: 600 }}>📍 {property.location}</p>
@@ -260,7 +274,7 @@ export default function PropertyDetailClient() {
 
                 {/* Description */}
                 <h3 style={{ fontSize: 16, fontWeight: 700, marginBottom: 12 }}>About this property</h3>
-                <div style={{ fontSize: 15, color: '#333333', lineHeight: 1.75 }}>
+                <div style={{ fontSize: 15, color: '#333333', lineHeight: 1.75, overflowWrap: 'break-word', wordBreak: 'break-word' }}>
                   {property.description.split('\n').map((line, i) => {
                     const isBullet = line.trim().startsWith('•');
                     const isHeading = line.trim().endsWith(':') && line.trim().length < 40;

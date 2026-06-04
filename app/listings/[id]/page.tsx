@@ -1,367 +1,1010 @@
 'use client';
-// app/listings/[id]/page.tsx
-import { useState, useEffect } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+// app/page.tsx
+import { useState, useEffect, useRef, lazy, Suspense } from 'react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Navbar from '@/components/layout/Navbar';
-import { getProperty } from '@/services/property';
-import { getOrCreateChat } from '@/services/chat';
-import { getUserProfile } from '@/services/auth';
-import { useAuth } from '@/hooks/useAuth';
+import PropertyCard from '@/components/property/PropertyCard';
+import { getProperties } from '@/services/property';
 import { Property } from '@/lib/types';
 
-export const dynamic = 'force-dynamic';
+const ValuationModal = lazy(() => import('@/components/ValuationModal'));
+const TenantEnquiryModal = lazy(() => import('@/components/property/TenantEnquiryModal'));
 
-export default function PropertyDetailPage() {
-  const { id } = useParams<{ id: string }>();
-  const router = useRouter();
-  const { profile } = useAuth();
-  const [property, setProperty] = useState<Property | null>(null);
-  const [landlordName, setLandlordName] = useState('');
-  const [loading, setLoading] = useState(true);
-  const [activeImg, setActiveImg] = useState(0);
-  const [contacting, setContacting] = useState(false);
-  const [error, setError] = useState('');
+// ── INLINE VALUATION BUTTON ───────────────────────────────────────────────────
+function ValuationInlineButton() {
+  const [open, setOpen] = useState(false);
+  return (
+    <>
+      <button
+        onClick={() => setOpen(true)}
+        style={{
+          padding: '16px 0', background: '#2563eb', color: '#fff',
+          border: 'none', borderRadius: 6, fontSize: 16, fontWeight: 700,
+          letterSpacing: '0.5px', cursor: 'pointer', transition: 'background 0.2s',
+          fontFamily: "'Poppins', sans-serif",
+          display: 'inline-block', width: '220px', textAlign: 'center',
+        }}
+        onMouseEnter={e => (e.currentTarget.style.background = '#1d4ed8')}
+        onMouseLeave={e => (e.currentTarget.style.background = '#2563eb')}
+      >
+        Book a valuation
+      </button>
+      <Suspense fallback={null}>
+        {open && <ValuationModal isOpen={open} onClose={() => setOpen(false)} />}
+      </Suspense>
+    </>
+  );
+}
 
-  useEffect(() => {
-    if (!id) return;
-    let cancelled = false;
-    const load = async () => {
-      try {
-        const prop = await getProperty(id);
-        if (cancelled) return;
-        setProperty(prop);
-        if (prop?.landlordId) {
-          const landlord = await getUserProfile(prop.landlordId);
-          if (cancelled) return;
-          setLandlordName(landlord?.name || 'Landlord');
-        }
-      } catch (err: any) {
-        if (cancelled) return;
-        console.error('Failed to load property:', err);
-        setError(err?.message || 'Failed to load property. Please try again.');
-        setProperty(null);
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    };
-    load();
-    return () => { cancelled = true; };
-  }, [id]);
+// ── INLINE BOOK A VIEWING BUTTON ──────────────────────────────────────────────
+function BookViewingInlineButton() {
+  const [open, setOpen] = useState(false);
+  return (
+    <>
+      <button
+        onClick={() => setOpen(true)}
+        style={{
+          padding: '16px 0', background: '#2563eb', color: '#fff',
+          border: 'none', borderRadius: 6, fontSize: 16, fontWeight: 700,
+          letterSpacing: '0.5px', cursor: 'pointer', transition: 'background 0.2s',
+          fontFamily: "'Poppins', sans-serif",
+          display: 'inline-block', width: '220px', textAlign: 'center',
+        }}
+        onMouseEnter={e => (e.currentTarget.style.background = '#1d4ed8')}
+        onMouseLeave={e => (e.currentTarget.style.background = '#2563eb')}
+      >
+        Book a viewing
+      </button>
+      <Suspense fallback={null}>
+        {open && (
+          <TenantEnquiryModal
+            isOpen={open}
+            onClose={() => setOpen(false)}
+            propertyTitle="House of Lettings"
+            propertyPrice={0}
+          />
+        )}
+      </Suspense>
+    </>
+  );
+}
 
-  const handleContact = async () => {
-    if (!profile) { router.push('/login'); return; }
-    if (profile.role === 'landlord') {
-      setError('Switch to a tenant account to contact landlords.');
-      return;
-    }
-    if (!property) return;
-    setContacting(true);
-    try {
-      const chatId = await getOrCreateChat(
-        property.id!,
-        property.title,
-        property.landlordId,
-        profile.uid,
-        profile.name,
-        landlordName
-      );
-      router.push(`/dashboard/tenant?tab=messages&chatId=${chatId}`);
-    } catch (err: any) {
-      setError(err.message || 'Failed to start conversation.');
-    } finally {
-      setContacting(false);
-    }
+
+
+// ── GALLERY DATA ─────────────────────────────────────────────────────────────
+const GALLERY_ITEMS = [
+  {
+    img: '/images/agent-photo.jpeg',
+    label: 'Leeds & Manchester Experts',
+    sub: 'Local knowledge, professional service.',
+  },
+  {
+    img: '/images/brand-desk.jpeg',
+    label: 'We Handle the Details.',
+    sub: 'You enjoy the returns.',
+  },
+  {
+    img: '/images/service-compare.png',
+    label: 'Full Lettings & Management',
+    sub: 'AI-powered system, expert team.',
+  },
+  {
+    img: '/images/landlord-app.png',
+    label: 'Everything You Need',
+    sub: 'To succeed as a landlord.',
+  },
+  {
+    img: '/images/compliance.jpeg',
+    label: 'Stay Fully Compliant',
+    sub: 'We track the rules so you don\'t have to.',
+  },
+  {
+    img: '/images/tenant-pressure.jpeg',
+    label: 'Tenant Pressure? We Handle It.',
+    sub: 'Smart landlords choose professional management.',
+  },
+];
+
+// ── GALLERY COMPONENT ─────────────────────────────────────────────────────────
+function ImageGallery() {
+  const trackRef = useRef<HTMLDivElement>(null);
+  const [active, setActive] = useState(0);
+  const [isDragging, setIsDragging] = useState(false);
+  const [startX, setStartX] = useState(0);
+  const [scrollLeft, setScrollLeft] = useState(0);
+  const [lightbox, setLightbox] = useState<number | null>(null);
+
+  const scrollToIndex = (i: number) => {
+    if (!trackRef.current) return;
+    const card = trackRef.current.children[i] as HTMLElement;
+    if (!card) return;
+    trackRef.current.scrollTo({ left: card.offsetLeft - 40, behavior: 'smooth' });
+    setActive(i);
   };
 
-  if (loading) return (
-    <>
-      <Navbar />
-      <div style={{ display: 'flex', justifyContent: 'center', padding: '120px 0' }}>
-        <div className="spinner" />
+  const onMouseDown = (e: React.MouseEvent) => {
+    setIsDragging(true);
+    setStartX(e.pageX - (trackRef.current?.offsetLeft ?? 0));
+    setScrollLeft(trackRef.current?.scrollLeft ?? 0);
+  };
+  const onMouseMove = (e: React.MouseEvent) => {
+    if (!isDragging || !trackRef.current) return;
+    e.preventDefault();
+    const x = e.pageX - (trackRef.current.offsetLeft ?? 0);
+    trackRef.current.scrollLeft = scrollLeft - (x - startX);
+  };
+  const onMouseUp = () => setIsDragging(false);
+
+  return (
+    <section style={{ padding: '90px 0', background: '#fff', overflow: 'hidden' }}>
+      <style>{`
+        .hol-gallery-track::-webkit-scrollbar { display: none; }
+        .hol-gallery-track { -ms-overflow-style: none; scrollbar-width: none; }
+        .hol-gallery-card { transition: transform 0.35s ease, box-shadow 0.35s ease; }
+        .hol-gallery-card:hover { transform: translateY(-8px) scale(1.015); box-shadow: 0 24px 60px rgba(0,0,0,0.18) !important; }
+        .hol-gallery-card:hover .hol-gallery-overlay { opacity: 1 !important; }
+        .hol-gallery-card:hover .hol-gallery-label { transform: translateY(0) !important; opacity: 1 !important; }
+        .hol-dot { transition: all 0.2s ease; cursor: pointer; border: none; padding: 0; background: none; }
+        .hol-lightbox { position: fixed; inset: 0; background: rgba(0,0,0,0.92); z-index: 9999; display: flex; align-items: center; justify-content: center; animation: hol-fadein 0.2s ease; }
+        @keyframes hol-fadein { from { opacity: 0 } to { opacity: 1 } }
+        .hol-lightbox img { max-width: 90vw; max-height: 85vh; object-fit: contain; border-radius: 8px; box-shadow: 0 32px 80px rgba(0,0,0,0.6); }
+        .hol-lb-close { position: absolute; top: 20px; right: 28px; color: #fff; font-size: 36px; cursor: pointer; line-height: 1; background: none; border: none; opacity: 0.8; transition: opacity 0.2s; }
+        .hol-lb-close:hover { opacity: 1; }
+        .hol-lb-prev, .hol-lb-next { position: absolute; top: 50%; transform: translateY(-50%); color: #fff; font-size: 36px; cursor: pointer; background: rgba(255,255,255,0.1); border: none; border-radius: 50%; width: 52px; height: 52px; display: flex; align-items: center; justify-content: center; transition: background 0.2s; }
+        .hol-lb-prev:hover, .hol-lb-next:hover { background: rgba(255,255,255,0.25); }
+        .hol-lb-prev { left: 20px; }
+        .hol-lb-next { right: 20px; }
+        .hol-lb-caption { position: absolute; bottom: 24px; left: 50%; transform: translateX(-50%); color: #fff; font-size: 15px; font-weight: 600; text-align: center; white-space: nowrap; }
+      `}</style>
+
+      {/* Lightbox */}
+      {lightbox !== null && (
+        <div className="hol-lightbox" onClick={() => setLightbox(null)}>
+          <button className="hol-lb-close" onClick={() => setLightbox(null)}>✕</button>
+          <button className="hol-lb-prev" onClick={e => { e.stopPropagation(); setLightbox((lightbox - 1 + GALLERY_ITEMS.length) % GALLERY_ITEMS.length); }}>‹</button>
+          <img
+            src={GALLERY_ITEMS[lightbox].img}
+            alt={GALLERY_ITEMS[lightbox].label}
+            onClick={e => e.stopPropagation()}
+          />
+          <button className="hol-lb-next" onClick={e => { e.stopPropagation(); setLightbox((lightbox + 1) % GALLERY_ITEMS.length); }}>›</button>
+          <div className="hol-lb-caption">{GALLERY_ITEMS[lightbox].label}</div>
+        </div>
+      )}
+
+      {/* Section header */}
+      <div style={{ padding: '0 5%', marginBottom: 48 }}>
+        <div style={{
+          fontSize: 11, fontWeight: 700, letterSpacing: 3, textTransform: 'uppercase',
+          color: '#2563eb', marginBottom: 14,
+        }}>
+          Properties We Love
+        </div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: 16 }}>
+          <h2 style={{
+            fontFamily: "'Poppins', sans-serif",
+            fontSize: 'clamp(28px,4vw,48px)',
+            fontWeight: 700, lineHeight: 1.1, letterSpacing: '-0.5px', margin: 0,
+            color: '#0f1f3d',
+          }}>
+            Homes That Inspire
+          </h2>
+          <p style={{ fontSize: 15, color: '#6b7280', maxWidth: 380, lineHeight: 1.65, margin: 0, fontWeight: 300 }}>
+            From compact city flats to sprawling countryside homes — every property listed directly by landlords across the UK.
+          </p>
+        </div>
       </div>
-    </>
-  );
 
-  if (!property) return (
-    <>
-      <Navbar />
-      <div style={{ paddingTop: 68, textAlign: 'center', padding: '120px 5%' }}>
-        <h2 style={{ fontFamily: "'Poppins', sans-serif", fontSize: 32 }}>
-          {error ? 'Something went wrong' : 'Property not found'}
-        </h2>
-        {error && <p style={{ color: 'var(--gray-400)', fontSize: 15, marginTop: 10 }}>{error}</p>}
-        <Link href="/listings" style={{ color: 'var(--red)', fontWeight: 600, marginTop: 16, display: 'inline-block' }}>
-          ← Back to listings
-        </Link>
+      {/* Scrollable track */}
+      <div
+        ref={trackRef}
+        className="hol-gallery-track"
+        onMouseDown={onMouseDown}
+        onMouseMove={onMouseMove}
+        onMouseUp={onMouseUp}
+        onMouseLeave={onMouseUp}
+        style={{
+          display: 'flex', gap: 20, padding: '8px 5% 16px',
+          overflowX: 'auto', cursor: isDragging ? 'grabbing' : 'grab',
+          userSelect: 'none',
+        }}
+      >
+        {GALLERY_ITEMS.map((item, i) => (
+          <div
+            key={i}
+            className="hol-gallery-card"
+            onClick={() => { setActive(i); setLightbox(i); }}
+            style={{
+              flexShrink: 0,
+              width: i % 3 === 0 ? 360 : 280,
+              height: 400,
+              borderRadius: 12,
+              overflow: 'hidden',
+              position: 'relative',
+              boxShadow: active === i
+                ? '0 20px 50px rgba(15,31,61,0.22)'
+                : '0 6px 24px rgba(0,0,0,0.08)',
+              cursor: 'pointer',
+              outline: active === i ? '2px solid #2563eb' : '2px solid transparent',
+              outlineOffset: 3,
+            }}
+          >
+            <img
+              src={item.img}
+              alt={item.label}
+              draggable={false}
+              style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+            />
+
+            {/* Overlay */}
+            <div
+              className="hol-gallery-overlay"
+              style={{
+                position: 'absolute', inset: 0,
+                background: 'linear-gradient(to top, rgba(10,10,20,0.85) 0%, rgba(10,10,20,0.1) 55%, transparent 100%)',
+                opacity: active === i ? 1 : 0.7,
+                transition: 'opacity 0.3s ease',
+              }}
+            />
+
+            {/* Label */}
+            <div
+              className="hol-gallery-label"
+              style={{
+                position: 'absolute', bottom: 0, left: 0, right: 0,
+                padding: '20px 20px 22px',
+                transform: active === i ? 'translateY(0)' : 'translateY(6px)',
+                opacity: active === i ? 1 : 0.85,
+                transition: 'all 0.3s ease',
+              }}
+            >
+              <div style={{ fontSize: 15, fontWeight: 700, color: '#fff', marginBottom: 4, fontFamily: "'Poppins', sans-serif" }}>
+                {item.label}
+              </div>
+              <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.65)', letterSpacing: 0.5 }}>
+                {item.sub}
+              </div>
+            </div>
+
+            {/* Active badge */}
+            {active === i && (
+              <div style={{
+                position: 'absolute', top: 14, right: 14,
+                background: '#1e3a6e', color: '#fff',
+                fontSize: 10, fontWeight: 700, letterSpacing: 1.5,
+                textTransform: 'uppercase', padding: '4px 10px', borderRadius: 20,
+              }}>
+                Featured
+              </div>
+            )}
+          </div>
+        ))}
       </div>
-    </>
+
+      {/* Dot navigation */}
+      <div style={{ display: 'flex', gap: 8, justifyContent: 'center', marginTop: 28, padding: '0 5%' }}>
+        {GALLERY_ITEMS.map((_, i) => (
+          <button
+            key={i}
+            className="hol-dot"
+            onClick={() => scrollToIndex(i)}
+            aria-label={`Go to slide ${i + 1}`}
+            style={{
+              width: active === i ? 28 : 8,
+              height: 8,
+              borderRadius: 4,
+              background: active === i ? '#2563eb' : '#e5e7eb',
+            }}
+          />
+        ))}
+      </div>
+
+    </section>
   );
+}
 
-  const bedsLabel = property.bedrooms === 0 ? 'Studio' : `${property.bedrooms} Bedroom${property.bedrooms > 1 ? 's' : ''}`;
+// ── PAGE ──────────────────────────────────────────────────────────────────────
+export default function HomePage() {
+  const router = useRouter();
+  const [featured, setFeatured] = useState<Property[]>([]);
+  const [location, setLocation] = useState('');
+  const [minPrice, setMinPrice] = useState('');
+  const [maxPrice, setMaxPrice] = useState('');
+  const [bedrooms, setBedrooms] = useState('');
 
-  const parkingLabel = (p: string) => {
-    const map: Record<string, string> = {
-      none: 'No Parking', 'off-street': 'Off Street', residents: "Resident's",
-      'street-no-permit': 'Street (No Permit)', 'street-permit': 'Street (Permit)',
-      'driveway-private': 'Private Driveway', 'driveway-shared': 'Shared Driveway',
-      'double-garage': 'Double Garage', 'single-garage': 'Single Garage',
-      underground: 'Underground', gated: 'Gated', 'ev-private': 'EV (Private)', 'ev-shared': 'EV (Shared)',
-    };
-    return map[p] || p.replace(/-/g, ' ');
+  useEffect(() => {
+    getProperties().then(props => setFeatured(props.slice(0, 3)));
+  }, []);
+
+  const handleSearch = () => {
+    const params = new URLSearchParams();
+    if (location) params.set('location', location);
+    if (minPrice) params.set('minPrice', minPrice);
+    if (maxPrice) params.set('maxPrice', maxPrice);
+    if (bedrooms) params.set('bedrooms', bedrooms);
+    router.push(`/listings?${params.toString()}`);
   };
 
   return (
     <>
       <Navbar />
-      <div style={{ paddingTop: 68, minHeight: '100vh', background: 'var(--gray-100)' }}>
 
-        {/* Breadcrumb */}
-        <div style={{ background: '#fff', borderBottom: '1px solid var(--gray-200)', padding: '14px 5%', display: 'flex', gap: 10, alignItems: 'center' }}>
-          <Link href="/" style={{
-            background: '#0f1f3d', color: '#fff', padding: '8px 20px',
-            borderRadius: 999, fontSize: 15, fontWeight: 600, textDecoration: 'none',
-          }}>Home</Link>
-          <span style={{ color: 'var(--gray-400)', fontSize: 14 }}>→</span>
-          <Link href="/listings" style={{
-            background: '#0f1f3d', color: '#fff', padding: '8px 20px',
-            borderRadius: 999, fontSize: 15, fontWeight: 600, textDecoration: 'none',
-          }}>Listings</Link>
-        </div>
+      {/* ── HERO ─────────────────────────────────────────────── */}
+      <section style={{
+        minHeight: '100vh', background: '#0f1f3d', 
+        position: 'relative', display: 'flex', alignItems: 'center',
+        padding: '60px 5%',
+      }}>
+        {/* Hero background image - Leeds city */}
+        <div style={{
+          position: 'absolute', inset: 0,
+          backgroundImage: 'url(/images/Background_of_the_Homepage.png)',
+          backgroundSize: 'cover', backgroundPosition: 'center',
+          backgroundRepeat: 'no-repeat',
+        }} />
+        {/* Dark overlay for text readability */}
+        <div style={{
+          position: 'absolute', inset: 0,
+          background: 'linear-gradient(135deg,rgba(10,20,50,0.88) 0%,rgba(10,20,50,0.65) 60%, rgba(10,20,50,0.4) 100%)',
+        }} />
+        {/* Subtle radial accent */}
+        <div style={{
+          position: 'absolute', inset: 0,
+          background: 'radial-gradient(ellipse at 70% 50%, rgba(30,58,110,0.12) 0%, transparent 60%)',
+          pointerEvents: 'none',
+        }} />
 
-        <div style={{ padding: '40px 5%', maxWidth: 1100, margin: '0 auto' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 340px', gap: 40, alignItems: 'start' }}>
+        <div style={{ position: 'relative', maxWidth: 700 }}>
 
-            {/* ── LEFT COLUMN ── */}
-            <div>
 
-              {/* Image Gallery */}
-              <div style={{ borderRadius: 10, overflow: 'hidden', marginBottom: 8, background: 'var(--gray-200)', height: 420 }}>
-                {property.images?.[activeImg] ? (
-                  <img src={property.images[activeImg]} alt={property.title}
-                    style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                ) : (
-                  <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--gray-400)', fontSize: 14 }}>
-                    No Image Available
-                  </div>
-                )}
-              </div>
-              {property.images?.length > 1 && (
-                <div style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 4 }}>
-                  {property.images.map((img, i) => (
-                    <div key={i} onClick={() => setActiveImg(i)} style={{
-                      width: 80, height: 60, flexShrink: 0, borderRadius: 6, overflow: 'hidden',
-                      cursor: 'pointer', border: `2px solid ${i === activeImg ? 'var(--red)' : 'transparent'}`,
-                      transition: 'border .2s',
-                    }}>
-                      <img src={img} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                    </div>
-                  ))}
-                </div>
-              )}
+          <h1 style={{
+            fontFamily: "'Barlow Condensed', 'Poppins', sans-serif",
+            fontSize: 'clamp(36px,5.5vw,68px)',
+            fontWeight: 700, color: '#fff', lineHeight: 1.05, letterSpacing: '0.5px', marginBottom: 6,
+            textTransform: 'uppercase',
+          }}>
+            We Handle the Details.
+          </h1>
+          <h1 style={{
+            fontFamily: "'Barlow Condensed', 'Poppins', sans-serif",
+            fontSize: 'clamp(36px,5.5vw,68px)',
+            fontWeight: 700, color: '#4a90d9', lineHeight: 1.05, letterSpacing: '0.5px', marginBottom: 28,
+            textTransform: 'uppercase',
+          }}>
+            You Enjoy the Returns.
+          </h1>
 
-              {/* Details Card */}
-              <div style={{ background: '#fff', border: '1px solid var(--gray-200)', borderRadius: 8, padding: 32, marginTop: 24 }}>
+          {/* Divider */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 20 }}>
+            <div style={{ width: 32, height: 1, background: 'rgba(255,255,255,0.25)' }} />
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="rgba(255,255,255,0.4)" xmlns="http://www.w3.org/2000/svg">
+              <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
+            </svg>
+          </div>
 
-                {/* Title & Price */}
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 24, flexWrap: 'wrap', gap: 12 }}>
-                  <div>
-                    {property.badge && (
-                      <span style={{
-                        display: 'inline-block', background: 'var(--red)', color: '#fff',
-                        fontSize: 10, fontWeight: 700, letterSpacing: 1.5, textTransform: 'uppercase',
-                        padding: '4px 10px', borderRadius: 2, marginBottom: 10,
-                      }}>{property.badge}</span>
-                    )}
-                    <h1 style={{ fontFamily: "'Poppins', sans-serif", fontSize: 32, fontWeight: 700, lineHeight: 1.2 }}>
-                      {property.title}
-                    </h1>
-                    <p style={{ color: '#000000', fontSize: 17, fontWeight: 600, marginTop: 6 }}>📍 {property.location}</p>
-                  </div>
-                  <div style={{ textAlign: 'right' }}>
-                    <div style={{ fontFamily: "'Poppins', sans-serif", fontSize: 36, fontWeight: 700, color: 'var(--red)' }}>
-                      £{property.price.toLocaleString()}
-                    </div>
-                    <div style={{ fontSize: 14, color: 'var(--gray-400)' }}>per month</div>
-                  </div>
-                </div>
+          <p style={{
+            fontSize: 17, color: 'rgba(255,255,255,0.6)', lineHeight: 1.65,
+            maxWidth: 480, marginBottom: 44, fontWeight: 400, letterSpacing: '0.2px',
+            fontFamily: "'Poppins', sans-serif",
+          }}>
+            Property management. Done right.
+          </p>
 
-                {/* Key Stats */}
-                <div style={{
-                  display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16,
-                  padding: '20px 0', borderTop: '1px solid var(--gray-200)', borderBottom: '1px solid var(--gray-200)',
-                  marginBottom: 28,
-                }}>
-                  {[
-                    { icon: '🛏', label: 'Bedrooms', value: bedsLabel },
-                    { icon: '🚿', label: 'Bathrooms', value: `${property.bathrooms}` },
-                    { icon: '📐', label: 'Size', value: property.sqft ? `${property.sqft} sqft` : 'N/A' },
-                    { icon: '🪑', label: 'Furnished', value: property.furnished ? property.furnished.charAt(0).toUpperCase() + property.furnished.slice(1) : 'N/A' },
-                  ].map(f => (
-                    <div key={f.label} style={{ textAlign: 'center' }}>
-                      <div style={{ fontSize: 24, marginBottom: 6 }}>{f.icon}</div>
-                      <div style={{ fontSize: 13, color: 'var(--gray-400)', marginBottom: 2 }}>{f.label}</div>
-                      <div style={{ fontSize: 15, fontWeight: 600, color: 'var(--black)' }}>{f.value}</div>
-                    </div>
-                  ))}
-                </div>
-
-                {/* Description */}
-                <h3 style={{ fontSize: 16, fontWeight: 700, marginBottom: 12 }}>About this property</h3>
-                <p style={{ fontSize: 15, color: 'var(--gray-600)', lineHeight: 1.75, whiteSpace: 'pre-line' }}>
-                  {property.description}
-                </p>
-
-                {/* Video Tour */}
-                {property.videoTourUrl ? (
-                  <div style={{ marginTop: 28, borderTop: '1px solid var(--gray-200)', paddingTop: 24 }}>
-                    <h3 style={{ fontSize: 16, fontWeight: 700, marginBottom: 16 }}>🎥 Video Tour</h3>
-                    <a href={property.videoTourUrl} target="_blank" rel="noopener noreferrer" style={{
-                      display: 'inline-flex', alignItems: 'center', gap: 8,
-                      background: 'var(--black)', color: '#fff', padding: '12px 20px',
-                      borderRadius: 4, fontSize: 14, fontWeight: 600, textDecoration: 'none',
-                    }}>
-                      ▶ Watch Video Tour
-                    </a>
-                  </div>
-                ) : null}
-
-              </div>
-            </div>
-
-            {/* ── RIGHT COLUMN — Contact Card ── */}
-            <div style={{ position: 'sticky', top: 88 }}>
-              <div style={{ background: '#fff', border: '1px solid var(--gray-200)', borderRadius: 8, padding: 28 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 24 }}>
-                  <div style={{
-                    width: 48, height: 48, background: 'var(--black)', borderRadius: '50%',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    color: '#fff', fontFamily: "'Poppins', sans-serif", fontSize: 18, fontWeight: 700,
-                  }}>
-                    {landlordName.charAt(0).toUpperCase()}
-                  </div>
-                  <div>
-                    <div style={{ fontWeight: 600, fontSize: 15, color: 'var(--black)' }}>{landlordName}</div>
-                    <div style={{ fontSize: 13, color: 'var(--gray-400)' }}>Property Owner</div>
-                  </div>
-                </div>
-
-                {error && (
-                  <div style={{ background: '#fce4ec', color: '#c62828', padding: '10px 14px', borderRadius: 4, fontSize: 13, marginBottom: 16 }}>
-                    {error}
-                  </div>
-                )}
-
-                <div style={{
-                  background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: 6,
-                  padding: '10px 14px', fontSize: 13, color: '#166534', marginBottom: 20,
-                }}>
-                  ✓ No agency fees — contact landlord directly
-                </div>
-
-                <button onClick={handleContact} disabled={contacting} style={{
-                  width: '100%', padding: 14, background: 'var(--red)', color: '#fff',
-                  border: 'none', borderRadius: 4, fontSize: 14, fontWeight: 600,
-                  letterSpacing: '0.5px', textTransform: 'uppercase', cursor: 'pointer',
-                  opacity: contacting ? 0.7 : 1, marginBottom: 12,
-                }}>
-                  {contacting ? 'Opening Chat…' : '💬 Message Landlord'}
-                </button>
-
-                {!profile && (
-                  <p style={{ textAlign: 'center', fontSize: 13, color: 'var(--gray-400)' }}>
-                    <Link href="/login" style={{ color: 'var(--red)', fontWeight: 600 }}>Sign in</Link> to message the landlord
-                  </p>
-                )}
-
-                <div style={{ borderTop: '1px solid var(--gray-200)', marginTop: 20, paddingTop: 20 }}>
-                  {[
-                    { label: 'Property ID', value: property.id?.slice(0, 8).toUpperCase() },
-                    { label: 'Status', value: property.status.charAt(0).toUpperCase() + property.status.slice(1) },
-                    { label: 'Listed', value: property.createdAt ? new Date((property.createdAt as any).seconds * 1000).toLocaleDateString('en-GB') : 'Recent' },
-                  ].map(r => (
-                    <div key={r.label} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 10, fontSize: 13 }}>
-                      <span style={{ color: 'var(--gray-400)' }}>{r.label}</span>
-                      <span style={{ fontWeight: 500 }}>{r.value}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <Link href="/listings" style={{ display: 'block', textAlign: 'center', marginTop: 14, color: 'var(--gray-400)', fontSize: 13 }}>
-                ← Back to listings
-              </Link>
-
-              {/* Pricing Details */}
-              <div style={{ background: '#fff', border: '1px solid var(--gray-200)', borderRadius: 8, padding: 24, marginTop: 20 }}>
-                <h3 style={{ fontSize: 16, fontWeight: 700, marginBottom: 16 }}>Pricing Details</h3>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-                  <div style={{ background: 'var(--gray-100)', borderRadius: 6, padding: '14px 18px' }}>
-                    <div style={{ fontSize: 12, color: 'var(--gray-400)', marginBottom: 4 }}>MONTHLY RENT</div>
-                    <div style={{ fontSize: 18, fontWeight: 700, color: 'var(--black)' }}>£{property.price.toLocaleString()}</div>
-                  </div>
-                  {property.depositAmount ? (
-                    <div style={{ background: 'var(--gray-100)', borderRadius: 6, padding: '14px 18px' }}>
-                      <div style={{ fontSize: 12, color: 'var(--gray-400)', marginBottom: 4 }}>DEPOSIT</div>
-                      <div style={{ fontSize: 18, fontWeight: 700, color: 'var(--black)' }}>£{property.depositAmount.toLocaleString()}</div>
-                    </div>
-                  ) : null}
-                </div>
-                <div style={{
-                  marginTop: 12, padding: '10px 14px', borderRadius: 6, fontSize: 13,
-                  background: property.billsIncluded ? '#f0fdf4' : '#fafafa',
-                  border: `1px solid ${property.billsIncluded ? '#bbf7d0' : 'var(--gray-200)'}`,
-                  color: property.billsIncluded ? '#166534' : 'var(--gray-600)',
-                }}>
-                  {property.billsIncluded ? '✓ Bills included' : '✗ Bills not included'}
-                  {property.billsNote ? <span style={{ marginLeft: 8, fontStyle: 'italic' }}>{property.billsNote}</span> : null}
-                </div>
-                {property.availableFrom ? (
-                  <div style={{ marginTop: 12, padding: '14px 18px', background: 'var(--gray-100)', borderRadius: 6, fontSize: 14 }}>
-                    📅 <strong>Available from:</strong>{' '}
-                    {new Date(property.availableFrom).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}
-                  </div>
-                ) : null}
-              </div>
-
-              {/* Features & Amenities */}
-              {(property.parking || property.garden || property.balcony) ? (
-                <div style={{ background: '#fff', border: '1px solid var(--gray-200)', borderRadius: 8, padding: 24, marginTop: 16 }}>
-                  <h3 style={{ fontSize: 16, fontWeight: 700, marginBottom: 16 }}>Features & Amenities</h3>
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12 }}>
-                    {property.parking ? (
-                      <div style={{ background: 'var(--gray-100)', borderRadius: 6, padding: '14px 16px', textAlign: 'center' }}>
-                        <div style={{ fontSize: 22, marginBottom: 6 }}>🚗</div>
-                        <div style={{ fontSize: 12, color: 'var(--gray-400)', marginBottom: 2 }}>PARKING</div>
-                        <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--black)' }}>{parkingLabel(property.parking)}</div>
-                      </div>
-                    ) : null}
-                    {property.garden ? (
-                      <div style={{ background: 'var(--gray-100)', borderRadius: 6, padding: '14px 16px', textAlign: 'center' }}>
-                        <div style={{ fontSize: 22, marginBottom: 6 }}>🌿</div>
-                        <div style={{ fontSize: 12, color: 'var(--gray-400)', marginBottom: 2 }}>GARDEN</div>
-                        <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--black)' }}>
-                          {property.garden === 'none' ? 'No Garden' :
-                           property.garden === 'private' ? 'Private Garden' :
-                           property.garden === 'shared' ? 'Shared Garden' : 'Communal Grounds'}
-                        </div>
-                      </div>
-                    ) : null}
-                    {property.balcony ? (
-                      <div style={{ background: 'var(--gray-100)', borderRadius: 6, padding: '14px 16px', textAlign: 'center' }}>
-                        <div style={{ fontSize: 22, marginBottom: 6 }}>🏠</div>
-                        <div style={{ fontSize: 12, color: 'var(--gray-400)', marginBottom: 2 }}>BALCONY</div>
-                        <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--black)' }}>Has Balcony / Terrace</div>
-                      </div>
-                    ) : null}
-                  </div>
-                </div>
-              ) : null}
-            </div>
-
+          <style>{`
+            .hero-btns { display: flex; gap: 12px; flex-wrap: wrap; }
+            .hero-btn {
+              padding: 14px 28px;
+              background: #2563eb; color: #fff; border: none;
+              border-radius: 6px; font-size: 13px; font-weight: 700;
+              letter-spacing: 0.5px; text-transform: uppercase;
+              text-decoration: none; font-family: 'Poppins', sans-serif;
+              white-space: nowrap; display: inline-block;
+              transition: background 0.2s;
+            }
+            .hero-btn:hover { background: #1d4ed8; }
+            .hero-btn-outline {
+              padding: 14px 28px;
+              background: transparent; color: #fff;
+              border: 1.5px solid rgba(255,255,255,0.5);
+              border-radius: 6px; font-size: 13px; font-weight: 700;
+              letter-spacing: 0.5px; text-transform: uppercase;
+              text-decoration: none; font-family: 'Poppins', sans-serif;
+              white-space: nowrap; display: inline-block;
+              transition: all 0.2s;
+            }
+            .hero-btn-outline:hover { background: rgba(255,255,255,0.1); }
+            @media (max-width: 480px) {
+              .hero-btns { gap: 10px; }
+              .hero-btn, .hero-btn-outline {
+                padding: 11px 18px;
+                font-size: 11px;
+              }
+            }
+          `}</style>
+          <div className="hero-btns">
+            <Link href="/listings" className="hero-btn">
+              Browse Properties
+            </Link>
+            <Link href="/register" className="hero-btn-outline">
+              List Your Property
+            </Link>
           </div>
         </div>
-      </div>
+      </section>
+
+      {/* ── BOOK A VALUATION ─────────────────────────────────── */}
+      <section style={{
+        padding: '100px 5%',
+        position: 'relative',
+        overflow: 'hidden',
+        background: '#08122a',
+        isolation: 'isolate',
+      }}>
+        {/* Valuation background image - luxury interior */}
+        <div style={{
+          position: 'absolute', inset: 0,
+          backgroundImage: 'url(/images/Background_Book_Valuation.png)',
+          backgroundSize: 'cover', backgroundPosition: 'center',
+          backgroundRepeat: 'no-repeat',
+        }} />
+        {/* Dark overlay */}
+        <div style={{
+          position: 'absolute', inset: 0,
+          background: 'rgba(8, 18, 40, 0.78)',
+        }} />
+        <div style={{ maxWidth: 780, position: 'relative', zIndex: 1 }}>
+          <h2 style={{
+            fontFamily: "'Poppins', sans-serif",
+            fontSize: 'clamp(32px,5vw,56px)', fontWeight: 700,
+            color: '#fff', lineHeight: 1.2, marginBottom: 24,
+          }}>
+            Are you ready to sell or let your property?
+          </h2>
+          <p style={{
+            fontSize: 18, color: 'rgba(255,255,255,0.75)', lineHeight: 1.8,
+            marginBottom: 44, fontWeight: 300, maxWidth: 620,
+          }}>
+            Book a free sales or lettings valuation with your local agent, and they will use their local knowledge and expertise to give you the most accurate sales or lettings valuation.
+          </p>
+          <ValuationInlineButton />
+        </div>
+      </section>
+
+      {/* ── BOOK A VIEWING ───────────────────────────────────── */}
+      <section style={{
+        padding: '100px 5%',
+        position: 'relative',
+        overflow: 'hidden',
+        background: '#08122a',
+        isolation: 'isolate',
+      }}>
+        {/* Background image - agent photo */}
+        <div style={{
+          position: 'absolute', inset: 0,
+          backgroundImage: 'url(/images/agent-photo.jpeg)',
+          backgroundSize: 'cover', backgroundPosition: 'center right',
+          backgroundRepeat: 'no-repeat',
+          zIndex: 0,
+        }} />
+        {/* Dark overlay - solid enough to block any bleed-through */}
+        <div style={{
+          position: 'absolute', inset: 0,
+          background: 'rgba(8, 18, 40, 0.92)',
+          zIndex: 1,
+        }} />
+        <div style={{ maxWidth: 780, position: 'relative', zIndex: 2 }}>
+          <h2 style={{
+            fontFamily: "'Poppins', sans-serif",
+            fontSize: 'clamp(32px,5vw,56px)', fontWeight: 700,
+            color: '#fff', lineHeight: 1.2, marginBottom: 24,
+          }}>
+            Looking to rent a property?
+          </h2>
+          <p style={{
+            fontSize: 18, color: 'rgba(255,255,255,0.75)', lineHeight: 1.8,
+            marginBottom: 44, fontWeight: 300, maxWidth: 620,
+          }}>
+            Register your requirements and we&apos;ll match you with suitable properties before they hit the market.
+          </p>
+          <BookViewingInlineButton />
+        </div>
+      </section>
+
+      {/* ── INFO CARDS ───────────────────────────────────────── */}
+      <section style={{ padding: '90px 5%', position: 'relative', overflow: 'hidden' }}>
+        {/* Services background image - agent with clients */}
+        <div style={{
+          position: 'absolute', inset: 0,
+          backgroundImage: 'url(/images/Background_of_the_services.png)',
+          backgroundSize: 'cover', backgroundPosition: 'center top',
+          backgroundRepeat: 'no-repeat',
+        }} />
+        {/* Dark overlay */}
+        <div style={{
+          position: 'absolute', inset: 0,
+          background: 'rgba(8, 18, 40, 0.82)',
+        }} />
+        <div style={{ position: 'relative', zIndex: 1 }}>
+        <div style={{ marginBottom: 56, textAlign: 'center' }}>
+          <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 3, textTransform: 'uppercase', color: '#4a90d9', marginBottom: 14 }}>
+            Our Services
+          </div>
+          <h2 style={{ fontFamily: "'Poppins', sans-serif", fontSize: 'clamp(28px,4vw,48px)', fontWeight: 700, color: '#fff', margin: 0 }}>
+            How We Can Help
+          </h2>
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 24 }}>
+          {[
+            {
+              title: 'For Landlords',
+              body: 'Renting your property should feel straightforward and cost-effective. Our service keeps the process clear with transparent pricing and flexible options, from free tools to low-cost packages including advertising, enquiry handling, and professional tenancy setup.',
+            },
+            {
+              title: 'For Tenants',
+              body: 'Our goal is to make finding your next home straightforward, safe, and comfortable. We offer flexible search options for different needs — pet-friendly homes, student accommodation, and properties suitable for a range of lifestyles. No pressure, no unnecessary office visits.',
+            },
+            {
+              title: 'Property Management',
+              body: 'From accurate valuations and professional photography to comprehensive tenant screening and 12-month guarantee insurance, we ensure your property is in the best hands at every stage of the letting process.',
+            },
+          ].map(card => (
+            <div key={card.title} style={{
+              background: '#162849',
+              borderRadius: 10, padding: '32px 28px',
+              border: '1px solid rgba(255,255,255,0.08)',
+            }}>
+              <h3 style={{
+                fontFamily: "'Poppins', sans-serif",
+                fontSize: 20, fontWeight: 700, color: '#fff',
+                marginBottom: 16,
+              }}>
+                {card.title}
+              </h3>
+              <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.65)', lineHeight: 1.8, margin: 0 }}>
+                {card.body}
+              </p>
+            </div>
+          ))}
+        </div>
+        </div>
+      </section>
+
+      {/* ── PRICING TABLE ─────────────────────────────────────── */}
+      <section style={{ padding: '90px 5%', position: 'relative', overflow: 'hidden' }}>
+        {/* Pricing background - same services image, different angle */}
+        <div style={{
+          position: 'absolute', inset: 0,
+          backgroundImage: 'url(/images/Background_of_the_services.png)',
+          backgroundSize: 'cover', backgroundPosition: 'center bottom',
+          backgroundRepeat: 'no-repeat',
+        }} />
+        {/* Darker overlay for pricing readability */}
+        <div style={{
+          position: 'absolute', inset: 0,
+          background: 'rgba(5, 12, 30, 0.88)',
+        }} />
+        <div style={{ position: 'relative', zIndex: 1 }}>
+        <div style={{ marginBottom: 56, textAlign: 'center' }}>
+          <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 3, textTransform: 'uppercase', color: '#4a90d9', marginBottom: 14 }}>
+            Transparent Pricing
+          </div>
+          <h2 style={{ fontFamily: "'Poppins', sans-serif", fontSize: 'clamp(28px,4vw,48px)', fontWeight: 700, color: '#fff', margin: 0 }}>
+            Choose Your Package
+          </h2>
+        </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 24, maxWidth: 1100, margin: '0 auto' }}>
+
+          {/* £399 Virtual Tenant Find */}
+          <div style={{
+            background: '#162849', borderRadius: 10, padding: '36px 28px',
+            border: '1px solid rgba(255,255,255,0.08)', display: 'flex', flexDirection: 'column',
+          }}>
+            <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.45)', marginBottom: 8, textTransform: 'uppercase', letterSpacing: 1 }}>One-time fee</div>
+            <div style={{ fontFamily: "'Poppins', sans-serif", fontSize: 52, fontWeight: 700, color: '#fff', lineHeight: 1, marginBottom: 4 }}>£399</div>
+            <div style={{ fontFamily: "'Poppins', sans-serif", fontSize: 18, fontWeight: 800, color: '#fff', marginBottom: 24, paddingBottom: 24, borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
+              Virtual Tenant Find
+            </div>
+            {[
+              'Expert property valuation',
+              'Advertising your property on major portals',
+              'Enquiries, Screening & Viewings Arrangement',
+              'Schedule Viewing with the Landlord',
+              'Viewing Feedback & Offer Negotiation',
+              'Document Request & Holding Deposit Collection',
+              'Credit & Right to Rent Checks',
+              'Binding ASAT tenancy agreement',
+              'First Rent & Deposit Collection',
+              'Arranging transfer of utilities and council tax',
+            ].map(item => (
+              <div key={item} style={{ display: 'flex', gap: 10, marginBottom: 12, alignItems: 'flex-start' }}>
+                <span style={{ color: '#2563eb', fontWeight: 700, fontSize: 15, marginTop: 1, flexShrink: 0 }}>✓</span>
+                <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.7)', lineHeight: 1.5 }}>{item}</span>
+              </div>
+            ))}
+            <div style={{ marginTop: 'auto', paddingTop: 28 }}>
+              <Link href="/register" style={{
+                display: 'block', textAlign: 'center',
+                padding: '14px 24px', background: '#2563eb', color: '#fff',
+                borderRadius: 4, fontSize: 14, fontWeight: 700,
+                letterSpacing: '0.5px', textTransform: 'uppercase', textDecoration: 'none',
+              }}>
+                Add Listing Now
+              </Link>
+            </div>
+          </div>
+
+          {/* £599 Expert Tenant Find — Most Popular */}
+          <div style={{
+            background: '#0f1f3d', borderRadius: 10, padding: '36px 28px',
+            border: '2px solid #2563eb', display: 'flex', flexDirection: 'column',
+            position: 'relative',
+          }}>
+            <div style={{
+              position: 'absolute', top: -14, left: '50%', transform: 'translateX(-50%)',
+              background: '#2563eb', color: '#fff', fontSize: 10, fontWeight: 800,
+              letterSpacing: 2, textTransform: 'uppercase', padding: '5px 16px', borderRadius: 20,
+              whiteSpace: 'nowrap',
+            }}>
+              Most Popular
+            </div>
+            <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.45)', marginBottom: 8, textTransform: 'uppercase', letterSpacing: 1 }}>One-time fee</div>
+            <div style={{ fontFamily: "'Poppins', sans-serif", fontSize: 52, fontWeight: 700, color: '#4a90d9', lineHeight: 1, marginBottom: 4 }}>£599</div>
+            <div style={{ fontFamily: "'Poppins', sans-serif", fontSize: 18, fontWeight: 800, fontStyle: 'normal', color: '#fff', marginBottom: 24, paddingBottom: 24, borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
+              Expert Tenant Find
+            </div>
+            {[
+              'Professional property photography',
+              'Expert property valuation',
+              'Advertising your property on major portals',
+              'Enquiries, Screening & Viewings Arrangement',
+              'Viewings conducted by our experienced agent',
+              'Viewing Feedback & Offer Negotiation',
+              'Document Request & Holding Deposit Collection',
+              'Credit & Right to Rent Checks',
+              'Binding ASAT tenancy agreement',
+              'First Rent & Deposit Collection',
+              'Comprehensive handover key to the tenant',
+            ].map(item => (
+              <div key={item} style={{ display: 'flex', gap: 10, marginBottom: 12, alignItems: 'flex-start' }}>
+                <span style={{ color: '#4a90d9', fontWeight: 700, fontSize: 15, marginTop: 1, flexShrink: 0 }}>✓</span>
+                <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.7)', lineHeight: 1.5 }}>{item}</span>
+              </div>
+            ))}
+            <div style={{ marginTop: 'auto', paddingTop: 28 }}>
+              <Link href="/register" style={{
+                display: 'block', textAlign: 'center',
+                padding: '14px 24px', background: '#2563eb', color: '#fff',
+                borderRadius: 4, fontSize: 14, fontWeight: 700,
+                letterSpacing: '0.5px', textTransform: 'uppercase', textDecoration: 'none',
+              }}>
+                Add Listing Now
+              </Link>
+            </div>
+          </div>
+
+          {/* 8% Full Management */}
+          <div style={{
+            background: '#162849', borderRadius: 10, padding: '36px 28px',
+            border: '1px solid rgba(255,255,255,0.08)', display: 'flex', flexDirection: 'column',
+          }}>
+            <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.45)', marginBottom: 8, textTransform: 'uppercase', letterSpacing: 1 }}>Monthly percentage</div>
+            <div style={{ fontFamily: "'Poppins', sans-serif", fontSize: 52, fontWeight: 700, color: '#fff', lineHeight: 1, marginBottom: 4 }}>8%</div>
+            <div style={{ fontFamily: "'Poppins', sans-serif", fontSize: 18, fontWeight: 800, color: '#fff', marginBottom: 24, paddingBottom: 24, borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
+              Full Management
+            </div>
+            {[
+              'Rental Invoice to Tenant & Rent Collection',
+              'Account Statement & Rent Transfer to Landlord',
+              'Maintenance Payment Handling',
+              'Annual Expense and Income Summary',
+              'Deposit Protection (DPS/TDS)',
+              'Gas, Electric & EPC Certificate Renewal Reminders',
+              'Move-In Inventory Report',
+              'Move-Out Inventory Report',
+              'Check-in / Check-out Comparison',
+              'Tenant enquiry handling',
+              'Maintenance Reporting & Oversight',
+              'Contractor Coordination (with approval)',
+              'Maintenance Record Keeping',
+              'Key Holding Management',
+              'Final Utility & Council Tax Coordination',
+              'Compliance Certificate Management',
+            ].map(item => (
+              <div key={item} style={{ display: 'flex', gap: 10, marginBottom: 12, alignItems: 'flex-start' }}>
+                <span style={{ color: '#2563eb', fontWeight: 700, fontSize: 15, marginTop: 1, flexShrink: 0 }}>✓</span>
+                <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.7)', lineHeight: 1.5 }}>{item}</span>
+              </div>
+            ))}
+            <div style={{ marginTop: 'auto', paddingTop: 28 }}>
+              <Link href="/register" style={{
+                display: 'block', textAlign: 'center',
+                padding: '14px 24px', background: '#2563eb', color: '#fff',
+                borderRadius: 4, fontSize: 14, fontWeight: 700,
+                letterSpacing: '0.5px', textTransform: 'uppercase', textDecoration: 'none',
+              }}>
+                Add Listing Now
+              </Link>
+            </div>
+          </div>
+
+        </div>
+        </div>
+      </section>
+
+      {/* ── SEARCH BAR ───────────────────────────────────────── */}
+      <section style={{ background: '#f7f8fa', padding: '56px 5%', borderBottom: '1px solid #e5e7eb' }}>
+        <div style={{
+          background: '#fff', borderRadius: 10, padding: '40px 40px',
+          boxShadow: '0 4px 32px rgba(0,0,0,0.08)', border: '1px solid #e5e7eb',
+        }}>
+          <style>{`
+            .search-grid {
+              display: grid;
+              grid-template-columns: 2fr 1fr 1fr 1fr auto;
+              gap: 16px;
+              align-items: end;
+            }
+            @media (max-width: 640px) {
+              .search-grid {
+                grid-template-columns: 1fr 1fr;
+                gap: 12px;
+              }
+              .search-grid > *:first-child {
+                grid-column: 1 / -1;
+              }
+              .search-grid > button {
+                grid-column: 1 / -1;
+                width: 100%;
+              }
+            }
+          `}</style>
+          <div style={{ fontSize: 13, fontWeight: 700, letterSpacing: 2, textTransform: 'uppercase', color: '#9ca3af', marginBottom: 28 }}>
+            Search Properties
+          </div>
+          <div className="search-grid">
+            <div>
+              <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#6b7280', marginBottom: 8, textTransform: 'uppercase', letterSpacing: 1 }}>Location</label>
+              <input
+                value={location} onChange={e => setLocation(e.target.value)}
+                placeholder="City, postcode or area…"
+                onKeyDown={e => e.key === 'Enter' && handleSearch()}
+                style={{
+                  width: '100%', padding: '14px 16px', fontSize: 15,
+                  border: '1px solid #d1d5db', borderRadius: 6, outline: 'none',
+                  fontFamily: "'Poppins', sans-serif", color: '#0f1f3d',
+                  boxSizing: 'border-box',
+                }}
+              />
+            </div>
+            <div>
+              <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#6b7280', marginBottom: 8, textTransform: 'uppercase', letterSpacing: 1 }}>Min Price</label>
+              <select value={minPrice} onChange={e => setMinPrice(e.target.value)} style={{
+                width: '100%', padding: '14px 16px', fontSize: 15,
+                border: '1px solid #d1d5db', borderRadius: 6, outline: 'none',
+                fontFamily: "'Poppins', sans-serif", color: '#0f1f3d',
+                background: '#fff', cursor: 'pointer',
+              }}>
+                <option value="">No min</option>
+                <option value="500">£500/mo</option>
+                <option value="800">£800/mo</option>
+                <option value="1000">£1,000/mo</option>
+                <option value="1500">£1,500/mo</option>
+                <option value="2000">£2,000/mo</option>
+              </select>
+            </div>
+            <div>
+              <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#6b7280', marginBottom: 8, textTransform: 'uppercase', letterSpacing: 1 }}>Max Price</label>
+              <select value={maxPrice} onChange={e => setMaxPrice(e.target.value)} style={{
+                width: '100%', padding: '14px 16px', fontSize: 15,
+                border: '1px solid #d1d5db', borderRadius: 6, outline: 'none',
+                fontFamily: "'Poppins', sans-serif", color: '#0f1f3d',
+                background: '#fff', cursor: 'pointer',
+              }}>
+                <option value="">No max</option>
+                <option value="1000">£1,000/mo</option>
+                <option value="1500">£1,500/mo</option>
+                <option value="2000">£2,000/mo</option>
+                <option value="3000">£3,000/mo</option>
+                <option value="5000">£5,000/mo</option>
+              </select>
+            </div>
+            <div>
+              <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#6b7280', marginBottom: 8, textTransform: 'uppercase', letterSpacing: 1 }}>Bedrooms</label>
+              <select value={bedrooms} onChange={e => setBedrooms(e.target.value)} style={{
+                width: '100%', padding: '14px 16px', fontSize: 15,
+                border: '1px solid #d1d5db', borderRadius: 6, outline: 'none',
+                fontFamily: "'Poppins', sans-serif", color: '#0f1f3d',
+                background: '#fff', cursor: 'pointer',
+              }}>
+                <option value="">Any</option>
+                <option value="0">Studio</option>
+                <option value="1">1+</option>
+                <option value="2">2+</option>
+                <option value="3">3+</option>
+                <option value="4">4+</option>
+              </select>
+            </div>
+            <button onClick={handleSearch} style={{
+              padding: '14px 32px', background: '#0f1f3d', color: '#fff', border: 'none',
+              borderRadius: 6, fontSize: 15, fontWeight: 700, whiteSpace: 'nowrap',
+              textTransform: 'uppercase', letterSpacing: '1px', cursor: 'pointer', transition: 'background .2s',
+            }}
+              onMouseEnter={e => (e.currentTarget.style.background = '#162849')}
+              onMouseLeave={e => (e.currentTarget.style.background = '#0f1f3d')}
+            >
+              Search
+            </button>
+          </div>
+        </div>
+      </section>
+
+      {/* ── FEATURED LISTINGS ────────────────────────────────── */}
+      <section style={{ padding: '90px 5%' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 56 }}>
+          <div>
+            <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 3, textTransform: 'uppercase', color: '#2563eb', marginBottom: 14 }}>
+              Latest Listings
+            </div>
+            <h2 style={{ fontFamily: "'Poppins', sans-serif", fontSize: 'clamp(32px,4vw,52px)', fontWeight: 700, lineHeight: 1.1, letterSpacing: '-0.5px', color: '#0f1f3d' }}>
+              Recently Added
+            </h2>
+          </div>
+          <Link href="/listings" style={{
+            padding: '12px 24px', border: '1px solid #e5e7eb', borderRadius: 4,
+            fontSize: 13, fontWeight: 600, color: '#0f1f3d', textTransform: 'uppercase',
+            letterSpacing: '0.5px', transition: 'all .2s', textDecoration: 'none',
+          }}>
+            View All →
+          </Link>
+        </div>
+
+        {featured.length > 0 ? (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(300px,1fr))', gap: 24 }}>
+            {featured.map(p => <PropertyCard key={p.id} property={p} />)}
+          </div>
+        ) : (
+          <div style={{ textAlign: 'center', padding: '60px 0', color: '#9ca3af' }}>
+            <div style={{ fontSize: 48, marginBottom: 16 }}>🏠</div>
+            <p style={{ fontSize: 16, fontWeight: 500 }}>No properties listed yet.</p>
+            <p style={{ fontSize: 14, marginTop: 8 }}>Be the first to list a property!</p>
+            <Link href="/register" style={{
+              display: 'inline-block', marginTop: 20, padding: '12px 24px',
+              background: '#1e3a6e', color: '#ffffff', borderRadius: 4, fontSize: 14, fontWeight: 700,
+              textDecoration: 'none',
+            }}>
+              List Your Property →
+            </Link>
+          </div>
+        )}
+      </section>
+
+      {/* ── HOW IT WORKS ─────────────────────────────────────── */}
+      <section style={{ padding: '90px 5%', background: '#f7f8fa', borderTop: '1px solid #e5e7eb' }}>
+        <div style={{ marginBottom: 56 }}>
+          <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 3, textTransform: 'uppercase', color: '#2563eb', marginBottom: 14 }}>
+            How It Works
+          </div>
+          <h2 style={{ fontFamily: "'Poppins', sans-serif", fontSize: 'clamp(32px,4vw,52px)', fontWeight: 700, color: '#0f1f3d' }}>
+            Simple, Direct, Transparent
+          </h2>
+        </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 60 }}>
+          {[
+            {
+              role: 'For Landlords',
+              steps: [
+                { n: 1, title: 'Create your account', desc: 'Sign up as a landlord in under 2 minutes. No setup fees.' },
+                { n: 2, title: 'List your property', desc: 'Add photos, set your rent, describe your home. It goes live instantly.' },
+                { n: 3, title: 'Receive enquiries', desc: 'Tenants message you directly. No middlemen, no commission.' },
+                { n: 4, title: 'Find your tenant', desc: 'Choose who you let to. Full control at every step.' },
+              ],
+            },
+            {
+              role: 'For Tenants',
+              steps: [
+                { n: 1, title: 'Search & filter', desc: 'Browse by location, price, bedrooms. Find homes that fit your life.' },
+                { n: 2, title: 'View details', desc: 'See all photos, features, and availability at a glance.' },
+                { n: 3, title: 'Message landlord', desc: 'Contact landlords directly. No agency gatekeeping.' },
+                { n: 4, title: 'Secure your home', desc: 'Agree terms directly with the landlord. Zero agency fees.' },
+              ],
+            },
+          ].map(col => (
+            <div key={col.role}>
+              <div style={{
+                fontSize: 11, fontWeight: 700, letterSpacing: 3, textTransform: 'uppercase',
+                color: '#0f1f3d', marginBottom: 28, paddingBottom: 12,
+                borderBottom: '2px solid #2563eb', display: 'inline-block',
+              }}>
+                {col.role}
+              </div>
+              {col.steps.map(s => (
+                <div key={s.n} style={{ display: 'flex', gap: 18, marginBottom: 28 }}>
+                  <div style={{
+                    width: 36, height: 36, background: '#0f1f3d', color: '#fff',
+                    borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    fontSize: 13, fontWeight: 700, flexShrink: 0,
+                  }}>
+                    {s.n}
+                  </div>
+                  <div>
+                    <h4 style={{ fontSize: 15, fontWeight: 600, marginBottom: 5, color: '#0f1f3d' }}>{s.title}</h4>
+                    <p style={{ fontSize: 14, color: '#6b7280', lineHeight: 1.6 }}>{s.desc}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* ── IMAGE GALLERY ─────────────────────────────────────── */}
+      <ImageGallery />
+
+      {/* ── CTA BANNER ───────────────────────────────────────── */}
+      <section style={{
+        background: '#0f1f3d', padding: '80px 5%',
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 40, flexWrap: 'wrap',
+        position: 'relative', overflow: 'hidden',
+      }}>
+        <div style={{
+          position: 'absolute', inset: 0,
+          background: 'radial-gradient(ellipse at 20% 50%, rgba(30,58,110,0.2) 0%, transparent 60%)',
+          pointerEvents: 'none',
+        }} />
+        <div style={{ position: 'relative' }}>
+          <h2 style={{ fontFamily: "'Poppins', sans-serif", fontSize: 'clamp(28px,3.5vw,48px)', fontWeight: 700, color: '#fff', marginBottom: 12 }}>
+            Ready to find your<br /><span style={{ color: '#4a90d9' }}>perfect home?</span>
+          </h2>
+          <p style={{ color: 'rgba(255,255,255,0.55)', fontSize: 16, fontWeight: 300 }}>
+            Join thousands of landlords and tenants already using House of Lettings.
+          </p>
+        </div>
+        <div style={{ display: 'flex', gap: 14, position: 'relative' }}>
+          <Link href="/register" style={{
+            padding: '16px 36px', background: '#1e3a6e', color: '#ffffff',
+            borderRadius: 4, fontSize: 14, fontWeight: 700, letterSpacing: '0.5px', textTransform: 'uppercase',
+            textDecoration: 'none',
+          }}>
+            Get Started Free
+          </Link>
+          <Link href="/listings" style={{
+            padding: '16px 36px', background: 'transparent', color: '#fff',
+            border: '1px solid rgba(255,255,255,0.3)', borderRadius: 4, fontSize: 14,
+            fontWeight: 500, letterSpacing: '0.5px', textTransform: 'uppercase',
+            textDecoration: 'none',
+          }}>
+            Browse Listings
+          </Link>
+        </div>
+      </section>
+
+      {/* ── FOOTER ───────────────────────────────────────────── */}
+      <footer style={{
+        background: '#050a12', borderTop: '1px solid rgba(255,255,255,0.06)',
+        padding: '48px 5%',
+      }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 20 }}>
+          <div style={{
+            fontFamily: "'Poppins', sans-serif", fontSize: 20, fontWeight: 700,
+            color: '#fff', display: 'flex', alignItems: 'center', gap: 10,
+          }}>
+            <span style={{ width: 7, height: 7, background: '#2563eb', borderRadius: '50%', display: 'inline-block' }} />
+            House of Lettings
+          </div>
+          <p style={{ color: 'rgba(255,255,255,0.25)', fontSize: 13 }}>
+            © {new Date().getFullYear()} House of Lettings Ltd. All rights reserved.
+          </p>
+          <div style={{ display: 'flex', gap: 24 }}>
+            <Link href="/cookie-policy" style={{ color: 'rgba(255,255,255,0.35)', fontSize: 13, textDecoration: 'none' }}>Cookie Policy</Link>
+            <Link href="/terms" style={{ color: 'rgba(255,255,255,0.35)', fontSize: 13, textDecoration: 'none' }}>Terms</Link>
+            <span style={{ color: 'rgba(255,255,255,0.35)', fontSize: 13, cursor: 'pointer' }}>Contact</span>
+          </div>
+        </div>
+      </footer>
+
     </>
   );
 }

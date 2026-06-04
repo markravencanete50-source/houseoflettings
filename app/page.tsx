@@ -459,6 +459,8 @@ export default function HomePage() {
         padding: '100px 5%',
         position: 'relative',
         overflow: 'hidden',
+        background: '#08122a',
+        isolation: 'isolate',
       }}>
         {/* Background image - agent photo */}
         <div style={{
@@ -466,13 +468,15 @@ export default function HomePage() {
           backgroundImage: 'url(/images/agent-photo.jpeg)',
           backgroundSize: 'cover', backgroundPosition: 'center right',
           backgroundRepeat: 'no-repeat',
+          zIndex: 0,
         }} />
-        {/* Dark overlay */}
+        {/* Dark overlay - solid enough to block any bleed-through */}
         <div style={{
           position: 'absolute', inset: 0,
-          background: 'rgba(8, 18, 40, 0.82)',
+          background: 'rgba(8, 18, 40, 0.92)',
+          zIndex: 1,
         }} />
-        <div style={{ maxWidth: 780, position: 'relative', zIndex: 1 }}>
+        <div style={{ maxWidth: 780, position: 'relative', zIndex: 2 }}>
           <h2 style={{
             fontFamily: "'Poppins', sans-serif",
             fontSize: 'clamp(32px,5vw,56px)', fontWeight: 700,

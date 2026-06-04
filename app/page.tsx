@@ -355,26 +355,7 @@ export default function HomePage() {
         }} />
 
         <div style={{ position: 'relative', maxWidth: 700 }}>
-          {/* Logo */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 36 }}>
-            <img
-              src="/images/logo_HOL.png"
-              alt="House of Lettings Logo"
-              style={{ height: 60, width: 'auto', display: 'block' }}
-              onError={e => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
-            />
-            <div style={{ lineHeight: 1.15 }}>
-              <div style={{
-                fontFamily: '"DM Sans", "Inter", Arial, sans-serif', fontSize: 18, fontWeight: 800,
-                color: '#fff', letterSpacing: '2px', textTransform: 'uppercase',
-              }}>
-                House of Lettings
-              </div>
-              <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.45)', letterSpacing: '1px', textTransform: 'uppercase', marginTop: 2 }}>
-                Leeds &amp; Manchester
-              </div>
-            </div>
-          </div>
+
 
           <h1 style={{
             fontFamily: '"DM Sans", "Inter", Arial, sans-serif',

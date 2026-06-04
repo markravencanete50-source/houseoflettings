@@ -97,7 +97,7 @@ export default function PropertyDetailClient() {
     <>
       <Navbar />
       <div style={{ paddingTop: 68, textAlign: 'center', padding: '120px 5%' }}>
-        <h2 style={{ fontFamily: 'var(--font-serif)', fontSize: 32 }}>Property not found</h2>
+        <h2 style={{ fontFamily: "'Poppins', sans-serif", fontSize: 32 }}>Property not found</h2>
         <Link href="/listings" style={{ color: 'var(--red)', fontWeight: 600, marginTop: 16, display: 'inline-block' }}>
           ← Back to listings
         </Link>
@@ -225,13 +225,13 @@ export default function PropertyDetailClient() {
                         {property.badge}
                       </span>
                     )}
-                    <h1 style={{ fontFamily: 'var(--font-serif)', fontSize: 32, fontWeight: 700, lineHeight: 1.2 }}>
+                    <h1 style={{ fontFamily: "'Poppins', sans-serif", fontSize: 32, fontWeight: 700, lineHeight: 1.2 }}>
                       {property.title}
                     </h1>
                     <p style={{ color: '#000000', fontSize: 17, marginTop: 8, fontWeight: 600 }}>📍 {property.location}</p>
                   </div>
                   <div style={{ textAlign: 'right' }}>
-                    <div style={{ fontFamily: 'var(--font-serif)', fontSize: 36, fontWeight: 700, color: 'var(--red)' }}>
+                    <div style={{ fontFamily: "'Poppins', sans-serif", fontSize: 36, fontWeight: 700, color: 'var(--red)' }}>
                       £{property.price.toLocaleString()}
                     </div>
                     <div style={{ fontSize: 14, color: '#555555' }}>per month</div>
@@ -293,7 +293,7 @@ export default function PropertyDetailClient() {
                   <div style={{
                     width: 48, height: 48, background: 'var(--black)', borderRadius: '50%',
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    color: '#fff', fontFamily: 'var(--font-serif)', fontSize: 18, fontWeight: 700,
+                    color: '#fff', fontFamily: "'Poppins', sans-serif", fontSize: 18, fontWeight: 700,
                   }}>
                     {landlordName ? landlordName.charAt(0).toUpperCase() : '🏠'}
                   </div>
@@ -336,7 +336,7 @@ export default function PropertyDetailClient() {
                     transform: viewingHovered ? 'scale(1.02)' : 'scale(1)',
                     boxShadow: viewingHovered ? '0 4px 16px rgba(37,99,168,0.4)' : '0 2px 8px rgba(37,99,168,0.25)',
                     transition: 'all 0.2s',
-                    fontFamily: 'Georgia, serif',
+                    fontFamily: "'Poppins', sans-serif",
                   }}
                 >
                   🏠 Book a Viewing

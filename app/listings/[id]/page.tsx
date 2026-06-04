@@ -87,7 +87,7 @@ export default function PropertyDetailPage() {
     <>
       <Navbar />
       <div style={{ paddingTop: 68, textAlign: 'center', padding: '120px 5%' }}>
-        <h2 style={{ fontFamily: 'var(--font-serif)', fontSize: 32 }}>
+        <h2 style={{ fontFamily: "'Poppins', sans-serif", fontSize: 32 }}>
           {error ? 'Something went wrong' : 'Property not found'}
         </h2>
         {error && <p style={{ color: 'var(--gray-400)', fontSize: 15, marginTop: 10 }}>{error}</p>}
@@ -173,13 +173,13 @@ export default function PropertyDetailPage() {
                         padding: '4px 10px', borderRadius: 2, marginBottom: 10,
                       }}>{property.badge}</span>
                     )}
-                    <h1 style={{ fontFamily: 'var(--font-serif)', fontSize: 32, fontWeight: 700, lineHeight: 1.2 }}>
+                    <h1 style={{ fontFamily: "'Poppins', sans-serif", fontSize: 32, fontWeight: 700, lineHeight: 1.2 }}>
                       {property.title}
                     </h1>
                     <p style={{ color: '#000000', fontSize: 17, fontWeight: 600, marginTop: 6 }}>📍 {property.location}</p>
                   </div>
                   <div style={{ textAlign: 'right' }}>
-                    <div style={{ fontFamily: 'var(--font-serif)', fontSize: 36, fontWeight: 700, color: 'var(--red)' }}>
+                    <div style={{ fontFamily: "'Poppins', sans-serif", fontSize: 36, fontWeight: 700, color: 'var(--red)' }}>
                       £{property.price.toLocaleString()}
                     </div>
                     <div style={{ fontSize: 14, color: 'var(--gray-400)' }}>per month</div>
@@ -236,7 +236,7 @@ export default function PropertyDetailPage() {
                   <div style={{
                     width: 48, height: 48, background: 'var(--black)', borderRadius: '50%',
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    color: '#fff', fontFamily: 'var(--font-serif)', fontSize: 18, fontWeight: 700,
+                    color: '#fff', fontFamily: "'Poppins', sans-serif", fontSize: 18, fontWeight: 700,
                   }}>
                     {landlordName.charAt(0).toUpperCase()}
                   </div>

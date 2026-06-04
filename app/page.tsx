@@ -359,16 +359,16 @@ export default function HomePage() {
 
           <h1 style={{
             fontFamily: "'Barlow Condensed', 'Poppins', sans-serif",
-            fontSize: 'clamp(42px,7vw,90px)',
-            fontWeight: 900, color: '#fff', lineHeight: 1.0, letterSpacing: '1px', marginBottom: 8,
+            fontSize: 'clamp(36px,5.5vw,68px)',
+            fontWeight: 700, color: '#fff', lineHeight: 1.05, letterSpacing: '0.5px', marginBottom: 6,
             textTransform: 'uppercase',
           }}>
             We Handle the Details.
           </h1>
           <h1 style={{
             fontFamily: "'Barlow Condensed', 'Poppins', sans-serif",
-            fontSize: 'clamp(42px,7vw,90px)',
-            fontWeight: 900, color: '#4a90d9', lineHeight: 1.0, letterSpacing: '1px', marginBottom: 32,
+            fontSize: 'clamp(36px,5.5vw,68px)',
+            fontWeight: 700, color: '#4a90d9', lineHeight: 1.05, letterSpacing: '0.5px', marginBottom: 28,
             textTransform: 'uppercase',
           }}>
             You Enjoy the Returns.

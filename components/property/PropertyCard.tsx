@@ -33,7 +33,7 @@ export default function PropertyCard({ property }: PropertyCardProps) {
         transform: hovered ? 'translateY(-3px)' : 'translateY(0)',
         display: 'flex',
         flexDirection: 'column',
-        fontFamily: 'Georgia, serif',
+        fontFamily: "'Poppins', sans-serif",
       }}
     >
       {/* Image */}
@@ -48,7 +48,7 @@ export default function PropertyCard({ property }: PropertyCardProps) {
           <div style={{
             width: '100%', height: '100%', background: '#e8edf3',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            color: '#8a99b3', fontSize: 14, fontFamily: 'Georgia, serif',
+            color: '#8a99b3', fontSize: 14, fontFamily: "'Poppins', sans-serif",
           }}>
             No Image Available
           </div>
@@ -57,7 +57,7 @@ export default function PropertyCard({ property }: PropertyCardProps) {
           <span style={{
             position: 'absolute', top: 12, left: 12,
             background: '#0f1f3d', color: '#fff',
-            fontSize: 11, fontWeight: 700, fontFamily: 'Georgia, serif',
+            fontSize: 11, fontWeight: 700, fontFamily: "'Poppins', sans-serif",
             padding: '4px 10px', borderRadius: 3,
             textTransform: 'uppercase', letterSpacing: '0.6px',
           }}>
@@ -74,7 +74,7 @@ export default function PropertyCard({ property }: PropertyCardProps) {
         {/* Price */}
         <div style={{
           fontSize: 22, fontWeight: 700, color: '#0f1f3d',
-          fontFamily: 'Georgia, serif',
+          fontFamily: "'Poppins', sans-serif",
         }}>
           £{property.price.toLocaleString()}
           <span style={{ fontSize: 13, fontWeight: 400, color: '#5a6a80' }}> / month</span>
@@ -83,7 +83,7 @@ export default function PropertyCard({ property }: PropertyCardProps) {
         {/* Title */}
         <div style={{
           fontSize: 15, fontWeight: 600, color: '#1a2e4a',
-          fontFamily: 'Georgia, serif', lineHeight: 1.4,
+          fontFamily: "'Poppins', sans-serif", lineHeight: 1.4,
           display: '-webkit-box', WebkitLineClamp: 2,
           WebkitBoxOrient: 'vertical', overflow: 'hidden',
         }}>
@@ -91,7 +91,7 @@ export default function PropertyCard({ property }: PropertyCardProps) {
         </div>
 
         {/* Location */}
-        <div style={{ fontSize: 13, color: '#5a6a80', fontFamily: 'Georgia, serif' }}>
+        <div style={{ fontSize: 13, color: '#5a6a80', fontFamily: "'Poppins', sans-serif" }}>
           📍 {property.location}
         </div>
 
@@ -99,7 +99,7 @@ export default function PropertyCard({ property }: PropertyCardProps) {
         <div style={{
           display: 'flex', gap: 12, flexWrap: 'wrap',
           fontSize: 13, color: '#3a4f6a', marginTop: 4,
-          fontFamily: 'Georgia, serif',
+          fontFamily: "'Poppins', sans-serif",
         }}>
           <span>🛏 {bedsLabel}</span>
           <span>🚿 {property.bathrooms} Bath</span>
@@ -124,7 +124,7 @@ export default function PropertyCard({ property }: PropertyCardProps) {
             borderRadius: 4,
             fontSize: 13,
             fontWeight: 600,
-            fontFamily: 'Georgia, serif',
+            fontFamily: "'Poppins', sans-serif",
             textAlign: 'center',
             letterSpacing: '0.5px',
             textTransform: 'uppercase',

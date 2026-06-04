@@ -334,7 +334,7 @@ export default function HomePage() {
       <section style={{
         minHeight: '100vh', background: '#0f1f3d', 
         position: 'relative', display: 'flex', alignItems: 'center',
-        padding: '100px 5% 60px',
+        padding: '60px 5%',
       }}>
         {/* Hero background image - Leeds city */}
         <div style={{

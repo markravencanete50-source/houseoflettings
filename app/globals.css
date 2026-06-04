@@ -7,7 +7,7 @@
 }
 
 html {
-  scroll-behavior: smooth;
+  /* scroll-behavior: smooth removed — breaks position:fixed on mobile Chrome */
 }
 
 :root {
@@ -41,6 +41,10 @@ body {
   background-color: #ffffff;
   color: #0a162f;
   line-height: 1.6;
+}
+
+@media (max-width: 640px) {
+  body { padding-top: 60px !important; }
 }
 
 a { color: inherit; text-decoration: none; }

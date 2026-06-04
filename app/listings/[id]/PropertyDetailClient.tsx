@@ -1,6 +1,6 @@
 'use client';
 // app/listings/[id]/PropertyDetailClient.tsx
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Navbar from '@/components/layout/Navbar';
@@ -26,6 +26,10 @@ export default function PropertyDetailClient() {
   const [viewingHovered, setViewingHovered] = useState(false);
   const [imgFading, setImgFading] = useState(false);
   const [enquiryOpen, setEnquiryOpen] = useState(false);
+
+  // Lightbox state
+  const [lightboxOpen, setLightboxOpen] = useState(false);
+  const [lightboxIndex, setLightboxIndex] = useState(0);
 
   useEffect(() => {
     const t = setTimeout(() => setMounted(true), 50);
@@ -55,6 +59,24 @@ export default function PropertyDetailClient() {
     })();
   }, [id]);
 
+  // Lightbox keyboard nav
+  const handleKeyDown = useCallback((e: KeyboardEvent) => {
+    if (!lightboxOpen || !property?.images) return;
+    if (e.key === 'ArrowRight') setLightboxIndex(i => (i + 1) % property.images.length);
+    if (e.key === 'ArrowLeft') setLightboxIndex(i => (i - 1 + property.images.length) % property.images.length);
+    if (e.key === 'Escape') setLightboxOpen(false);
+  }, [lightboxOpen, property]);
+
+  useEffect(() => {
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [handleKeyDown]);
+
+  const openLightbox = (index: number) => {
+    setLightboxIndex(index);
+    setLightboxOpen(true);
+  };
+
   const handleContact = async () => {
     if (!profile) { router.push('/login'); return; }
     if (profile.role === 'landlord') {
@@ -74,6 +96,12 @@ export default function PropertyDetailClient() {
     } finally {
       setContacting(false);
     }
+  };
+
+  const switchImage = (i: number) => {
+    if (i === activeImg) return;
+    setImgFading(true);
+    setTimeout(() => { setActiveImg(i); setImgFading(false); }, 180);
   };
 
   if (loading) return (
@@ -101,20 +129,20 @@ export default function PropertyDetailClient() {
   const isLeeds = /leeds|LS\d/i.test(property.location || '');
   const contactPhone = isLeeds ? '+44 113 868 9212' : '+44 161 768 1758';
   const contactPhoneHref = isLeeds ? 'tel:+441138689212' : 'tel:+441617681758';
-
-  const switchImage = (i: number) => {
-    if (i === activeImg) return;
-    setImgFading(true);
-    setTimeout(() => { setActiveImg(i); setImgFading(false); }, 180);
-  };
+  const images = property.images || [];
 
   return (
     <>
       <Navbar />
+
       <style>{`
         @keyframes hol-fadeUp {
           from { opacity: 0; transform: translateY(18px); }
           to   { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes hol-lightboxIn {
+          from { opacity: 0; }
+          to   { opacity: 1; }
         }
         .hol-panel {
           transition: box-shadow 0.25s, transform 0.25s;
@@ -140,17 +168,72 @@ export default function PropertyDetailClient() {
           transform: translateY(-2px);
         }
 
+        /* ── Full-width gallery strip (above the layout grid) ── */
+        .hol-gallery-main {
+          position: relative;
+          width: 100%;
+          height: 480px;
+          background: #111;
+          overflow: hidden;
+          cursor: zoom-in;
+        }
+        .hol-gallery-main img {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          transition: opacity 0.18s ease;
+        }
+        .hol-gallery-counter {
+          position: absolute;
+          bottom: 12px;
+          right: 16px;
+          background: rgba(0,0,0,0.55);
+          color: #fff;
+          font-size: 13px;
+          font-weight: 600;
+          padding: 4px 10px;
+          border-radius: 20px;
+          pointer-events: none;
+        }
+        .hol-gallery-arrow {
+          position: absolute;
+          top: 50%;
+          transform: translateY(-50%);
+          background: rgba(0,0,0,0.45);
+          color: #fff;
+          border: none;
+          border-radius: 50%;
+          width: 40px;
+          height: 40px;
+          font-size: 20px;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          transition: background 0.2s;
+          z-index: 2;
+        }
+        .hol-gallery-arrow:hover { background: rgba(0,0,0,0.75); }
+        .hol-gallery-arrow.prev { left: 12px; }
+        .hol-gallery-arrow.next { right: 12px; }
+
+        /* ── Thumbstrip ── */
+        .hol-thumbstrip {
+          display: flex;
+          gap: 8px;
+          overflow-x: auto;
+          padding: 8px 16px;
+          background: #fff;
+          scrollbar-width: none;
+        }
+        .hol-thumbstrip::-webkit-scrollbar { display: none; }
+
         /* ── Layout grid ── */
         .hol-detail-grid {
           display: grid;
           grid-template-columns: 1fr 340px;
           gap: 40px;
           align-items: start;
-        }
-
-        /* ── Main image ── */
-        .hol-main-image {
-          height: 420px;
         }
 
         /* ── Key features row ── */
@@ -171,25 +254,114 @@ export default function PropertyDetailClient() {
           font-size: 36px;
         }
 
+        /* ── Fixed bottom CTA bar (mobile only) ── */
+        .hol-bottom-cta {
+          display: none;
+        }
+
+        /* ── Lightbox overlay ── */
+        .hol-lightbox {
+          position: fixed;
+          inset: 0;
+          background: rgba(0,0,0,0.94);
+          z-index: 9999;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          animation: hol-lightboxIn 0.2s ease;
+        }
+        .hol-lightbox-img {
+          max-width: 95vw;
+          max-height: 80vh;
+          object-fit: contain;
+          border-radius: 4px;
+          user-select: none;
+        }
+        .hol-lightbox-close {
+          position: absolute;
+          top: 16px;
+          right: 20px;
+          background: rgba(255,255,255,0.12);
+          border: none;
+          color: #fff;
+          font-size: 28px;
+          width: 44px;
+          height: 44px;
+          border-radius: 50%;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          line-height: 1;
+          transition: background 0.2s;
+        }
+        .hol-lightbox-close:hover { background: rgba(255,255,255,0.25); }
+        .hol-lightbox-nav {
+          position: absolute;
+          top: 50%;
+          transform: translateY(-50%);
+          background: rgba(255,255,255,0.12);
+          border: none;
+          color: #fff;
+          font-size: 28px;
+          width: 52px;
+          height: 52px;
+          border-radius: 50%;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          transition: background 0.2s;
+        }
+        .hol-lightbox-nav:hover { background: rgba(255,255,255,0.28); }
+        .hol-lightbox-nav.prev { left: 20px; }
+        .hol-lightbox-nav.next { right: 20px; }
+        .hol-lightbox-counter {
+          position: absolute;
+          bottom: 24px;
+          color: rgba(255,255,255,0.7);
+          font-size: 14px;
+          font-weight: 500;
+          letter-spacing: 0.5px;
+        }
+        .hol-lightbox-dots {
+          position: absolute;
+          bottom: 52px;
+          display: flex;
+          gap: 6px;
+        }
+        .hol-lightbox-dot {
+          width: 7px;
+          height: 7px;
+          border-radius: 50%;
+          background: rgba(255,255,255,0.35);
+          transition: background 0.2s;
+        }
+        .hol-lightbox-dot.active {
+          background: #fff;
+        }
+
         /* ── MOBILE ── */
         @media (max-width: 768px) {
+          .hol-gallery-main {
+            height: 260px;
+            border-radius: 0;
+          }
+
           .hol-detail-grid {
             grid-template-columns: 1fr;
             gap: 20px;
           }
 
-          /* Contact card comes FIRST on mobile (order trick) */
+          /* Hide desktop contact card on mobile */
           .hol-right-col {
-            order: -1;
+            display: none;
           }
 
           .hol-contact-sticky {
             position: static;
             top: unset;
-          }
-
-          .hol-main-image {
-            height: 240px;
           }
 
           .hol-key-features {
@@ -201,7 +373,6 @@ export default function PropertyDetailClient() {
             font-size: 26px;
           }
 
-          /* Keep title + price from overflowing side-by-side */
           .hol-title-price-row {
             flex-direction: column !important;
             align-items: flex-start !important;
@@ -211,11 +382,31 @@ export default function PropertyDetailClient() {
           .hol-price-block {
             text-align: left !important;
           }
+
+          /* Show fixed bottom CTA */
+          .hol-bottom-cta {
+            display: flex;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+            background: #fff;
+            border-top: 1px solid #e0e0e0;
+            padding: 10px 14px;
+            gap: 10px;
+            box-shadow: 0 -4px 20px rgba(0,0,0,0.12);
+          }
+
+          /* Bottom padding so content doesn't hide behind fixed bar */
+          .hol-page-content {
+            padding-bottom: 90px !important;
+          }
         }
 
         @media (max-width: 480px) {
-          .hol-main-image {
-            height: 200px;
+          .hol-gallery-main {
+            height: 220px;
           }
           .hol-key-features {
             grid-template-columns: repeat(2, 1fr);
@@ -224,7 +415,145 @@ export default function PropertyDetailClient() {
         }
       `}</style>
 
+      {/* ── LIGHTBOX ── */}
+      {lightboxOpen && images.length > 0 && (
+        <div className="hol-lightbox" onClick={() => setLightboxOpen(false)}>
+          <button
+            className="hol-lightbox-close"
+            onClick={() => setLightboxOpen(false)}
+          >×</button>
+
+          <img
+            className="hol-lightbox-img"
+            src={images[lightboxIndex]}
+            alt={`Photo ${lightboxIndex + 1}`}
+            onClick={e => e.stopPropagation()}
+            draggable={false}
+          />
+
+          {images.length > 1 && (
+            <>
+              <button
+                className="hol-lightbox-nav prev"
+                onClick={e => { e.stopPropagation(); setLightboxIndex(i => (i - 1 + images.length) % images.length); }}
+              >‹</button>
+              <button
+                className="hol-lightbox-nav next"
+                onClick={e => { e.stopPropagation(); setLightboxIndex(i => (i + 1) % images.length); }}
+              >›</button>
+              <div className="hol-lightbox-dots">
+                {images.map((_, i) => (
+                  <div
+                    key={i}
+                    className={`hol-lightbox-dot${i === lightboxIndex ? ' active' : ''}`}
+                    onClick={e => { e.stopPropagation(); setLightboxIndex(i); }}
+                  />
+                ))}
+              </div>
+              <div className="hol-lightbox-counter">{lightboxIndex + 1} / {images.length}</div>
+            </>
+          )}
+        </div>
+      )}
+
+      {/* ── FIXED MOBILE BOTTOM CTA ── */}
+      <div className="hol-bottom-cta">
+        <button
+          onClick={() => setEnquiryOpen(true)}
+          style={{
+            flex: 1, padding: '13px 8px',
+            background: 'linear-gradient(135deg,#1a3c5e,#2563a8)',
+            color: '#fff', border: 'none', borderRadius: 8,
+            fontSize: 14, fontWeight: 700, letterSpacing: '0.3px',
+            cursor: 'pointer', fontFamily: "'Poppins', sans-serif",
+          }}
+        >
+          🏠 Book Viewing
+        </button>
+        <a
+          href={contactPhoneHref}
+          style={{
+            flex: 1, padding: '13px 8px',
+            background: 'var(--red)',
+            color: '#fff', textDecoration: 'none',
+            borderRadius: 8, fontSize: 14, fontWeight: 700,
+            letterSpacing: '0.3px', textAlign: 'center',
+            cursor: 'pointer', fontFamily: "'Poppins', sans-serif",
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+          }}
+        >
+          📞 Contact Us
+        </a>
+      </div>
+
       <div style={{ minHeight: '100vh', background: 'var(--gray-100)' }}>
+
+        {/* ── FULL-WIDTH GALLERY (above everything) ── */}
+        <div style={{ background: '#111' }}>
+          {/* Main image */}
+          <div
+            className="hol-gallery-main"
+            onClick={() => openLightbox(activeImg)}
+            title="Click to enlarge"
+          >
+            {images[activeImg] ? (
+              <img
+                src={images[activeImg]}
+                alt={property.title}
+                style={{ opacity: imgFading ? 0 : 1 }}
+              />
+            ) : (
+              <div style={{
+                width: '100%', height: '100%',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                color: 'rgba(255,255,255,0.4)', fontSize: 14,
+              }}>
+                No Image Available
+              </div>
+            )}
+
+            {images.length > 0 && (
+              <div className="hol-gallery-counter">
+                📷 {activeImg + 1} / {images.length}
+              </div>
+            )}
+
+            {images.length > 1 && (
+              <>
+                <button
+                  className="hol-gallery-arrow prev"
+                  onClick={e => { e.stopPropagation(); switchImage((activeImg - 1 + images.length) % images.length); }}
+                >‹</button>
+                <button
+                  className="hol-gallery-arrow next"
+                  onClick={e => { e.stopPropagation(); switchImage((activeImg + 1) % images.length); }}
+                >›</button>
+              </>
+            )}
+          </div>
+
+          {/* Thumbnail strip */}
+          {images.length > 1 && (
+            <div className="hol-thumbstrip">
+              {images.map((img, i) => (
+                <div
+                  key={i}
+                  onClick={() => switchImage(i)}
+                  className="hol-thumb"
+                  style={{
+                    width: 80, height: 56, flexShrink: 0,
+                    borderRadius: 6, overflow: 'hidden', cursor: 'pointer',
+                    border: `2px solid ${i === activeImg ? 'var(--red)' : 'transparent'}`,
+                    opacity: i === activeImg ? 1 : 0.65,
+                    transition: 'opacity 0.2s, border 0.2s, transform 0.2s',
+                  }}
+                >
+                  <img src={img} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
 
         {/* Breadcrumb */}
         <div style={{ background: '#fff', borderBottom: '1px solid var(--gray-200)', padding: '12px 20px' }}>
@@ -243,7 +572,7 @@ export default function PropertyDetailClient() {
           </div>
         </div>
 
-        <div style={{ padding: '24px 16px' }}>
+        <div className="hol-page-content" style={{ padding: '24px 16px' }}>
           <div style={{ maxWidth: 1200, margin: '0 auto', width: '100%' }}>
             <div
               className="hol-detail-grid"
@@ -254,59 +583,13 @@ export default function PropertyDetailClient() {
             >
               {/* ── LEFT COLUMN ── */}
               <div>
-
-                {/* Image Gallery */}
-                <div
-                  className="hol-main-image"
-                  style={{ borderRadius: 10, overflow: 'hidden', marginBottom: 8, background: 'var(--gray-200)' }}
-                >
-                  {property.images?.[activeImg] ? (
-                    <img
-                      src={property.images[activeImg]}
-                      alt={property.title}
-                      style={{
-                        width: '100%', height: '100%', objectFit: 'cover',
-                        opacity: imgFading ? 0 : 1,
-                        transition: 'opacity 0.18s ease',
-                      }}
-                    />
-                  ) : (
-                    <div style={{
-                      width: '100%', height: '100%',
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      color: 'var(--gray-400)', fontSize: 14,
-                    }}>
-                      No Image Available
-                    </div>
-                  )}
-                </div>
-
-                {property.images?.length > 1 && (
-                  <div style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 4 }}>
-                    {property.images.map((img, i) => (
-                      <div
-                        key={i}
-                        onClick={() => switchImage(i)}
-                        className="hol-thumb"
-                        style={{
-                          width: 72, height: 54, flexShrink: 0,
-                          borderRadius: 6, overflow: 'hidden', cursor: 'pointer',
-                          border: `2px solid ${i === activeImg ? 'var(--red)' : 'transparent'}`,
-                        }}
-                      >
-                        <img src={img} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                      </div>
-                    ))}
-                  </div>
-                )}
-
                 {/* Details Panel */}
                 <div
                   className="hol-panel"
                   style={{
                     background: '#fff', border: '1px solid var(--gray-200)',
-                    borderRadius: 8, padding: 'clamp(16px, 4%, 32px)', marginTop: 20,
-                    animation: mounted ? 'hol-fadeUp 0.5s ease 0.4s both' : 'none',
+                    borderRadius: 8, padding: 'clamp(16px, 4%, 32px)',
+                    animation: mounted ? 'hol-fadeUp 0.5s ease 0.1s both' : 'none',
                   }}
                 >
                   {/* Title + Price */}
@@ -392,7 +675,7 @@ export default function PropertyDetailClient() {
                 </div>
               </div>
 
-              {/* ── RIGHT COLUMN ── */}
+              {/* ── RIGHT COLUMN (desktop only) ── */}
               <div className="hol-right-col">
                 <div className="hol-contact-sticky">
 

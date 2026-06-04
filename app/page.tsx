@@ -22,7 +22,7 @@ function ValuationInlineButton() {
           padding: '16px 0', background: '#2563eb', color: '#fff',
           border: 'none', borderRadius: 6, fontSize: 16, fontWeight: 700,
           letterSpacing: '0.5px', cursor: 'pointer', transition: 'background 0.2s',
-          fontFamily: 'Georgia, "Times New Roman", serif',
+          fontFamily: "'Poppins', sans-serif",
           display: 'inline-block', width: '220px', textAlign: 'center',
         }}
         onMouseEnter={e => (e.currentTarget.style.background = '#1d4ed8')}
@@ -48,7 +48,7 @@ function BookViewingInlineButton() {
           padding: '16px 0', background: '#2563eb', color: '#fff',
           border: 'none', borderRadius: 6, fontSize: 16, fontWeight: 700,
           letterSpacing: '0.5px', cursor: 'pointer', transition: 'background 0.2s',
-          fontFamily: 'Georgia, "Times New Roman", serif',
+          fontFamily: "'Poppins', sans-serif",
           display: 'inline-block', width: '220px', textAlign: 'center',
         }}
         onMouseEnter={e => (e.currentTarget.style.background = '#1d4ed8')}
@@ -183,7 +183,7 @@ function ImageGallery() {
         </div>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: 16 }}>
           <h2 style={{
-            fontFamily: 'Georgia, "Times New Roman", serif',
+            fontFamily: "'Poppins', sans-serif",
             fontSize: 'clamp(28px,4vw,48px)',
             fontWeight: 700, lineHeight: 1.1, letterSpacing: '-0.5px', margin: 0,
             color: '#0f1f3d',
@@ -259,7 +259,7 @@ function ImageGallery() {
                 transition: 'all 0.3s ease',
               }}
             >
-              <div style={{ fontSize: 15, fontWeight: 700, color: '#fff', marginBottom: 4, fontFamily: 'Georgia, serif' }}>
+              <div style={{ fontSize: 15, fontWeight: 700, color: '#fff', marginBottom: 4, fontFamily: "'Poppins', sans-serif" }}>
                 {item.label}
               </div>
               <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.65)', letterSpacing: 0.5 }}>
@@ -358,17 +358,17 @@ export default function HomePage() {
 
 
           <h1 style={{
-            fontFamily: '"DM Sans", "Inter", Arial, sans-serif',
-            fontSize: 'clamp(32px,5vw,66px)',
-            fontWeight: 900, color: '#fff', lineHeight: 1.08, letterSpacing: '-1px', marginBottom: 12,
+            fontFamily: "'Barlow Condensed', 'Poppins', sans-serif",
+            fontSize: 'clamp(42px,7vw,90px)',
+            fontWeight: 900, color: '#fff', lineHeight: 1.0, letterSpacing: '1px', marginBottom: 8,
             textTransform: 'uppercase',
           }}>
             We Handle the Details.
           </h1>
           <h1 style={{
-            fontFamily: '"DM Sans", "Inter", Arial, sans-serif',
-            fontSize: 'clamp(32px,5vw,66px)',
-            fontWeight: 900, color: '#4a90d9', lineHeight: 1.08, letterSpacing: '-1px', marginBottom: 28,
+            fontFamily: "'Barlow Condensed', 'Poppins', sans-serif",
+            fontSize: 'clamp(42px,7vw,90px)',
+            fontWeight: 900, color: '#4a90d9', lineHeight: 1.0, letterSpacing: '1px', marginBottom: 32,
             textTransform: 'uppercase',
           }}>
             You Enjoy the Returns.
@@ -385,7 +385,7 @@ export default function HomePage() {
           <p style={{
             fontSize: 17, color: 'rgba(255,255,255,0.6)', lineHeight: 1.65,
             maxWidth: 480, marginBottom: 44, fontWeight: 400, letterSpacing: '0.2px',
-            fontFamily: '"DM Sans", "Inter", Arial, sans-serif',
+            fontFamily: "'Poppins', sans-serif",
           }}>
             Property management. Done right.
           </p>
@@ -394,7 +394,7 @@ export default function HomePage() {
             <Link href="/listings" style={{
               padding: '16px 36px', background: '#2563eb', color: '#ffffff', border: 'none',
               borderRadius: 6, fontSize: 14, fontWeight: 700, letterSpacing: '0.5px', textTransform: 'uppercase',
-              textDecoration: 'none', fontFamily: 'Georgia, "Times New Roman", serif',
+              textDecoration: 'none', fontFamily: "'Poppins', sans-serif",
             }}>
               Browse Properties
             </Link>
@@ -402,7 +402,7 @@ export default function HomePage() {
               padding: '16px 36px', background: '#2563eb', color: '#fff',
               border: 'none', borderRadius: 6, fontSize: 14,
               fontWeight: 700, letterSpacing: '0.5px', textTransform: 'uppercase',
-              textDecoration: 'none', fontFamily: 'Georgia, "Times New Roman", serif',
+              textDecoration: 'none', fontFamily: "'Poppins', sans-serif",
             }}>
               List Your Property
             </Link>
@@ -410,7 +410,7 @@ export default function HomePage() {
               padding: '16px 36px', background: '#2563eb', color: '#fff',
               border: 'none', borderRadius: 6, fontSize: 14,
               fontWeight: 700, letterSpacing: '0.5px', textTransform: 'uppercase',
-              textDecoration: 'none', fontFamily: 'Georgia, "Times New Roman", serif',
+              textDecoration: 'none', fontFamily: "'Poppins', sans-serif",
             }}>
               Terms &amp; Conditions
             </Link>
@@ -438,7 +438,7 @@ export default function HomePage() {
         }} />
         <div style={{ maxWidth: 780, position: 'relative', zIndex: 1 }}>
           <h2 style={{
-            fontFamily: 'Georgia, "Times New Roman", serif',
+            fontFamily: "'Poppins', sans-serif",
             fontSize: 'clamp(32px,5vw,56px)', fontWeight: 700,
             color: '#fff', lineHeight: 1.2, marginBottom: 24,
           }}>
@@ -474,7 +474,7 @@ export default function HomePage() {
         }} />
         <div style={{ maxWidth: 780, position: 'relative', zIndex: 1 }}>
           <h2 style={{
-            fontFamily: 'Georgia, "Times New Roman", serif',
+            fontFamily: "'Poppins', sans-serif",
             fontSize: 'clamp(32px,5vw,56px)', fontWeight: 700,
             color: '#fff', lineHeight: 1.2, marginBottom: 24,
           }}>
@@ -509,7 +509,7 @@ export default function HomePage() {
           <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 3, textTransform: 'uppercase', color: '#4a90d9', marginBottom: 14 }}>
             Our Services
           </div>
-          <h2 style={{ fontFamily: 'Georgia, "Times New Roman", serif', fontSize: 'clamp(28px,4vw,48px)', fontWeight: 700, color: '#fff', margin: 0 }}>
+          <h2 style={{ fontFamily: "'Poppins', sans-serif", fontSize: 'clamp(28px,4vw,48px)', fontWeight: 700, color: '#fff', margin: 0 }}>
             How We Can Help
           </h2>
         </div>
@@ -534,7 +534,7 @@ export default function HomePage() {
               border: '1px solid rgba(255,255,255,0.08)',
             }}>
               <h3 style={{
-                fontFamily: 'Georgia, "Times New Roman", serif',
+                fontFamily: "'Poppins', sans-serif",
                 fontSize: 20, fontWeight: 700, color: '#fff',
                 marginBottom: 16,
               }}>
@@ -568,7 +568,7 @@ export default function HomePage() {
           <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 3, textTransform: 'uppercase', color: '#4a90d9', marginBottom: 14 }}>
             Transparent Pricing
           </div>
-          <h2 style={{ fontFamily: 'Georgia, "Times New Roman", serif', fontSize: 'clamp(28px,4vw,48px)', fontWeight: 700, color: '#fff', margin: 0 }}>
+          <h2 style={{ fontFamily: "'Poppins', sans-serif", fontSize: 'clamp(28px,4vw,48px)', fontWeight: 700, color: '#fff', margin: 0 }}>
             Choose Your Package
           </h2>
         </div>
@@ -581,8 +581,8 @@ export default function HomePage() {
             border: '1px solid rgba(255,255,255,0.08)', display: 'flex', flexDirection: 'column',
           }}>
             <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.45)', marginBottom: 8, textTransform: 'uppercase', letterSpacing: 1 }}>One-time fee</div>
-            <div style={{ fontFamily: 'Georgia, "Times New Roman", serif', fontSize: 52, fontWeight: 700, color: '#fff', lineHeight: 1, marginBottom: 4 }}>£399</div>
-            <div style={{ fontFamily: '"DM Sans", "Inter", Arial, sans-serif', fontSize: 18, fontWeight: 800, color: '#fff', marginBottom: 24, paddingBottom: 24, borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
+            <div style={{ fontFamily: "'Poppins', sans-serif", fontSize: 52, fontWeight: 700, color: '#fff', lineHeight: 1, marginBottom: 4 }}>£399</div>
+            <div style={{ fontFamily: "'Poppins', sans-serif", fontSize: 18, fontWeight: 800, color: '#fff', marginBottom: 24, paddingBottom: 24, borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
               Virtual Tenant Find
             </div>
             {[
@@ -629,8 +629,8 @@ export default function HomePage() {
               Most Popular
             </div>
             <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.45)', marginBottom: 8, textTransform: 'uppercase', letterSpacing: 1 }}>One-time fee</div>
-            <div style={{ fontFamily: 'Georgia, "Times New Roman", serif', fontSize: 52, fontWeight: 700, color: '#4a90d9', lineHeight: 1, marginBottom: 4 }}>£599</div>
-            <div style={{ fontFamily: '"DM Sans", "Inter", Arial, sans-serif', fontSize: 18, fontWeight: 800, fontStyle: 'normal', color: '#fff', marginBottom: 24, paddingBottom: 24, borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
+            <div style={{ fontFamily: "'Poppins', sans-serif", fontSize: 52, fontWeight: 700, color: '#4a90d9', lineHeight: 1, marginBottom: 4 }}>£599</div>
+            <div style={{ fontFamily: "'Poppins', sans-serif", fontSize: 18, fontWeight: 800, fontStyle: 'normal', color: '#fff', marginBottom: 24, paddingBottom: 24, borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
               Expert Tenant Find
             </div>
             {[
@@ -669,8 +669,8 @@ export default function HomePage() {
             border: '1px solid rgba(255,255,255,0.08)', display: 'flex', flexDirection: 'column',
           }}>
             <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.45)', marginBottom: 8, textTransform: 'uppercase', letterSpacing: 1 }}>Monthly percentage</div>
-            <div style={{ fontFamily: 'Georgia, "Times New Roman", serif', fontSize: 52, fontWeight: 700, color: '#fff', lineHeight: 1, marginBottom: 4 }}>8%</div>
-            <div style={{ fontFamily: '"DM Sans", "Inter", Arial, sans-serif', fontSize: 18, fontWeight: 800, color: '#fff', marginBottom: 24, paddingBottom: 24, borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
+            <div style={{ fontFamily: "'Poppins', sans-serif", fontSize: 52, fontWeight: 700, color: '#fff', lineHeight: 1, marginBottom: 4 }}>8%</div>
+            <div style={{ fontFamily: "'Poppins', sans-serif", fontSize: 18, fontWeight: 800, color: '#fff', marginBottom: 24, paddingBottom: 24, borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
               Full Management
             </div>
             {[
@@ -731,7 +731,7 @@ export default function HomePage() {
                 style={{
                   width: '100%', padding: '14px 16px', fontSize: 15,
                   border: '1px solid #d1d5db', borderRadius: 6, outline: 'none',
-                  fontFamily: 'Georgia, "Times New Roman", serif', color: '#0f1f3d',
+                  fontFamily: "'Poppins', sans-serif", color: '#0f1f3d',
                   boxSizing: 'border-box',
                 }}
               />
@@ -741,7 +741,7 @@ export default function HomePage() {
               <select value={minPrice} onChange={e => setMinPrice(e.target.value)} style={{
                 width: '100%', padding: '14px 16px', fontSize: 15,
                 border: '1px solid #d1d5db', borderRadius: 6, outline: 'none',
-                fontFamily: 'Georgia, "Times New Roman", serif', color: '#0f1f3d',
+                fontFamily: "'Poppins', sans-serif", color: '#0f1f3d',
                 background: '#fff', cursor: 'pointer',
               }}>
                 <option value="">No min</option>
@@ -757,7 +757,7 @@ export default function HomePage() {
               <select value={maxPrice} onChange={e => setMaxPrice(e.target.value)} style={{
                 width: '100%', padding: '14px 16px', fontSize: 15,
                 border: '1px solid #d1d5db', borderRadius: 6, outline: 'none',
-                fontFamily: 'Georgia, "Times New Roman", serif', color: '#0f1f3d',
+                fontFamily: "'Poppins', sans-serif", color: '#0f1f3d',
                 background: '#fff', cursor: 'pointer',
               }}>
                 <option value="">No max</option>
@@ -773,7 +773,7 @@ export default function HomePage() {
               <select value={bedrooms} onChange={e => setBedrooms(e.target.value)} style={{
                 width: '100%', padding: '14px 16px', fontSize: 15,
                 border: '1px solid #d1d5db', borderRadius: 6, outline: 'none',
-                fontFamily: 'Georgia, "Times New Roman", serif', color: '#0f1f3d',
+                fontFamily: "'Poppins', sans-serif", color: '#0f1f3d',
                 background: '#fff', cursor: 'pointer',
               }}>
                 <option value="">Any</option>
@@ -805,7 +805,7 @@ export default function HomePage() {
             <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 3, textTransform: 'uppercase', color: '#2563eb', marginBottom: 14 }}>
               Latest Listings
             </div>
-            <h2 style={{ fontFamily: 'Georgia, "Times New Roman", serif', fontSize: 'clamp(32px,4vw,52px)', fontWeight: 700, lineHeight: 1.1, letterSpacing: '-0.5px', color: '#0f1f3d' }}>
+            <h2 style={{ fontFamily: "'Poppins', sans-serif", fontSize: 'clamp(32px,4vw,52px)', fontWeight: 700, lineHeight: 1.1, letterSpacing: '-0.5px', color: '#0f1f3d' }}>
               Recently Added
             </h2>
           </div>
@@ -844,7 +844,7 @@ export default function HomePage() {
           <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 3, textTransform: 'uppercase', color: '#2563eb', marginBottom: 14 }}>
             How It Works
           </div>
-          <h2 style={{ fontFamily: 'Georgia, "Times New Roman", serif', fontSize: 'clamp(32px,4vw,52px)', fontWeight: 700, color: '#0f1f3d' }}>
+          <h2 style={{ fontFamily: "'Poppins', sans-serif", fontSize: 'clamp(32px,4vw,52px)', fontWeight: 700, color: '#0f1f3d' }}>
             Simple, Direct, Transparent
           </h2>
         </div>
@@ -913,7 +913,7 @@ export default function HomePage() {
           pointerEvents: 'none',
         }} />
         <div style={{ position: 'relative' }}>
-          <h2 style={{ fontFamily: 'Georgia, "Times New Roman", serif', fontSize: 'clamp(28px,3.5vw,48px)', fontWeight: 700, color: '#fff', marginBottom: 12 }}>
+          <h2 style={{ fontFamily: "'Poppins', sans-serif", fontSize: 'clamp(28px,3.5vw,48px)', fontWeight: 700, color: '#fff', marginBottom: 12 }}>
             Ready to find your<br /><span style={{ color: '#4a90d9' }}>perfect home?</span>
           </h2>
           <p style={{ color: 'rgba(255,255,255,0.55)', fontSize: 16, fontWeight: 300 }}>
@@ -946,7 +946,7 @@ export default function HomePage() {
       }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 20 }}>
           <div style={{
-            fontFamily: 'Georgia, "Times New Roman", serif', fontSize: 20, fontWeight: 700,
+            fontFamily: "'Poppins', sans-serif", fontSize: 20, fontWeight: 700,
             color: '#fff', display: 'flex', alignItems: 'center', gap: 10,
           }}>
             <span style={{ width: 7, height: 7, background: '#2563eb', borderRadius: '50%', display: 'inline-block' }} />

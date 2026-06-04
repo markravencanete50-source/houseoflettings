@@ -9,6 +9,7 @@ import { getProperties } from '@/services/property';
 import { Property } from '@/lib/types';
 
 const ValuationModal = lazy(() => import('@/components/ValuationModal'));
+const TenantEnquiryModal = lazy(() => import('@/components/property/TenantEnquiryModal'));
 
 // ── INLINE VALUATION BUTTON ───────────────────────────────────────────────────
 function ValuationInlineButton() {
@@ -30,6 +31,44 @@ function ValuationInlineButton() {
       </button>
       <Suspense fallback={null}>
         {open && <ValuationModal isOpen={open} onClose={() => setOpen(false)} />}
+      </Suspense>
+    </>
+  );
+}
+
+// ── INLINE BOOK A VIEWING BUTTON ──────────────────────────────────────────────
+function BookViewingInlineButton() {
+  const [open, setOpen] = useState(false);
+  return (
+    <>
+      <button
+        onClick={() => setOpen(true)}
+        style={{
+          padding: '16px 48px', background: 'transparent', color: '#fff',
+          border: '1px solid rgba(255,255,255,0.5)', borderRadius: 6, fontSize: 16, fontWeight: 700,
+          letterSpacing: '0.5px', cursor: 'pointer', transition: 'all 0.2s',
+          fontFamily: 'Georgia, "Times New Roman", serif',
+        }}
+        onMouseEnter={e => {
+          e.currentTarget.style.background = 'rgba(255,255,255,0.1)';
+          e.currentTarget.style.borderColor = 'rgba(255,255,255,0.8)';
+        }}
+        onMouseLeave={e => {
+          e.currentTarget.style.background = 'transparent';
+          e.currentTarget.style.borderColor = 'rgba(255,255,255,0.5)';
+        }}
+      >
+        Book a viewing
+      </button>
+      <Suspense fallback={null}>
+        {open && (
+          <TenantEnquiryModal
+            isOpen={open}
+            onClose={() => setOpen(false)}
+            propertyTitle="House of Lettings"
+            propertyPrice=""
+          />
+        )}
       </Suspense>
     </>
   );
@@ -433,7 +472,10 @@ export default function HomePage() {
           }}>
             Book a free sales or lettings valuation with your local agent, and they will use their local knowledge and expertise to give you the most accurate sales or lettings valuation.
           </p>
-          <ValuationInlineButton />
+          <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', alignItems: 'center' }}>
+            <ValuationInlineButton />
+            <BookViewingInlineButton />
+          </div>
         </div>
       </section>
 

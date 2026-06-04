@@ -19,7 +19,7 @@ export default function PropertyDetailClient() {
   const [landlordName, setLandlordName] = useState('');
   const [loading, setLoading] = useState(true);
   const [activeImg, setActiveImg] = useState(0);
-  const [contacting, setContacting] = useState(false);
+  const [contacting, setContacting] = useState(false); // kept for potential future use
   const [error, setError] = useState('');
   const [mounted, setMounted] = useState(false);
   const [btnHovered, setBtnHovered] = useState(false);
@@ -107,6 +107,10 @@ export default function PropertyDetailClient() {
 
   const bedsLabel = property.bedrooms === 0 ? 'Studio' : `${property.bedrooms} Bedroom${property.bedrooms > 1 ? 's' : ''}`;
 
+  const isLeeds = /leeds|LS\d/i.test(property.location || '');
+  const contactPhone = isLeeds ? '+44 113 868 9212' : '+44 161 768 1758';
+  const contactPhoneHref = isLeeds ? 'tel:+441138689212' : 'tel:+441617681758';
+
   const switchImage = (i: number) => {
     if (i === activeImg) return;
     setImgFading(true);
@@ -154,8 +158,8 @@ export default function PropertyDetailClient() {
       `}</style>
       <div style={{ minHeight: '100vh', background: 'var(--gray-100)' }}>
         {/* Breadcrumb */}
-        <div style={{ background: '#fff', borderBottom: '1px solid var(--gray-200)', padding: '12px 5%' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+        <div style={{ background: '#fff', borderBottom: '1px solid var(--gray-200)', padding: '12px 20px' }}>
+          <div style={{ maxWidth: 1200, margin: '0 auto', display: 'flex', alignItems: 'center', gap: 8 }}>
             <Link href="/" style={{
               color: '#fff', fontWeight: 700, fontSize: 15,
               background: '#0f1f3d', borderRadius: 5,
@@ -172,7 +176,8 @@ export default function PropertyDetailClient() {
           </div>
         </div>
 
-        <div style={{ padding: '40px 5%', maxWidth: 1100, margin: '0 auto' }}>
+        <div style={{ padding: '40px 20px' }}>
+        <div style={{ maxWidth: 1200, margin: '0 auto', width: '100%' }}>
         <style>{`
           .hol-detail-grid {
             display: grid;
@@ -356,30 +361,26 @@ export default function PropertyDetailClient() {
                   🏠 Book a Viewing
                 </button>
 
-                {/* Message Landlord button */}
-                <button
-                  onClick={handleContact}
-                  disabled={contacting}
+                {/* Contact Us phone button */}
+                <a
+                  href={contactPhoneHref}
                   onMouseEnter={() => setBtnHovered(true)}
                   onMouseLeave={() => setBtnHovered(false)}
                   style={{
-                    width: '100%', padding: 14, background: 'var(--red)', color: '#fff',
-                    border: 'none', borderRadius: 4, fontSize: 14, fontWeight: 600,
-                    letterSpacing: '0.5px', textTransform: 'uppercase', cursor: 'pointer',
-                    opacity: contacting ? 0.7 : 1, marginBottom: 12,
-                    transform: btnHovered && !contacting ? 'scale(1.02)' : 'scale(1)',
-                    boxShadow: btnHovered && !contacting ? '0 4px 16px rgba(198,40,40,0.35)' : 'none',
-                    transition: 'transform 0.2s, box-shadow 0.2s, opacity 0.2s',
+                    display: 'block', width: '100%', padding: 14,
+                    background: btnHovered ? '#b71c1c' : 'var(--red)',
+                    color: '#fff', textDecoration: 'none',
+                    borderRadius: 4, fontSize: 14, fontWeight: 600,
+                    letterSpacing: '0.5px', textTransform: 'uppercase',
+                    cursor: 'pointer', marginBottom: 12, textAlign: 'center',
+                    transform: btnHovered ? 'scale(1.02)' : 'scale(1)',
+                    boxShadow: btnHovered ? '0 4px 16px rgba(198,40,40,0.35)' : 'none',
+                    transition: 'transform 0.2s, box-shadow 0.2s, background 0.2s',
+                    fontFamily: "'Poppins', sans-serif",
                   }}
                 >
-                  {contacting ? 'Opening Chat…' : '💬 Message Landlord'}
-                </button>
-
-                {!profile && (
-                  <p style={{ textAlign: 'center', fontSize: 13, color: '#555555' }}>
-                    <Link href="/login" style={{ color: 'var(--red)', fontWeight: 600 }}>Sign in</Link> to message the landlord
-                  </p>
-                )}
+                  📞 Contact Us — {contactPhone}
+                </a>
 
                 <div style={{ borderTop: '1px solid var(--gray-200)', marginTop: 20, paddingTop: 20 }}>
                   {[
@@ -455,6 +456,7 @@ export default function PropertyDetailClient() {
               </div>
             </div>
           </div>
+        </div>
         </div>
       </div>
 

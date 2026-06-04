@@ -167,17 +167,6 @@ export default function Navbar() {
     textTransform: 'uppercase',
   };
 
-  const dotStyle: React.CSSProperties = {
-    display: 'inline-block',
-    width: 6,
-    height: 6,
-    background: '#c9a96e',
-    borderRadius: '50%',
-    marginLeft: 4,
-    verticalAlign: 'middle',
-    marginBottom: 2,
-  };
-
   const desktopLinksStyle: React.CSSProperties = {
     display: 'flex',
     alignItems: 'center',
@@ -309,7 +298,7 @@ export default function Navbar() {
           {/* Logo */}
           <Link href="/" style={logoStyle}>
             <span style={logoTopStyle}>
-              House of Lettings<span style={dotStyle} />
+              House of Lettings
             </span>
             <span style={logoSubStyle}>Leeds &amp; Manchester</span>
           </Link>
@@ -377,7 +366,7 @@ export default function Navbar() {
       <aside style={drawerStyle} role="dialog" aria-label="Navigation menu" aria-modal="true">
         <div style={drawerHeaderStyle}>
           <Link href="/" style={{ ...logoStyle }} onClick={() => setMenuOpen(false)}>
-            <span style={{ ...logoTopStyle, fontSize: 16 }}>House of Lettings<span style={dotStyle} /></span>
+            <span style={{ ...logoTopStyle, fontSize: 16 }}>House of Lettings</span>
             <span style={logoSubStyle}>Leeds &amp; Manchester</span>
           </Link>
           <button onClick={() => setMenuOpen(false)} aria-label="Close menu"

@@ -44,19 +44,13 @@ function BookViewingInlineButton() {
       <button
         onClick={() => setOpen(true)}
         style={{
-          padding: '16px 48px', background: 'transparent', color: '#fff',
-          border: '1px solid rgba(255,255,255,0.5)', borderRadius: 6, fontSize: 16, fontWeight: 700,
-          letterSpacing: '0.5px', cursor: 'pointer', transition: 'all 0.2s',
+          padding: '16px 48px', background: '#2563eb', color: '#fff',
+          border: 'none', borderRadius: 6, fontSize: 16, fontWeight: 700,
+          letterSpacing: '0.5px', cursor: 'pointer', transition: 'background 0.2s',
           fontFamily: 'Georgia, "Times New Roman", serif',
         }}
-        onMouseEnter={e => {
-          e.currentTarget.style.background = 'rgba(255,255,255,0.1)';
-          e.currentTarget.style.borderColor = 'rgba(255,255,255,0.8)';
-        }}
-        onMouseLeave={e => {
-          e.currentTarget.style.background = 'transparent';
-          e.currentTarget.style.borderColor = 'rgba(255,255,255,0.5)';
-        }}
+        onMouseEnter={e => (e.currentTarget.style.background = '#1d4ed8')}
+        onMouseLeave={e => (e.currentTarget.style.background = '#2563eb')}
       >
         Book a viewing
       </button>
@@ -472,10 +466,43 @@ export default function HomePage() {
           }}>
             Book a free sales or lettings valuation with your local agent, and they will use their local knowledge and expertise to give you the most accurate sales or lettings valuation.
           </p>
-          <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', alignItems: 'center' }}>
-            <ValuationInlineButton />
-            <BookViewingInlineButton />
-          </div>
+          <ValuationInlineButton />
+        </div>
+      </section>
+
+      {/* ── BOOK A VIEWING ───────────────────────────────────── */}
+      <section style={{
+        padding: '100px 5%',
+        position: 'relative',
+        overflow: 'hidden',
+      }}>
+        {/* Background image - tenant focused */}
+        <div style={{
+          position: 'absolute', inset: 0,
+          backgroundImage: 'url(/images/tenant-pressure.jpeg)',
+          backgroundSize: 'cover', backgroundPosition: 'center',
+          backgroundRepeat: 'no-repeat',
+        }} />
+        {/* Dark overlay */}
+        <div style={{
+          position: 'absolute', inset: 0,
+          background: 'rgba(8, 18, 40, 0.78)',
+        }} />
+        <div style={{ maxWidth: 780, position: 'relative', zIndex: 1 }}>
+          <h2 style={{
+            fontFamily: 'Georgia, "Times New Roman", serif',
+            fontSize: 'clamp(32px,5vw,56px)', fontWeight: 700,
+            color: '#fff', lineHeight: 1.2, marginBottom: 24,
+          }}>
+            Looking to rent a property?
+          </h2>
+          <p style={{
+            fontSize: 18, color: 'rgba(255,255,255,0.75)', lineHeight: 1.8,
+            marginBottom: 44, fontWeight: 300, maxWidth: 620,
+          }}>
+            Register your requirements and we&apos;ll match you with suitable properties before they hit the market.
+          </p>
+          <BookViewingInlineButton />
         </div>
       </section>
 

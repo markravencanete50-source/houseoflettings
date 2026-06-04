@@ -262,7 +262,7 @@ export default function Navbar() {
     display: 'flex',
     flexDirection: 'column',
     gap: 12,
-    marginTop: 'auto',
+    marginTop: 0,
   };
 
   const drawerBtnPrimary: React.CSSProperties = {

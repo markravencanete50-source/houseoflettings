@@ -87,7 +87,6 @@ function RadioGroup({ options, value, onChange, columns = 2 }: RadioGroupProps) 
             border: `2px solid ${value === opt ? "#2563a8" : "#d1d5db"}`,
             background: value === opt ? "#2563a8" : "#fff",
             display: "flex", alignItems: "center", justifyContent: "center",
-            flexShrink: 0,
           }}>
             {value === opt && (
               <span style={{ width: 7, height: 7, borderRadius: "50%", background: "#fff", display: "block" }} />

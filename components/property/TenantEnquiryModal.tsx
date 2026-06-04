@@ -22,7 +22,11 @@ const EMPTY_FORM = {
   hasPets: "",
   hasSmokers: "",
   // About you
-  incomeExceedsThreshold: "",
+  location: "",
+  viewingAvailability: "",
+  totalAnnualIncome: "",
+  hasChildren: "",
+  childrenAges: "",
   adverseCredit: "",
   message: "",
 };
@@ -202,7 +206,7 @@ export default function TenantEnquiryModal({
               {propertyTitle && (
                 <p className="hol-modal__subtitle">
                   Enquiring about: <strong style={{ color: "#0f1f3d" }}>{propertyTitle}</strong>
-                  {propertyPrice && <span style={{ marginLeft: 8, color: "#2563a8", fontWeight: 600 }}>£{propertyPrice.toLocaleString()} pcm</span>}
+                  {propertyPrice && propertyPrice > 0 && <span style={{ marginLeft: 8, color: "#2563a8", fontWeight: 600 }}>£{propertyPrice.toLocaleString()} pcm</span>}
                 </p>
               )}
               {!propertyTitle && (
@@ -268,8 +272,8 @@ export default function TenantEnquiryModal({
                     {errors.phone && <p className="hol-err">{errors.phone}</p>}
                   </div>
                   <div className="hol-field">
-                    <label className="hol-label">Postcode <span style={{ color: "#9ca3af", fontWeight: 400 }}>(current)</span></label>
-                    <input type="text" className="hol-input" placeholder="e.g. MK6 1AJ" value={form.postcode} onChange={set("postcode")} autoComplete="postal-code"/>
+                    <label className="hol-label">What property postcode are you looking for?</label>
+                    <input type="text" className="hol-input" placeholder="e.g. M1 1AE or LS1 1BA" value={form.postcode} onChange={set("postcode")} autoComplete="postal-code"/>
                   </div>
                 </div>
 
@@ -355,13 +359,33 @@ export default function TenantEnquiryModal({
                 <SectionTitle>About you</SectionTitle>
 
                 <div className="hol-field hol-field--mb">
-                  <label className="hol-label">Does your household's combined yearly income exceed £52,500?</label>
+                  <label className="hol-label">Is it Manchester or Leeds?</label>
                   <RadioGroup
-                    options={["Yes", "No"]}
-                    value={form.incomeExceedsThreshold}
-                    onChange={(v) => setRadio("incomeExceedsThreshold", v)}
+                    options={["Manchester", "Leeds"]}
+                    value={form.location}
+                    onChange={(v) => setRadio("location", v)}
                     columns={2}
                   />
+                </div>
+
+                <div className="hol-field hol-field--mb">
+                  <label className="hol-label">What days and times are you available for a viewing?</label>
+                  <RadioGroup
+                    options={["Weekday mornings", "Weekday afternoons", "Weekday evenings", "Weekends"]}
+                    value={form.viewingAvailability}
+                    onChange={(v) => setRadio("viewingAvailability", v)}
+                    columns={2}
+                  />
+                </div>
+
+                <div className="hol-field hol-field--mb">
+                  <label className="hol-label">What is the total annual income of all adults moving in?</label>
+                  <input type="text" className="hol-input" placeholder="e.g. £35,000" value={form.totalAnnualIncome} onChange={set("totalAnnualIncome")} />
+                </div>
+
+                <div className="hol-field hol-field--mb">
+                  <label className="hol-label">Do you have children? If so, please provide their ages.</label>
+                  <input type="text" className="hol-input" placeholder="e.g. Yes – ages 4 and 7, or No" value={form.hasChildren} onChange={set("hasChildren")} />
                 </div>
 
                 <div className="hol-field hol-field--mb">

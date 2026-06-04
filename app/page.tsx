@@ -365,7 +365,7 @@ export default function HomePage() {
             />
             <div style={{ lineHeight: 1.15 }}>
               <div style={{
-                fontFamily: 'Georgia, "Times New Roman", serif', fontSize: 18, fontWeight: 700,
+                fontFamily: '"DM Sans", "Inter", Arial, sans-serif', fontSize: 18, fontWeight: 800,
                 color: '#fff', letterSpacing: '2px', textTransform: 'uppercase',
               }}>
                 House of Lettings
@@ -377,17 +377,17 @@ export default function HomePage() {
           </div>
 
           <h1 style={{
-            fontFamily: 'Georgia, "Times New Roman", serif',
+            fontFamily: '"DM Sans", "Inter", Arial, sans-serif',
             fontSize: 'clamp(32px,5vw,66px)',
-            fontWeight: 700, color: '#fff', lineHeight: 1.08, letterSpacing: '-0.5px', marginBottom: 12,
+            fontWeight: 900, color: '#fff', lineHeight: 1.08, letterSpacing: '-1px', marginBottom: 12,
             textTransform: 'uppercase',
           }}>
             We Handle the Details.
           </h1>
           <h1 style={{
-            fontFamily: 'Georgia, "Times New Roman", serif',
+            fontFamily: '"DM Sans", "Inter", Arial, sans-serif',
             fontSize: 'clamp(32px,5vw,66px)',
-            fontWeight: 700, color: '#4a90d9', lineHeight: 1.08, letterSpacing: '-0.5px', marginBottom: 28,
+            fontWeight: 900, color: '#4a90d9', lineHeight: 1.08, letterSpacing: '-1px', marginBottom: 28,
             textTransform: 'uppercase',
           }}>
             You Enjoy the Returns.
@@ -403,32 +403,33 @@ export default function HomePage() {
 
           <p style={{
             fontSize: 17, color: 'rgba(255,255,255,0.6)', lineHeight: 1.65,
-            maxWidth: 480, marginBottom: 44, fontWeight: 300, letterSpacing: '0.2px',
+            maxWidth: 480, marginBottom: 44, fontWeight: 400, letterSpacing: '0.2px',
+            fontFamily: '"DM Sans", "Inter", Arial, sans-serif',
           }}>
             Property management. Done right.
           </p>
 
           <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap' }}>
             <Link href="/listings" style={{
-              padding: '16px 36px', background: '#1e3a6e', color: '#ffffff', border: 'none',
-              borderRadius: 4, fontSize: 14, fontWeight: 700, letterSpacing: '0.5px', textTransform: 'uppercase',
-              textDecoration: 'none',
+              padding: '16px 36px', background: '#2563eb', color: '#ffffff', border: 'none',
+              borderRadius: 6, fontSize: 14, fontWeight: 700, letterSpacing: '0.5px', textTransform: 'uppercase',
+              textDecoration: 'none', fontFamily: 'Georgia, "Times New Roman", serif',
             }}>
               Browse Properties
             </Link>
             <Link href="/register" style={{
-              padding: '16px 36px', background: 'transparent', color: '#fff',
-              border: '1px solid rgba(255,255,255,0.4)', borderRadius: 4, fontSize: 14,
-              fontWeight: 500, letterSpacing: '0.5px', textTransform: 'uppercase',
-              textDecoration: 'none',
+              padding: '16px 36px', background: '#2563eb', color: '#fff',
+              border: 'none', borderRadius: 6, fontSize: 14,
+              fontWeight: 700, letterSpacing: '0.5px', textTransform: 'uppercase',
+              textDecoration: 'none', fontFamily: 'Georgia, "Times New Roman", serif',
             }}>
               List Your Property
             </Link>
             <Link href="/terms" style={{
-              padding: '16px 36px', background: 'transparent', color: '#fff',
-              border: '1px solid rgba(255,255,255,0.4)', borderRadius: 4, fontSize: 14,
-              fontWeight: 500, letterSpacing: '0.5px', textTransform: 'uppercase',
-              textDecoration: 'none',
+              padding: '16px 36px', background: '#2563eb', color: '#fff',
+              border: 'none', borderRadius: 6, fontSize: 14,
+              fontWeight: 700, letterSpacing: '0.5px', textTransform: 'uppercase',
+              textDecoration: 'none', fontFamily: 'Georgia, "Times New Roman", serif',
             }}>
               Terms &amp; Conditions
             </Link>
@@ -600,7 +601,7 @@ export default function HomePage() {
           }}>
             <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.45)', marginBottom: 8, textTransform: 'uppercase', letterSpacing: 1 }}>One-time fee</div>
             <div style={{ fontFamily: 'Georgia, "Times New Roman", serif', fontSize: 52, fontWeight: 700, color: '#fff', lineHeight: 1, marginBottom: 4 }}>£399</div>
-            <div style={{ fontFamily: 'Georgia, "Times New Roman", serif', fontSize: 18, fontWeight: 700, color: '#fff', marginBottom: 24, paddingBottom: 24, borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
+            <div style={{ fontFamily: '"DM Sans", "Inter", Arial, sans-serif', fontSize: 18, fontWeight: 800, color: '#fff', marginBottom: 24, paddingBottom: 24, borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
               Virtual Tenant Find
             </div>
             {[
@@ -648,7 +649,7 @@ export default function HomePage() {
             </div>
             <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.45)', marginBottom: 8, textTransform: 'uppercase', letterSpacing: 1 }}>One-time fee</div>
             <div style={{ fontFamily: 'Georgia, "Times New Roman", serif', fontSize: 52, fontWeight: 700, color: '#4a90d9', lineHeight: 1, marginBottom: 4 }}>£599</div>
-            <div style={{ fontFamily: 'Georgia, "Times New Roman", serif', fontSize: 18, fontWeight: 700, fontStyle: 'normal', color: '#fff', marginBottom: 24, paddingBottom: 24, borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
+            <div style={{ fontFamily: '"DM Sans", "Inter", Arial, sans-serif', fontSize: 18, fontWeight: 800, fontStyle: 'normal', color: '#fff', marginBottom: 24, paddingBottom: 24, borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
               Expert Tenant Find
             </div>
             {[
@@ -688,7 +689,7 @@ export default function HomePage() {
           }}>
             <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.45)', marginBottom: 8, textTransform: 'uppercase', letterSpacing: 1 }}>Monthly percentage</div>
             <div style={{ fontFamily: 'Georgia, "Times New Roman", serif', fontSize: 52, fontWeight: 700, color: '#fff', lineHeight: 1, marginBottom: 4 }}>8%</div>
-            <div style={{ fontFamily: 'Georgia, "Times New Roman", serif', fontSize: 18, fontWeight: 700, color: '#fff', marginBottom: 24, paddingBottom: 24, borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
+            <div style={{ fontFamily: '"DM Sans", "Inter", Arial, sans-serif', fontSize: 18, fontWeight: 800, color: '#fff', marginBottom: 24, paddingBottom: 24, borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
               Full Management
             </div>
             {[

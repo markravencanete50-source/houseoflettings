@@ -76,9 +76,15 @@ export default function Navbar() {
       <nav
         className="hol-nav"
         style={{
-          background: scrolled ? 'rgba(10,22,47,0.97)' : 'rgba(10,22,47,0.92)',
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          zIndex: 1000,
+          background: scrolled ? 'rgba(10,22,47,0.98)' : 'rgba(10,22,47,0.92)',
           boxShadow: scrolled ? '0 2px 16px rgba(0,0,0,0.3)' : 'none',
           borderBottom: scrolled ? '1px solid rgba(255,255,255,0.08)' : 'none',
+          transition: 'background 0.3s ease, box-shadow 0.3s ease',
         }}
       >
         <div className="hol-nav__inner">
@@ -108,10 +114,7 @@ export default function Navbar() {
 
         <style>{`
           .hol-nav {
-            position: fixed;
-            top: 0; left: 0; right: 0;
-            z-index: 100;
-            transition: background 0.3s ease, box-shadow 0.3s ease;
+            width: 100%;
           }
           .hol-nav__inner {
             max-width: 1280px;
@@ -202,18 +205,28 @@ export default function Navbar() {
           .nav-btn-outline:hover {
             background: rgba(255,255,255,0.1);
           }
-          /* On small screens, links wrap below logo neatly */
           @media (max-width: 640px) {
             .hol-nav__inner {
               padding: 0 4%;
+              flex-wrap: nowrap;
+              min-height: 60px;
             }
+            .hol-nav__logo-top { font-size: 14px; }
+            .hol-nav__logo-sub { font-size: 9px; }
             .hol-nav__links {
-              gap: 8px;
-              padding-bottom: 10px;
+              flex-wrap: nowrap;
+              overflow-x: auto;
+              gap: 6px;
+              padding: 0;
+              -ms-overflow-style: none;
+              scrollbar-width: none;
             }
-            .nav-btn-primary, .nav-btn-outline {
-              font-size: 11px;
-              padding: 7px 10px;
+            .hol-nav__links::-webkit-scrollbar { display: none; }
+            .nav-btn-primary, .nav-btn-outline, .hol-nav__link {
+              font-size: 10px;
+              padding: 6px 8px;
+              white-space: nowrap;
+              flex-shrink: 0;
             }
           }
         `}</style>

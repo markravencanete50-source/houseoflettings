@@ -53,10 +53,10 @@ export default function Navbar() {
     alignItems: 'center',
     padding: '0 5%',
     background: scrolled
-      ? 'rgba(255,255,255,0.97)'
-      : 'rgba(255,255,255,1)',
-    borderBottom: '1px solid #e5e3dd',
-    boxShadow: scrolled ? '0 2px 16px rgba(0,0,0,0.08)' : 'none',
+      ? 'rgba(15,31,61,0.97)'
+      : 'transparent',
+    borderBottom: scrolled ? '1px solid rgba(255,255,255,0.08)' : 'none',
+    boxShadow: scrolled ? '0 2px 16px rgba(0,0,0,0.2)' : 'none',
     transition: 'box-shadow 0.3s ease, background 0.3s ease',
   };
 
@@ -100,7 +100,7 @@ export default function Navbar() {
 
   const linkStyle: React.CSSProperties = {
     fontFamily: "'DM Sans', sans-serif",
-    color: '#4a4844',
+    color: '#ffffff',
     fontSize: 13,
     fontWeight: 500,
     letterSpacing: '0.06em',
@@ -113,8 +113,8 @@ export default function Navbar() {
 
   const btnOutlineStyle: React.CSSProperties = {
     padding: '9px 20px',
-    border: '1.5px solid #1d3557',
-    color: '#1d3557',
+    border: '1.5px solid rgba(255,255,255,0.6)',
+    color: '#ffffff',
     background: 'transparent',
     borderRadius: 4,
     fontFamily: "'DM Sans', sans-serif",
@@ -163,7 +163,7 @@ export default function Navbar() {
   const barStyle = (open: boolean, nth: 1|2|3): React.CSSProperties => ({
     width: '100%',
     height: 2,
-    background: '#1d3557',
+    background: '#ffffff',
     borderRadius: 2,
     transition: 'all 0.3s ease',
     transformOrigin: 'center',

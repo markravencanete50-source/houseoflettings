@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap');
+
 *, *::before, *::after {
   box-sizing: border-box;
   margin: 0;
@@ -10,9 +12,11 @@ html {
 
 :root {
   /* Brand colours */
+  --navy:        #0a162f;
+  --navy-mid:    #0f1f3d;
+  --teal:        #00b8a0;
+  --teal-dark:   #009b87;
   --red:         #c0392b;
-  --navy:        #0f1f3d;
-  --gold:        #b8860b;
 
   /* Greys */
   --gray-100:    #f5f5f5;
@@ -22,21 +26,20 @@ html {
   --gray-800:    #212121;
 
   /* Typography */
-  --font-serif:  Georgia, "Times New Roman", serif;
-  --font-sans:   'DM Sans', sans-serif;
+  --font-sans:   'Poppins', sans-serif;
 
   /* Misc */
   --radius:      8px;
   --shadow:      0 2px 12px rgba(0,0,0,0.08);
 
   /* Aliases */
-  --black:       #0a1f44;
+  --black:       #0a162f;
 }
 
 body {
-  font-family: Georgia, "Times New Roman", serif;
+  font-family: 'Poppins', sans-serif;
   background-color: #ffffff;
-  color: #0a1f44;
+  color: #0a162f;
   line-height: 1.6;
 }
 
@@ -56,7 +59,7 @@ ul, ol { list-style: none; }
 .dash-sidebar {
   width: 240px;
   min-width: 240px;
-  background: #0f1f3d;
+  background: #0a162f;
   padding: 28px 0;
   position: sticky;
   top: 68px;
@@ -72,7 +75,7 @@ ul, ol { list-style: none; }
   padding: 12px 28px;
   color: rgba(255,255,255,0.55);
   font-size: 14px;
-  font-family: Georgia, "Times New Roman", serif;
+  font-family: 'Poppins', sans-serif;
   font-weight: 500;
   text-align: left;
   background: none;
@@ -88,8 +91,8 @@ ul, ol { list-style: none; }
 
 .dash-nav-item.active {
   color: #fff;
-  background: rgba(192,57,43,0.25);
-  border-left: 3px solid #c0392b;
+  background: rgba(0,184,160,0.2);
+  border-left: 3px solid #00b8a0;
 }
 
 .dash-content {
@@ -99,10 +102,10 @@ ul, ol { list-style: none; }
 }
 
 .dash-section-title {
-  font-family: Georgia, "Times New Roman", serif;
+  font-family: 'Poppins', sans-serif;
   font-size: 28px;
   font-weight: 700;
-  color: #0f1f3d;
+  color: #0a162f;
   margin-bottom: 8px;
 }
 
@@ -119,24 +122,27 @@ ul, ol { list-style: none; }
   width: 100%;
   border-collapse: collapse;
   font-size: 14px;
+  font-family: 'Poppins', sans-serif;
 }
 
 .data-table th {
   text-align: left;
   padding: 12px 16px;
   font-size: 11px;
-  font-weight: 700;
+  font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.5px;
   color: #9e9e9e;
   border-bottom: 1px solid #e0e0e0;
   background: #f8f9fa;
+  font-family: 'Poppins', sans-serif;
 }
 
 .data-table td {
   padding: 14px 16px;
   border-bottom: 1px solid #f5f5f5;
   vertical-align: middle;
+  font-family: 'Poppins', sans-serif;
 }
 
 .data-table tr:last-child td {
@@ -153,7 +159,8 @@ ul, ol { list-style: none; }
   padding: 3px 10px;
   border-radius: 20px;
   font-size: 11px;
-  font-weight: 700;
+  font-weight: 600;
+  font-family: 'Poppins', sans-serif;
   text-transform: uppercase;
   letter-spacing: 0.3px;
 }
@@ -163,7 +170,7 @@ ul, ol { list-style: none; }
 .status-badge.pending   { background: #fff8e1; color: #f57f17; }
 .status-badge.landlord  { background: #e3f2fd; color: #1565c0; }
 .status-badge.tenant    { background: #f3e5f5; color: #6a1b9a; }
-.status-badge.admin     { background: rgba(192,57,43,0.1); color: #c0392b; }
+.status-badge.admin     { background: rgba(0,184,160,0.12); color: #009b87; }
 
 /* ── Buttons ── */
 .btn-danger {
@@ -174,6 +181,7 @@ ul, ol { list-style: none; }
   border-radius: 4px;
   font-size: 11px;
   font-weight: 600;
+  font-family: 'Poppins', sans-serif;
   cursor: pointer;
   transition: all 0.15s;
 }
@@ -192,9 +200,9 @@ ul, ol { list-style: none; }
   display: block;
   font-size: 13px;
   font-weight: 600;
-  color: #0a1f44;
+  color: #0a162f;
   margin-bottom: 6px;
-  font-family: Georgia, "Times New Roman", serif;
+  font-family: 'Poppins', sans-serif;
 }
 
 .form-input,
@@ -205,8 +213,8 @@ ul, ol { list-style: none; }
   border: 1px solid #e0e0e0;
   border-radius: 6px;
   font-size: 14px;
-  font-family: Georgia, "Times New Roman", serif;
-  color: #0a1f44;
+  font-family: 'Poppins', sans-serif;
+  color: #0a162f;
   background: #fff;
   outline: none;
   box-sizing: border-box;
@@ -216,7 +224,7 @@ ul, ol { list-style: none; }
 .form-input:focus,
 .form-select:focus,
 .form-textarea:focus {
-  border-color: #0f1f3d;
+  border-color: #0a162f;
 }
 
 .form-textarea {
@@ -229,7 +237,7 @@ ul, ol { list-style: none; }
   width: 36px;
   height: 36px;
   border: 3px solid #e0e0e0;
-  border-top-color: #0f1f3d;
+  border-top-color: #0a162f;
   border-radius: 50%;
   animation: spin 0.7s linear infinite;
 }

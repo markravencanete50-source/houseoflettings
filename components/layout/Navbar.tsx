@@ -21,7 +21,7 @@ function NavValuationButton() {
           color: '#fff',
           border: 'none',
           borderRadius: 4,
-          fontFamily: "'DM Sans', sans-serif",
+          fontFamily: "'Poppins', sans-serif",
           fontSize: 12,
           fontWeight: 600,
           letterSpacing: '0.07em',
@@ -54,7 +54,7 @@ function NavViewingButton() {
           color: '#fff',
           border: '1.5px solid rgba(255,255,255,0.6)',
           borderRadius: 4,
-          fontFamily: "'DM Sans', sans-serif",
+          fontFamily: "'Poppins', sans-serif",
           fontSize: 12,
           fontWeight: 600,
           letterSpacing: '0.07em',
@@ -151,15 +151,15 @@ export default function Navbar() {
   };
 
   const logoTopStyle: React.CSSProperties = {
-    fontFamily: "'Playfair Display', Georgia, serif",
-    fontSize: 18,
-    fontWeight: 700,
+    fontFamily: "'Poppins', sans-serif",
+    fontSize: 19,
+    fontWeight: 800,
     color: '#ffffff',
-    letterSpacing: '-0.2px',
+    letterSpacing: '-0.3px',
   };
 
   const logoSubStyle: React.CSSProperties = {
-    fontFamily: "'DM Sans', sans-serif",
+    fontFamily: "'Poppins', sans-serif",
     fontSize: 10,
     fontWeight: 500,
     color: 'rgba(255,255,255,0.55)',
@@ -174,7 +174,7 @@ export default function Navbar() {
   };
 
   const linkStyle: React.CSSProperties = {
-    fontFamily: "'DM Sans', sans-serif",
+    fontFamily: "'Poppins', sans-serif",
     color: '#ffffff',
     fontSize: 13,
     fontWeight: 500,
@@ -191,7 +191,7 @@ export default function Navbar() {
     color: '#ffffff',
     background: 'transparent',
     borderRadius: 4,
-    fontFamily: "'DM Sans', sans-serif",
+    fontFamily: "'Poppins', sans-serif",
     fontSize: 12,
     fontWeight: 600,
     letterSpacing: '0.07em',
@@ -248,7 +248,7 @@ export default function Navbar() {
   const drawerLinkStyle: React.CSSProperties = {
     display: 'block',
     padding: '16px 24px',
-    fontFamily: "'DM Sans', sans-serif",
+    fontFamily: "'Poppins', sans-serif",
     fontSize: 15,
     fontWeight: 500,
     color: '#ffffff',
@@ -269,7 +269,7 @@ export default function Navbar() {
     width: '100%', padding: '14px 20px',
     background: '#2563eb', color: '#fff',
     border: 'none', borderRadius: 4,
-    fontFamily: "'DM Sans', sans-serif",
+    fontFamily: "'Poppins', sans-serif",
     fontSize: 13, fontWeight: 600,
     letterSpacing: '0.07em',
     textTransform: 'uppercase' as const,
@@ -282,7 +282,7 @@ export default function Navbar() {
     background: 'transparent', color: '#fff',
     border: '1.5px solid rgba(255,255,255,0.4)',
     borderRadius: 4,
-    fontFamily: "'DM Sans', sans-serif",
+    fontFamily: "'Poppins', sans-serif",
     fontSize: 13, fontWeight: 600,
     letterSpacing: '0.07em',
     textTransform: 'uppercase' as const,

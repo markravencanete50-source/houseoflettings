@@ -15,23 +15,7 @@ function NavValuationButton() {
     <>
       <button
         onClick={() => setOpen(true)}
-        style={{
-          padding: '8px 16px',
-          background: '#2563eb',
-          color: '#fff',
-          border: 'none',
-          borderRadius: 4,
-          fontFamily: "'Poppins', sans-serif",
-          fontSize: 12,
-          fontWeight: 600,
-          letterSpacing: '0.07em',
-          textTransform: 'uppercase',
-          cursor: 'pointer',
-          transition: 'background 0.2s',
-          whiteSpace: 'nowrap',
-        }}
-        onMouseEnter={e => (e.currentTarget.style.background = '#1d4ed8')}
-        onMouseLeave={e => (e.currentTarget.style.background = '#2563eb')}
+        className="nav-btn-primary"
       >
         Book a Valuation
       </button>
@@ -48,29 +32,7 @@ function NavViewingButton() {
     <>
       <button
         onClick={() => setOpen(true)}
-        style={{
-          padding: '8px 16px',
-          background: 'transparent',
-          color: '#fff',
-          border: '1.5px solid rgba(255,255,255,0.6)',
-          borderRadius: 4,
-          fontFamily: "'Poppins', sans-serif",
-          fontSize: 12,
-          fontWeight: 600,
-          letterSpacing: '0.07em',
-          textTransform: 'uppercase',
-          cursor: 'pointer',
-          transition: 'all 0.2s',
-          whiteSpace: 'nowrap',
-        }}
-        onMouseEnter={e => {
-          e.currentTarget.style.background = '#2563eb';
-          e.currentTarget.style.borderColor = '#2563eb';
-        }}
-        onMouseLeave={e => {
-          e.currentTarget.style.background = 'transparent';
-          e.currentTarget.style.borderColor = 'rgba(255,255,255,0.6)';
-        }}
+        className="nav-btn-outline"
       >
         Book a Viewing
       </button>
@@ -92,7 +54,6 @@ export default function Navbar() {
   const { profile, loading } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
-  const [menuOpen, setMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
@@ -101,15 +62,7 @@ export default function Navbar() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  useEffect(() => { setMenuOpen(false); }, [pathname]);
-
-  useEffect(() => {
-    document.body.style.overflow = menuOpen ? 'hidden' : '';
-    return () => { document.body.style.overflow = ''; };
-  }, [menuOpen]);
-
   const handleSignOut = async () => {
-    setMenuOpen(false);
     await signOut();
     router.push('/');
   };
@@ -118,283 +71,153 @@ export default function Navbar() {
     profile?.role === 'landlord' ? '/dashboard/landlord' :
     profile?.role === 'tenant'   ? '/dashboard/tenant'   : '/admin';
 
-  const navStyle: React.CSSProperties = {
-    position: 'fixed',
-    top: 0, left: 0, right: 0,
-    zIndex: 100,
-    height: 72,
-    display: 'flex',
-    alignItems: 'center',
-    padding: '0 5%',
-    background: scrolled ? 'rgba(10,22,47,0.97)' : 'rgba(10,22,47,0.85)',
-    borderBottom: scrolled ? '1px solid rgba(255,255,255,0.08)' : 'none',
-    boxShadow: scrolled ? '0 2px 16px rgba(0,0,0,0.3)' : 'none',
-    transition: 'box-shadow 0.3s ease, background 0.3s ease',
-  };
-
-  const innerStyle: React.CSSProperties = {
-    width: '100%',
-    maxWidth: 1280,
-    margin: '0 auto',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: 16,
-  };
-
-  const logoStyle: React.CSSProperties = {
-    display: 'flex',
-    flexDirection: 'column',
-    textDecoration: 'none',
-    flexShrink: 0,
-    lineHeight: 1.2,
-  };
-
-  const logoTopStyle: React.CSSProperties = {
-    fontFamily: "'Poppins', sans-serif",
-    fontSize: 19,
-    fontWeight: 800,
-    color: '#ffffff',
-    letterSpacing: '-0.3px',
-  };
-
-  const logoSubStyle: React.CSSProperties = {
-    fontFamily: "'Poppins', sans-serif",
-    fontSize: 10,
-    fontWeight: 500,
-    color: 'rgba(255,255,255,0.55)',
-    letterSpacing: '0.18em',
-    textTransform: 'uppercase',
-  };
-
-  const desktopLinksStyle: React.CSSProperties = {
-    display: 'flex',
-    alignItems: 'center',
-    gap: 24,
-  };
-
-  const linkStyle: React.CSSProperties = {
-    fontFamily: "'Poppins', sans-serif",
-    color: '#ffffff',
-    fontSize: 13,
-    fontWeight: 500,
-    letterSpacing: '0.06em',
-    textTransform: 'uppercase',
-    textDecoration: 'none',
-    transition: 'color 0.2s',
-    padding: '4px 0',
-  };
-
-  const btnOutlineStyle: React.CSSProperties = {
-    padding: '8px 16px',
-    border: '1.5px solid rgba(255,255,255,0.5)',
-    color: '#ffffff',
-    background: 'transparent',
-    borderRadius: 4,
-    fontFamily: "'Poppins', sans-serif",
-    fontSize: 12,
-    fontWeight: 600,
-    letterSpacing: '0.07em',
-    textTransform: 'uppercase' as const,
-    cursor: 'pointer',
-    textDecoration: 'none',
-    display: 'inline-block',
-    transition: 'all 0.2s',
-  };
-
-  const barStyle = (open: boolean, nth: 1|2|3): React.CSSProperties => ({
-    width: '100%',
-    height: 2,
-    background: '#ffffff',
-    borderRadius: 2,
-    transition: 'all 0.3s ease',
-    transformOrigin: 'center',
-    transform:
-      open && nth === 1 ? 'translateY(7px) rotate(45deg)' :
-      open && nth === 2 ? 'scaleX(0)' :
-      open && nth === 3 ? 'translateY(-7px) rotate(-45deg)' : 'none',
-    opacity: open && nth === 2 ? 0 : 1,
-  });
-
-  const overlayStyle: React.CSSProperties = {
-    position: 'fixed', inset: 0, zIndex: 99,
-    background: 'rgba(0,0,0,0.5)',
-    opacity: menuOpen ? 1 : 0,
-    pointerEvents: menuOpen ? 'auto' : 'none',
-    transition: 'opacity 0.3s ease',
-  };
-
-  const drawerStyle: React.CSSProperties = {
-    position: 'fixed', top: 0, right: 0, bottom: 0, zIndex: 101,
-    width: 'min(320px, 85vw)',
-    background: '#0a162f',
-    boxShadow: '-4px 0 24px rgba(0,0,0,0.3)',
-    transform: menuOpen ? 'translateX(0)' : 'translateX(100%)',
-    transition: 'transform 0.35s cubic-bezier(0.4, 0, 0.2, 1)',
-    overflowY: 'auto',
-    display: 'flex',
-    flexDirection: 'column',
-    padding: '0 0 32px',
-  };
-
-  const drawerHeaderStyle: React.CSSProperties = {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    padding: '20px 24px',
-    borderBottom: '1px solid rgba(255,255,255,0.1)',
-  };
-
-  const drawerLinkStyle: React.CSSProperties = {
-    display: 'block',
-    padding: '16px 24px',
-    fontFamily: "'Poppins', sans-serif",
-    fontSize: 15,
-    fontWeight: 500,
-    color: '#ffffff',
-    textDecoration: 'none',
-    borderBottom: '1px solid rgba(255,255,255,0.07)',
-    letterSpacing: '0.01em',
-  };
-
-  const drawerActionsStyle: React.CSSProperties = {
-    padding: '24px',
-    display: 'flex',
-    flexDirection: 'column',
-    gap: 12,
-    marginTop: 0,
-  };
-
-  const drawerBtnPrimary: React.CSSProperties = {
-    width: '100%', padding: '14px 20px',
-    background: '#2563eb', color: '#fff',
-    border: 'none', borderRadius: 4,
-    fontFamily: "'Poppins', sans-serif",
-    fontSize: 13, fontWeight: 600,
-    letterSpacing: '0.07em',
-    textTransform: 'uppercase' as const,
-    cursor: 'pointer', textDecoration: 'none',
-    display: 'block', textAlign: 'center' as const,
-  };
-
-  const drawerBtnOutline: React.CSSProperties = {
-    width: '100%', padding: '14px 20px',
-    background: 'transparent', color: '#fff',
-    border: '1.5px solid rgba(255,255,255,0.4)',
-    borderRadius: 4,
-    fontFamily: "'Poppins', sans-serif",
-    fontSize: 13, fontWeight: 600,
-    letterSpacing: '0.07em',
-    textTransform: 'uppercase' as const,
-    cursor: 'pointer', textDecoration: 'none',
-    display: 'block', textAlign: 'center' as const,
-  };
-
   return (
     <>
-      <nav style={navStyle}>
-        <div style={innerStyle}>
-
+      <nav
+        className="hol-nav"
+        style={{
+          background: scrolled ? 'rgba(10,22,47,0.97)' : 'rgba(10,22,47,0.92)',
+          boxShadow: scrolled ? '0 2px 16px rgba(0,0,0,0.3)' : 'none',
+          borderBottom: scrolled ? '1px solid rgba(255,255,255,0.08)' : 'none',
+        }}
+      >
+        <div className="hol-nav__inner">
           {/* Logo */}
-          <Link href="/" style={logoStyle}>
-            <span style={logoTopStyle}>
-              House of Lettings
-            </span>
-            <span style={logoSubStyle}>Leeds &amp; Manchester</span>
+          <Link href="/" className="hol-nav__logo">
+            <span className="hol-nav__logo-top">House of Lettings</span>
+            <span className="hol-nav__logo-sub">Leeds &amp; Manchester</span>
           </Link>
 
-          {/* Desktop Nav */}
-          <div style={desktopLinksStyle} className="desktop-nav">
-            <Link href="/listings" style={linkStyle}>Browse</Link>
-
+          {/* Links + CTAs — always visible, wrap on mobile */}
+          <div className="hol-nav__links">
+            <Link href="/listings" className="hol-nav__link">Browse</Link>
             {!loading && profile && (
-              <Link href={dashLink} style={linkStyle}>Dashboard</Link>
+              <Link href={dashLink} className="hol-nav__link">Dashboard</Link>
             )}
-
-            {/* CTA buttons always visible */}
             <NavValuationButton />
             <NavViewingButton />
-
             {!loading && (
               profile ? (
-                <button onClick={handleSignOut} style={btnOutlineStyle}
-                  onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.1)'; }}
-                  onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; }}
-                >
-                  Sign Out
-                </button>
+                <button onClick={handleSignOut} className="nav-btn-outline">Sign Out</button>
               ) : (
-                <Link href="/login" style={btnOutlineStyle}
-                  onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.1)'; }}
-                  onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
-                >
-                  Sign In
-                </Link>
+                <Link href="/login" className="nav-btn-outline">Sign In</Link>
               )
             )}
           </div>
-
-          {/* Hamburger */}
-          <button
-            style={{ display: 'none', flexDirection: 'column' as const, justifyContent: 'center', gap: 5, width: 40, height: 40, background: 'none', border: 'none', cursor: 'pointer', padding: 8, borderRadius: 4, flexShrink: 0 }}
-            className="hamburger-btn"
-            onClick={() => setMenuOpen(v => !v)}
-            aria-label={menuOpen ? 'Close menu' : 'Open menu'}
-            aria-expanded={menuOpen}
-          >
-            <span style={barStyle(menuOpen, 1)} />
-            <span style={barStyle(menuOpen, 2)} />
-            <span style={barStyle(menuOpen, 3)} />
-          </button>
         </div>
 
         <style>{`
-          @media (max-width: 900px) {
-            .desktop-nav { display: none !important; }
-            .hamburger-btn { display: flex !important; }
+          .hol-nav {
+            position: fixed;
+            top: 0; left: 0; right: 0;
+            z-index: 100;
+            transition: background 0.3s ease, box-shadow 0.3s ease;
           }
-          @media (min-width: 901px) {
-            .hamburger-btn { display: none !important; }
+          .hol-nav__inner {
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 0 5%;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            min-height: 72px;
+            flex-wrap: wrap;
+          }
+          .hol-nav__logo {
+            display: flex;
+            flex-direction: column;
+            text-decoration: none;
+            flex-shrink: 0;
+            line-height: 1.2;
+            padding: 12px 0;
+          }
+          .hol-nav__logo-top {
+            font-family: 'Poppins', sans-serif;
+            font-size: 18px;
+            font-weight: 800;
+            color: #fff;
+            letter-spacing: -0.3px;
+          }
+          .hol-nav__logo-sub {
+            font-family: 'Poppins', sans-serif;
+            font-size: 10px;
+            font-weight: 500;
+            color: rgba(255,255,255,0.55);
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+          }
+          .hol-nav__links {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+            padding: 8px 0;
+          }
+          .hol-nav__link {
+            font-family: 'Poppins', sans-serif;
+            color: #fff;
+            font-size: 13px;
+            font-weight: 500;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            text-decoration: none;
+            padding: 4px 0;
+            white-space: nowrap;
+          }
+          .hol-nav__link:hover { opacity: 0.75; }
+          .nav-btn-primary {
+            padding: 8px 14px;
+            background: #2563eb;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            font-family: 'Poppins', sans-serif;
+            font-size: 12px;
+            font-weight: 600;
+            letter-spacing: 0.07em;
+            text-transform: uppercase;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: background 0.2s;
+          }
+          .nav-btn-primary:hover { background: #1d4ed8; }
+          .nav-btn-outline {
+            padding: 8px 14px;
+            background: transparent;
+            color: #fff;
+            border: 1.5px solid rgba(255,255,255,0.55);
+            border-radius: 4px;
+            font-family: 'Poppins', sans-serif;
+            font-size: 12px;
+            font-weight: 600;
+            letter-spacing: 0.07em;
+            text-transform: uppercase;
+            cursor: pointer;
+            white-space: nowrap;
+            text-decoration: none;
+            display: inline-block;
+            transition: all 0.2s;
+          }
+          .nav-btn-outline:hover {
+            background: rgba(255,255,255,0.1);
+          }
+          /* On small screens, links wrap below logo neatly */
+          @media (max-width: 640px) {
+            .hol-nav__inner {
+              padding: 0 4%;
+            }
+            .hol-nav__links {
+              gap: 8px;
+              padding-bottom: 10px;
+            }
+            .nav-btn-primary, .nav-btn-outline {
+              font-size: 11px;
+              padding: 7px 10px;
+            }
           }
         `}</style>
       </nav>
-
-      {/* Mobile Overlay */}
-      <div style={overlayStyle} onClick={() => setMenuOpen(false)} aria-hidden="true" />
-
-      {/* Mobile Drawer */}
-      <aside style={drawerStyle} role="dialog" aria-label="Navigation menu" aria-modal="true">
-        <div style={drawerHeaderStyle}>
-          <Link href="/" style={{ ...logoStyle }} onClick={() => setMenuOpen(false)}>
-            <span style={{ ...logoTopStyle, fontSize: 16 }}>House of Lettings</span>
-            <span style={logoSubStyle}>Leeds &amp; Manchester</span>
-          </Link>
-          <button onClick={() => setMenuOpen(false)} aria-label="Close menu"
-            style={{ background: 'none', border: 'none', cursor: 'pointer', width: 36, height: 36, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 4, color: '#fff' }}
-          >
-            <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-              <path d="M1 1l16 16M17 1L1 17" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-            </svg>
-          </button>
-        </div>
-
-        <Link href="/listings" style={drawerLinkStyle} onClick={() => setMenuOpen(false)}>Browse Properties</Link>
-        {!loading && profile && (
-          <Link href={dashLink} style={drawerLinkStyle} onClick={() => setMenuOpen(false)}>Dashboard</Link>
-        )}
-
-        <div style={drawerActionsStyle}>
-          <NavValuationButton />
-          <NavViewingButton />
-          {!loading && (
-            profile ? (
-              <button onClick={handleSignOut} style={drawerBtnOutline}>Sign Out</button>
-            ) : (
-              <Link href="/login" style={drawerBtnOutline} onClick={() => setMenuOpen(false)}>Sign In</Link>
-            )
-          )}
-        </div>
-      </aside>
     </>
   );
 }

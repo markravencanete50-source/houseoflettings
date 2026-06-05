@@ -72,6 +72,49 @@ function BookViewingInlineButton() {
 
 
 
+// ── HERO BOOK A VIEWING BUTTON ────────────────────────────────────────────────
+function HeroViewingButton() {
+  const [open, setOpen] = useState(false);
+  return (
+    <>
+      <button
+        onClick={() => setOpen(true)}
+        className="hero-btn"
+      >
+        Book a Viewing
+      </button>
+      <Suspense fallback={null}>
+        {open && (
+          <TenantEnquiryModal
+            isOpen={open}
+            onClose={() => setOpen(false)}
+            propertyTitle="House of Lettings"
+            propertyPrice={0}
+          />
+        )}
+      </Suspense>
+    </>
+  );
+}
+
+// ── HERO BOOK A VALUATION BUTTON ──────────────────────────────────────────────
+function HeroValuationButton() {
+  const [open, setOpen] = useState(false);
+  return (
+    <>
+      <button
+        onClick={() => setOpen(true)}
+        className="hero-btn"
+      >
+        Book a Valuation
+      </button>
+      <Suspense fallback={null}>
+        {open && <ValuationModal isOpen={open} onClose={() => setOpen(false)} />}
+      </Suspense>
+    </>
+  );
+}
+
 // ── GALLERY DATA ─────────────────────────────────────────────────────────────
 const GALLERY_ITEMS = [
   {
@@ -334,6 +377,7 @@ export default function HomePage() {
       <section style={{
         minHeight: '100vh', background: '#0f1f3d', 
         position: 'relative', display: 'flex', alignItems: 'center',
+        justifyContent: 'center',
         padding: '60px 5%',
       }}>
         {/* Hero background image - Leeds city */}
@@ -355,7 +399,7 @@ export default function HomePage() {
           pointerEvents: 'none',
         }} />
 
-        <div style={{ position: 'relative', maxWidth: 700 }}>
+        <div style={{ position: 'relative', maxWidth: 700, margin: '0 auto', textAlign: 'center' }}>
 
 
           <h1 style={{
@@ -376,7 +420,7 @@ export default function HomePage() {
           </h1>
 
           {/* Divider */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 20 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 20, justifyContent: 'center' }}>
             <div style={{ width: 32, height: 1, background: 'rgba(255,255,255,0.25)' }} />
             <svg width="18" height="18" viewBox="0 0 24 24" fill="rgba(255,255,255,0.4)" xmlns="http://www.w3.org/2000/svg">
               <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
@@ -392,7 +436,10 @@ export default function HomePage() {
           </p>
 
           <style>{`
-            .hero-btns { display: flex; gap: 12px; flex-wrap: wrap; }
+            .hero-btns {
+              display: flex; gap: 12px; flex-wrap: wrap;
+              justify-content: center;
+            }
             .hero-btn {
               padding: 14px 28px;
               background: #2563eb; color: #fff; border: none;
@@ -400,35 +447,20 @@ export default function HomePage() {
               letter-spacing: 0.5px; text-transform: uppercase;
               text-decoration: none; font-family: 'Poppins', sans-serif;
               white-space: nowrap; display: inline-block;
-              transition: background 0.2s;
+              cursor: pointer; transition: background 0.2s;
             }
             .hero-btn:hover { background: #1d4ed8; }
-            .hero-btn-outline {
-              padding: 14px 28px;
-              background: transparent; color: #fff;
-              border: 1.5px solid rgba(255,255,255,0.5);
-              border-radius: 6px; font-size: 13px; font-weight: 700;
-              letter-spacing: 0.5px; text-transform: uppercase;
-              text-decoration: none; font-family: 'Poppins', sans-serif;
-              white-space: nowrap; display: inline-block;
-              transition: all 0.2s;
-            }
-            .hero-btn-outline:hover { background: rgba(255,255,255,0.1); }
             @media (max-width: 480px) {
               .hero-btns { gap: 10px; }
-              .hero-btn, .hero-btn-outline {
-                padding: 11px 18px;
-                font-size: 11px;
-              }
+              .hero-btn { padding: 11px 18px; font-size: 11px; }
             }
           `}</style>
           <div className="hero-btns">
             <Link href="/listings" className="hero-btn">
               Browse Properties
             </Link>
-            <Link href="/register" className="hero-btn-outline">
-              List Your Property
-            </Link>
+            <HeroViewingButton />
+            <HeroValuationButton />
           </div>
         </div>
       </section>

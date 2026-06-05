@@ -676,22 +676,7 @@ export default function PropertyDetailClient() {
                       animation: mounted ? 'hol-fadeUp 0.5s ease 0.2s both' : 'none',
                     }}
                   >
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 20 }}>
-                      <div style={{
-                        width: 44, height: 44, background: 'var(--black)', borderRadius: '50%',
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        color: '#fff', fontFamily: "'Poppins', sans-serif", fontSize: 17, fontWeight: 700,
-                        flexShrink: 0,
-                      }}>
-                        {landlordName === 'House of Lettings' ? 'HOL' : (landlordName ? landlordName.charAt(0).toUpperCase() : 'HOL')}
-                      </div>
-                      <div>
-                        <div style={{ fontWeight: 600, fontSize: 15, color: 'var(--black)' }}>{landlordName || 'House of Lettings'}</div>
-                        <div style={{ fontSize: 13, color: '#555' }}>
-                          {landlordName === 'House of Lettings' ? 'Managed by House of Lettings' : 'Property Owner'}
-                        </div>
-                      </div>
-                    </div>
+
 
                     {error && (
                       <div style={{

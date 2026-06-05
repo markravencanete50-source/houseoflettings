@@ -18,7 +18,7 @@ import { format } from 'date-fns';
 import { db } from '@/lib/firebase';
 import { collection, getDocs, orderBy, query, doc, updateDoc } from 'firebase/firestore';
 
-type Tab = 'analytics' | 'users' | 'properties' | 'post' | 'valuations';
+type Tab = 'analytics' | 'users' | 'properties' | 'post' | 'edit' | 'valuations';
 
 interface Valuation {
   id: string;
@@ -45,6 +45,7 @@ export default function AdminDashboard() {
   const [loading, setLoading] = useState(true);
   const [searchUser, setSearchUser] = useState('');
   const [searchProp, setSearchProp] = useState('');
+  const [editingProperty, setEditingProperty] = useState<Property | null>(null);
 
   useEffect(() => {
     if (!authLoading && (!profile || profile.role !== 'admin')) {
@@ -88,8 +89,24 @@ export default function AdminDashboard() {
     );
   };
 
+  const handleEditProperty = (prop: Property) => {
+    setEditingProperty(prop);
+    setTab('edit');
+  };
+
   const handlePostSuccess = () => {
     getAllProperties().then(p => setProperties(p));
+    setTab('properties');
+  };
+
+  const handleEditSuccess = () => {
+    getAllProperties().then(p => setProperties(p));
+    setEditingProperty(null);
+    setTab('properties');
+  };
+
+  const handleEditCancel = () => {
+    setEditingProperty(null);
     setTab('properties');
   };
 
@@ -114,12 +131,14 @@ export default function AdminDashboard() {
     </div>
   );
 
+  // Only show 'edit' in nav when actively editing
   const navItems: Array<{ id: Tab; icon: string; label: string }> = [
     { id: 'analytics',   icon: '📊', label: 'Analytics' },
     { id: 'users',       icon: '👥', label: `Users (${users.length})` },
     { id: 'properties',  icon: '🏠', label: `Properties (${properties.length})` },
     { id: 'valuations',  icon: '📋', label: `Valuations (${valuations.length})` },
     { id: 'post',        icon: '➕', label: 'Post Property' },
+    ...(editingProperty ? [{ id: 'edit' as Tab, icon: '✏️', label: 'Edit Property' }] : []),
   ];
 
   const statusColor: Record<Valuation['status'], { bg: string; color: string }> = {
@@ -383,6 +402,17 @@ export default function AdminDashboard() {
                         <td>
                           <div style={{ display: 'flex', gap: 6 }}>
                             <button
+                              onClick={() => handleEditProperty(p)}
+                              style={{
+                                padding: '5px 10px', background: 'transparent',
+                                border: '1px solid #1565c0',
+                                color: '#1565c0',
+                                borderRadius: 4, fontSize: 11, cursor: 'pointer',
+                              }}
+                            >
+                              ✏️ Edit
+                            </button>
+                            <button
                               onClick={() => handleToggleProperty(p)}
                               style={{
                                 padding: '5px 10px', background: 'transparent',
@@ -521,6 +551,52 @@ export default function AdminDashboard() {
                   adminOverride={{ featured: true }}
                   onSuccess={handlePostSuccess}
                   onCancel={() => setTab('properties')}
+                />
+              </div>
+            </div>
+          )}
+
+          {/* ── Edit Property ── */}
+          {tab === 'edit' && profile && editingProperty && (
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
+                <button
+                  onClick={handleEditCancel}
+                  style={{
+                    padding: '6px 12px', background: 'transparent',
+                    border: '1px solid var(--gray-200)', borderRadius: 4,
+                    fontSize: 12, cursor: 'pointer', color: 'var(--gray-600)',
+                  }}
+                >
+                  ← Back to Properties
+                </button>
+              </div>
+
+              <h1 className="dash-section-title">Edit Property</h1>
+              <p style={{ color: 'var(--gray-600)', marginBottom: 8, fontSize: 15 }}>
+                Editing: <strong>{editingProperty.title}</strong>
+              </p>
+
+              <div style={{
+                display: 'flex', alignItems: 'center', gap: 10,
+                background: 'rgba(21,101,192,0.08)',
+                border: '1px solid rgba(21,101,192,0.2)',
+                borderRadius: 8, padding: '12px 16px', marginBottom: 28,
+              }}>
+                <span style={{ fontSize: 18 }}>✏️</span>
+                <p style={{ fontSize: 13, color: 'var(--gray-600)', margin: 0 }}>
+                  Changes will update the live listing immediately after saving.
+                </p>
+              </div>
+
+              <div className="dash-card">
+                <PropertyForm
+                  landlordId={editingProperty.landlordId || profile.uid}
+                  landlordName={editingProperty.landlordName || profile.name}
+                  existing={editingProperty}
+                  adminOverride={{ featured: editingProperty.featured }}
+                  onSuccess={handleEditSuccess}
+                  onCancel={handleEditCancel}
                 />
               </div>
             </div>

@@ -344,6 +344,11 @@ export default function PropertyDetailClient() {
           background: #fff;
         }
 
+        /* Hide mobile extras on desktop */
+        .hol-mobile-extras {
+          display: none;
+        }
+
         /* ── MOBILE ── */
         @media (max-width: 768px) {
           .hol-gallery-main {
@@ -354,6 +359,11 @@ export default function PropertyDetailClient() {
           .hol-detail-grid {
             grid-template-columns: 1fr;
             gap: 20px;
+          }
+
+          /* Show mobile extras */
+          .hol-mobile-extras {
+            display: block;
           }
 
           /* Hide desktop contact card on mobile */
@@ -661,6 +671,76 @@ export default function PropertyDetailClient() {
                     })}
                   </div>
                 </div>
+
+                {/* ── MOBILE ONLY: Pricing Details + Features ── */}
+                <div className="hol-mobile-extras">
+                  <div style={{
+                    background: '#fff', border: '1px solid var(--gray-200)',
+                    borderRadius: 8, padding: '16px 20px', marginTop: 16,
+                  }}>
+                    <h4 style={{ fontSize: 13, fontWeight: 700, color: '#222', marginBottom: 12, textTransform: 'uppercase', letterSpacing: 0.5 }}>
+                      Pricing Details
+                    </h4>
+                    {[
+                      { label: 'Rent PCM', value: `£${property.price.toLocaleString()}` },
+                      { label: 'Deposit', value: property.depositAmount ? `£${property.depositAmount.toLocaleString()}` : 'N/A' },
+                      { label: 'Bills Included', value: property.billsIncluded ? '✓ Yes' : '✗ No', color: property.billsIncluded ? '#166534' : '#c62828' },
+                      {
+                        label: 'Available From',
+                        value: property.availableFrom
+                          ? new Date(property.availableFrom).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
+                          : 'Now',
+                      },
+                    ].map(r => (
+                      <div key={r.label} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8, fontSize: 14 }}>
+                        <span style={{ color: '#444' }}>{r.label}</span>
+                        <span style={{ fontWeight: 600, color: (r as any).color || '#222' }}>{r.value}</span>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div style={{
+                    background: '#fff', border: '1px solid var(--gray-200)',
+                    borderRadius: 8, padding: '16px 20px', marginTop: 12,
+                  }}>
+                    <h4 style={{ fontSize: 13, fontWeight: 700, color: '#222', marginBottom: 12, textTransform: 'uppercase', letterSpacing: 0.5 }}>
+                      Features &amp; Amenities
+                    </h4>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '8px 16px' }}>
+                      {[
+                        { label: 'Garden', value: property.garden && property.garden !== 'none', isText: false },
+                        { label: 'Parking', value: property.parking && property.parking !== 'none', isText: false },
+                        { label: 'Balcony', value: property.balcony, isText: false },
+                        { label: 'Furnishing', value: property.furnished ? property.furnished.charAt(0).toUpperCase() + property.furnished.slice(1) : null, isText: true },
+                      ].map(feat => (
+                        <div key={feat.label} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 14 }}>
+                          <span style={{ color: '#444' }}>{feat.label}</span>
+                          {feat.isText
+                            ? <span style={{ fontWeight: 600, color: '#222' }}>{feat.value as string || 'N/A'}</span>
+                            : <span style={{ color: feat.value ? '#166534' : '#c62828', fontWeight: 600 }}>{feat.value ? '✓' : '✗'}</span>
+                          }
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div style={{
+                    background: '#fff', border: '1px solid var(--gray-200)',
+                    borderRadius: 8, padding: '16px 20px', marginTop: 12,
+                  }}>
+                    {[
+                      { label: 'Property ID', value: property.id?.slice(0, 8).toUpperCase() },
+                      { label: 'Status', value: property.status.charAt(0).toUpperCase() + property.status.slice(1) },
+                      { label: 'Listed', value: property.createdAt ? new Date((property.createdAt as any).seconds * 1000).toLocaleDateString('en-GB') : 'Recent' },
+                    ].map(r => (
+                      <div key={r.label} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 10, fontSize: 13 }}>
+                        <span style={{ color: '#555' }}>{r.label}</span>
+                        <span style={{ fontWeight: 500 }}>{r.value}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
               </div>
 
               {/* ── RIGHT COLUMN (desktop only) ── */}

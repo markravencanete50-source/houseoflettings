@@ -429,8 +429,8 @@ export default function HomePage() {
 
           <p style={{
             fontSize: 17, color: 'rgba(255,255,255,0.6)', lineHeight: 1.65,
-            maxWidth: 480, marginBottom: 44, fontWeight: 400, letterSpacing: '0.2px',
-            fontFamily: "'Poppins', sans-serif",
+            maxWidth: 480, margin: '0 auto 44px', fontWeight: 400, letterSpacing: '0.2px',
+            fontFamily: "'Poppins', sans-serif", textAlign: 'center',
           }}>
             Property management. Done right.
           </p>

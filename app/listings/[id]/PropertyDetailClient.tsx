@@ -45,9 +45,11 @@ export default function PropertyDetailClient() {
         if (prop?.landlordId) {
           try {
             const landlord = await getUserProfile(prop.landlordId);
-            setLandlordName(landlord?.name || 'Landlord');
+            // If posted by an admin, always show brand name
+            const isAdmin = landlord?.role === 'admin';
+            setLandlordName(isAdmin ? 'House of Lettings' : (landlord?.name || 'Landlord'));
           } catch {
-            setLandlordName('Landlord');
+            setLandlordName('House of Lettings');
           }
         }
       } catch (err) {
@@ -468,22 +470,8 @@ export default function PropertyDetailClient() {
             cursor: 'pointer', fontFamily: "'Poppins', sans-serif",
           }}
         >
-          🏠 Book Viewing
+          🏠 Book a Viewing
         </button>
-        <a
-          href={contactPhoneHref}
-          style={{
-            flex: 1, padding: '13px 8px',
-            background: 'var(--red)',
-            color: '#fff', textDecoration: 'none',
-            borderRadius: 8, fontSize: 14, fontWeight: 700,
-            letterSpacing: '0.3px', textAlign: 'center',
-            cursor: 'pointer', fontFamily: "'Poppins', sans-serif",
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-          }}
-        >
-          📞 Contact Us
-        </a>
       </div>
 
       <div style={{ minHeight: '100vh', background: 'var(--gray-100)' }}>
@@ -695,11 +683,13 @@ export default function PropertyDetailClient() {
                         color: '#fff', fontFamily: "'Poppins', sans-serif", fontSize: 17, fontWeight: 700,
                         flexShrink: 0,
                       }}>
-                        {landlordName ? landlordName.charAt(0).toUpperCase() : '🏠'}
+                        {landlordName === 'House of Lettings' ? '🏠' : (landlordName ? landlordName.charAt(0).toUpperCase() : '🏠')}
                       </div>
                       <div>
-                        <div style={{ fontWeight: 600, fontSize: 15, color: 'var(--black)' }}>{landlordName || 'Property Owner'}</div>
-                        <div style={{ fontSize: 13, color: '#555' }}>Property Owner</div>
+                        <div style={{ fontWeight: 600, fontSize: 15, color: 'var(--black)' }}>{landlordName || 'House of Lettings'}</div>
+                        <div style={{ fontSize: 13, color: '#555' }}>
+                          {landlordName === 'House of Lettings' ? 'Managed by House of Lettings' : 'Property Owner'}
+                        </div>
                       </div>
                     </div>
 
@@ -716,7 +706,7 @@ export default function PropertyDetailClient() {
                       background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: 6,
                       padding: '10px 14px', fontSize: 13, color: '#166534', marginBottom: 16,
                     }}>
-                      ✓ No agency fees — contact landlord directly
+                      ✓ No agency fees — managed by House of Lettings
                     </div>
 
                     {/* Book a Viewing */}
@@ -740,28 +730,6 @@ export default function PropertyDetailClient() {
                     >
                       🏠 Book a Viewing
                     </button>
-
-                    {/* Phone */}
-                    <a
-                      href={contactPhoneHref}
-                      onMouseEnter={() => setBtnHovered(true)}
-                      onMouseLeave={() => setBtnHovered(false)}
-                      style={{
-                        display: 'block', width: '100%', padding: '13px 14px',
-                        background: btnHovered ? '#b71c1c' : 'var(--red)',
-                        color: '#fff', textDecoration: 'none',
-                        borderRadius: 4, fontSize: 14, fontWeight: 600,
-                        letterSpacing: '0.5px', textTransform: 'uppercase',
-                        cursor: 'pointer', marginBottom: 12, textAlign: 'center',
-                        transform: btnHovered ? 'scale(1.02)' : 'scale(1)',
-                        boxShadow: btnHovered ? '0 4px 16px rgba(198,40,40,0.35)' : 'none',
-                        transition: 'transform 0.2s, box-shadow 0.2s, background 0.2s',
-                        fontFamily: "'Poppins', sans-serif",
-                        boxSizing: 'border-box',
-                      }}
-                    >
-                      📞 Contact Us — {contactPhone}
-                    </a>
 
                     <div style={{ borderTop: '1px solid var(--gray-200)', marginTop: 16, paddingTop: 16 }}>
                       {[

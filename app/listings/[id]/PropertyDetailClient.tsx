@@ -470,7 +470,7 @@ export default function PropertyDetailClient() {
             cursor: 'pointer', fontFamily: "'Poppins', sans-serif",
           }}
         >
-          🏠 Book a Viewing
+          BOOK A VIEWING
         </button>
       </div>
 
@@ -683,7 +683,7 @@ export default function PropertyDetailClient() {
                         color: '#fff', fontFamily: "'Poppins', sans-serif", fontSize: 17, fontWeight: 700,
                         flexShrink: 0,
                       }}>
-                        {landlordName === 'House of Lettings' ? '🏠' : (landlordName ? landlordName.charAt(0).toUpperCase() : '🏠')}
+                        {landlordName === 'House of Lettings' ? 'HOL' : (landlordName ? landlordName.charAt(0).toUpperCase() : 'HOL')}
                       </div>
                       <div>
                         <div style={{ fontWeight: 600, fontSize: 15, color: 'var(--black)' }}>{landlordName || 'House of Lettings'}</div>
@@ -728,7 +728,7 @@ export default function PropertyDetailClient() {
                         fontFamily: "'Poppins', sans-serif",
                       }}
                     >
-                      🏠 Book a Viewing
+                      BOOK A VIEWING
                     </button>
 
                     <div style={{ borderTop: '1px solid var(--gray-200)', marginTop: 16, paddingTop: 16 }}>

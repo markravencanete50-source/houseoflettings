@@ -768,10 +768,11 @@ export default function PropertyDetailClient() {
                     )}
 
                     <div style={{
-                      background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: 6,
-                      padding: '10px 14px', fontSize: 13, color: '#166534', marginBottom: 16,
+                      textAlign: 'center', fontSize: 15, fontWeight: 700,
+                      color: '#0f1f3d', marginBottom: 16,
+                      fontFamily: "'Poppins', sans-serif",
                     }}>
-                      ✓ No agency fees — managed by House of Lettings
+                      House of Lettings
                     </div>
 
                     {/* Book a Viewing */}

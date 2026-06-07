@@ -102,6 +102,7 @@ export default function Navbar() {
             )}
             <NavValuationButton />
             <NavViewingButton />
+            <Link href="/pricing" className="nav-btn-outline">Pricing</Link>
             {!loading && (
               profile ? (
                 <button onClick={handleSignOut} className="nav-btn-outline">Sign Out</button>

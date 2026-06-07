@@ -604,164 +604,258 @@ export default function HomePage() {
 
       {/* ── PRICING TABLE ─────────────────────────────────────── */}
       <section style={{ padding: '90px 5%', position: 'relative', overflow: 'hidden' }}>
-        {/* Pricing background - same services image, different angle */}
         <div style={{
           position: 'absolute', inset: 0,
           backgroundImage: 'url(/images/Background_of_the_services.png)',
           backgroundSize: 'cover', backgroundPosition: 'center bottom',
           backgroundRepeat: 'no-repeat',
         }} />
-        {/* Darker overlay for pricing readability */}
         <div style={{
           position: 'absolute', inset: 0,
           background: 'rgba(5, 12, 30, 0.88)',
         }} />
         <div style={{ position: 'relative', zIndex: 1 }}>
-        <div style={{ marginBottom: 56, textAlign: 'center' }}>
-          <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 3, textTransform: 'uppercase', color: '#4a90d9', marginBottom: 14 }}>
-            Transparent Pricing
-          </div>
-          <h2 style={{ fontFamily: "'Poppins', sans-serif", fontSize: 'clamp(28px,4vw,48px)', fontWeight: 700, color: '#fff', margin: 0 }}>
-            Choose Your Package
-          </h2>
-        </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 24, maxWidth: 1100, margin: '0 auto' }}>
-
-          {/* £399 Virtual Tenant Find */}
-          <div style={{
-            background: '#162849', borderRadius: 10, padding: '36px 28px',
-            border: '1px solid rgba(255,255,255,0.08)', display: 'flex', flexDirection: 'column',
-          }}>
-            <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.45)', marginBottom: 8, textTransform: 'uppercase', letterSpacing: 1 }}>One-time fee</div>
-            <div style={{ fontFamily: "'Poppins', sans-serif", fontSize: 52, fontWeight: 700, color: '#fff', lineHeight: 1, marginBottom: 4 }}>£399</div>
-            <div style={{ fontFamily: "'Poppins', sans-serif", fontSize: 18, fontWeight: 800, color: '#fff', marginBottom: 24, paddingBottom: 24, borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
-              Virtual Tenant Find
+          {/* Section header */}
+          <div style={{ marginBottom: 56, textAlign: 'center' }}>
+            <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 3, textTransform: 'uppercase', color: '#4a90d9', marginBottom: 14 }}>
+              Transparent Pricing
             </div>
-            {[
-              'Expert property valuation',
-              'Advertising your property on major portals',
-              'Enquiries, Screening & Viewings Arrangement',
-              'Schedule Viewing with the Landlord',
-              'Viewing Feedback & Offer Negotiation',
-              'Document Request & Holding Deposit Collection',
-              'Credit & Right to Rent Checks',
-              'Binding ASAT tenancy agreement',
-              'First Rent & Deposit Collection',
-              'Arranging transfer of utilities and council tax',
-            ].map(item => (
-              <div key={item} style={{ display: 'flex', gap: 10, marginBottom: 12, alignItems: 'flex-start' }}>
-                <span style={{ color: '#2563eb', fontWeight: 700, fontSize: 15, marginTop: 1, flexShrink: 0 }}>✓</span>
-                <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.7)', lineHeight: 1.5 }}>{item}</span>
-              </div>
-            ))}
-            <div style={{ marginTop: 'auto', paddingTop: 28 }}>
-              <Link href="/register" style={{
-                display: 'block', textAlign: 'center',
-                padding: '14px 24px', background: '#2563eb', color: '#fff',
-                borderRadius: 4, fontSize: 14, fontWeight: 700,
-                letterSpacing: '0.5px', textTransform: 'uppercase', textDecoration: 'none',
-              }}>
-                Add Listing Now
-              </Link>
-            </div>
+            <h2 style={{ fontFamily: "'Poppins', sans-serif", fontSize: 'clamp(28px,4vw,48px)', fontWeight: 700, color: '#fff', margin: '0 0 16px' }}>
+              Choose Your Package
+            </h2>
+            <p style={{ fontSize: 15, color: 'rgba(255,255,255,0.5)', maxWidth: 560, margin: '0 auto', lineHeight: 1.7, fontWeight: 300, fontFamily: "'Poppins', sans-serif" }}>
+              Every package builds on the last. Start with what you need — upgrade whenever you&apos;re ready.
+            </p>
           </div>
 
-          {/* £599 Expert Tenant Find — Most Popular */}
-          <div style={{
-            background: '#0f1f3d', borderRadius: 10, padding: '36px 28px',
-            border: '2px solid #2563eb', display: 'flex', flexDirection: 'column',
-            position: 'relative',
-          }}>
+          {/* Row 1 — 3 cards */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 24, maxWidth: 1100, margin: '0 auto 24px' }}>
+
+            {/* Virtual Tenant Find — £499 */}
             <div style={{
-              position: 'absolute', top: -14, left: '50%', transform: 'translateX(-50%)',
-              background: '#2563eb', color: '#fff', fontSize: 10, fontWeight: 800,
-              letterSpacing: 2, textTransform: 'uppercase', padding: '5px 16px', borderRadius: 20,
-              whiteSpace: 'nowrap',
+              background: '#162849', borderRadius: 10, padding: '36px 28px',
+              border: '1px solid rgba(255,255,255,0.08)', display: 'flex', flexDirection: 'column',
             }}>
-              Most Popular
-            </div>
-            <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.45)', marginBottom: 8, textTransform: 'uppercase', letterSpacing: 1 }}>One-time fee</div>
-            <div style={{ fontFamily: "'Poppins', sans-serif", fontSize: 52, fontWeight: 700, color: '#4a90d9', lineHeight: 1, marginBottom: 4 }}>£599</div>
-            <div style={{ fontFamily: "'Poppins', sans-serif", fontSize: 18, fontWeight: 800, fontStyle: 'normal', color: '#fff', marginBottom: 24, paddingBottom: 24, borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
-              Expert Tenant Find
-            </div>
-            {[
-              'Professional property photography',
-              'Expert property valuation',
-              'Advertising your property on major portals',
-              'Enquiries, Screening & Viewings Arrangement',
-              'Viewings conducted by our experienced agent',
-              'Viewing Feedback & Offer Negotiation',
-              'Document Request & Holding Deposit Collection',
-              'Credit & Right to Rent Checks',
-              'Binding ASAT tenancy agreement',
-              'First Rent & Deposit Collection',
-              'Comprehensive handover key to the tenant',
-            ].map(item => (
-              <div key={item} style={{ display: 'flex', gap: 10, marginBottom: 12, alignItems: 'flex-start' }}>
-                <span style={{ color: '#4a90d9', fontWeight: 700, fontSize: 15, marginTop: 1, flexShrink: 0 }}>✓</span>
-                <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.7)', lineHeight: 1.5 }}>{item}</span>
+              <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.45)', marginBottom: 8, textTransform: 'uppercase', letterSpacing: 1 }}>One-time fee</div>
+              <div style={{ fontFamily: "'Poppins', sans-serif", fontSize: 52, fontWeight: 700, color: '#fff', lineHeight: 1, marginBottom: 4 }}>£499</div>
+              <div style={{ fontFamily: "'Poppins', sans-serif", fontSize: 18, fontWeight: 800, color: '#fff', marginBottom: 8, paddingBottom: 24, borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
+                Virtual Tenant Find
               </div>
-            ))}
-            <div style={{ marginTop: 'auto', paddingTop: 28 }}>
-              <Link href="/register" style={{
-                display: 'block', textAlign: 'center',
-                padding: '14px 24px', background: '#2563eb', color: '#fff',
-                borderRadius: 4, fontSize: 14, fontWeight: 700,
-                letterSpacing: '0.5px', textTransform: 'uppercase', textDecoration: 'none',
+              {[
+                'Collection of holding deposit',
+                'Right to Rent checks',
+                'Tenant application processing',
+                'Credit and affordability checks',
+                'Employment and landlord references',
+                'Guarantor referencing (where applicable)',
+                'Preparation of tenancy agreement',
+                'Collection of first month\'s rent and tenancy deposit',
+                'Deposit registration and prescribed information',
+                'Utility and council tax notifications',
+                'Landlord tenancy documentation pack',
+                'Transfer of funds to the landlord',
+              ].map(item => (
+                <div key={item} style={{ display: 'flex', gap: 10, marginBottom: 10, alignItems: 'flex-start' }}>
+                  <span style={{ color: '#2563eb', fontWeight: 700, fontSize: 14, marginTop: 2, flexShrink: 0 }}>✓</span>
+                  <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.7)', lineHeight: 1.5 }}>{item}</span>
+                </div>
+              ))}
+              <div style={{ marginTop: 'auto', paddingTop: 28 }}>
+                <Link href="/register" style={{
+                  display: 'block', textAlign: 'center',
+                  padding: '14px 24px', background: '#2563eb', color: '#fff',
+                  borderRadius: 4, fontSize: 14, fontWeight: 700,
+                  letterSpacing: '0.5px', textTransform: 'uppercase', textDecoration: 'none',
+                }}>
+                  Get Started
+                </Link>
+              </div>
+            </div>
+
+            {/* Expert Tenant Find — £799 — Most Popular */}
+            <div style={{
+              background: '#0f1f3d', borderRadius: 10, padding: '36px 28px',
+              border: '2px solid #2563eb', display: 'flex', flexDirection: 'column',
+              position: 'relative',
+            }}>
+              <div style={{
+                position: 'absolute', top: -14, left: '50%', transform: 'translateX(-50%)',
+                background: '#2563eb', color: '#fff', fontSize: 10, fontWeight: 800,
+                letterSpacing: 2, textTransform: 'uppercase', padding: '5px 16px', borderRadius: 20,
+                whiteSpace: 'nowrap',
               }}>
-                Add Listing Now
-              </Link>
+                Most Popular
+              </div>
+              <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.45)', marginBottom: 8, textTransform: 'uppercase', letterSpacing: 1 }}>One-time fee</div>
+              <div style={{ fontFamily: "'Poppins', sans-serif", fontSize: 52, fontWeight: 700, color: '#4a90d9', lineHeight: 1, marginBottom: 4 }}>£799</div>
+              <div style={{ fontFamily: "'Poppins', sans-serif", fontSize: 18, fontWeight: 800, color: '#fff', marginBottom: 8, paddingBottom: 16, borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
+                Expert Tenant Find
+              </div>
+              <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', fontStyle: 'italic', marginBottom: 12 }}>
+                ↳ Everything in Virtual, plus:
+              </div>
+              {[
+                'Professional property photography',
+                'Advertising on major property portals',
+                'Enquiry management and applicant screening',
+                'Agent-led property viewings',
+                'Viewing feedback and negotiation',
+                'Tenant handover and key management',
+              ].map(item => (
+                <div key={item} style={{ display: 'flex', gap: 10, marginBottom: 10, alignItems: 'flex-start' }}>
+                  <span style={{ color: '#4a90d9', fontWeight: 700, fontSize: 14, marginTop: 2, flexShrink: 0 }}>✓</span>
+                  <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.7)', lineHeight: 1.5 }}>{item}</span>
+                </div>
+              ))}
+              <div style={{ marginTop: 'auto', paddingTop: 28 }}>
+                <Link href="/register" style={{
+                  display: 'block', textAlign: 'center',
+                  padding: '14px 24px', background: '#2563eb', color: '#fff',
+                  borderRadius: 4, fontSize: 14, fontWeight: 700,
+                  letterSpacing: '0.5px', textTransform: 'uppercase', textDecoration: 'none',
+                }}>
+                  Get Started
+                </Link>
+              </div>
+            </div>
+
+            {/* Rent Collection — 6% */}
+            <div style={{
+              background: '#162849', borderRadius: 10, padding: '36px 28px',
+              border: '1px solid rgba(255,255,255,0.08)', display: 'flex', flexDirection: 'column',
+            }}>
+              <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.45)', marginBottom: 8, textTransform: 'uppercase', letterSpacing: 1 }}>Monthly percentage</div>
+              <div style={{ fontFamily: "'Poppins', sans-serif", fontSize: 52, fontWeight: 700, color: '#fff', lineHeight: 1, marginBottom: 4 }}>6%</div>
+              <div style={{ fontFamily: "'Poppins', sans-serif", fontSize: 18, fontWeight: 800, color: '#fff', marginBottom: 8, paddingBottom: 16, borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
+                Rent Collection
+              </div>
+              <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', fontStyle: 'italic', marginBottom: 12 }}>
+                ↳ Everything in Expert Tenant Find, plus:
+              </div>
+              {[
+                'Monthly rent collection',
+                'Rent payment monitoring',
+                'Arrears chasing and reminders',
+                'Monthly landlord statements',
+                'Annual rental income summary',
+                'Tenancy continuation management',
+                'Rent review guidance',
+                'Utility and compliance reminders',
+              ].map(item => (
+                <div key={item} style={{ display: 'flex', gap: 10, marginBottom: 10, alignItems: 'flex-start' }}>
+                  <span style={{ color: '#2563eb', fontWeight: 700, fontSize: 14, marginTop: 2, flexShrink: 0 }}>✓</span>
+                  <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.7)', lineHeight: 1.5 }}>{item}</span>
+                </div>
+              ))}
+              <div style={{ marginTop: 'auto', paddingTop: 28 }}>
+                <Link href="/register" style={{
+                  display: 'block', textAlign: 'center',
+                  padding: '14px 24px', background: '#2563eb', color: '#fff',
+                  borderRadius: 4, fontSize: 14, fontWeight: 700,
+                  letterSpacing: '0.5px', textTransform: 'uppercase', textDecoration: 'none',
+                }}>
+                  Get Started
+                </Link>
+              </div>
             </div>
           </div>
 
-          {/* 8% Full Management */}
-          <div style={{
-            background: '#162849', borderRadius: 10, padding: '36px 28px',
-            border: '1px solid rgba(255,255,255,0.08)', display: 'flex', flexDirection: 'column',
-          }}>
-            <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.45)', marginBottom: 8, textTransform: 'uppercase', letterSpacing: 1 }}>Monthly percentage</div>
-            <div style={{ fontFamily: "'Poppins', sans-serif", fontSize: 52, fontWeight: 700, color: '#fff', lineHeight: 1, marginBottom: 4 }}>8%</div>
-            <div style={{ fontFamily: "'Poppins', sans-serif", fontSize: 18, fontWeight: 800, color: '#fff', marginBottom: 24, paddingBottom: 24, borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
-              Full Management
-            </div>
-            {[
-              'Rental Invoice to Tenant & Rent Collection',
-              'Account Statement & Rent Transfer to Landlord',
-              'Maintenance Payment Handling',
-              'Annual Expense and Income Summary',
-              'Deposit Protection (DPS/TDS)',
-              'Gas, Electric & EPC Certificate Renewal Reminders',
-              'Move-In Inventory Report',
-              'Move-Out Inventory Report',
-              'Check-in / Check-out Comparison',
-              'Tenant enquiry handling',
-              'Maintenance Reporting & Oversight',
-              'Contractor Coordination (with approval)',
-              'Maintenance Record Keeping',
-              'Key Holding Management',
-              'Final Utility & Council Tax Coordination',
-              'Compliance Certificate Management',
-            ].map(item => (
-              <div key={item} style={{ display: 'flex', gap: 10, marginBottom: 12, alignItems: 'flex-start' }}>
-                <span style={{ color: '#2563eb', fontWeight: 700, fontSize: 15, marginTop: 1, flexShrink: 0 }}>✓</span>
-                <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.7)', lineHeight: 1.5 }}>{item}</span>
-              </div>
-            ))}
-            <div style={{ marginTop: 'auto', paddingTop: 28 }}>
-              <Link href="/register" style={{
-                display: 'block', textAlign: 'center',
-                padding: '14px 24px', background: '#2563eb', color: '#fff',
-                borderRadius: 4, fontSize: 14, fontWeight: 700,
-                letterSpacing: '0.5px', textTransform: 'uppercase', textDecoration: 'none',
-              }}>
-                Add Listing Now
-              </Link>
-            </div>
-          </div>
+          {/* Row 2 — 2 cards centred */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 24, maxWidth: 740, margin: '0 auto' }}>
 
-        </div>
+            {/* Full Management — 8% */}
+            <div style={{
+              background: '#162849', borderRadius: 10, padding: '36px 28px',
+              border: '1px solid rgba(255,255,255,0.08)', display: 'flex', flexDirection: 'column',
+            }}>
+              <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.45)', marginBottom: 8, textTransform: 'uppercase', letterSpacing: 1 }}>Monthly percentage</div>
+              <div style={{ fontFamily: "'Poppins', sans-serif", fontSize: 52, fontWeight: 700, color: '#fff', lineHeight: 1, marginBottom: 4 }}>8%</div>
+              <div style={{ fontFamily: "'Poppins', sans-serif", fontSize: 18, fontWeight: 800, color: '#fff', marginBottom: 8, paddingBottom: 16, borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
+                Full Management
+              </div>
+              <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', fontStyle: 'italic', marginBottom: 12 }}>
+                ↳ Everything in Rent Collection, plus:
+              </div>
+              {[
+                'Dedicated property management team',
+                'Day-to-day tenant communication',
+                'Maintenance reporting and contractor coordination',
+                'Repair quotation management',
+                'Emergency maintenance support',
+                'Key holding service',
+                'Compliance monitoring (Gas Safety, EICR, EPC)',
+                'Tenancy continuation and re-marketing management',
+                'End-of-tenancy administration',
+                'Deposit negotiation assistance',
+              ].map(item => (
+                <div key={item} style={{ display: 'flex', gap: 10, marginBottom: 10, alignItems: 'flex-start' }}>
+                  <span style={{ color: '#2563eb', fontWeight: 700, fontSize: 14, marginTop: 2, flexShrink: 0 }}>✓</span>
+                  <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.7)', lineHeight: 1.5 }}>{item}</span>
+                </div>
+              ))}
+              <div style={{ marginTop: 'auto', paddingTop: 28 }}>
+                <Link href="/register" style={{
+                  display: 'block', textAlign: 'center',
+                  padding: '14px 24px', background: '#2563eb', color: '#fff',
+                  borderRadius: 4, fontSize: 14, fontWeight: 700,
+                  letterSpacing: '0.5px', textTransform: 'uppercase', textDecoration: 'none',
+                }}>
+                  Get Started
+                </Link>
+              </div>
+            </div>
+
+            {/* Comprehensive Management — 10% — Most Complete */}
+            <div style={{
+              background: '#0f1f3d', borderRadius: 10, padding: '36px 28px',
+              border: '2px solid #4a6fa5', display: 'flex', flexDirection: 'column',
+              position: 'relative',
+            }}>
+              <div style={{
+                position: 'absolute', top: -14, left: '50%', transform: 'translateX(-50%)',
+                background: '#4a6fa5', color: '#fff', fontSize: 10, fontWeight: 800,
+                letterSpacing: 2, textTransform: 'uppercase', padding: '5px 16px', borderRadius: 20,
+                whiteSpace: 'nowrap',
+              }}>
+                Most Complete
+              </div>
+              <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.45)', marginBottom: 8, textTransform: 'uppercase', letterSpacing: 1 }}>Monthly percentage</div>
+              <div style={{ fontFamily: "'Poppins', sans-serif", fontSize: 52, fontWeight: 700, color: '#4a90d9', lineHeight: 1, marginBottom: 4 }}>10%</div>
+              <div style={{ fontFamily: "'Poppins', sans-serif", fontSize: 18, fontWeight: 800, color: '#fff', marginBottom: 8, paddingBottom: 16, borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
+                Comprehensive Management
+              </div>
+              <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', fontStyle: 'italic', marginBottom: 12 }}>
+                ↳ Everything in Full Management, plus:
+              </div>
+              {[
+                'Professional check-in inventory',
+                'Professional check-out inventory',
+                'Inventory comparison report',
+                'Deposit deduction assessment and evidence preparation',
+                'Contractor attendance coordination',
+                'Property compliance monitoring and reporting',
+                'End-of-tenancy dispute preparation (if required)',
+                'Priority management support',
+              ].map(item => (
+                <div key={item} style={{ display: 'flex', gap: 10, marginBottom: 10, alignItems: 'flex-start' }}>
+                  <span style={{ color: '#4a90d9', fontWeight: 700, fontSize: 14, marginTop: 2, flexShrink: 0 }}>✓</span>
+                  <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.7)', lineHeight: 1.5 }}>{item}</span>
+                </div>
+              ))}
+              <div style={{ marginTop: 'auto', paddingTop: 28 }}>
+                <Link href="/register" style={{
+                  display: 'block', textAlign: 'center',
+                  padding: '14px 24px', background: '#4a6fa5', color: '#fff',
+                  borderRadius: 4, fontSize: 14, fontWeight: 700,
+                  letterSpacing: '0.5px', textTransform: 'uppercase', textDecoration: 'none',
+                }}>
+                  Get Started
+                </Link>
+              </div>
+            </div>
+
+          </div>
         </div>
       </section>
 

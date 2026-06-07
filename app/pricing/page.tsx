@@ -239,8 +239,20 @@ export default function PricingPage() {
         overflow: 'hidden',
         transition: 'background 0.5s ease',
       }}>
-        <div style={{ position: 'absolute', inset: 0, backgroundImage: 'url(/images/Background_of_the_services.png)', backgroundSize: 'cover', backgroundPosition: 'center bottom', backgroundRepeat: 'no-repeat', opacity: 0.25 }} />
-        <div style={{ position: 'absolute', inset: 0, background: 'rgba(5,12,30,0.92)' }} />
+        {/* Background photo — more visible now */}
+        <div style={{
+          position: 'absolute', inset: 0,
+          backgroundImage: 'url(/images/Background_of_the_services.png)',
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          backgroundRepeat: 'no-repeat',
+          opacity: 0.55,
+        }} />
+        {/* Gradient overlay — dark at edges, lighter in centre so photo shows through */}
+        <div style={{
+          position: 'absolute', inset: 0,
+          background: 'radial-gradient(ellipse at 50% 50%, rgba(8,18,42,0.55) 0%, rgba(5,12,30,0.88) 100%)',
+        }} />
         {/* Dynamic accent layer — shifts per package */}
         <div style={{
           position: 'absolute', inset: 0,
@@ -287,7 +299,9 @@ export default function PricingPage() {
           >
             {/* Left — price + CTA */}
             <div style={{
-              background: '#0f1f3d',
+              background: 'rgba(10,24,56,0.82)',
+              backdropFilter: 'blur(12px)',
+              WebkitBackdropFilter: 'blur(12px)',
               border: `2px solid ${pkg.color}`,
               borderRadius: 14,
               padding: '44px 36px',
@@ -375,8 +389,10 @@ export default function PricingPage() {
 
             {/* Right — feature list */}
             <div style={{
-              background: '#162849',
-              border: '1px solid rgba(255,255,255,0.08)',
+              background: 'rgba(16,34,68,0.78)',
+              backdropFilter: 'blur(12px)',
+              WebkitBackdropFilter: 'blur(12px)',
+              border: '1px solid rgba(255,255,255,0.10)',
               borderRadius: 14,
               padding: '44px 40px',
             }}>

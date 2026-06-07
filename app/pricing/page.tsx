@@ -1,6 +1,6 @@
 'use client';
 // app/pricing/page.tsx
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Navbar from '@/components/layout/Navbar';
 
@@ -114,9 +114,72 @@ const PACKAGES = [
 ];
 
 export default function PricingPage() {
-  const [active, setActive] = useState(1); // default to Expert (Most Popular)
+  const [active, setActive] = useState(1);
+  const [showModal, setShowModal] = useState(false);
+  const [formData, setFormData] = useState({
+    firstName: '', lastName: '', email: '', phone: '',
+    propertyAddress: '', numberOfProperties: '', startDate: '',
+  });
+  const [submitting, setSubmitting] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
+  const [error, setError] = useState('');
 
   const pkg = PACKAGES[active];
+
+  // Lock body scroll when modal open
+  useEffect(() => {
+    document.body.style.overflow = showModal ? 'hidden' : '';
+    return () => { document.body.style.overflow = ''; };
+  }, [showModal]);
+
+  const handleSubmit = async () => {
+    setError('');
+    const required = ['firstName','lastName','email','phone','propertyAddress','numberOfProperties','startDate'];
+    for (const f of required) {
+      if (!formData[f as keyof typeof formData].trim()) {
+        setError('Please fill in all fields.');
+        return;
+      }
+    }
+    setSubmitting(true);
+    try {
+      const res = await fetch('/api/get-started', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...formData, selectedPackage: pkg.label }),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.message || 'Something went wrong');
+      setSubmitted(true);
+    } catch (err: any) {
+      setError(err.message || 'Something went wrong. Please try again.');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const closeModal = () => {
+    setShowModal(false);
+    setSubmitted(false);
+    setError('');
+    setFormData({ firstName: '', lastName: '', email: '', phone: '', propertyAddress: '', numberOfProperties: '', startDate: '' });
+  };
+
+  const inputStyle: React.CSSProperties = {
+    width: '100%', padding: '13px 16px',
+    background: 'rgba(255,255,255,0.06)',
+    border: '1.5px solid rgba(255,255,255,0.12)',
+    borderRadius: 8, color: '#fff', fontSize: 14,
+    fontFamily: "'Poppins', sans-serif",
+    outline: 'none', boxSizing: 'border-box',
+    transition: 'border-color 0.2s',
+  };
+  const labelStyle: React.CSSProperties = {
+    display: 'block', fontSize: 11, fontWeight: 700,
+    letterSpacing: 1.5, textTransform: 'uppercase',
+    color: 'rgba(255,255,255,0.45)', marginBottom: 7,
+    fontFamily: "'Poppins', sans-serif",
+  };
 
   return (
     <>
@@ -358,16 +421,20 @@ export default function PricingPage() {
                 {active === 4 && "Our most comprehensive package — total peace of mind from day one."}
               </div>
 
-              <Link href="/register" style={{
-                display: 'block', textAlign: 'center',
-                padding: '16px 24px', background: '#2563eb', color: '#fff',
-                borderRadius: 6, fontSize: 15, fontWeight: 700,
-                letterSpacing: '0.5px', textTransform: 'uppercase',
-                textDecoration: 'none', fontFamily: "'Poppins', sans-serif",
-                transition: 'background 0.2s',
-              }}>
+              <button
+                onClick={() => setShowModal(true)}
+                style={{
+                  display: 'block', width: '100%', textAlign: 'center',
+                  padding: '16px 24px', background: '#2563eb', color: '#fff',
+                  borderRadius: 6, fontSize: 15, fontWeight: 700,
+                  letterSpacing: '0.5px', textTransform: 'uppercase',
+                  border: 'none', cursor: 'pointer',
+                  fontFamily: "'Poppins', sans-serif",
+                  transition: 'background 0.2s',
+                }}
+              >
                 Get Started
-              </Link>
+              </button>
 
               {/* Step indicator */}
               <div style={{ display: 'flex', justifyContent: 'center', gap: 6, marginTop: 24 }}>
@@ -546,6 +613,247 @@ export default function PricingPage() {
           </div>
         </div>
       </footer>
+
+      {/* ── GET STARTED MODAL ────────────────────────────────── */}
+      {showModal && (
+        <div
+          onClick={(e) => { if (e.target === e.currentTarget) closeModal(); }}
+          style={{
+            position: 'fixed', inset: 0, zIndex: 9999,
+            background: 'rgba(5,12,30,0.85)',
+            backdropFilter: 'blur(6px)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            padding: '20px',
+            animation: 'fadeIn 0.2s ease',
+          }}
+        >
+          <style>{`
+            @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+            @keyframes slideUp { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: translateY(0); } }
+            .gs-input:focus { border-color: #2563eb !important; background: rgba(37,99,235,0.08) !important; }
+            .gs-input::placeholder { color: rgba(255,255,255,0.2); }
+            .gs-input option { background: #0f1f3d; color: #fff; }
+          `}</style>
+
+          <div style={{
+            background: '#0d1e3d',
+            border: '1px solid rgba(255,255,255,0.10)',
+            borderRadius: 18,
+            width: '100%', maxWidth: 560,
+            maxHeight: '90vh', overflowY: 'auto',
+            animation: 'slideUp 0.25s ease',
+            scrollbarWidth: 'none',
+          }}>
+            {/* Modal header */}
+            <div style={{
+              background: 'linear-gradient(135deg, #0f1f3d 0%, #162849 100%)',
+              borderBottom: '1px solid rgba(255,255,255,0.08)',
+              padding: '28px 32px 24px',
+              borderRadius: '18px 18px 0 0',
+              position: 'relative',
+            }}>
+              {/* Close button */}
+              <button
+                onClick={closeModal}
+                style={{
+                  position: 'absolute', top: 20, right: 20,
+                  background: 'rgba(255,255,255,0.08)', border: 'none',
+                  color: 'rgba(255,255,255,0.6)', width: 32, height: 32,
+                  borderRadius: '50%', fontSize: 16, cursor: 'pointer',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  transition: 'all 0.2s',
+                }}
+              >✕</button>
+
+              {/* Selected package badge */}
+              <div style={{
+                fontSize: 10, fontWeight: 700, letterSpacing: 2,
+                textTransform: 'uppercase', color: '#4a90d9',
+                marginBottom: 10, fontFamily: "'Poppins', sans-serif",
+              }}>
+                Selected Package
+              </div>
+              <div style={{
+                display: 'inline-flex', alignItems: 'center', gap: 10,
+                background: `rgba(37,99,235,0.15)`,
+                border: `1.5px solid ${pkg.color}`,
+                borderRadius: 10, padding: '10px 20px',
+                marginBottom: 16,
+              }}>
+                <div style={{
+                  width: 8, height: 8, borderRadius: '50%',
+                  background: pkg.color, flexShrink: 0,
+                }} />
+                <span style={{
+                  fontFamily: "'Poppins', sans-serif",
+                  fontSize: 16, fontWeight: 700, color: '#fff',
+                }}>{pkg.label}</span>
+                <span style={{
+                  fontFamily: "'Poppins', sans-serif",
+                  fontSize: 14, fontWeight: 600, color: pkg.color,
+                }}>{pkg.price}</span>
+              </div>
+              <h2 style={{
+                fontFamily: "'Poppins', sans-serif",
+                fontSize: 22, fontWeight: 700, color: '#fff',
+                margin: '0 0 4px',
+              }}>Get Started</h2>
+              <p style={{
+                fontFamily: "'Poppins', sans-serif",
+                fontSize: 13, color: 'rgba(255,255,255,0.45)', margin: 0,
+              }}>Fill in your details and we&apos;ll be in touch within 24–48 hours.</p>
+            </div>
+
+            {/* Modal body */}
+            <div style={{ padding: '28px 32px 32px' }}>
+              {submitted ? (
+                <div style={{ textAlign: 'center', padding: '32px 0' }}>
+                  <div style={{ fontSize: 48, marginBottom: 16 }}>🎉</div>
+                  <h3 style={{
+                    fontFamily: "'Poppins', sans-serif", fontSize: 20,
+                    fontWeight: 700, color: '#fff', marginBottom: 12,
+                  }}>Registration Received!</h3>
+                  <p style={{
+                    fontFamily: "'Poppins', sans-serif", fontSize: 14,
+                    color: 'rgba(255,255,255,0.55)', lineHeight: 1.7, marginBottom: 28,
+                  }}>
+                    We&apos;ve sent a confirmation to <strong style={{ color: '#fff' }}>{formData.email}</strong>.<br />
+                    A member of our team will be in touch shortly.
+                  </p>
+                  <button
+                    onClick={closeModal}
+                    style={{
+                      padding: '12px 32px', background: '#2563eb', color: '#fff',
+                      border: 'none', borderRadius: 8, fontSize: 14, fontWeight: 700,
+                      cursor: 'pointer', fontFamily: "'Poppins', sans-serif",
+                    }}
+                  >Close</button>
+                </div>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
+                  {/* Row: First + Last name */}
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+                    <div>
+                      <label style={labelStyle}>First Name</label>
+                      <input
+                        className="gs-input"
+                        style={inputStyle}
+                        placeholder="John"
+                        value={formData.firstName}
+                        onChange={e => setFormData(p => ({ ...p, firstName: e.target.value }))}
+                      />
+                    </div>
+                    <div>
+                      <label style={labelStyle}>Last Name</label>
+                      <input
+                        className="gs-input"
+                        style={inputStyle}
+                        placeholder="Smith"
+                        value={formData.lastName}
+                        onChange={e => setFormData(p => ({ ...p, lastName: e.target.value }))}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Email */}
+                  <div>
+                    <label style={labelStyle}>Email Address</label>
+                    <input
+                      className="gs-input"
+                      type="email"
+                      style={inputStyle}
+                      placeholder="john@example.com"
+                      value={formData.email}
+                      onChange={e => setFormData(p => ({ ...p, email: e.target.value }))}
+                    />
+                  </div>
+
+                  {/* Phone */}
+                  <div>
+                    <label style={labelStyle}>Phone Number</label>
+                    <input
+                      className="gs-input"
+                      type="tel"
+                      style={inputStyle}
+                      placeholder="+44 7700 000000"
+                      value={formData.phone}
+                      onChange={e => setFormData(p => ({ ...p, phone: e.target.value }))}
+                    />
+                  </div>
+
+                  {/* Property address */}
+                  <div>
+                    <label style={labelStyle}>What Property Do You Own?</label>
+                    <input
+                      className="gs-input"
+                      style={inputStyle}
+                      placeholder="e.g. 12 Oak Street, Leeds, LS1 1AA"
+                      value={formData.propertyAddress}
+                      onChange={e => setFormData(p => ({ ...p, propertyAddress: e.target.value }))}
+                    />
+                  </div>
+
+                  {/* Number of properties */}
+                  <div>
+                    <label style={labelStyle}>How Many Properties to Manage?</label>
+                    <select
+                      className="gs-input"
+                      style={inputStyle}
+                      value={formData.numberOfProperties}
+                      onChange={e => setFormData(p => ({ ...p, numberOfProperties: e.target.value }))}
+                    >
+                      <option value="">Select number of properties</option>
+                      <option value="1">1 property</option>
+                      <option value="2">2 properties</option>
+                      <option value="3">3 properties</option>
+                      <option value="4">4 properties</option>
+                      <option value="5+">5 or more</option>
+                    </select>
+                  </div>
+
+                  {/* Start date */}
+                  <div>
+                    <label style={labelStyle}>When Do You Want to Register?</label>
+                    <input
+                      className="gs-input"
+                      type="date"
+                      style={{ ...inputStyle, colorScheme: 'dark' }}
+                      value={formData.startDate}
+                      min={new Date().toISOString().split('T')[0]}
+                      onChange={e => setFormData(p => ({ ...p, startDate: e.target.value }))}
+                    />
+                  </div>
+
+                  {error && (
+                    <div style={{
+                      background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)',
+                      borderRadius: 8, padding: '12px 16px',
+                      color: '#f87171', fontSize: 13, fontFamily: "'Poppins', sans-serif",
+                    }}>{error}</div>
+                  )}
+
+                  <button
+                    onClick={handleSubmit}
+                    disabled={submitting}
+                    style={{
+                      width: '100%', padding: '15px 24px',
+                      background: submitting ? 'rgba(37,99,235,0.5)' : '#2563eb',
+                      color: '#fff', border: 'none', borderRadius: 8,
+                      fontSize: 14, fontWeight: 700, letterSpacing: '0.5px',
+                      textTransform: 'uppercase', cursor: submitting ? 'wait' : 'pointer',
+                      fontFamily: "'Poppins', sans-serif",
+                      transition: 'background 0.2s',
+                      marginTop: 4,
+                    }}
+                  >
+                    {submitting ? 'Submitting...' : 'Submit Registration'}
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }

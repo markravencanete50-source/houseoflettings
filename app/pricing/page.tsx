@@ -11,6 +11,7 @@ const PACKAGES = [
     price: '£499',
     priceType: 'One-time fee',
     color: '#2563eb',
+    bg: 'radial-gradient(ellipse at 20% 60%, rgba(37,99,235,0.18) 0%, transparent 55%), radial-gradient(ellipse at 80% 20%, rgba(15,31,61,0.4) 0%, transparent 60%)',
     badge: null,
     inherits: null,
     features: [
@@ -34,6 +35,7 @@ const PACKAGES = [
     price: '£799',
     priceType: 'One-time fee',
     color: '#4a90d9',
+    bg: 'radial-gradient(ellipse at 70% 30%, rgba(74,144,217,0.22) 0%, transparent 55%), radial-gradient(ellipse at 20% 80%, rgba(37,99,235,0.12) 0%, transparent 50%)',
     badge: 'Most Popular',
     badgeColor: '#2563eb',
     inherits: 'Everything in Virtual, plus:',
@@ -52,6 +54,7 @@ const PACKAGES = [
     price: '6%',
     priceType: 'Monthly percentage',
     color: '#2563eb',
+    bg: 'radial-gradient(ellipse at 50% 80%, rgba(0,184,160,0.15) 0%, transparent 55%), radial-gradient(ellipse at 90% 10%, rgba(37,99,235,0.1) 0%, transparent 50%)',
     badge: null,
     inherits: 'Everything in Expert Tenant Find, plus:',
     features: [
@@ -71,6 +74,7 @@ const PACKAGES = [
     price: '8%',
     priceType: 'Monthly percentage',
     color: '#2563eb',
+    bg: 'radial-gradient(ellipse at 10% 40%, rgba(99,37,235,0.16) 0%, transparent 55%), radial-gradient(ellipse at 85% 70%, rgba(37,99,235,0.14) 0%, transparent 50%)',
     badge: null,
     inherits: 'Everything in Rent Collection, plus:',
     features: [
@@ -92,6 +96,7 @@ const PACKAGES = [
     price: '10%',
     priceType: 'Monthly percentage',
     color: '#4a90d9',
+    bg: 'radial-gradient(ellipse at 60% 20%, rgba(74,111,165,0.25) 0%, transparent 55%), radial-gradient(ellipse at 15% 85%, rgba(74,144,217,0.15) 0%, transparent 50%)',
     badge: 'Most Complete',
     badgeColor: '#4a6fa5',
     inherits: 'Everything in Full Management, plus:',
@@ -232,9 +237,17 @@ export default function PricingPage() {
         padding: '64px 5% 100px',
         position: 'relative',
         overflow: 'hidden',
+        transition: 'background 0.5s ease',
       }}>
-        <div style={{ position: 'absolute', inset: 0, backgroundImage: 'url(/images/Background_of_the_services.png)', backgroundSize: 'cover', backgroundPosition: 'center bottom', backgroundRepeat: 'no-repeat' }} />
+        <div style={{ position: 'absolute', inset: 0, backgroundImage: 'url(/images/Background_of_the_services.png)', backgroundSize: 'cover', backgroundPosition: 'center bottom', backgroundRepeat: 'no-repeat', opacity: 0.25 }} />
         <div style={{ position: 'absolute', inset: 0, background: 'rgba(5,12,30,0.92)' }} />
+        {/* Dynamic accent layer — shifts per package */}
+        <div style={{
+          position: 'absolute', inset: 0,
+          background: pkg.bg,
+          transition: 'background 0.6s ease',
+          pointerEvents: 'none',
+        }} />
 
         <div style={{ position: 'relative', zIndex: 1, maxWidth: 1200, margin: '0 auto' }}>
 

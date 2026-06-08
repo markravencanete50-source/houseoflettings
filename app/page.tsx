@@ -461,6 +461,12 @@ export default function HomePage() {
             </Link>
             <HeroViewingButton />
             <HeroValuationButton />
+            <Link href="/pricing" className="hero-btn">
+              Pricing
+            </Link>
+            <Link href="/terms" className="hero-btn">
+              Terms &amp; Conditions
+            </Link>
           </div>
         </div>
       </section>

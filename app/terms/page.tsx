@@ -263,7 +263,7 @@ export default function TermsAndConditions() {
           font-weight: 700;
           letter-spacing: 0.18em;
           text-transform: uppercase;
-          color: var(--gold);
+          color: #ffffff;
           margin-bottom: 20px;
         }
         .hol-hero-eyebrow::before {
@@ -271,7 +271,7 @@ export default function TermsAndConditions() {
           display: block;
           width: 28px;
           height: 2px;
-          background: var(--gold);
+          background: #ffffff;
           border-radius: 2px;
         }
         .hol-hero-title {
@@ -526,8 +526,6 @@ export default function TermsAndConditions() {
             <h1 className="hol-hero-title">Terms &amp; Conditions</h1>
             <div className="hol-hero-meta">
               <span>Effective Date: May 2026</span>
-              <span>Version 1.0</span>
-              <span>England &amp; Wales</span>
             </div>
           </div>
         </div>

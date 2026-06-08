@@ -1160,7 +1160,6 @@ export default function HomePage() {
         </div>
       </section>
 
-      <div className="section-gap" />
 
       {/* ── SEARCH BAR ───────────────────────────────────────── */}
       <style>{`
@@ -1283,7 +1282,6 @@ export default function HomePage() {
         </div>
       </section>
 
-      <div className="section-gap" />
 
       {/* ── FEATURED LISTINGS ────────────────────────────────── */}
       <style>{`
@@ -1335,7 +1333,6 @@ export default function HomePage() {
         )}
       </section>
 
-      <div className="section-gap" />
 
       {/* ── HOW IT WORKS ─────────────────────────────────────── */}
       <style>{`
@@ -1410,12 +1407,10 @@ export default function HomePage() {
         </div>
       </section>
 
-      <div className="section-gap" />
 
       {/* ── IMAGE GALLERY ─────────────────────────────────────── */}
       <ImageGallery />
 
-      <div className="section-gap" />
 
       {/* ── CTA BANNER ───────────────────────────────────────── */}
       <style>{`
@@ -1475,7 +1470,6 @@ export default function HomePage() {
         </div>
       </section>
 
-      <div className="section-gap" />
 
       {/* ── FOOTER ───────────────────────────────────────────── */}
       <footer style={{

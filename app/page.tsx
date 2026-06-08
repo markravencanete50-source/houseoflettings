@@ -32,7 +32,6 @@ function useScrollReveal() {
 // ── HERO TEXT CYCLER ──────────────────────────────────────────────────────────
 const HERO_PHRASES = [
   'Property management. Done right.',
-  'No agency fees. No middlemen.',
   'Leeds & Manchester specialists.',
   'Your returns, fully protected.',
 ];

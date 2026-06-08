@@ -849,23 +849,9 @@ export default function HomePage() {
         }
       `}</style>
 
-      {/* Valuation — photo left, text right */}
+      {/* Valuation — text left, photo right */}
       <section className="split-section" style={{ background: '#f7f8fa' }}>
         <div className="split-grid">
-          <div className="split-img-panel" style={{ overflow: 'hidden', minHeight: 860, display: 'flex', alignItems: 'stretch', position: 'relative' }}>
-            <img
-              src="/images/Landlord_Book_valuation_background.png"
-              alt="Book a Valuation"
-              style={{
-                width: '100%',
-                height: '100%',
-                minHeight: 860,
-                objectFit: 'cover',
-                objectPosition: 'center top',
-                display: 'block',
-              }}
-            />
-          </div>
           <div className="split-text reveal" style={{ background: '#f7f8fa' }}>
             <p className="split-eyebrow">For Landlords</p>
             <h2 className="split-title">Why book a valuation with House of Lettings?</h2>
@@ -884,6 +870,20 @@ export default function HomePage() {
               Whether you own one property or a full portfolio, our team is here to protect your investment and maximise your returns — so you can enjoy the freedom of hands-off landlording.
             </p>
             <ValuationInlineButton />
+          </div>
+          <div className="split-img-panel" style={{ overflow: 'hidden', minHeight: 860, display: 'flex', alignItems: 'stretch', position: 'relative' }}>
+            <img
+              src="/images/Landlord_Book_valuation_background.png"
+              alt="Book a Valuation"
+              style={{
+                width: '100%',
+                height: '100%',
+                minHeight: 860,
+                objectFit: 'cover',
+                objectPosition: 'center top',
+                display: 'block',
+              }}
+            />
           </div>
         </div>
       </section>

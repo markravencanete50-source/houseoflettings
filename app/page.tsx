@@ -481,10 +481,10 @@ export default function HomePage() {
           to   { opacity: 1; transform: translateY(0); }
         }
 
-        /* Section breathing gaps — always white for a clean visible break */
+        /* Section breathing gaps — navy so dark sections flow naturally */
         .section-gap, .section-gap-light, .section-gap-dark {
           height: clamp(56px, 7vw, 88px);
-          background: #ffffff;
+          background: #08122a;
         }
         @media (max-width: 768px) {
           .section-gap, .section-gap-light, .section-gap-dark {
@@ -665,7 +665,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      <div className="section-gap" />
+      <div style={{ height: 'clamp(56px,7vw,88px)', background: '#ffffff' }} />
 
       {/* ── BOOK A VALUATION ─────────────────────────────────── */}
       <style>{`
@@ -1040,29 +1040,41 @@ export default function HomePage() {
 
       <div className="section-gap" />
 
-      {/* ── PRICING TABLE ─────────────────────────────────────── */}
+      {/* ── PRICING TEASER ────────────────────────────────────── */}
       <style>{`
-        .pricing-row {
+        .pricing-teaser-grid {
           display: grid;
-          grid-template-columns: repeat(3, 1fr);
-          gap: 24px;
+          grid-template-columns: repeat(5, 1fr);
+          gap: 16px;
           max-width: 1100px;
-          margin: 0 auto 24px;
+          margin: 0 auto 48px;
         }
-        .pricing-row-2 {
-          display: grid;
-          grid-template-columns: repeat(2, 1fr);
-          gap: 24px;
-          max-width: 760px;
-          margin: 0 auto;
+        .pricing-teaser-card {
+          background: #162849;
+          border: 1px solid rgba(255,255,255,0.08);
+          border-radius: 10px;
+          padding: 28px 20px;
+          text-align: center;
+          transition: transform 0.25s ease, border-color 0.25s ease, background 0.25s ease;
+          cursor: pointer;
+          text-decoration: none;
+          display: block;
+        }
+        .pricing-teaser-card:hover {
+          transform: translateY(-5px);
+          border-color: rgba(74,144,217,0.5);
+          background: #1a3060;
+        }
+        .pricing-teaser-card.popular {
+          border: 2px solid #2563eb;
+          background: #0f1f3d;
+          position: relative;
         }
         @media (max-width: 900px) {
-          .pricing-row { grid-template-columns: 1fr 1fr; }
-          .pricing-row-2 { grid-template-columns: 1fr 1fr; max-width: 100%; }
+          .pricing-teaser-grid { grid-template-columns: repeat(3, 1fr); }
         }
-        @media (max-width: 600px) {
-          .pricing-row { grid-template-columns: 1fr; }
-          .pricing-row-2 { grid-template-columns: 1fr; max-width: 100%; }
+        @media (max-width: 560px) {
+          .pricing-teaser-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
         }
       `}</style>
       <section style={{ padding: 'clamp(60px, 8vw, 100px) clamp(20px, 5%, 5%)', position: 'relative', overflow: 'hidden' }}>
@@ -1072,13 +1084,10 @@ export default function HomePage() {
           backgroundSize: 'cover', backgroundPosition: 'center bottom',
           backgroundRepeat: 'no-repeat',
         }} />
-        <div style={{
-          position: 'absolute', inset: 0,
-          background: 'rgba(5, 12, 30, 0.88)',
-        }} />
+        <div style={{ position: 'absolute', inset: 0, background: 'rgba(5,12,30,0.88)' }} />
         <div style={{ position: 'relative', zIndex: 1 }}>
 
-          {/* Section header */}
+          {/* Header */}
           <div style={{ marginBottom: 56, textAlign: 'center' }}>
             <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 3, textTransform: 'uppercase', color: '#4a90d9', marginBottom: 14 }}>
               Transparent Pricing
@@ -1091,233 +1100,63 @@ export default function HomePage() {
             </p>
           </div>
 
-          {/* Row 1 — 3 cards */}
-          <div className="pricing-row">
-
-            {/* Virtual Tenant Find — £499 */}
-            <div className="pricing-card reveal reveal-delay-1" style={{
-              background: '#162849', borderRadius: 10, padding: '36px 28px',
-              border: '1px solid rgba(255,255,255,0.08)', display: 'flex', flexDirection: 'column',
-            }}>
-              <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.45)', marginBottom: 8, textTransform: 'uppercase', letterSpacing: 1 }}>One-time fee</div>
-              <div style={{ fontFamily: "'Poppins', sans-serif", fontSize: 52, fontWeight: 700, color: '#fff', lineHeight: 1, marginBottom: 4 }}>£499</div>
-              <div style={{ fontFamily: "'Poppins', sans-serif", fontSize: 18, fontWeight: 800, color: '#fff', marginBottom: 8, paddingBottom: 24, borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
-                Virtual Tenant Find
-              </div>
-              {[
-                'Collection of holding deposit',
-                'Right to Rent checks',
-                'Tenant application processing',
-                'Credit and affordability checks',
-                'Employment and landlord references',
-                'Guarantor referencing (where applicable)',
-                'Preparation of tenancy agreement',
-                'Collection of first month\'s rent and tenancy deposit',
-                'Deposit registration and prescribed information',
-                'Utility and council tax notifications',
-                'Landlord tenancy documentation pack',
-                'Transfer of funds to the landlord',
-              ].map(item => (
-                <div key={item} style={{ display: 'flex', gap: 10, marginBottom: 10, alignItems: 'flex-start' }}>
-                  <span style={{ color: '#2563eb', fontWeight: 700, fontSize: 14, marginTop: 2, flexShrink: 0 }}>✓</span>
-                  <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.7)', lineHeight: 1.5 }}>{item}</span>
+          {/* 5 teaser tiles */}
+          <div className="pricing-teaser-grid">
+            {[
+              { price: '£499', label: 'Virtual Tenant Find', type: 'One-time fee', popular: false },
+              { price: '£799', label: 'Expert Tenant Find', type: 'One-time fee', popular: true },
+              { price: '6%',   label: 'Rent Collection',    type: 'Monthly',       popular: false },
+              { price: '8%',   label: 'Full Management',    type: 'Monthly',       popular: false },
+              { price: '10%',  label: 'Comprehensive Management', type: 'Monthly', popular: false },
+            ].map((pkg, i) => (
+              <Link
+                key={pkg.label}
+                href="/pricing"
+                className={`pricing-teaser-card reveal reveal-delay-${i + 1}${pkg.popular ? ' popular' : ''}`}
+              >
+                {pkg.popular && (
+                  <div style={{
+                    position: 'absolute', top: -13, left: '50%', transform: 'translateX(-50%)',
+                    background: '#2563eb', color: '#fff', fontSize: 9, fontWeight: 800,
+                    letterSpacing: 2, textTransform: 'uppercase', padding: '4px 14px', borderRadius: 20,
+                    whiteSpace: 'nowrap',
+                  }}>
+                    Most Popular
+                  </div>
+                )}
+                <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 10, fontFamily: "'Poppins', sans-serif" }}>
+                  {pkg.type}
                 </div>
-              ))}
-              <div style={{ marginTop: 'auto', paddingTop: 28 }}>
-                <Link href="/register" style={{
-                  display: 'block', textAlign: 'center',
-                  padding: '14px 24px', background: '#2563eb', color: '#fff',
-                  borderRadius: 4, fontSize: 14, fontWeight: 700,
-                  letterSpacing: '0.5px', textTransform: 'uppercase', textDecoration: 'none',
-                }}>
-                  Get Started
-                </Link>
-              </div>
-            </div>
-
-            {/* Expert Tenant Find — £799 — Most Popular */}
-            <div className="pricing-card reveal reveal-delay-2" style={{
-              background: '#0f1f3d', borderRadius: 10, padding: '36px 28px',
-              border: '2px solid #2563eb', display: 'flex', flexDirection: 'column',
-              position: 'relative',
-            }}>
-              <div style={{
-                position: 'absolute', top: -14, left: '50%', transform: 'translateX(-50%)',
-                background: '#2563eb', color: '#fff', fontSize: 10, fontWeight: 800,
-                letterSpacing: 2, textTransform: 'uppercase', padding: '5px 16px', borderRadius: 20,
-                whiteSpace: 'nowrap',
-              }}>
-                Most Popular
-              </div>
-              <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.45)', marginBottom: 8, textTransform: 'uppercase', letterSpacing: 1 }}>One-time fee</div>
-              <div style={{ fontFamily: "'Poppins', sans-serif", fontSize: 52, fontWeight: 700, color: '#4a90d9', lineHeight: 1, marginBottom: 4 }}>£799</div>
-              <div style={{ fontFamily: "'Poppins', sans-serif", fontSize: 18, fontWeight: 800, color: '#fff', marginBottom: 8, paddingBottom: 16, borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
-                Expert Tenant Find
-              </div>
-              <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', fontStyle: 'italic', marginBottom: 12 }}>
-                ↳ Everything in Virtual, plus:
-              </div>
-              {[
-                'Professional property photography',
-                'Advertising on major property portals',
-                'Enquiry management and applicant screening',
-                'Agent-led property viewings',
-                'Viewing feedback and negotiation',
-                'Tenant handover and key management',
-              ].map(item => (
-                <div key={item} style={{ display: 'flex', gap: 10, marginBottom: 10, alignItems: 'flex-start' }}>
-                  <span style={{ color: '#4a90d9', fontWeight: 700, fontSize: 14, marginTop: 2, flexShrink: 0 }}>✓</span>
-                  <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.7)', lineHeight: 1.5 }}>{item}</span>
+                <div style={{ fontFamily: "'Poppins', sans-serif", fontSize: 'clamp(28px,3vw,40px)', fontWeight: 700, color: pkg.popular ? '#4a90d9' : '#fff', lineHeight: 1, marginBottom: 12 }}>
+                  {pkg.price}
                 </div>
-              ))}
-              <div style={{ marginTop: 'auto', paddingTop: 28 }}>
-                <Link href="/register" style={{
-                  display: 'block', textAlign: 'center',
-                  padding: '14px 24px', background: '#2563eb', color: '#fff',
-                  borderRadius: 4, fontSize: 14, fontWeight: 700,
-                  letterSpacing: '0.5px', textTransform: 'uppercase', textDecoration: 'none',
-                }}>
-                  Get Started
-                </Link>
-              </div>
-            </div>
-
-            {/* Rent Collection — 6% */}
-            <div className="pricing-card reveal reveal-delay-3" style={{
-              background: '#162849', borderRadius: 10, padding: '36px 28px',
-              border: '1px solid rgba(255,255,255,0.08)', display: 'flex', flexDirection: 'column',
-            }}>
-              <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.45)', marginBottom: 8, textTransform: 'uppercase', letterSpacing: 1 }}>Monthly percentage</div>
-              <div style={{ fontFamily: "'Poppins', sans-serif", fontSize: 52, fontWeight: 700, color: '#fff', lineHeight: 1, marginBottom: 4 }}>6%</div>
-              <div style={{ fontFamily: "'Poppins', sans-serif", fontSize: 18, fontWeight: 800, color: '#fff', marginBottom: 8, paddingBottom: 16, borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
-                Rent Collection
-              </div>
-              <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', fontStyle: 'italic', marginBottom: 12 }}>
-                ↳ Everything in Expert Tenant Find, plus:
-              </div>
-              {[
-                'Monthly rent collection',
-                'Rent payment monitoring',
-                'Arrears chasing and reminders',
-                'Monthly landlord statements',
-                'Annual rental income summary',
-                'Tenancy continuation management',
-                'Rent review guidance',
-                'Utility and compliance reminders',
-              ].map(item => (
-                <div key={item} style={{ display: 'flex', gap: 10, marginBottom: 10, alignItems: 'flex-start' }}>
-                  <span style={{ color: '#2563eb', fontWeight: 700, fontSize: 14, marginTop: 2, flexShrink: 0 }}>✓</span>
-                  <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.7)', lineHeight: 1.5 }}>{item}</span>
+                <div style={{ fontFamily: "'Poppins', sans-serif", fontSize: 13, fontWeight: 700, color: '#fff', lineHeight: 1.4 }}>
+                  {pkg.label}
                 </div>
-              ))}
-              <div style={{ marginTop: 'auto', paddingTop: 28 }}>
-                <Link href="/register" style={{
-                  display: 'block', textAlign: 'center',
-                  padding: '14px 24px', background: '#2563eb', color: '#fff',
-                  borderRadius: 4, fontSize: 14, fontWeight: 700,
-                  letterSpacing: '0.5px', textTransform: 'uppercase', textDecoration: 'none',
-                }}>
-                  Get Started
-                </Link>
-              </div>
-            </div>
+                <div style={{ marginTop: 16, fontSize: 11, color: '#4a90d9', fontWeight: 600, letterSpacing: 0.5, textTransform: 'uppercase' }}>
+                  View details →
+                </div>
+              </Link>
+            ))}
           </div>
 
-          {/* Row 2 — 2 cards centred */}
-          <div className="pricing-row-2">
-
-            {/* Full Management — 8% */}
-            <div style={{
-              background: '#162849', borderRadius: 10, padding: '36px 28px',
-              border: '1px solid rgba(255,255,255,0.08)', display: 'flex', flexDirection: 'column',
-            }}>
-              <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.45)', marginBottom: 8, textTransform: 'uppercase', letterSpacing: 1 }}>Monthly percentage</div>
-              <div style={{ fontFamily: "'Poppins', sans-serif", fontSize: 52, fontWeight: 700, color: '#fff', lineHeight: 1, marginBottom: 4 }}>8%</div>
-              <div style={{ fontFamily: "'Poppins', sans-serif", fontSize: 18, fontWeight: 800, color: '#fff', marginBottom: 8, paddingBottom: 16, borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
-                Full Management
-              </div>
-              <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', fontStyle: 'italic', marginBottom: 12 }}>
-                ↳ Everything in Rent Collection, plus:
-              </div>
-              {[
-                'Dedicated property management team',
-                'Day-to-day tenant communication',
-                'Maintenance reporting and contractor coordination',
-                'Repair quotation management',
-                'Emergency maintenance support',
-                'Key holding service',
-                'Compliance monitoring (Gas Safety, EICR, EPC)',
-                'Tenancy continuation and re-marketing management',
-                'End-of-tenancy administration',
-                'Deposit negotiation assistance',
-              ].map(item => (
-                <div key={item} style={{ display: 'flex', gap: 10, marginBottom: 10, alignItems: 'flex-start' }}>
-                  <span style={{ color: '#2563eb', fontWeight: 700, fontSize: 14, marginTop: 2, flexShrink: 0 }}>✓</span>
-                  <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.7)', lineHeight: 1.5 }}>{item}</span>
-                </div>
-              ))}
-              <div style={{ marginTop: 'auto', paddingTop: 28 }}>
-                <Link href="/register" style={{
-                  display: 'block', textAlign: 'center',
-                  padding: '14px 24px', background: '#2563eb', color: '#fff',
-                  borderRadius: 4, fontSize: 14, fontWeight: 700,
-                  letterSpacing: '0.5px', textTransform: 'uppercase', textDecoration: 'none',
-                }}>
-                  Get Started
-                </Link>
-              </div>
-            </div>
-
-            {/* Comprehensive Management — 10% — Most Complete */}
-            <div style={{
-              background: '#0f1f3d', borderRadius: 10, padding: '36px 28px',
-              border: '2px solid #4a6fa5', display: 'flex', flexDirection: 'column',
-              position: 'relative',
-            }}>
-              <div style={{
-                position: 'absolute', top: -14, left: '50%', transform: 'translateX(-50%)',
-                background: '#4a6fa5', color: '#fff', fontSize: 10, fontWeight: 800,
-                letterSpacing: 2, textTransform: 'uppercase', padding: '5px 16px', borderRadius: 20,
-                whiteSpace: 'nowrap',
-              }}>
-                Most Complete
-              </div>
-              <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.45)', marginBottom: 8, textTransform: 'uppercase', letterSpacing: 1 }}>Monthly percentage</div>
-              <div style={{ fontFamily: "'Poppins', sans-serif", fontSize: 52, fontWeight: 700, color: '#4a90d9', lineHeight: 1, marginBottom: 4 }}>10%</div>
-              <div style={{ fontFamily: "'Poppins', sans-serif", fontSize: 18, fontWeight: 800, color: '#fff', marginBottom: 8, paddingBottom: 16, borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
-                Comprehensive Management
-              </div>
-              <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', fontStyle: 'italic', marginBottom: 12 }}>
-                ↳ Everything in Full Management, plus:
-              </div>
-              {[
-                'Professional check-in inventory',
-                'Professional check-out inventory',
-                'Inventory comparison report',
-                'Deposit deduction assessment and evidence preparation',
-                'Contractor attendance coordination',
-                'Property compliance monitoring and reporting',
-                'End-of-tenancy dispute preparation (if required)',
-                'Priority management support',
-              ].map(item => (
-                <div key={item} style={{ display: 'flex', gap: 10, marginBottom: 10, alignItems: 'flex-start' }}>
-                  <span style={{ color: '#4a90d9', fontWeight: 700, fontSize: 14, marginTop: 2, flexShrink: 0 }}>✓</span>
-                  <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.7)', lineHeight: 1.5 }}>{item}</span>
-                </div>
-              ))}
-              <div style={{ marginTop: 'auto', paddingTop: 28 }}>
-                <Link href="/register" style={{
-                  display: 'block', textAlign: 'center',
-                  padding: '14px 24px', background: '#4a6fa5', color: '#fff',
-                  borderRadius: 4, fontSize: 14, fontWeight: 700,
-                  letterSpacing: '0.5px', textTransform: 'uppercase', textDecoration: 'none',
-                }}>
-                  Get Started
-                </Link>
-              </div>
-            </div>
-
+          {/* CTA to pricing page */}
+          <div style={{ textAlign: 'center' }}>
+            <Link href="/pricing" style={{
+              display: 'inline-block', padding: '16px 48px',
+              background: '#2563eb', color: '#fff', borderRadius: 6,
+              fontSize: 14, fontWeight: 700, letterSpacing: '0.5px',
+              textTransform: 'uppercase', textDecoration: 'none',
+              transition: 'background 0.2s',
+              fontFamily: "'Poppins', sans-serif",
+            }}
+              onMouseEnter={e => (e.currentTarget.style.background = '#1d4ed8')}
+              onMouseLeave={e => (e.currentTarget.style.background = '#2563eb')}
+            >
+              View Full Pricing &amp; Details
+            </Link>
           </div>
+
         </div>
       </section>
 

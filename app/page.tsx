@@ -555,13 +555,13 @@ export default function HomePage() {
         .split-grid {
           display: grid;
           grid-template-columns: 1fr 1fr;
-          min-height: 680px;
+          min-height: 860px;
         }
         .split-photo {
           background-size: contain;
           background-repeat: no-repeat;
           background-position: center center;
-          min-height: 680px;
+          min-height: 860px;
           background-color: #0a1628;
         }
         .split-text {
@@ -632,7 +632,13 @@ export default function HomePage() {
               <li><span className="split-check">✓</span>Free, no-obligation valuation from a local expert</li>
               <li><span className="split-check">✓</span>Accurate rental and sales valuations backed by live market data</li>
               <li><span className="split-check">✓</span>Advice on how to maximise your property&apos;s return</li>
+              <li><span className="split-check">✓</span>Better tenant quality — we find and secure reliable tenants</li>
+              <li><span className="split-check">✓</span>Full compliance, legal, and rent protection support</li>
+              <li><span className="split-check">✓</span>Day-to-day management handled by experts</li>
             </ul>
+            <p style={{ fontFamily: "'Poppins', sans-serif", fontSize: 13, color: '#6b7280', lineHeight: 1.7, marginBottom: 28 }}>
+              Whether you own one property or a full portfolio, our team is here to protect your investment and maximise your returns — so you can enjoy the freedom of hands-off landlording.
+            </p>
             <ValuationInlineButton />
           </div>
         </div>

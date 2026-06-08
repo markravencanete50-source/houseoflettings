@@ -481,6 +481,25 @@ export default function HomePage() {
           to   { opacity: 1; transform: translateY(0); }
         }
 
+        /* Section breathing gaps */
+        .section-gap {
+          height: clamp(48px, 7vw, 80px);
+          background: #fff;
+        }
+        .section-gap-light {
+          height: clamp(48px, 7vw, 80px);
+          background: #f7f8fa;
+        }
+        .section-gap-dark {
+          height: clamp(40px, 5vw, 60px);
+          background: #08122a;
+        }
+        @media (max-width: 768px) {
+          .section-gap, .section-gap-light, .section-gap-dark {
+            height: 40px;
+          }
+        }
+
         /* Scroll progress bar */
         #hol-progress {
           position: fixed; top: 0; left: 0; height: 3px;
@@ -701,15 +720,23 @@ export default function HomePage() {
           </div>
           <div className="bav-photo">
             <img src="/images/Background_Book_Valuation.png" alt="Book a Valuation" />
-            {/* Subtle corner vignette only */}
+            {/* Blend: fade left edge into navy text panel */}
             <div style={{
               position: 'absolute', inset: 0,
-              background: 'radial-gradient(ellipse at center, transparent 55%, rgba(8,18,42,0.28) 100%)',
+              background: 'linear-gradient(to right, #08122a 0%, rgba(8,18,42,0.55) 35%, rgba(8,18,42,0) 70%)',
+              pointerEvents: 'none',
+            }} />
+            {/* Vignette: top + bottom fade */}
+            <div style={{
+              position: 'absolute', inset: 0,
+              background: 'linear-gradient(to bottom, rgba(8,18,42,0.45) 0%, transparent 25%, transparent 75%, rgba(8,18,42,0.45) 100%)',
               pointerEvents: 'none',
             }} />
           </div>
         </div>
       </section>
+
+      <div className="section-gap-dark" />
 
       {/* ── BOOK A VIEWING ───────────────────────────────────── */}
       <style>{`
@@ -742,10 +769,16 @@ export default function HomePage() {
         <div className="bvw-grid">
           <div className="bvw-photo">
             <img src="/images/agent-photo.jpeg" alt="Book a Viewing" />
-            {/* Subtle corner vignette only */}
+            {/* Blend: fade right edge into navy text panel */}
             <div style={{
               position: 'absolute', inset: 0,
-              background: 'radial-gradient(ellipse at center, transparent 55%, rgba(8,18,42,0.28) 100%)',
+              background: 'linear-gradient(to left, #08122a 0%, rgba(8,18,42,0.55) 35%, rgba(8,18,42,0) 70%)',
+              pointerEvents: 'none',
+            }} />
+            {/* Vignette: top + bottom */}
+            <div style={{
+              position: 'absolute', inset: 0,
+              background: 'linear-gradient(to bottom, rgba(8,18,42,0.45) 0%, transparent 25%, transparent 75%, rgba(8,18,42,0.45) 100%)',
               pointerEvents: 'none',
             }} />
           </div>
@@ -767,6 +800,8 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+
+      <div className="section-gap" />
 
       {/* ── WHY BOOK A VALUATION + VIEWING ───────────────────── */}
       <style>{`
@@ -863,10 +898,16 @@ export default function HomePage() {
                 display: 'block',
               }}
             />
-            {/* Subtle corner vignette only */}
+            {/* Blend: fade right edge into light text panel */}
             <div style={{
               position: 'absolute', inset: 0,
-              background: 'radial-gradient(ellipse at center, transparent 55%, rgba(0,0,0,0.18) 100%)',
+              background: 'linear-gradient(to right, transparent 40%, rgba(247,248,250,0.6) 72%, #f7f8fa 100%)',
+              pointerEvents: 'none',
+            }} />
+            {/* Vignette: top + bottom */}
+            <div style={{
+              position: 'absolute', inset: 0,
+              background: 'linear-gradient(to bottom, rgba(247,248,250,0.3) 0%, transparent 20%, transparent 80%, rgba(247,248,250,0.3) 100%)',
               pointerEvents: 'none',
             }} />
           </div>
@@ -893,6 +934,7 @@ export default function HomePage() {
       </section>
 
       {/* Viewing — text left, photo right */}
+      <div className="section-gap-light" />
       <section className="split-section" style={{ background: '#ffffff' }}>
         <div className="split-grid" style={{ alignItems: 'stretch' }}>
           <div className="split-text" style={{ background: '#ffffff' }}>
@@ -912,15 +954,23 @@ export default function HomePage() {
             className="split-photo"
             style={{ backgroundImage: 'url(/images/Tenants_Book_viewing_background.png)', backgroundPosition: 'center center', alignSelf: 'stretch', position: 'relative' }}
           >
-            {/* Subtle corner vignette only */}
+            {/* Blend: fade left edge into white text panel */}
             <div style={{
               position: 'absolute', inset: 0,
-              background: 'radial-gradient(ellipse at center, transparent 55%, rgba(0,0,0,0.18) 100%)',
+              background: 'linear-gradient(to left, transparent 40%, rgba(255,255,255,0.6) 72%, #ffffff 100%)',
+              pointerEvents: 'none',
+            }} />
+            {/* Vignette: top + bottom */}
+            <div style={{
+              position: 'absolute', inset: 0,
+              background: 'linear-gradient(to bottom, rgba(255,255,255,0.3) 0%, transparent 20%, transparent 80%, rgba(255,255,255,0.3) 100%)',
               pointerEvents: 'none',
             }} />
           </div>
         </div>
       </section>
+
+      <div className="section-gap" />
 
       {/* ── INFO CARDS ───────────────────────────────────────── */}
       <style>{`
@@ -993,6 +1043,8 @@ export default function HomePage() {
         </div>
         </div>
       </section>
+
+      <div className="section-gap-dark" />
 
       {/* ── PRICING TABLE ─────────────────────────────────────── */}
       <style>{`
@@ -1275,6 +1327,8 @@ export default function HomePage() {
         </div>
       </section>
 
+      <div className="section-gap" />
+
       {/* ── SEARCH BAR ───────────────────────────────────────── */}
       <style>{`
         .search-grid {
@@ -1396,6 +1450,8 @@ export default function HomePage() {
         </div>
       </section>
 
+      <div className="section-gap-light" />
+
       {/* ── FEATURED LISTINGS ────────────────────────────────── */}
       <style>{`
         .listings-header {
@@ -1446,6 +1502,8 @@ export default function HomePage() {
         )}
       </section>
 
+      <div className="section-gap" />
+
       {/* ── HOW IT WORKS ─────────────────────────────────────── */}
       <style>{`
         .how-grid {
@@ -1460,7 +1518,7 @@ export default function HomePage() {
           }
         }
       `}</style>
-      <section style={{ padding: 'clamp(60px, 8vw, 90px) clamp(20px, 5%, 5%)', background: '#f7f8fa', borderTop: '1px solid #e5e7eb' }}>
+      <section style={{ padding: 'clamp(60px, 8vw, 90px) clamp(20px, 5%, 5%)', background: '#f7f8fa' }}>
         <div style={{ marginBottom: 56 }}>
           <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 3, textTransform: 'uppercase', color: '#2563eb', marginBottom: 14 }}>
             How It Works
@@ -1519,8 +1577,12 @@ export default function HomePage() {
         </div>
       </section>
 
+      <div className="section-gap" />
+
       {/* ── IMAGE GALLERY ─────────────────────────────────────── */}
       <ImageGallery />
+
+      <div className="section-gap" />
 
       {/* ── CTA BANNER ───────────────────────────────────────── */}
       <style>{`
@@ -1579,6 +1641,8 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+
+      <div className="section-gap-dark" />
 
       {/* ── FOOTER ───────────────────────────────────────────── */}
       <footer style={{

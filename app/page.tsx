@@ -723,15 +723,14 @@ export default function HomePage() {
         .bvw-grid {
           display: grid;
           grid-template-columns: 1fr 1fr;
+          min-height: 560px;
         }
         .bvw-photo {
-          position: relative; overflow: hidden;
-          aspect-ratio: 1 / 1; max-height: 500px;
-          background: #08122a; display: flex; align-items: center; justify-content: center;
+          position: relative; overflow: hidden; min-height: 560px;
         }
         .bvw-photo img {
           width: 100%; height: 100%;
-          object-fit: contain;
+          object-fit: cover; object-position: center right;
           display: block;
         }
         .bvw-text {
@@ -777,19 +776,19 @@ export default function HomePage() {
         .split-grid {
           display: grid;
           grid-template-columns: 1fr 1fr;
-          min-height: 500px;
+          min-height: 860px;
         }
         .split-photo {
           background-size: cover;
           background-repeat: no-repeat;
           background-position: center center;
-          min-height: 500px;
+          min-height: 860px;
         }
         .split-photo-contain {
           background-size: contain;
           background-repeat: no-repeat;
           background-position: center center;
-          min-height: 500px;
+          min-height: 860px;
           background-color: #08122a;
         }
         .split-text {
@@ -872,15 +871,16 @@ export default function HomePage() {
             </p>
             <ValuationInlineButton />
           </div>
-          <div className="split-img-panel" style={{ overflow: 'hidden', aspectRatio: '1/1', maxHeight: 500, display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', background: '#08122a' }}>
+          <div className="split-img-panel" style={{ overflow: 'hidden', minHeight: 860, display: 'flex', alignItems: 'stretch', position: 'relative' }}>
             <img
               src="/images/Landlord_Book_valuation_background.png"
               alt="Book a Valuation"
               style={{
                 width: '100%',
                 height: '100%',
-                objectFit: 'contain',
-                objectPosition: 'center center',
+                minHeight: 860,
+                objectFit: 'cover',
+                objectPosition: 'center top',
                 display: 'block',
               }}
             />
@@ -890,7 +890,7 @@ export default function HomePage() {
 
       {/* Viewing — photo left, text right */}
       <section className="split-section" style={{ background: '#ffffff' }}>
-        <div className="split-grid" style={{ alignItems: 'stretch', minHeight: 500 }}>
+        <div className="split-grid" style={{ alignItems: 'stretch', minHeight: 560 }}>
           <div
             className="split-photo"
             style={{ backgroundImage: 'url(/images/Tenants_Book_viewing_background.png)', backgroundPosition: 'center center', alignSelf: 'stretch', minHeight: 560 }}

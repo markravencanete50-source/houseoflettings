@@ -558,11 +558,17 @@ export default function HomePage() {
           min-height: 860px;
         }
         .split-photo {
+          background-size: cover;
+          background-repeat: no-repeat;
+          background-position: center center;
+          min-height: 860px;
+        }
+        .split-photo-contain {
           background-size: contain;
           background-repeat: no-repeat;
           background-position: center center;
           min-height: 860px;
-          background-color: #0a1628;
+          background-color: #08122a;
         }
         .split-text {
           padding: clamp(48px, 6vw, 88px) clamp(28px, 5vw, 72px);
@@ -604,8 +610,8 @@ export default function HomePage() {
           .split-grid {
             grid-template-columns: 1fr !important;
           }
-          .split-photo {
-            min-height: 300px !important;
+          .split-photo, .split-photo-contain {
+            min-height: 320px !important;
             order: -1 !important;
           }
           .split-text {
@@ -619,8 +625,8 @@ export default function HomePage() {
       <section className="split-section" style={{ background: '#f7f8fa' }}>
         <div className="split-grid">
           <div
-            className="split-photo"
-            style={{ backgroundImage: 'url(/images/Landlord_Book_valuation_background.png)', backgroundPosition: 'center top' }}
+            className="split-photo-contain"
+            style={{ backgroundImage: 'url(/images/Landlord_Book_valuation_background.png)' }}
           />
           <div className="split-text" style={{ background: '#f7f8fa' }}>
             <p className="split-eyebrow">For Landlords</p>
@@ -646,7 +652,7 @@ export default function HomePage() {
 
       {/* Viewing — text left, photo right */}
       <section className="split-section" style={{ background: '#ffffff' }}>
-        <div className="split-grid">
+        <div className="split-grid" style={{ alignItems: 'stretch' }}>
           <div className="split-text" style={{ background: '#ffffff' }}>
             <p className="split-eyebrow">For Tenants</p>
             <h2 className="split-title">Find your perfect home with House of Lettings</h2>
@@ -662,7 +668,7 @@ export default function HomePage() {
           </div>
           <div
             className="split-photo"
-            style={{ backgroundImage: 'url(/images/Tenants_Book_viewing_background.png)', backgroundPosition: 'center top' }}
+            style={{ backgroundImage: 'url(/images/Tenants_Book_viewing_background.png)', backgroundPosition: 'center center', alignSelf: 'stretch' }}
           />
         </div>
       </section>

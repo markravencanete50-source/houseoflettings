@@ -723,14 +723,15 @@ export default function HomePage() {
         .bvw-grid {
           display: grid;
           grid-template-columns: 1fr 1fr;
-          min-height: 420px;
         }
         .bvw-photo {
-          position: relative; overflow: hidden; min-height: 420px;
+          position: relative; overflow: hidden;
+          aspect-ratio: 1 / 1; max-height: 500px;
+          background: #08122a; display: flex; align-items: center; justify-content: center;
         }
         .bvw-photo img {
           width: 100%; height: 100%;
-          object-fit: cover; object-position: center right;
+          object-fit: contain;
           display: block;
         }
         .bvw-text {
@@ -871,16 +872,15 @@ export default function HomePage() {
             </p>
             <ValuationInlineButton />
           </div>
-          <div className="split-img-panel" style={{ overflow: 'hidden', minHeight: 500, display: 'flex', alignItems: 'stretch', position: 'relative' }}>
+          <div className="split-img-panel" style={{ overflow: 'hidden', aspectRatio: '1/1', maxHeight: 500, display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', background: '#08122a' }}>
             <img
               src="/images/Landlord_Book_valuation_background.png"
               alt="Book a Valuation"
               style={{
                 width: '100%',
                 height: '100%',
-                minHeight: 860,
-                objectFit: 'cover',
-                objectPosition: 'center top',
+                objectFit: 'contain',
+                objectPosition: 'center center',
                 display: 'block',
               }}
             />

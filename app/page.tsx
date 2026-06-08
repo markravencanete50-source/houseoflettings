@@ -549,6 +549,124 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* ── WHY BOOK A VALUATION ─────────────────────────────── */}
+      <section style={{ background: '#f7f8fa', overflow: 'hidden' }}>
+        <div style={{
+          display: 'grid', gridTemplateColumns: '1fr 1fr',
+          minHeight: 500,
+        }}>
+          {/* Photo — left */}
+          <div style={{
+            backgroundImage: 'url(/images/Landlord_Book_valuation_background.png)',
+            backgroundSize: 'cover', backgroundPosition: 'center',
+            minHeight: 420,
+          }} />
+
+          {/* Text — right */}
+          <div style={{
+            padding: 'clamp(48px, 6vw, 88px) clamp(32px, 5vw, 72px)',
+            display: 'flex', flexDirection: 'column', justifyContent: 'center',
+            background: '#f7f8fa',
+          }}>
+            <p style={{
+              fontFamily: "'Poppins', sans-serif",
+              fontSize: 11, fontWeight: 700, letterSpacing: '0.18em',
+              textTransform: 'uppercase', color: '#2563eb', marginBottom: 16,
+            }}>For Landlords</p>
+            <h2 style={{
+              fontFamily: "'Poppins', sans-serif",
+              fontSize: 'clamp(24px, 3vw, 36px)', fontWeight: 700,
+              color: '#0f1f3d', lineHeight: 1.25, marginBottom: 18,
+            }}>
+              Why book a valuation with House of Lettings?
+            </h2>
+            <p style={{
+              fontFamily: "'Poppins', sans-serif",
+              fontSize: 15, color: '#4b5563', lineHeight: 1.8,
+              marginBottom: 28, maxWidth: 440,
+            }}>
+              Booking a valuation with House of Lettings will save you time, money, and stress. Our local experts give you an honest, data-driven view of what your property is worth — so you can make informed decisions with confidence.
+            </p>
+            <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 36px', display: 'flex', flexDirection: 'column', gap: 12 }}>
+              {[
+                'Free, no-obligation valuation from a local expert',
+                'Accurate rental and sales valuations backed by live market data',
+                'Advice on how to maximise your property's return',
+              ].map((item, i) => (
+                <li key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 12, fontFamily: "'Poppins', sans-serif", fontSize: 14, color: '#374151' }}>
+                  <span style={{ color: '#2563eb', fontWeight: 700, fontSize: 16, lineHeight: 1.4, flexShrink: 0 }}>✓</span>
+                  {item}
+                </li>
+              ))}
+            </ul>
+            <ValuationInlineButton />
+          </div>
+        </div>
+
+        {/* Mobile: stack vertically */}
+        <style>{`
+          @media (max-width: 768px) {
+            .split-grid { grid-template-columns: 1fr !important; }
+            .split-photo { min-height: 280px !important; }
+          }
+        `}</style>
+      </section>
+
+      {/* ── WHY BOOK A VIEWING ───────────────────────────────── */}
+      <section style={{ background: '#ffffff', overflow: 'hidden' }}>
+        <div style={{
+          display: 'grid', gridTemplateColumns: '1fr 1fr',
+          minHeight: 500,
+        }}>
+          {/* Text — left */}
+          <div style={{
+            padding: 'clamp(48px, 6vw, 88px) clamp(32px, 5vw, 72px)',
+            display: 'flex', flexDirection: 'column', justifyContent: 'center',
+            background: '#ffffff',
+          }}>
+            <p style={{
+              fontFamily: "'Poppins', sans-serif",
+              fontSize: 11, fontWeight: 700, letterSpacing: '0.18em',
+              textTransform: 'uppercase', color: '#2563eb', marginBottom: 16,
+            }}>For Tenants</p>
+            <h2 style={{
+              fontFamily: "'Poppins', sans-serif",
+              fontSize: 'clamp(24px, 3vw, 36px)', fontWeight: 700,
+              color: '#0f1f3d', lineHeight: 1.25, marginBottom: 18,
+            }}>
+              Find your perfect home with House of Lettings
+            </h2>
+            <p style={{
+              fontFamily: "'Poppins', sans-serif",
+              fontSize: 15, color: '#4b5563', lineHeight: 1.8,
+              marginBottom: 28, maxWidth: 440,
+            }}>
+              Booking a viewing with us is quick, easy, and puts you first. We take the pressure off your search — matching you with the right properties and guiding you every step of the way.
+            </p>
+            <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 36px', display: 'flex', flexDirection: 'column', gap: 12 }}>
+              {[
+                'View properties before they hit the open market',
+                'Dedicated agent to handle all enquiries and negotiations',
+                'Transparent process with no hidden fees for tenants',
+              ].map((item, i) => (
+                <li key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 12, fontFamily: "'Poppins', sans-serif", fontSize: 14, color: '#374151' }}>
+                  <span style={{ color: '#2563eb', fontWeight: 700, fontSize: 16, lineHeight: 1.4, flexShrink: 0 }}>✓</span>
+                  {item}
+                </li>
+              ))}
+            </ul>
+            <BookViewingInlineButton />
+          </div>
+
+          {/* Photo — right */}
+          <div style={{
+            backgroundImage: 'url(/images/Tenants_Book_viewing_background.png)',
+            backgroundSize: 'cover', backgroundPosition: 'center',
+            minHeight: 420,
+          }} />
+        </div>
+      </section>
+
       {/* ── INFO CARDS ───────────────────────────────────────── */}
       <section style={{ padding: '90px 5%', position: 'relative', overflow: 'hidden' }}>
         {/* Services background image - agent with clients */}

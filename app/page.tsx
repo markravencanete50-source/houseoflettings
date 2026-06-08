@@ -614,6 +614,13 @@ export default function HomePage() {
             min-height: 320px !important;
             order: -1 !important;
           }
+          .split-img-panel {
+            min-height: 360px !important;
+            order: -1 !important;
+          }
+          .split-img-panel img {
+            min-height: 360px !important;
+          }
           .split-text {
             padding: 40px 24px !important;
           }
@@ -624,10 +631,20 @@ export default function HomePage() {
       {/* Valuation — photo left, text right */}
       <section className="split-section" style={{ background: '#f7f8fa' }}>
         <div className="split-grid">
-          <div
-            className="split-photo-contain"
-            style={{ backgroundImage: 'url(/images/Landlord_Book_valuation_background.png)' }}
-          />
+          <div className="split-img-panel" style={{ overflow: 'hidden', minHeight: 860, display: 'flex', alignItems: 'stretch' }}>
+            <img
+              src="/images/Landlord_Book_valuation_background.png"
+              alt="Book a Valuation"
+              style={{
+                width: '100%',
+                height: '100%',
+                minHeight: 860,
+                objectFit: 'cover',
+                objectPosition: 'center top',
+                display: 'block',
+              }}
+            />
+          </div>
           <div className="split-text" style={{ background: '#f7f8fa' }}>
             <p className="split-eyebrow">For Landlords</p>
             <h2 className="split-title">Why book a valuation with House of Lettings?</h2>

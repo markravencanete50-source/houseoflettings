@@ -555,12 +555,14 @@ export default function HomePage() {
         .split-grid {
           display: grid;
           grid-template-columns: 1fr 1fr;
-          min-height: 520px;
+          min-height: 680px;
         }
         .split-photo {
-          background-size: cover;
-          background-position: center top;
-          min-height: 520px;
+          background-size: contain;
+          background-repeat: no-repeat;
+          background-position: center center;
+          min-height: 680px;
+          background-color: #0a1628;
         }
         .split-text {
           padding: clamp(48px, 6vw, 88px) clamp(28px, 5vw, 72px);

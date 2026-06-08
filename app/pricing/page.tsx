@@ -166,18 +166,17 @@ export default function PricingPage() {
   };
 
   const inputStyle: React.CSSProperties = {
-    width: '100%', padding: '13px 16px',
-    background: 'rgba(255,255,255,0.06)',
-    border: '1.5px solid rgba(255,255,255,0.12)',
-    borderRadius: 8, color: '#fff', fontSize: 14,
+    width: '100%', padding: '12px 14px',
+    background: '#fff',
+    border: '1.5px solid #e5e7eb',
+    borderRadius: 8, color: '#111827', fontSize: 14,
     fontFamily: "'Poppins', sans-serif",
     outline: 'none', boxSizing: 'border-box',
     transition: 'border-color 0.2s',
   };
   const labelStyle: React.CSSProperties = {
-    display: 'block', fontSize: 11, fontWeight: 700,
-    letterSpacing: 1.5, textTransform: 'uppercase',
-    color: 'rgba(255,255,255,0.45)', marginBottom: 7,
+    display: 'block', fontSize: 13, fontWeight: 500,
+    color: '#374151', marginBottom: 6,
     fontFamily: "'Poppins', sans-serif",
   };
 
@@ -620,8 +619,8 @@ export default function PricingPage() {
           onClick={(e) => { if (e.target === e.currentTarget) closeModal(); }}
           style={{
             position: 'fixed', inset: 0, zIndex: 9999,
-            background: 'rgba(5,12,30,0.85)',
-            backdropFilter: 'blur(6px)',
+            background: 'rgba(0,0,0,0.5)',
+            backdropFilter: 'blur(4px)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             padding: '20px',
             animation: 'fadeIn 0.2s ease',
@@ -630,26 +629,23 @@ export default function PricingPage() {
           <style>{`
             @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
             @keyframes slideUp { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: translateY(0); } }
-            .gs-input:focus { border-color: #2563eb !important; background: rgba(37,99,235,0.08) !important; }
-            .gs-input::placeholder { color: rgba(255,255,255,0.2); }
-            .gs-input option { background: #0f1f3d; color: #fff; }
+            .gs-input:focus { border-color: #2563eb !important; }
+            .gs-input::placeholder { color: #9ca3af; }
+            .gs-input option { background: #fff; color: #111; }
           `}</style>
 
           <div style={{
-            background: '#0d1e3d',
-            border: '1px solid rgba(255,255,255,0.10)',
-            borderRadius: 18,
-            width: '100%', maxWidth: 560,
+            background: '#fff',
+            borderRadius: 16,
+            width: '100%', maxWidth: 540,
             maxHeight: '90vh', overflowY: 'auto',
             animation: 'slideUp 0.25s ease',
             scrollbarWidth: 'none',
+            boxShadow: '0 20px 60px rgba(0,0,0,0.3)',
           }}>
             {/* Modal header */}
             <div style={{
-              background: 'linear-gradient(135deg, #0f1f3d 0%, #162849 100%)',
-              borderBottom: '1px solid rgba(255,255,255,0.08)',
-              padding: '28px 32px 24px',
-              borderRadius: '18px 18px 0 0',
+              padding: '24px 28px 0',
               position: 'relative',
             }}>
               {/* Close button */}
@@ -657,8 +653,8 @@ export default function PricingPage() {
                 onClick={closeModal}
                 style={{
                   position: 'absolute', top: 20, right: 20,
-                  background: 'rgba(255,255,255,0.08)', border: 'none',
-                  color: 'rgba(255,255,255,0.6)', width: 32, height: 32,
+                  background: '#f3f4f6', border: 'none',
+                  color: '#6b7280', width: 32, height: 32,
                   borderRadius: '50%', fontSize: 16, cursor: 'pointer',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                   transition: 'all 0.2s',
@@ -667,57 +663,66 @@ export default function PricingPage() {
 
               {/* Selected package badge */}
               <div style={{
-                fontSize: 10, fontWeight: 700, letterSpacing: 2,
-                textTransform: 'uppercase', color: '#4a90d9',
-                marginBottom: 10, fontFamily: "'Poppins', sans-serif",
+                display: 'inline-flex', alignItems: 'center', gap: 8,
+                background: '#1a3c5e',
+                borderRadius: 20, padding: '5px 14px',
+                marginBottom: 14,
               }}>
-                Selected Package
-              </div>
-              <div style={{
-                display: 'inline-flex', alignItems: 'center', gap: 10,
-                background: `rgba(37,99,235,0.15)`,
-                border: `1.5px solid ${pkg.color}`,
-                borderRadius: 10, padding: '10px 20px',
-                marginBottom: 16,
-              }}>
-                <div style={{
-                  width: 8, height: 8, borderRadius: '50%',
-                  background: pkg.color, flexShrink: 0,
-                }} />
                 <span style={{
                   fontFamily: "'Poppins', sans-serif",
-                  fontSize: 16, fontWeight: 700, color: '#fff',
+                  fontSize: 12, fontWeight: 700, color: '#fff',
+                  letterSpacing: 0.5,
                 }}>{pkg.label}</span>
-                <span style={{
-                  fontFamily: "'Poppins', sans-serif",
-                  fontSize: 14, fontWeight: 600, color: pkg.color,
-                }}>{pkg.price}</span>
               </div>
+
               <h2 style={{
                 fontFamily: "'Poppins', sans-serif",
-                fontSize: 22, fontWeight: 700, color: '#fff',
-                margin: '0 0 4px',
+                fontSize: 26, fontWeight: 700, color: '#111827',
+                margin: '0 0 6px',
               }}>Get Started</h2>
               <p style={{
                 fontFamily: "'Poppins', sans-serif",
-                fontSize: 13, color: 'rgba(255,255,255,0.45)', margin: 0,
+                fontSize: 13, color: '#6b7280', margin: '0 0 20px',
               }}>Fill in your details and we&apos;ll be in touch within 24–48 hours.</p>
+
+              {/* Benefits bar */}
+              <div style={{
+                background: '#f8f9ff',
+                border: '1px solid #e5e7eb',
+                borderRadius: 10, padding: '14px 18px',
+                marginBottom: 24,
+                display: 'flex', flexDirection: 'column', gap: 8,
+              }}>
+                {['Takes less than two minutes', 'We&apos;ll match you with the right package', 'No commitment until you speak to us'].map((text, i) => (
+                  <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                    <span style={{ color: '#2563eb', fontSize: 14, fontWeight: 700 }}>✓</span>
+                    <span style={{ fontFamily: "'Poppins', sans-serif", fontSize: 13, color: '#374151' }}
+                      dangerouslySetInnerHTML={{ __html: text }} />
+                  </div>
+                ))}
+              </div>
+
+              <h3 style={{
+                fontFamily: "'Poppins', sans-serif",
+                fontSize: 15, fontWeight: 600, color: '#111827',
+                margin: '0 0 16px',
+              }}>Your details</h3>
             </div>
 
             {/* Modal body */}
-            <div style={{ padding: '28px 32px 32px' }}>
+            <div style={{ padding: '0 28px 28px' }}>
               {submitted ? (
                 <div style={{ textAlign: 'center', padding: '32px 0' }}>
                   <div style={{ fontSize: 48, marginBottom: 16 }}>🎉</div>
                   <h3 style={{
                     fontFamily: "'Poppins', sans-serif", fontSize: 20,
-                    fontWeight: 700, color: '#fff', marginBottom: 12,
+                    fontWeight: 700, color: '#111827', marginBottom: 12,
                   }}>Registration Received!</h3>
                   <p style={{
                     fontFamily: "'Poppins', sans-serif", fontSize: 14,
-                    color: 'rgba(255,255,255,0.55)', lineHeight: 1.7, marginBottom: 28,
+                    color: '#6b7280', lineHeight: 1.7, marginBottom: 28,
                   }}>
-                    We&apos;ve sent a confirmation to <strong style={{ color: '#fff' }}>{formData.email}</strong>.<br />
+                    We&apos;ve sent a confirmation to <strong style={{ color: '#111' }}>{formData.email}</strong>.<br />
                     A member of our team will be in touch shortly.
                   </p>
                   <button
@@ -817,7 +822,7 @@ export default function PricingPage() {
                     <input
                       className="gs-input"
                       type="date"
-                      style={{ ...inputStyle, colorScheme: 'dark' }}
+                      style={{ ...inputStyle, colorScheme: 'light' }}
                       value={formData.startDate}
                       min={new Date().toISOString().split('T')[0]}
                       onChange={e => setFormData(p => ({ ...p, startDate: e.target.value }))}
@@ -826,9 +831,9 @@ export default function PricingPage() {
 
                   {error && (
                     <div style={{
-                      background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)',
+                      background: '#fef2f2', border: '1px solid #fecaca',
                       borderRadius: 8, padding: '12px 16px',
-                      color: '#f87171', fontSize: 13, fontFamily: "'Poppins', sans-serif",
+                      color: '#dc2626', fontSize: 13, fontFamily: "'Poppins', sans-serif",
                     }}>{error}</div>
                   )}
 
@@ -836,8 +841,8 @@ export default function PricingPage() {
                     onClick={handleSubmit}
                     disabled={submitting}
                     style={{
-                      width: '100%', padding: '15px 24px',
-                      background: submitting ? 'rgba(37,99,235,0.5)' : '#2563eb',
+                      width: '100%', padding: '14px 24px',
+                      background: submitting ? '#93c5fd' : '#2563eb',
                       color: '#fff', border: 'none', borderRadius: 8,
                       fontSize: 14, fontWeight: 700, letterSpacing: '0.5px',
                       textTransform: 'uppercase', cursor: submitting ? 'wait' : 'pointer',

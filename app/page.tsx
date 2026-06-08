@@ -961,30 +961,6 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Viewing — photo left, text right */}
-      <section className="split-section" style={{ background: '#ffffff' }}>
-        <div className="split-grid" style={{ alignItems: 'stretch', minHeight: 560 }}>
-          <div
-            className="split-photo"
-            style={{ backgroundImage: 'url(/images/Tenants_Book_viewing_background.png)', backgroundPosition: 'center center', alignSelf: 'stretch', minHeight: 560 }}
-          />
-          <div className="split-text" style={{ background: '#ffffff', justifyContent: 'center' }}>
-            <p className="split-eyebrow">For Tenants</p>
-            <h2 className="split-title">Find your perfect home with House of Lettings</h2>
-            <p className="split-body">
-              Booking a viewing with us is quick, easy, and puts you first. We take the pressure off your search — matching you with the right properties and guiding you every step of the way.
-            </p>
-            <ul className="split-list">
-              <li><span className="split-check">✓</span>View properties before they hit the open market</li>
-              <li><span className="split-check">✓</span>Dedicated agent to handle all enquiries and negotiations</li>
-              <li><span className="split-check">✓</span>Transparent process with no hidden fees for tenants</li>
-            </ul>
-            <BookViewingInlineButton />
-          </div>
-        </div>
-      </section>
-
-
 
       {/* ── PRICING TEASER ────────────────────────────────────── */}
       <style>{`
@@ -1105,6 +1081,31 @@ export default function HomePage() {
 
         </div>
       </section>
+
+
+      {/* Viewing — photo left, text right */}
+      <section className="split-section" style={{ background: '#ffffff' }}>
+        <div className="split-grid" style={{ alignItems: 'stretch', minHeight: 560 }}>
+          <div
+            className="split-photo"
+            style={{ backgroundImage: 'url(/images/Tenants_Book_viewing_background.png)', backgroundPosition: 'center center', alignSelf: 'stretch', minHeight: 560 }}
+          />
+          <div className="split-text" style={{ background: '#ffffff', justifyContent: 'center' }}>
+            <p className="split-eyebrow">For Tenants</p>
+            <h2 className="split-title">Find your perfect home with House of Lettings</h2>
+            <p className="split-body">
+              Booking a viewing with us is quick, easy, and puts you first. We take the pressure off your search — matching you with the right properties and guiding you every step of the way.
+            </p>
+            <ul className="split-list">
+              <li><span className="split-check">✓</span>View properties before they hit the open market</li>
+              <li><span className="split-check">✓</span>Dedicated agent to handle all enquiries and negotiations</li>
+              <li><span className="split-check">✓</span>Transparent process with no hidden fees for tenants</li>
+            </ul>
+            <BookViewingInlineButton />
+          </div>
+        </div>
+      </section>
+
 
 
       {/* ── SEARCH BAR ───────────────────────────────────────── */}

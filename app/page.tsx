@@ -481,22 +481,14 @@ export default function HomePage() {
           to   { opacity: 1; transform: translateY(0); }
         }
 
-        /* Section breathing gaps */
-        .section-gap {
-          height: clamp(48px, 7vw, 80px);
-          background: #fff;
-        }
-        .section-gap-light {
-          height: clamp(48px, 7vw, 80px);
-          background: #f7f8fa;
-        }
-        .section-gap-dark {
-          height: clamp(40px, 5vw, 60px);
-          background: #08122a;
+        /* Section breathing gaps — always white for a clean visible break */
+        .section-gap, .section-gap-light, .section-gap-dark {
+          height: clamp(56px, 7vw, 88px);
+          background: #ffffff;
         }
         @media (max-width: 768px) {
           .section-gap, .section-gap-light, .section-gap-dark {
-            height: 40px;
+            height: 44px;
           }
         }
 
@@ -673,6 +665,8 @@ export default function HomePage() {
         </div>
       </section>
 
+      <div className="section-gap" />
+
       {/* ── BOOK A VALUATION ─────────────────────────────────── */}
       <style>{`
         .bav-grid {
@@ -736,7 +730,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      <div className="section-gap-dark" />
+      <div className="section-gap" />
 
       {/* ── BOOK A VIEWING ───────────────────────────────────── */}
       <style>{`
@@ -934,7 +928,7 @@ export default function HomePage() {
       </section>
 
       {/* Viewing — text left, photo right */}
-      <div className="section-gap-light" />
+      <div className="section-gap" />
       <section className="split-section" style={{ background: '#ffffff' }}>
         <div className="split-grid" style={{ alignItems: 'stretch' }}>
           <div className="split-text" style={{ background: '#ffffff' }}>
@@ -1044,7 +1038,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      <div className="section-gap-dark" />
+      <div className="section-gap" />
 
       {/* ── PRICING TABLE ─────────────────────────────────────── */}
       <style>{`
@@ -1450,7 +1444,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      <div className="section-gap-light" />
+      <div className="section-gap" />
 
       {/* ── FEATURED LISTINGS ────────────────────────────────── */}
       <style>{`
@@ -1642,7 +1636,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      <div className="section-gap-dark" />
+      <div className="section-gap" />
 
       {/* ── FOOTER ───────────────────────────────────────────── */}
       <footer style={{

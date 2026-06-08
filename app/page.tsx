@@ -481,14 +481,14 @@ export default function HomePage() {
           to   { opacity: 1; transform: translateY(0); }
         }
 
-        /* Section breathing gaps — invisible, just vertical space */
+        /* Section breathing gaps — navy so dark sections flow naturally */
         .section-gap, .section-gap-light, .section-gap-dark {
-          height: clamp(72px, 8vw, 100px);
-          background: transparent;
+          height: clamp(56px, 7vw, 88px);
+          background: #08122a;
         }
         @media (max-width: 768px) {
           .section-gap, .section-gap-light, .section-gap-dark {
-            height: 56px;
+            height: 44px;
           }
         }
 
@@ -665,7 +665,6 @@ export default function HomePage() {
         </div>
       </section>
 
-      <div style={{ height: 'clamp(56px,7vw,88px)', background: '#ffffff' }} />
 
       {/* ── BOOK A VALUATION ─────────────────────────────────── */}
       <style>{`
@@ -718,7 +717,6 @@ export default function HomePage() {
         </div>
       </section>
 
-      <div className="section-gap" />
 
       {/* ── BOOK A VIEWING ───────────────────────────────────── */}
       <style>{`
@@ -771,7 +769,6 @@ export default function HomePage() {
         </div>
       </section>
 
-      <div className="section-gap" />
 
       {/* ── WHY BOOK A VALUATION + VIEWING ───────────────────── */}
       <style>{`
@@ -855,7 +852,7 @@ export default function HomePage() {
       {/* Valuation — photo left, text right */}
       <section className="split-section" style={{ background: '#f7f8fa' }}>
         <div className="split-grid">
-          <div className="split-img-panel" style={{ overflow: 'hidden', minHeight: 860, display: 'flex', alignItems: 'stretch' }}>
+          <div className="split-img-panel" style={{ overflow: 'hidden', minHeight: 860, display: 'flex', alignItems: 'stretch', position: 'relative' }}>
             <img
               src="/images/Landlord_Book_valuation_background.png"
               alt="Book a Valuation"
@@ -892,7 +889,6 @@ export default function HomePage() {
       </section>
 
       {/* Viewing — text left, photo right */}
-      <div className="section-gap" />
       <section className="split-section" style={{ background: '#ffffff' }}>
         <div className="split-grid" style={{ alignItems: 'stretch' }}>
           <div className="split-text" style={{ background: '#ffffff' }}>
@@ -916,7 +912,6 @@ export default function HomePage() {
         </div>
       </section>
 
-      <div className="section-gap" />
 
       {/* ── INFO CARDS ───────────────────────────────────────── */}
       <style>{`
@@ -990,7 +985,6 @@ export default function HomePage() {
         </div>
       </section>
 
-      <div className="section-gap" />
 
       {/* ── PRICING TEASER ────────────────────────────────────── */}
       <style>{`

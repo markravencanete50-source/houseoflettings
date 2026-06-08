@@ -667,53 +667,38 @@ export default function HomePage() {
 
 
       {/* ── BOOK A VALUATION ─────────────────────────────────── */}
-      <style>{`
-        .bav-grid {
-          display: grid;
-          grid-template-columns: 1fr 1fr;
-          min-height: 560px;
-        }
-        .bav-text {
-          padding: clamp(56px, 7vw, 100px) clamp(32px, 5vw, 80px);
-          display: flex; flex-direction: column; justify-content: center;
-          background: #08122a;
-        }
-        .bav-photo {
-          position: relative; overflow: hidden; min-height: 560px;
-        }
-        .bav-photo img {
-          width: 100%; height: 100%;
-          object-fit: cover; object-position: center;
-          display: block;
-        }
-        @media (max-width: 768px) {
-          .bav-grid { grid-template-columns: 1fr; }
-          .bav-photo { min-height: 300px; order: -1; }
-          .bav-photo img { min-height: 300px; }
-          .bav-text { padding: 48px 24px; }
-        }
-      `}</style>
-      <section style={{ overflow: 'hidden', background: '#08122a' }}>
-        <div className="bav-grid">
-          <div className="bav-text reveal">
-            <h2 style={{
-              fontFamily: "'Poppins', sans-serif",
-              fontSize: 'clamp(28px,4vw,48px)', fontWeight: 700,
-              color: '#fff', lineHeight: 1.2, marginBottom: 24,
-            }}>
-              Are you ready to sell or let your property?
-            </h2>
-            <p style={{
-              fontSize: 17, color: 'rgba(255,255,255,0.75)', lineHeight: 1.8,
-              marginBottom: 44, fontWeight: 300,
-            }}>
-              Book a free sales or lettings valuation with your local agent, and they will use their local knowledge and expertise to give you the most accurate sales or lettings valuation.
-            </p>
-            <div><ValuationInlineButton /></div>
-          </div>
-          <div className="bav-photo">
-            <img src="/images/Background_Book_Valuation.png" alt="Book a Valuation" />
-          </div>
+      <section style={{
+        position: 'relative', overflow: 'hidden',
+        padding: 'clamp(72px, 10vw, 120px) clamp(20px, 5%, 5%)',
+        background: '#08122a',
+      }}>
+        {/* Background image */}
+        <div style={{
+          position: 'absolute', inset: 0,
+          backgroundImage: 'url(/images/brand-desk.jpeg)',
+          backgroundSize: 'cover', backgroundPosition: 'center center',
+          backgroundRepeat: 'no-repeat',
+          opacity: 0.35,
+        }} />
+        {/* Content */}
+        <div className="reveal" style={{
+          position: 'relative', zIndex: 1,
+          maxWidth: 600, margin: '0 auto', textAlign: 'center',
+        }}>
+          <h2 style={{
+            fontFamily: "'Poppins', sans-serif",
+            fontSize: 'clamp(28px,4vw,48px)', fontWeight: 700,
+            color: '#fff', lineHeight: 1.2, marginBottom: 20,
+          }}>
+            Are you ready to sell or let your property?
+          </h2>
+          <p style={{
+            fontSize: 17, color: 'rgba(255,255,255,0.75)', lineHeight: 1.8,
+            marginBottom: 40, fontWeight: 300,
+          }}>
+            Book a free sales or lettings valuation with your local agent, and they will use their local knowledge and expertise to give you the most accurate valuation.
+          </p>
+          <ValuationInlineButton />
         </div>
       </section>
 

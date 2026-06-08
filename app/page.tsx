@@ -28,70 +28,6 @@ function useScrollReveal() {
   }, []);
 }
 
-// ── COUNT-UP HOOK ─────────────────────────────────────────────────────────────
-function useCountUp(target: number, duration = 1800, started = false) {
-  const [count, setCount] = useState(0);
-  useEffect(() => {
-    if (!started) return;
-    let start = 0;
-    const step = Math.ceil(target / (duration / 16));
-    const timer = setInterval(() => {
-      start += step;
-      if (start >= target) { setCount(target); clearInterval(timer); }
-      else setCount(start);
-    }, 16);
-    return () => clearInterval(timer);
-  }, [target, duration, started]);
-  return count;
-}
-
-// ── STATS BAR ─────────────────────────────────────────────────────────────────
-function StatsBar() {
-  const ref = useRef<HTMLDivElement>(null);
-  const [started, setStarted] = useState(false);
-  useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    const observer = new IntersectionObserver(([e]) => {
-      if (e.isIntersecting) { setStarted(true); observer.disconnect(); }
-    }, { threshold: 0.3 });
-    observer.observe(el);
-    return () => observer.disconnect();
-  }, []);
-  const landlords = useCountUp(1200, 1600, started);
-  const properties = useCountUp(340, 1400, started);
-  const satisfaction = useCountUp(98, 1200, started);
-
-  return (
-    <div ref={ref} style={{
-      background: '#0a1628',
-      borderTop: '1px solid rgba(255,255,255,0.06)',
-      borderBottom: '1px solid rgba(255,255,255,0.06)',
-      padding: '28px 5%',
-    }}>
-      <style>{`
-        .stats-bar { display: flex; justify-content: center; gap: clamp(32px,6vw,96px); flex-wrap: wrap; }
-        .stat-item { text-align: center; }
-        .stat-num { font-family: 'Poppins', sans-serif; font-size: clamp(28px,3.5vw,42px); font-weight: 700; color: #4a90d9; line-height: 1; }
-        .stat-label { font-size: 12px; color: rgba(255,255,255,0.4); letter-spacing: 2px; text-transform: uppercase; margin-top: 6px; }
-      `}</style>
-      <div className="stats-bar">
-        <div className="stat-item">
-          <div className="stat-num">{landlords.toLocaleString()}+</div>
-          <div className="stat-label">Landlords Served</div>
-        </div>
-        <div className="stat-item">
-          <div className="stat-num">{properties.toLocaleString()}+</div>
-          <div className="stat-label">Properties Listed</div>
-        </div>
-        <div className="stat-item">
-          <div className="stat-num">{satisfaction}%</div>
-          <div className="stat-label">Satisfaction Rate</div>
-        </div>
-      </div>
-    </div>
-  );
-}
 
 // ── HERO TEXT CYCLER ──────────────────────────────────────────────────────────
 const HERO_PHRASES = [
@@ -718,9 +654,6 @@ export default function HomePage() {
           </div>
         </div>
       </section>
-
-      {/* ── STATS BAR ────────────────────────────────────────── */}
-      <StatsBar />
 
       {/* ── BOOK A VALUATION ─────────────────────────────────── */}
       <style>{`

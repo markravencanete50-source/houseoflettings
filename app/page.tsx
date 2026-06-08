@@ -472,80 +472,104 @@ export default function HomePage() {
       </section>
 
       {/* ── BOOK A VALUATION ─────────────────────────────────── */}
-      <section style={{
-        padding: '100px 5%',
-        position: 'relative',
-        overflow: 'hidden',
-        background: '#08122a',
-        isolation: 'isolate',
-      }}>
-        {/* Valuation background image - luxury interior */}
-        <div style={{
-          position: 'absolute', inset: 0,
-          backgroundImage: 'url(/images/Background_Book_Valuation.png)',
-          backgroundSize: 'cover', backgroundPosition: 'center',
-          backgroundRepeat: 'no-repeat',
-        }} />
-        {/* Dark overlay */}
-        <div style={{
-          position: 'absolute', inset: 0,
-          background: 'rgba(8, 18, 40, 0.78)',
-        }} />
-        <div style={{ maxWidth: 780, position: 'relative', zIndex: 1 }}>
-          <h2 style={{
-            fontFamily: "'Poppins', sans-serif",
-            fontSize: 'clamp(32px,5vw,56px)', fontWeight: 700,
-            color: '#fff', lineHeight: 1.2, marginBottom: 24,
-          }}>
-            Are you ready to sell or let your property?
-          </h2>
-          <p style={{
-            fontSize: 18, color: 'rgba(255,255,255,0.75)', lineHeight: 1.8,
-            marginBottom: 44, fontWeight: 300, maxWidth: 620,
-          }}>
-            Book a free sales or lettings valuation with your local agent, and they will use their local knowledge and expertise to give you the most accurate sales or lettings valuation.
-          </p>
-          <ValuationInlineButton />
+      <style>{`
+        .bav-grid {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          min-height: 560px;
+        }
+        .bav-text {
+          padding: clamp(56px, 7vw, 100px) clamp(32px, 5vw, 80px);
+          display: flex; flex-direction: column; justify-content: center;
+          background: #08122a;
+        }
+        .bav-photo {
+          position: relative; overflow: hidden; min-height: 560px;
+        }
+        .bav-photo img {
+          width: 100%; height: 100%;
+          object-fit: cover; object-position: center;
+          display: block;
+        }
+        @media (max-width: 768px) {
+          .bav-grid { grid-template-columns: 1fr; }
+          .bav-photo { min-height: 300px; order: -1; }
+          .bav-photo img { min-height: 300px; }
+          .bav-text { padding: 48px 24px; }
+        }
+      `}</style>
+      <section style={{ overflow: 'hidden', background: '#08122a' }}>
+        <div className="bav-grid">
+          <div className="bav-text">
+            <h2 style={{
+              fontFamily: "'Poppins', sans-serif",
+              fontSize: 'clamp(28px,4vw,48px)', fontWeight: 700,
+              color: '#fff', lineHeight: 1.2, marginBottom: 24,
+            }}>
+              Are you ready to sell or let your property?
+            </h2>
+            <p style={{
+              fontSize: 17, color: 'rgba(255,255,255,0.75)', lineHeight: 1.8,
+              marginBottom: 44, fontWeight: 300,
+            }}>
+              Book a free sales or lettings valuation with your local agent, and they will use their local knowledge and expertise to give you the most accurate sales or lettings valuation.
+            </p>
+            <div><ValuationInlineButton /></div>
+          </div>
+          <div className="bav-photo">
+            <img src="/images/Background_Book_Valuation.png" alt="Book a Valuation" />
+          </div>
         </div>
       </section>
 
       {/* ── BOOK A VIEWING ───────────────────────────────────── */}
-      <section style={{
-        padding: '100px 5%',
-        position: 'relative',
-        overflow: 'hidden',
-        background: '#08122a',
-        isolation: 'isolate',
-      }}>
-        {/* Background image - agent photo */}
-        <div style={{
-          position: 'absolute', inset: 0,
-          backgroundImage: 'url(/images/agent-photo.jpeg)',
-          backgroundSize: 'cover', backgroundPosition: 'center right',
-          backgroundRepeat: 'no-repeat',
-          zIndex: 0,
-        }} />
-        {/* Dark overlay - solid enough to block any bleed-through */}
-        <div style={{
-          position: 'absolute', inset: 0,
-          background: 'rgba(8, 18, 40, 0.92)',
-          zIndex: 1,
-        }} />
-        <div style={{ maxWidth: 780, position: 'relative', zIndex: 2 }}>
-          <h2 style={{
-            fontFamily: "'Poppins', sans-serif",
-            fontSize: 'clamp(32px,5vw,56px)', fontWeight: 700,
-            color: '#fff', lineHeight: 1.2, marginBottom: 24,
-          }}>
-            Looking to rent a property?
-          </h2>
-          <p style={{
-            fontSize: 18, color: 'rgba(255,255,255,0.75)', lineHeight: 1.8,
-            marginBottom: 44, fontWeight: 300, maxWidth: 620,
-          }}>
-            Register your requirements and we&apos;ll match you with suitable properties before they hit the market.
-          </p>
-          <BookViewingInlineButton />
+      <style>{`
+        .bvw-grid {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          min-height: 560px;
+        }
+        .bvw-photo {
+          position: relative; overflow: hidden; min-height: 560px;
+        }
+        .bvw-photo img {
+          width: 100%; height: 100%;
+          object-fit: cover; object-position: center right;
+          display: block;
+        }
+        .bvw-text {
+          padding: clamp(56px, 7vw, 100px) clamp(32px, 5vw, 80px);
+          display: flex; flex-direction: column; justify-content: center;
+          background: #08122a;
+        }
+        @media (max-width: 768px) {
+          .bvw-grid { grid-template-columns: 1fr; }
+          .bvw-photo { min-height: 300px; order: -1; }
+          .bvw-photo img { min-height: 300px; }
+          .bvw-text { padding: 48px 24px; }
+        }
+      `}</style>
+      <section style={{ overflow: 'hidden', background: '#08122a' }}>
+        <div className="bvw-grid">
+          <div className="bvw-photo">
+            <img src="/images/agent-photo.jpeg" alt="Book a Viewing" />
+          </div>
+          <div className="bvw-text">
+            <h2 style={{
+              fontFamily: "'Poppins', sans-serif",
+              fontSize: 'clamp(28px,4vw,48px)', fontWeight: 700,
+              color: '#fff', lineHeight: 1.2, marginBottom: 24,
+            }}>
+              Looking to rent a property?
+            </h2>
+            <p style={{
+              fontSize: 17, color: 'rgba(255,255,255,0.75)', lineHeight: 1.8,
+              marginBottom: 44, fontWeight: 300,
+            }}>
+              Register your requirements and we&apos;ll match you with suitable properties before they hit the market.
+            </p>
+            <div><BookViewingInlineButton /></div>
+          </div>
         </div>
       </section>
 
@@ -691,7 +715,20 @@ export default function HomePage() {
       </section>
 
       {/* ── INFO CARDS ───────────────────────────────────────── */}
-      <section style={{ padding: '90px 5%', position: 'relative', overflow: 'hidden' }}>
+      <style>{`
+        .services-grid {
+          display: grid;
+          grid-template-columns: repeat(3, 1fr);
+          gap: 28px;
+        }
+        @media (max-width: 900px) {
+          .services-grid { grid-template-columns: 1fr 1fr; }
+        }
+        @media (max-width: 600px) {
+          .services-grid { grid-template-columns: 1fr; }
+        }
+      `}</style>
+      <section style={{ padding: 'clamp(60px, 8vw, 100px) clamp(20px, 5%, 5%)', position: 'relative', overflow: 'hidden' }}>
         {/* Services background image - agent with clients */}
         <div style={{
           position: 'absolute', inset: 0,
@@ -713,7 +750,7 @@ export default function HomePage() {
             How We Can Help
           </h2>
         </div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 24 }}>
+        <div className="services-grid">
           {[
             {
               title: 'For Landlords',
@@ -730,7 +767,7 @@ export default function HomePage() {
           ].map(card => (
             <div key={card.title} style={{
               background: '#162849',
-              borderRadius: 10, padding: '32px 28px',
+              borderRadius: 10, padding: '40px 32px',
               border: '1px solid rgba(255,255,255,0.08)',
             }}>
               <h3 style={{
@@ -750,7 +787,31 @@ export default function HomePage() {
       </section>
 
       {/* ── PRICING TABLE ─────────────────────────────────────── */}
-      <section style={{ padding: '90px 5%', position: 'relative', overflow: 'hidden' }}>
+      <style>{`
+        .pricing-row {
+          display: grid;
+          grid-template-columns: repeat(3, 1fr);
+          gap: 24px;
+          max-width: 1100px;
+          margin: 0 auto 24px;
+        }
+        .pricing-row-2 {
+          display: grid;
+          grid-template-columns: repeat(2, 1fr);
+          gap: 24px;
+          max-width: 760px;
+          margin: 0 auto;
+        }
+        @media (max-width: 900px) {
+          .pricing-row { grid-template-columns: 1fr 1fr; }
+          .pricing-row-2 { grid-template-columns: 1fr 1fr; max-width: 100%; }
+        }
+        @media (max-width: 600px) {
+          .pricing-row { grid-template-columns: 1fr; }
+          .pricing-row-2 { grid-template-columns: 1fr; max-width: 100%; }
+        }
+      `}</style>
+      <section style={{ padding: 'clamp(60px, 8vw, 100px) clamp(20px, 5%, 5%)', position: 'relative', overflow: 'hidden' }}>
         <div style={{
           position: 'absolute', inset: 0,
           backgroundImage: 'url(/images/Background_of_the_services.png)',
@@ -777,7 +838,7 @@ export default function HomePage() {
           </div>
 
           {/* Row 1 — 3 cards */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 24, maxWidth: 1100, margin: '0 auto 24px' }}>
+          <div className="pricing-row">
 
             {/* Virtual Tenant Find — £499 */}
             <div style={{
@@ -909,7 +970,7 @@ export default function HomePage() {
           </div>
 
           {/* Row 2 — 2 cards centred */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 24, maxWidth: 740, margin: '0 auto' }}>
+          <div className="pricing-row-2">
 
             {/* Full Management — 8% */}
             <div style={{
@@ -1007,15 +1068,36 @@ export default function HomePage() {
       </section>
 
       {/* ── SEARCH BAR ───────────────────────────────────────── */}
-      <section style={{ background: '#f7f8fa', padding: '56px 5%', borderBottom: '1px solid #e5e7eb' }}>
+      <style>{`
+        .search-grid {
+          display: grid;
+          grid-template-columns: 2fr 1fr 1fr 1fr auto;
+          gap: 16px;
+          align-items: end;
+        }
+        @media (max-width: 900px) {
+          .search-grid {
+            grid-template-columns: 1fr 1fr;
+          }
+          .search-grid button {
+            grid-column: 1 / -1;
+          }
+        }
+        @media (max-width: 480px) {
+          .search-grid {
+            grid-template-columns: 1fr;
+          }
+        }
+      `}</style>
+      <section style={{ background: '#f7f8fa', padding: 'clamp(40px, 6vw, 56px) clamp(20px, 5%, 5%)', borderBottom: '1px solid #e5e7eb' }}>
         <div style={{
-          background: '#fff', borderRadius: 10, padding: '40px 40px',
+          background: '#fff', borderRadius: 10, padding: 'clamp(24px, 4vw, 40px)',
           boxShadow: '0 4px 32px rgba(0,0,0,0.08)', border: '1px solid #e5e7eb',
         }}>
           <div style={{ fontSize: 13, fontWeight: 700, letterSpacing: 2, textTransform: 'uppercase', color: '#9ca3af', marginBottom: 28 }}>
             Search Properties
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr auto', gap: 16, alignItems: 'end' }}>
+          <div className="search-grid">
             <div>
               <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#6b7280', marginBottom: 8, textTransform: 'uppercase', letterSpacing: 1 }}>Location</label>
               <input
@@ -1093,8 +1175,18 @@ export default function HomePage() {
       </section>
 
       {/* ── FEATURED LISTINGS ────────────────────────────────── */}
-      <section style={{ padding: '90px 5%' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 56 }}>
+      <style>{`
+        .listings-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: flex-end;
+          margin-bottom: 56px;
+          flex-wrap: wrap;
+          gap: 16px;
+        }
+      `}</style>
+      <section style={{ padding: 'clamp(60px, 8vw, 90px) clamp(20px, 5%, 5%)' }}>
+        <div className="listings-header">
           <div>
             <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 3, textTransform: 'uppercase', color: '#2563eb', marginBottom: 14 }}>
               Latest Listings
@@ -1133,7 +1225,20 @@ export default function HomePage() {
       </section>
 
       {/* ── HOW IT WORKS ─────────────────────────────────────── */}
-      <section style={{ padding: '90px 5%', background: '#f7f8fa', borderTop: '1px solid #e5e7eb' }}>
+      <style>{`
+        .how-grid {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 60px;
+        }
+        @media (max-width: 768px) {
+          .how-grid {
+            grid-template-columns: 1fr;
+            gap: 48px;
+          }
+        }
+      `}</style>
+      <section style={{ padding: 'clamp(60px, 8vw, 90px) clamp(20px, 5%, 5%)', background: '#f7f8fa', borderTop: '1px solid #e5e7eb' }}>
         <div style={{ marginBottom: 56 }}>
           <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 3, textTransform: 'uppercase', color: '#2563eb', marginBottom: 14 }}>
             How It Works
@@ -1143,7 +1248,7 @@ export default function HomePage() {
           </h2>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 60 }}>
+        <div className="how-grid">
           {[
             {
               role: 'For Landlords',
@@ -1196,9 +1301,27 @@ export default function HomePage() {
       <ImageGallery />
 
       {/* ── CTA BANNER ───────────────────────────────────────── */}
+      <style>{`
+        .cta-banner {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 40px;
+          flex-wrap: wrap;
+        }
+        .cta-banner-btns {
+          display: flex;
+          gap: 14px;
+          flex-wrap: wrap;
+        }
+        @media (max-width: 600px) {
+          .cta-banner { flex-direction: column; align-items: flex-start; }
+          .cta-banner-btns { width: 100%; }
+          .cta-banner-btns a { flex: 1; text-align: center; }
+        }
+      `}</style>
       <section style={{
-        background: '#0f1f3d', padding: '80px 5%',
-        display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 40, flexWrap: 'wrap',
+        background: '#0f1f3d', padding: 'clamp(56px, 8vw, 80px) clamp(20px, 5%, 5%)',
         position: 'relative', overflow: 'hidden',
       }}>
         <div style={{
@@ -1206,39 +1329,41 @@ export default function HomePage() {
           background: 'radial-gradient(ellipse at 20% 50%, rgba(30,58,110,0.2) 0%, transparent 60%)',
           pointerEvents: 'none',
         }} />
-        <div style={{ position: 'relative' }}>
-          <h2 style={{ fontFamily: "'Poppins', sans-serif", fontSize: 'clamp(28px,3.5vw,48px)', fontWeight: 700, color: '#fff', marginBottom: 12 }}>
-            Ready to find your<br /><span style={{ color: '#4a90d9' }}>perfect home?</span>
-          </h2>
-          <p style={{ color: 'rgba(255,255,255,0.55)', fontSize: 16, fontWeight: 300 }}>
-            Join thousands of landlords and tenants already using House of Lettings.
-          </p>
-        </div>
-        <div style={{ display: 'flex', gap: 14, position: 'relative' }}>
-          <Link href="/register" style={{
-            padding: '16px 36px', background: '#1e3a6e', color: '#ffffff',
-            borderRadius: 4, fontSize: 14, fontWeight: 700, letterSpacing: '0.5px', textTransform: 'uppercase',
-            textDecoration: 'none',
-          }}>
-            Get Started Free
-          </Link>
-          <Link href="/listings" style={{
-            padding: '16px 36px', background: 'transparent', color: '#fff',
-            border: '1px solid rgba(255,255,255,0.3)', borderRadius: 4, fontSize: 14,
-            fontWeight: 500, letterSpacing: '0.5px', textTransform: 'uppercase',
-            textDecoration: 'none',
-          }}>
-            Browse Listings
-          </Link>
+        <div className="cta-banner" style={{ position: 'relative' }}>
+          <div>
+            <h2 style={{ fontFamily: "'Poppins', sans-serif", fontSize: 'clamp(28px,3.5vw,48px)', fontWeight: 700, color: '#fff', marginBottom: 12 }}>
+              Ready to find your<br /><span style={{ color: '#4a90d9' }}>perfect home?</span>
+            </h2>
+            <p style={{ color: 'rgba(255,255,255,0.55)', fontSize: 16, fontWeight: 300 }}>
+              Join thousands of landlords and tenants already using House of Lettings.
+            </p>
+          </div>
+          <div className="cta-banner-btns">
+            <Link href="/register" style={{
+              padding: '16px 36px', background: '#1e3a6e', color: '#ffffff',
+              borderRadius: 4, fontSize: 14, fontWeight: 700, letterSpacing: '0.5px', textTransform: 'uppercase',
+              textDecoration: 'none',
+            }}>
+              Get Started Free
+            </Link>
+            <Link href="/listings" style={{
+              padding: '16px 36px', background: 'transparent', color: '#fff',
+              border: '1px solid rgba(255,255,255,0.3)', borderRadius: 4, fontSize: 14,
+              fontWeight: 500, letterSpacing: '0.5px', textTransform: 'uppercase',
+              textDecoration: 'none',
+            }}>
+              Browse Listings
+            </Link>
+          </div>
         </div>
       </section>
 
       {/* ── FOOTER ───────────────────────────────────────────── */}
       <footer style={{
         background: '#050a12', borderTop: '1px solid rgba(255,255,255,0.06)',
-        padding: '48px 5%',
+        padding: 'clamp(32px, 5vw, 48px) clamp(20px, 5%, 5%)',
       }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 20 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 16 }}>
           <div style={{
             fontFamily: "'Poppins', sans-serif", fontSize: 20, fontWeight: 700,
             color: '#fff', display: 'flex', alignItems: 'center', gap: 10,

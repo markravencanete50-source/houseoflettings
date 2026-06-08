@@ -588,28 +588,24 @@ export default function HomePage() {
               Booking a valuation with House of Lettings will save you time, money, and stress. Our local experts give you an honest, data-driven view of what your property is worth — so you can make informed decisions with confidence.
             </p>
             <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 36px', display: 'flex', flexDirection: 'column', gap: 12 }}>
-              {[
-                'Free, no-obligation valuation from a local expert',
-                'Accurate rental and sales valuations backed by live market data',
-                'Advice on how to maximise your property's return',
-              ].map((item, i) => (
-                <li key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 12, fontFamily: "'Poppins', sans-serif", fontSize: 14, color: '#374151' }}>
-                  <span style={{ color: '#2563eb', fontWeight: 700, fontSize: 16, lineHeight: 1.4, flexShrink: 0 }}>✓</span>
-                  {item}
-                </li>
-              ))}
+              <li style={{ display: 'flex', alignItems: 'flex-start', gap: 12, fontFamily: "'Poppins', sans-serif", fontSize: 14, color: '#374151' }}>
+                <span style={{ color: '#2563eb', fontWeight: 700, fontSize: 16, lineHeight: 1.4, flexShrink: 0 }}>✓</span>
+                Free, no-obligation valuation from a local expert
+              </li>
+              <li style={{ display: 'flex', alignItems: 'flex-start', gap: 12, fontFamily: "'Poppins', sans-serif", fontSize: 14, color: '#374151' }}>
+                <span style={{ color: '#2563eb', fontWeight: 700, fontSize: 16, lineHeight: 1.4, flexShrink: 0 }}>✓</span>
+                Accurate rental and sales valuations backed by live market data
+              </li>
+              <li style={{ display: 'flex', alignItems: 'flex-start', gap: 12, fontFamily: "'Poppins', sans-serif", fontSize: 14, color: '#374151' }}>
+                <span style={{ color: '#2563eb', fontWeight: 700, fontSize: 16, lineHeight: 1.4, flexShrink: 0 }}>✓</span>
+                Advice on how to maximise your property&apos;s return
+              </li>
             </ul>
             <ValuationInlineButton />
           </div>
         </div>
 
-        {/* Mobile: stack vertically */}
-        <style>{`
-          @media (max-width: 768px) {
-            .split-grid { grid-template-columns: 1fr !important; }
-            .split-photo { min-height: 280px !important; }
-          }
-        `}</style>
+
       </section>
 
       {/* ── WHY BOOK A VIEWING ───────────────────────────────── */}
@@ -644,16 +640,18 @@ export default function HomePage() {
               Booking a viewing with us is quick, easy, and puts you first. We take the pressure off your search — matching you with the right properties and guiding you every step of the way.
             </p>
             <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 36px', display: 'flex', flexDirection: 'column', gap: 12 }}>
-              {[
-                'View properties before they hit the open market',
-                'Dedicated agent to handle all enquiries and negotiations',
-                'Transparent process with no hidden fees for tenants',
-              ].map((item, i) => (
-                <li key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 12, fontFamily: "'Poppins', sans-serif", fontSize: 14, color: '#374151' }}>
-                  <span style={{ color: '#2563eb', fontWeight: 700, fontSize: 16, lineHeight: 1.4, flexShrink: 0 }}>✓</span>
-                  {item}
-                </li>
-              ))}
+              <li style={{ display: 'flex', alignItems: 'flex-start', gap: 12, fontFamily: "'Poppins', sans-serif", fontSize: 14, color: '#374151' }}>
+                <span style={{ color: '#2563eb', fontWeight: 700, fontSize: 16, lineHeight: 1.4, flexShrink: 0 }}>✓</span>
+                View properties before they hit the open market
+              </li>
+              <li style={{ display: 'flex', alignItems: 'flex-start', gap: 12, fontFamily: "'Poppins', sans-serif", fontSize: 14, color: '#374151' }}>
+                <span style={{ color: '#2563eb', fontWeight: 700, fontSize: 16, lineHeight: 1.4, flexShrink: 0 }}>✓</span>
+                Dedicated agent to handle all enquiries and negotiations
+              </li>
+              <li style={{ display: 'flex', alignItems: 'flex-start', gap: 12, fontFamily: "'Poppins', sans-serif", fontSize: 14, color: '#374151' }}>
+                <span style={{ color: '#2563eb', fontWeight: 700, fontSize: 16, lineHeight: 1.4, flexShrink: 0 }}>✓</span>
+                Transparent process with no hidden fees for tenants
+              </li>
             </ul>
             <BookViewingInlineButton />
           </div>

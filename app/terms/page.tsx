@@ -471,20 +471,22 @@ export default function TermsAndConditions() {
         }
         .hol-card {
           background: var(--navy);
-          color: rgba(255,255,255,0.85);
+          color: #ffffff;
           border-radius: 12px;
           padding: 24px 28px;
           font-size: 14px;
           line-height: 2;
           margin-top: 16px;
         }
+        .hol-card p { color: #ffffff; margin: 0; }
         .hol-card-name {
           font-weight: 700;
-          color: var(--white);
+          color: #ffffff;
           font-size: 15px;
           margin-bottom: 4px;
         }
-        .hol-card a { color: var(--gold-light); }
+        .hol-card a { color: #ffffff; font-weight: 600; text-decoration: underline; text-underline-offset: 3px; }
+        .hol-card a:hover { color: var(--gold-light); }
         .hol-offices-grid {
           display: grid;
           grid-template-columns: 1fr 1fr;
@@ -535,8 +537,7 @@ export default function TermsAndConditions() {
           <div className="hol-notice-inner">
             <strong>Important:</strong> Please read these Terms carefully before using our website. By
             accessing{' '}
-            <a href="https://www.houseoflettings.co.uk">www.houseoflettings.co.uk</a> or{' '}
-            <a href="https://houseoflettingsrent.vercel.app">houseoflettingsrent.vercel.app</a>, you
+            <a href="https://www.houseoflettings.uk">www.houseoflettings.uk</a>, you
             confirm that you have read, understood, and agree to be bound by these Terms. If you do not
             agree, please stop using the website immediately.
           </div>

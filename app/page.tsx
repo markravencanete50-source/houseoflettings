@@ -481,14 +481,14 @@ export default function HomePage() {
           to   { opacity: 1; transform: translateY(0); }
         }
 
-        /* Section breathing gaps — navy so dark sections flow naturally */
+        /* Section breathing gaps — invisible, just vertical space */
         .section-gap, .section-gap-light, .section-gap-dark {
-          height: clamp(56px, 7vw, 88px);
-          background: #08122a;
+          height: clamp(72px, 8vw, 100px);
+          background: transparent;
         }
         @media (max-width: 768px) {
           .section-gap, .section-gap-light, .section-gap-dark {
-            height: 44px;
+            height: 56px;
           }
         }
 
@@ -714,18 +714,6 @@ export default function HomePage() {
           </div>
           <div className="bav-photo">
             <img src="/images/Background_Book_Valuation.png" alt="Book a Valuation" />
-            {/* Blend: fade left edge into navy text panel */}
-            <div style={{
-              position: 'absolute', inset: 0,
-              background: 'linear-gradient(to right, #08122a 0%, rgba(8,18,42,0.55) 35%, rgba(8,18,42,0) 70%)',
-              pointerEvents: 'none',
-            }} />
-            {/* Vignette: top + bottom fade */}
-            <div style={{
-              position: 'absolute', inset: 0,
-              background: 'linear-gradient(to bottom, rgba(8,18,42,0.45) 0%, transparent 25%, transparent 75%, rgba(8,18,42,0.45) 100%)',
-              pointerEvents: 'none',
-            }} />
           </div>
         </div>
       </section>
@@ -763,18 +751,6 @@ export default function HomePage() {
         <div className="bvw-grid">
           <div className="bvw-photo">
             <img src="/images/agent-photo.jpeg" alt="Book a Viewing" />
-            {/* Blend: fade right edge into navy text panel */}
-            <div style={{
-              position: 'absolute', inset: 0,
-              background: 'linear-gradient(to left, #08122a 0%, rgba(8,18,42,0.55) 35%, rgba(8,18,42,0) 70%)',
-              pointerEvents: 'none',
-            }} />
-            {/* Vignette: top + bottom */}
-            <div style={{
-              position: 'absolute', inset: 0,
-              background: 'linear-gradient(to bottom, rgba(8,18,42,0.45) 0%, transparent 25%, transparent 75%, rgba(8,18,42,0.45) 100%)',
-              pointerEvents: 'none',
-            }} />
           </div>
           <div className="bvw-text reveal">
             <h2 style={{
@@ -879,7 +855,7 @@ export default function HomePage() {
       {/* Valuation — photo left, text right */}
       <section className="split-section" style={{ background: '#f7f8fa' }}>
         <div className="split-grid">
-          <div className="split-img-panel" style={{ overflow: 'hidden', minHeight: 860, display: 'flex', alignItems: 'stretch', position: 'relative' }}>
+          <div className="split-img-panel" style={{ overflow: 'hidden', minHeight: 860, display: 'flex', alignItems: 'stretch' }}>
             <img
               src="/images/Landlord_Book_valuation_background.png"
               alt="Book a Valuation"
@@ -892,18 +868,6 @@ export default function HomePage() {
                 display: 'block',
               }}
             />
-            {/* Blend: fade right edge into light text panel */}
-            <div style={{
-              position: 'absolute', inset: 0,
-              background: 'linear-gradient(to right, transparent 40%, rgba(247,248,250,0.6) 72%, #f7f8fa 100%)',
-              pointerEvents: 'none',
-            }} />
-            {/* Vignette: top + bottom */}
-            <div style={{
-              position: 'absolute', inset: 0,
-              background: 'linear-gradient(to bottom, rgba(247,248,250,0.3) 0%, transparent 20%, transparent 80%, rgba(247,248,250,0.3) 100%)',
-              pointerEvents: 'none',
-            }} />
           </div>
           <div className="split-text reveal" style={{ background: '#f7f8fa' }}>
             <p className="split-eyebrow">For Landlords</p>
@@ -946,21 +910,9 @@ export default function HomePage() {
           </div>
           <div
             className="split-photo"
-            style={{ backgroundImage: 'url(/images/Tenants_Book_viewing_background.png)', backgroundPosition: 'center center', alignSelf: 'stretch', position: 'relative' }}
-          >
-            {/* Blend: fade left edge into white text panel */}
-            <div style={{
-              position: 'absolute', inset: 0,
-              background: 'linear-gradient(to left, transparent 40%, rgba(255,255,255,0.6) 72%, #ffffff 100%)',
-              pointerEvents: 'none',
-            }} />
-            {/* Vignette: top + bottom */}
-            <div style={{
-              position: 'absolute', inset: 0,
-              background: 'linear-gradient(to bottom, rgba(255,255,255,0.3) 0%, transparent 20%, transparent 80%, rgba(255,255,255,0.3) 100%)',
-              pointerEvents: 'none',
-            }} />
-          </div>
+            style={{ backgroundImage: 'url(/images/Tenants_Book_viewing_background.png)', backgroundPosition: 'center center', alignSelf: 'stretch' }}
+          />
+
         </div>
       </section>
 

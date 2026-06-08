@@ -1,12 +1,135 @@
 'use client';
 // app/page.tsx
-import { useState, useEffect, useRef, lazy, Suspense } from 'react';
+import { useState, useEffect, useRef, useCallback, lazy, Suspense } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Navbar from '@/components/layout/Navbar';
 import PropertyCard from '@/components/property/PropertyCard';
 import { getProperties } from '@/services/property';
 import { Property } from '@/lib/types';
+
+// ── SCROLL REVEAL HOOK ────────────────────────────────────────────────────────
+function useScrollReveal() {
+  useEffect(() => {
+    const els = document.querySelectorAll('.reveal');
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('revealed');
+            observer.unobserve(entry.target);
+          }
+        });
+      },
+      { threshold: 0.12 }
+    );
+    els.forEach(el => observer.observe(el));
+    return () => observer.disconnect();
+  }, []);
+}
+
+// ── COUNT-UP HOOK ─────────────────────────────────────────────────────────────
+function useCountUp(target: number, duration = 1800, started = false) {
+  const [count, setCount] = useState(0);
+  useEffect(() => {
+    if (!started) return;
+    let start = 0;
+    const step = Math.ceil(target / (duration / 16));
+    const timer = setInterval(() => {
+      start += step;
+      if (start >= target) { setCount(target); clearInterval(timer); }
+      else setCount(start);
+    }, 16);
+    return () => clearInterval(timer);
+  }, [target, duration, started]);
+  return count;
+}
+
+// ── STATS BAR ─────────────────────────────────────────────────────────────────
+function StatsBar() {
+  const ref = useRef<HTMLDivElement>(null);
+  const [started, setStarted] = useState(false);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(([e]) => {
+      if (e.isIntersecting) { setStarted(true); observer.disconnect(); }
+    }, { threshold: 0.3 });
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+  const landlords = useCountUp(1200, 1600, started);
+  const properties = useCountUp(340, 1400, started);
+  const satisfaction = useCountUp(98, 1200, started);
+
+  return (
+    <div ref={ref} style={{
+      background: '#0a1628',
+      borderTop: '1px solid rgba(255,255,255,0.06)',
+      borderBottom: '1px solid rgba(255,255,255,0.06)',
+      padding: '28px 5%',
+    }}>
+      <style>{`
+        .stats-bar { display: flex; justify-content: center; gap: clamp(32px,6vw,96px); flex-wrap: wrap; }
+        .stat-item { text-align: center; }
+        .stat-num { font-family: 'Poppins', sans-serif; font-size: clamp(28px,3.5vw,42px); font-weight: 700; color: #4a90d9; line-height: 1; }
+        .stat-label { font-size: 12px; color: rgba(255,255,255,0.4); letter-spacing: 2px; text-transform: uppercase; margin-top: 6px; }
+      `}</style>
+      <div className="stats-bar">
+        <div className="stat-item">
+          <div className="stat-num">{landlords.toLocaleString()}+</div>
+          <div className="stat-label">Landlords Served</div>
+        </div>
+        <div className="stat-item">
+          <div className="stat-num">{properties.toLocaleString()}+</div>
+          <div className="stat-label">Properties Listed</div>
+        </div>
+        <div className="stat-item">
+          <div className="stat-num">{satisfaction}%</div>
+          <div className="stat-label">Satisfaction Rate</div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── HERO TEXT CYCLER ──────────────────────────────────────────────────────────
+const HERO_PHRASES = [
+  'Property management. Done right.',
+  'No agency fees. No middlemen.',
+  'Leeds & Manchester specialists.',
+  'Your returns, fully protected.',
+];
+function HeroCycler() {
+  const [idx, setIdx] = useState(0);
+  const [fade, setFade] = useState(true);
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setFade(false);
+      setTimeout(() => {
+        setIdx(i => (i + 1) % HERO_PHRASES.length);
+        setFade(true);
+      }, 350);
+    }, 3000);
+    return () => clearInterval(interval);
+  }, []);
+  return (
+    <>
+      <style>{`
+        .hero-cycler { transition: opacity 0.35s ease, transform 0.35s ease; }
+        .hero-cycler.fade-in { opacity: 1; transform: translateY(0); }
+        .hero-cycler.fade-out { opacity: 0; transform: translateY(-8px); }
+      `}</style>
+      <p className={`hero-cycler ${fade ? 'fade-in' : 'fade-out'}`} style={{
+        fontSize: 17, color: 'rgba(255,255,255,0.6)', lineHeight: 1.65,
+        maxWidth: 480, margin: '0 auto 44px', fontWeight: 400, letterSpacing: '0.2px',
+        fontFamily: "'Poppins', sans-serif", textAlign: 'center',
+      }}>
+        {HERO_PHRASES[idx]}
+      </p>
+    </>
+  );
+}
 
 const ValuationModal = lazy(() => import('@/components/ValuationModal'));
 const TenantEnquiryModal = lazy(() => import('@/components/property/TenantEnquiryModal'));
@@ -347,8 +470,39 @@ function ImageGallery() {
   );
 }
 
+// ── SCROLL PROGRESS BAR ───────────────────────────────────────────────────────
+function ScrollProgressBar() {
+  const [width, setWidth] = useState(0);
+  useEffect(() => {
+    const update = () => {
+      const scrolled = window.scrollY;
+      const total = document.documentElement.scrollHeight - window.innerHeight;
+      setWidth(total > 0 ? Math.round((scrolled / total) * 100) : 0);
+    };
+    window.addEventListener('scroll', update, { passive: true });
+    return () => window.removeEventListener('scroll', update);
+  }, []);
+  return <div id="hol-progress" style={{ width: `${width}%` }} />;
+}
+
+// ── MOBILE FAB ────────────────────────────────────────────────────────────────
+function MobileFAB() {
+  const [valuationOpen, setValuationOpen] = useState(false);
+  return (
+    <div className="hol-fab">
+      <Link href="/listings">🔍 Find Home</Link>
+      <div className="fab-divider" />
+      <button onClick={() => setValuationOpen(true)}>📋 List Property</button>
+      <Suspense fallback={null}>
+        {valuationOpen && <ValuationModal isOpen={valuationOpen} onClose={() => setValuationOpen(false)} />}
+      </Suspense>
+    </div>
+  );
+}
+
 // ── PAGE ──────────────────────────────────────────────────────────────────────
 export default function HomePage() {
+  useScrollReveal();
   const router = useRouter();
   const [featured, setFeatured] = useState<Property[]>([]);
   const [location, setLocation] = useState('');
@@ -371,6 +525,106 @@ export default function HomePage() {
 
   return (
     <>
+      {/* ── GLOBAL REVEAL + SMART NAVBAR + MOBILE FAB STYLES ── */}
+      <style>{`
+        .reveal {
+          opacity: 0;
+          transform: translateY(32px);
+          transition: opacity 0.65s cubic-bezier(.22,1,.36,1), transform 0.65s cubic-bezier(.22,1,.36,1);
+        }
+        .reveal.revealed {
+          opacity: 1;
+          transform: translateY(0);
+        }
+        .reveal-delay-1 { transition-delay: 0.1s; }
+        .reveal-delay-2 { transition-delay: 0.2s; }
+        .reveal-delay-3 { transition-delay: 0.3s; }
+        .reveal-delay-4 { transition-delay: 0.4s; }
+
+        @keyframes fadeSlideIn {
+          from { opacity: 0; transform: translateY(-4px); }
+          to   { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Scroll progress bar */
+        #hol-progress {
+          position: fixed; top: 0; left: 0; height: 3px;
+          background: #2563eb; z-index: 9999;
+          transition: width 0.1s linear;
+          pointer-events: none;
+        }
+
+        /* Mobile FAB */
+        .hol-fab {
+          display: none;
+          position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+          z-index: 999;
+          background: #0f1f3d; border-radius: 40px;
+          box-shadow: 0 8px 32px rgba(0,0,0,0.35);
+          overflow: hidden;
+          border: 1px solid rgba(255,255,255,0.12);
+        }
+        @media (max-width: 768px) {
+          .hol-fab { display: flex; }
+        }
+        .hol-fab a, .hol-fab button {
+          padding: 13px 22px; font-size: 12px; font-weight: 700;
+          letter-spacing: 0.5px; text-transform: uppercase;
+          color: #fff; text-decoration: none; white-space: nowrap;
+          font-family: 'Poppins', sans-serif;
+          border: none; background: none; cursor: pointer;
+          transition: background 0.2s;
+        }
+        .hol-fab a:hover, .hol-fab button:hover { background: rgba(255,255,255,0.08); }
+        .hol-fab .fab-divider {
+          width: 1px; background: rgba(255,255,255,0.15);
+          align-self: stretch; margin: 10px 0;
+        }
+
+        /* Pricing card hover lift */
+        .pricing-card {
+          transition: transform 0.3s cubic-bezier(.22,1,.36,1), box-shadow 0.3s ease !important;
+        }
+        .pricing-card:hover {
+          transform: translateY(-6px) !important;
+          box-shadow: 0 24px 60px rgba(0,0,0,0.35) !important;
+        }
+
+        /* Services card hover */
+        .service-card {
+          transition: transform 0.3s ease, border-color 0.3s ease, background 0.3s ease !important;
+        }
+        .service-card:hover {
+          transform: translateY(-4px) !important;
+          border-color: rgba(74,144,217,0.4) !important;
+          background: #1a3060 !important;
+        }
+
+        /* How it works step reveal */
+        .how-step {
+          transition: transform 0.2s ease, opacity 0.2s ease;
+        }
+        .how-step:hover .step-num {
+          background: #2563eb !important;
+          transform: scale(1.1);
+        }
+        .step-num { transition: background 0.2s ease, transform 0.2s ease; }
+
+        /* Ken Burns on gallery images */
+        .hol-gallery-card img {
+          transition: transform 6s ease !important;
+        }
+        .hol-gallery-card:hover img {
+          transform: scale(1.06) !important;
+        }
+      `}</style>
+
+      {/* Scroll progress bar */}
+      <ScrollProgressBar />
+
+      {/* Mobile FAB */}
+      <MobileFAB />
+
       <Navbar />
 
       {/* ── HERO ─────────────────────────────────────────────── */}
@@ -427,13 +681,7 @@ export default function HomePage() {
             </svg>
           </div>
 
-          <p style={{
-            fontSize: 17, color: 'rgba(255,255,255,0.6)', lineHeight: 1.65,
-            maxWidth: 480, margin: '0 auto 44px', fontWeight: 400, letterSpacing: '0.2px',
-            fontFamily: "'Poppins', sans-serif", textAlign: 'center',
-          }}>
-            Property management. Done right.
-          </p>
+          <HeroCycler />
 
           <style>{`
             .hero-btns {
@@ -471,6 +719,9 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* ── STATS BAR ────────────────────────────────────────── */}
+      <StatsBar />
+
       {/* ── BOOK A VALUATION ─────────────────────────────────── */}
       <style>{`
         .bav-grid {
@@ -500,7 +751,7 @@ export default function HomePage() {
       `}</style>
       <section style={{ overflow: 'hidden', background: '#08122a' }}>
         <div className="bav-grid">
-          <div className="bav-text">
+          <div className="bav-text reveal">
             <h2 style={{
               fontFamily: "'Poppins', sans-serif",
               fontSize: 'clamp(28px,4vw,48px)', fontWeight: 700,
@@ -554,7 +805,7 @@ export default function HomePage() {
           <div className="bvw-photo">
             <img src="/images/agent-photo.jpeg" alt="Book a Viewing" />
           </div>
-          <div className="bvw-text">
+          <div className="bvw-text reveal">
             <h2 style={{
               fontFamily: "'Poppins', sans-serif",
               fontSize: 'clamp(28px,4vw,48px)', fontWeight: 700,
@@ -669,7 +920,7 @@ export default function HomePage() {
               }}
             />
           </div>
-          <div className="split-text" style={{ background: '#f7f8fa' }}>
+          <div className="split-text reveal" style={{ background: '#f7f8fa' }}>
             <p className="split-eyebrow">For Landlords</p>
             <h2 className="split-title">Why book a valuation with House of Lettings?</h2>
             <p className="split-body">
@@ -764,8 +1015,8 @@ export default function HomePage() {
               title: 'Property Management',
               body: 'From accurate valuations and professional photography to comprehensive tenant screening and 12-month guarantee insurance, we ensure your property is in the best hands at every stage of the letting process.',
             },
-          ].map(card => (
-            <div key={card.title} style={{
+          ].map((card, i) => (
+            <div key={card.title} className={`service-card reveal reveal-delay-${i + 1}`} style={{
               background: '#162849',
               borderRadius: 10, padding: '40px 32px',
               border: '1px solid rgba(255,255,255,0.08)',
@@ -841,7 +1092,7 @@ export default function HomePage() {
           <div className="pricing-row">
 
             {/* Virtual Tenant Find — £499 */}
-            <div style={{
+            <div className="pricing-card reveal reveal-delay-1" style={{
               background: '#162849', borderRadius: 10, padding: '36px 28px',
               border: '1px solid rgba(255,255,255,0.08)', display: 'flex', flexDirection: 'column',
             }}>
@@ -882,7 +1133,7 @@ export default function HomePage() {
             </div>
 
             {/* Expert Tenant Find — £799 — Most Popular */}
-            <div style={{
+            <div className="pricing-card reveal reveal-delay-2" style={{
               background: '#0f1f3d', borderRadius: 10, padding: '36px 28px',
               border: '2px solid #2563eb', display: 'flex', flexDirection: 'column',
               position: 'relative',
@@ -929,7 +1180,7 @@ export default function HomePage() {
             </div>
 
             {/* Rent Collection — 6% */}
-            <div style={{
+            <div className="pricing-card reveal reveal-delay-3" style={{
               background: '#162849', borderRadius: 10, padding: '36px 28px',
               border: '1px solid rgba(255,255,255,0.08)', display: 'flex', flexDirection: 'column',
             }}>
@@ -1094,8 +1345,22 @@ export default function HomePage() {
           background: '#fff', borderRadius: 10, padding: 'clamp(24px, 4vw, 40px)',
           boxShadow: '0 4px 32px rgba(0,0,0,0.08)', border: '1px solid #e5e7eb',
         }}>
-          <div style={{ fontSize: 13, fontWeight: 700, letterSpacing: 2, textTransform: 'uppercase', color: '#9ca3af', marginBottom: 28 }}>
-            Search Properties
+          <div style={{ fontSize: 13, fontWeight: 700, letterSpacing: 2, textTransform: 'uppercase', color: '#9ca3af', marginBottom: 28, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 8 }}>
+            <span>Search Properties</span>
+            {(location || minPrice || maxPrice || bedrooms) && (
+              <span style={{
+                fontSize: 12, color: '#2563eb', fontWeight: 600, letterSpacing: 0.5,
+                background: '#eff6ff', padding: '4px 12px', borderRadius: 20,
+                textTransform: 'none', animation: 'fadeSlideIn 0.25s ease',
+              }}>
+                {[
+                  location && `📍 ${location}`,
+                  minPrice && `from £${Number(minPrice).toLocaleString()}/mo`,
+                  maxPrice && `to £${Number(maxPrice).toLocaleString()}/mo`,
+                  bedrooms === '0' ? 'Studio' : bedrooms ? `${bedrooms}+ beds` : '',
+                ].filter(Boolean).join(' · ')}
+              </span>
+            )}
           </div>
           <div className="search-grid">
             <div>
@@ -1278,8 +1543,8 @@ export default function HomePage() {
                 {col.role}
               </div>
               {col.steps.map(s => (
-                <div key={s.n} style={{ display: 'flex', gap: 18, marginBottom: 28 }}>
-                  <div style={{
+                <div key={s.n} className={`how-step reveal reveal-delay-${s.n}`} style={{ display: 'flex', gap: 18, marginBottom: 28 }}>
+                  <div className="step-num" style={{
                     width: 36, height: 36, background: '#0f1f3d', color: '#fff',
                     borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center',
                     fontSize: 13, fontWeight: 700, flexShrink: 0,
@@ -1329,7 +1594,7 @@ export default function HomePage() {
           background: 'radial-gradient(ellipse at 20% 50%, rgba(30,58,110,0.2) 0%, transparent 60%)',
           pointerEvents: 'none',
         }} />
-        <div className="cta-banner" style={{ position: 'relative' }}>
+        <div className="cta-banner reveal" style={{ position: 'relative' }}>
           <div>
             <h2 style={{ fontFamily: "'Poppins', sans-serif", fontSize: 'clamp(28px,3.5vw,48px)', fontWeight: 700, color: '#fff', marginBottom: 12 }}>
               Ready to find your<br /><span style={{ color: '#4a90d9' }}>perfect home?</span>

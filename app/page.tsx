@@ -770,6 +770,79 @@ export default function HomePage() {
       </section>
 
 
+      {/* ── INFO CARDS ───────────────────────────────────────── */}
+      <style>{`
+        .services-grid {
+          display: grid;
+          grid-template-columns: repeat(3, 1fr);
+          gap: 28px;
+        }
+        @media (max-width: 900px) {
+          .services-grid { grid-template-columns: 1fr 1fr; }
+        }
+        @media (max-width: 600px) {
+          .services-grid { grid-template-columns: 1fr; }
+        }
+      `}</style>
+      <section style={{ padding: 'clamp(60px, 8vw, 100px) clamp(20px, 5%, 5%)', position: 'relative', overflow: 'hidden' }}>
+        {/* Services background image - agent with clients */}
+        <div style={{
+          position: 'absolute', inset: 0,
+          backgroundImage: 'url(/images/Background_of_the_services.png)',
+          backgroundSize: 'cover', backgroundPosition: 'center top',
+          backgroundRepeat: 'no-repeat',
+        }} />
+        {/* Dark overlay */}
+        <div style={{
+          position: 'absolute', inset: 0,
+          background: 'rgba(8, 18, 40, 0.82)',
+        }} />
+        <div style={{ position: 'relative', zIndex: 1 }}>
+        <div style={{ marginBottom: 56, textAlign: 'center' }}>
+          <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 3, textTransform: 'uppercase', color: '#4a90d9', marginBottom: 14 }}>
+            Our Services
+          </div>
+          <h2 style={{ fontFamily: "'Poppins', sans-serif", fontSize: 'clamp(28px,4vw,48px)', fontWeight: 700, color: '#fff', margin: 0 }}>
+            How We Can Help
+          </h2>
+        </div>
+        <div className="services-grid">
+          {[
+            {
+              title: 'For Landlords',
+              body: 'Renting your property should feel straightforward and cost-effective. Our service keeps the process clear with transparent pricing and flexible options, from free tools to low-cost packages including advertising, enquiry handling, and professional tenancy setup.',
+            },
+            {
+              title: 'For Tenants',
+              body: 'Our goal is to make finding your next home straightforward, safe, and comfortable. We offer flexible search options for different needs — pet-friendly homes, student accommodation, and properties suitable for a range of lifestyles. No pressure, no unnecessary office visits.',
+            },
+            {
+              title: 'Property Management',
+              body: 'From accurate valuations and professional photography to comprehensive tenant screening and 12-month guarantee insurance, we ensure your property is in the best hands at every stage of the letting process.',
+            },
+          ].map((card, i) => (
+            <div key={card.title} className={`service-card reveal reveal-delay-${i + 1}`} style={{
+              background: '#162849',
+              borderRadius: 10, padding: '40px 32px',
+              border: '1px solid rgba(255,255,255,0.08)',
+            }}>
+              <h3 style={{
+                fontFamily: "'Poppins', sans-serif",
+                fontSize: 20, fontWeight: 700, color: '#fff',
+                marginBottom: 16,
+              }}>
+                {card.title}
+              </h3>
+              <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.65)', lineHeight: 1.8, margin: 0 }}>
+                {card.body}
+              </p>
+            </div>
+          ))}
+        </div>
+        </div>
+      </section>
+
+
       {/* ── WHY BOOK A VALUATION + VIEWING ───────────────────── */}
       <style>{`
         .split-section { overflow: hidden; }
@@ -911,78 +984,6 @@ export default function HomePage() {
         </div>
       </section>
 
-
-      {/* ── INFO CARDS ───────────────────────────────────────── */}
-      <style>{`
-        .services-grid {
-          display: grid;
-          grid-template-columns: repeat(3, 1fr);
-          gap: 28px;
-        }
-        @media (max-width: 900px) {
-          .services-grid { grid-template-columns: 1fr 1fr; }
-        }
-        @media (max-width: 600px) {
-          .services-grid { grid-template-columns: 1fr; }
-        }
-      `}</style>
-      <section style={{ padding: 'clamp(60px, 8vw, 100px) clamp(20px, 5%, 5%)', position: 'relative', overflow: 'hidden' }}>
-        {/* Services background image - agent with clients */}
-        <div style={{
-          position: 'absolute', inset: 0,
-          backgroundImage: 'url(/images/Background_of_the_services.png)',
-          backgroundSize: 'cover', backgroundPosition: 'center top',
-          backgroundRepeat: 'no-repeat',
-        }} />
-        {/* Dark overlay */}
-        <div style={{
-          position: 'absolute', inset: 0,
-          background: 'rgba(8, 18, 40, 0.82)',
-        }} />
-        <div style={{ position: 'relative', zIndex: 1 }}>
-        <div style={{ marginBottom: 56, textAlign: 'center' }}>
-          <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 3, textTransform: 'uppercase', color: '#4a90d9', marginBottom: 14 }}>
-            Our Services
-          </div>
-          <h2 style={{ fontFamily: "'Poppins', sans-serif", fontSize: 'clamp(28px,4vw,48px)', fontWeight: 700, color: '#fff', margin: 0 }}>
-            How We Can Help
-          </h2>
-        </div>
-        <div className="services-grid">
-          {[
-            {
-              title: 'For Landlords',
-              body: 'Renting your property should feel straightforward and cost-effective. Our service keeps the process clear with transparent pricing and flexible options, from free tools to low-cost packages including advertising, enquiry handling, and professional tenancy setup.',
-            },
-            {
-              title: 'For Tenants',
-              body: 'Our goal is to make finding your next home straightforward, safe, and comfortable. We offer flexible search options for different needs — pet-friendly homes, student accommodation, and properties suitable for a range of lifestyles. No pressure, no unnecessary office visits.',
-            },
-            {
-              title: 'Property Management',
-              body: 'From accurate valuations and professional photography to comprehensive tenant screening and 12-month guarantee insurance, we ensure your property is in the best hands at every stage of the letting process.',
-            },
-          ].map((card, i) => (
-            <div key={card.title} className={`service-card reveal reveal-delay-${i + 1}`} style={{
-              background: '#162849',
-              borderRadius: 10, padding: '40px 32px',
-              border: '1px solid rgba(255,255,255,0.08)',
-            }}>
-              <h3 style={{
-                fontFamily: "'Poppins', sans-serif",
-                fontSize: 20, fontWeight: 700, color: '#fff',
-                marginBottom: 16,
-              }}>
-                {card.title}
-              </h3>
-              <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.65)', lineHeight: 1.8, margin: 0 }}>
-                {card.body}
-              </p>
-            </div>
-          ))}
-        </div>
-        </div>
-      </section>
 
 
       {/* ── PRICING TEASER ────────────────────────────────────── */}

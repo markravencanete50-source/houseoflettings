@@ -549,119 +549,113 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ── WHY BOOK A VALUATION ─────────────────────────────── */}
-      <section style={{ background: '#f7f8fa', overflow: 'hidden' }}>
-        <div style={{
-          display: 'grid', gridTemplateColumns: '1fr 1fr',
-          minHeight: 500,
-        }}>
-          {/* Photo — left */}
-          <div style={{
-            backgroundImage: 'url(/images/Landlord_Book_valuation_background.png)',
-            backgroundSize: 'cover', backgroundPosition: 'center',
-            minHeight: 420,
-          }} />
+      {/* ── WHY BOOK A VALUATION + VIEWING ───────────────────── */}
+      <style>{`
+        .split-section { overflow: hidden; }
+        .split-grid {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          min-height: 520px;
+        }
+        .split-photo {
+          background-size: cover;
+          background-position: center top;
+          min-height: 520px;
+        }
+        .split-text {
+          padding: clamp(48px, 6vw, 88px) clamp(28px, 5vw, 72px);
+          display: flex;
+          flex-direction: column;
+          justify-content: center;
+        }
+        .split-eyebrow {
+          font-family: 'Poppins', sans-serif;
+          font-size: 11px; font-weight: 700;
+          letter-spacing: 0.18em; text-transform: uppercase;
+          color: #2563eb; margin-bottom: 16px;
+        }
+        .split-title {
+          font-family: 'Poppins', sans-serif;
+          font-size: clamp(22px, 3vw, 34px); font-weight: 700;
+          color: #0f1f3d; line-height: 1.25; margin-bottom: 16px;
+        }
+        .split-body {
+          font-family: 'Poppins', sans-serif;
+          font-size: 15px; color: #4b5563;
+          line-height: 1.8; margin-bottom: 24px; max-width: 440px;
+        }
+        .split-list {
+          list-style: none; padding: 0;
+          margin: 0 0 32px;
+          display: flex; flex-direction: column; gap: 12px;
+        }
+        .split-list li {
+          display: flex; align-items: flex-start; gap: 12px;
+          font-family: 'Poppins', sans-serif;
+          font-size: 14px; color: #374151;
+        }
+        .split-check {
+          color: #2563eb; font-weight: 700;
+          font-size: 16px; line-height: 1.4; flex-shrink: 0;
+        }
+        @media (max-width: 768px) {
+          .split-grid {
+            grid-template-columns: 1fr !important;
+          }
+          .split-photo {
+            min-height: 300px !important;
+            order: -1 !important;
+          }
+          .split-text {
+            padding: 40px 24px !important;
+          }
+          .split-body { max-width: 100% !important; }
+        }
+      `}</style>
 
-          {/* Text — right */}
-          <div style={{
-            padding: 'clamp(48px, 6vw, 88px) clamp(32px, 5vw, 72px)',
-            display: 'flex', flexDirection: 'column', justifyContent: 'center',
-            background: '#f7f8fa',
-          }}>
-            <p style={{
-              fontFamily: "'Poppins', sans-serif",
-              fontSize: 11, fontWeight: 700, letterSpacing: '0.18em',
-              textTransform: 'uppercase', color: '#2563eb', marginBottom: 16,
-            }}>For Landlords</p>
-            <h2 style={{
-              fontFamily: "'Poppins', sans-serif",
-              fontSize: 'clamp(24px, 3vw, 36px)', fontWeight: 700,
-              color: '#0f1f3d', lineHeight: 1.25, marginBottom: 18,
-            }}>
-              Why book a valuation with House of Lettings?
-            </h2>
-            <p style={{
-              fontFamily: "'Poppins', sans-serif",
-              fontSize: 15, color: '#4b5563', lineHeight: 1.8,
-              marginBottom: 28, maxWidth: 440,
-            }}>
+      {/* Valuation — photo left, text right */}
+      <section className="split-section" style={{ background: '#f7f8fa' }}>
+        <div className="split-grid">
+          <div
+            className="split-photo"
+            style={{ backgroundImage: 'url(/images/Landlord_Book_valuation_background.png)', backgroundPosition: 'center top' }}
+          />
+          <div className="split-text" style={{ background: '#f7f8fa' }}>
+            <p className="split-eyebrow">For Landlords</p>
+            <h2 className="split-title">Why book a valuation with House of Lettings?</h2>
+            <p className="split-body">
               Booking a valuation with House of Lettings will save you time, money, and stress. Our local experts give you an honest, data-driven view of what your property is worth — so you can make informed decisions with confidence.
             </p>
-            <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 36px', display: 'flex', flexDirection: 'column', gap: 12 }}>
-              <li style={{ display: 'flex', alignItems: 'flex-start', gap: 12, fontFamily: "'Poppins', sans-serif", fontSize: 14, color: '#374151' }}>
-                <span style={{ color: '#2563eb', fontWeight: 700, fontSize: 16, lineHeight: 1.4, flexShrink: 0 }}>✓</span>
-                Free, no-obligation valuation from a local expert
-              </li>
-              <li style={{ display: 'flex', alignItems: 'flex-start', gap: 12, fontFamily: "'Poppins', sans-serif", fontSize: 14, color: '#374151' }}>
-                <span style={{ color: '#2563eb', fontWeight: 700, fontSize: 16, lineHeight: 1.4, flexShrink: 0 }}>✓</span>
-                Accurate rental and sales valuations backed by live market data
-              </li>
-              <li style={{ display: 'flex', alignItems: 'flex-start', gap: 12, fontFamily: "'Poppins', sans-serif", fontSize: 14, color: '#374151' }}>
-                <span style={{ color: '#2563eb', fontWeight: 700, fontSize: 16, lineHeight: 1.4, flexShrink: 0 }}>✓</span>
-                Advice on how to maximise your property&apos;s return
-              </li>
+            <ul className="split-list">
+              <li><span className="split-check">✓</span>Free, no-obligation valuation from a local expert</li>
+              <li><span className="split-check">✓</span>Accurate rental and sales valuations backed by live market data</li>
+              <li><span className="split-check">✓</span>Advice on how to maximise your property&apos;s return</li>
             </ul>
             <ValuationInlineButton />
           </div>
         </div>
-
-
       </section>
 
-      {/* ── WHY BOOK A VIEWING ───────────────────────────────── */}
-      <section style={{ background: '#ffffff', overflow: 'hidden' }}>
-        <div style={{
-          display: 'grid', gridTemplateColumns: '1fr 1fr',
-          minHeight: 500,
-        }}>
-          {/* Text — left */}
-          <div style={{
-            padding: 'clamp(48px, 6vw, 88px) clamp(32px, 5vw, 72px)',
-            display: 'flex', flexDirection: 'column', justifyContent: 'center',
-            background: '#ffffff',
-          }}>
-            <p style={{
-              fontFamily: "'Poppins', sans-serif",
-              fontSize: 11, fontWeight: 700, letterSpacing: '0.18em',
-              textTransform: 'uppercase', color: '#2563eb', marginBottom: 16,
-            }}>For Tenants</p>
-            <h2 style={{
-              fontFamily: "'Poppins', sans-serif",
-              fontSize: 'clamp(24px, 3vw, 36px)', fontWeight: 700,
-              color: '#0f1f3d', lineHeight: 1.25, marginBottom: 18,
-            }}>
-              Find your perfect home with House of Lettings
-            </h2>
-            <p style={{
-              fontFamily: "'Poppins', sans-serif",
-              fontSize: 15, color: '#4b5563', lineHeight: 1.8,
-              marginBottom: 28, maxWidth: 440,
-            }}>
+      {/* Viewing — text left, photo right */}
+      <section className="split-section" style={{ background: '#ffffff' }}>
+        <div className="split-grid">
+          <div className="split-text" style={{ background: '#ffffff' }}>
+            <p className="split-eyebrow">For Tenants</p>
+            <h2 className="split-title">Find your perfect home with House of Lettings</h2>
+            <p className="split-body">
               Booking a viewing with us is quick, easy, and puts you first. We take the pressure off your search — matching you with the right properties and guiding you every step of the way.
             </p>
-            <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 36px', display: 'flex', flexDirection: 'column', gap: 12 }}>
-              <li style={{ display: 'flex', alignItems: 'flex-start', gap: 12, fontFamily: "'Poppins', sans-serif", fontSize: 14, color: '#374151' }}>
-                <span style={{ color: '#2563eb', fontWeight: 700, fontSize: 16, lineHeight: 1.4, flexShrink: 0 }}>✓</span>
-                View properties before they hit the open market
-              </li>
-              <li style={{ display: 'flex', alignItems: 'flex-start', gap: 12, fontFamily: "'Poppins', sans-serif", fontSize: 14, color: '#374151' }}>
-                <span style={{ color: '#2563eb', fontWeight: 700, fontSize: 16, lineHeight: 1.4, flexShrink: 0 }}>✓</span>
-                Dedicated agent to handle all enquiries and negotiations
-              </li>
-              <li style={{ display: 'flex', alignItems: 'flex-start', gap: 12, fontFamily: "'Poppins', sans-serif", fontSize: 14, color: '#374151' }}>
-                <span style={{ color: '#2563eb', fontWeight: 700, fontSize: 16, lineHeight: 1.4, flexShrink: 0 }}>✓</span>
-                Transparent process with no hidden fees for tenants
-              </li>
+            <ul className="split-list">
+              <li><span className="split-check">✓</span>View properties before they hit the open market</li>
+              <li><span className="split-check">✓</span>Dedicated agent to handle all enquiries and negotiations</li>
+              <li><span className="split-check">✓</span>Transparent process with no hidden fees for tenants</li>
             </ul>
             <BookViewingInlineButton />
           </div>
-
-          {/* Photo — right */}
-          <div style={{
-            backgroundImage: 'url(/images/Tenants_Book_viewing_background.png)',
-            backgroundSize: 'cover', backgroundPosition: 'center',
-            minHeight: 420,
-          }} />
+          <div
+            className="split-photo"
+            style={{ backgroundImage: 'url(/images/Tenants_Book_viewing_background.png)', backgroundPosition: 'center top' }}
+          />
         </div>
       </section>
 

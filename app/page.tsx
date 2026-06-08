@@ -890,8 +890,8 @@ export default function HomePage() {
 
       {/* Viewing — text left, photo right */}
       <section className="split-section" style={{ background: '#ffffff' }}>
-        <div className="split-grid" style={{ alignItems: 'stretch' }}>
-          <div className="split-text" style={{ background: '#ffffff' }}>
+        <div className="split-grid" style={{ alignItems: 'stretch', minHeight: 560 }}>
+          <div className="split-text" style={{ background: '#ffffff', justifyContent: 'center' }}>
             <p className="split-eyebrow">For Tenants</p>
             <h2 className="split-title">Find your perfect home with House of Lettings</h2>
             <p className="split-body">
@@ -906,7 +906,7 @@ export default function HomePage() {
           </div>
           <div
             className="split-photo"
-            style={{ backgroundImage: 'url(/images/Tenants_Book_viewing_background.png)', backgroundPosition: 'center center', alignSelf: 'stretch' }}
+            style={{ backgroundImage: 'url(/images/Tenants_Book_viewing_background.png)', backgroundPosition: 'center center', alignSelf: 'stretch', minHeight: 560 }}
           />
 
         </div>

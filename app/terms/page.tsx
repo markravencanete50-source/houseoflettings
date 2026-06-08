@@ -1,4 +1,6 @@
+'use client';
 import Link from 'next/link';
+import Navbar from '@/components/layout/Navbar';
 
 export default function TermsAndConditions() {
   const sections = [
@@ -216,7 +218,10 @@ export default function TermsAndConditions() {
 
   return (
     <>
+      <Navbar />
       <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap');
+        * { font-family: 'Poppins', sans-serif; }
         /* ── Tokens ── */
         :root {
           --navy: #0f1f3d;
@@ -276,7 +281,7 @@ export default function TermsAndConditions() {
           margin: 0 0 16px;
           line-height: 1.15;
           letter-spacing: -0.02em;
-          font-family: Georgia, 'Times New Roman', serif;
+          font-family: 'Poppins', sans-serif;
         }
         .hol-hero-meta {
           font-size: 13px;
@@ -510,7 +515,7 @@ export default function TermsAndConditions() {
         }
       `}</style>
 
-      <main className="min-h-screen bg-white">
+      <main className="min-h-screen" style={{ background: "#ffffff" }}>
 
         {/* Hero */}
         <div className="hol-hero">

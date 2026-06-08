@@ -723,10 +723,10 @@ export default function HomePage() {
         .bvw-grid {
           display: grid;
           grid-template-columns: 1fr 1fr;
-          min-height: 560px;
+          min-height: 420px;
         }
         .bvw-photo {
-          position: relative; overflow: hidden; min-height: 560px;
+          position: relative; overflow: hidden; min-height: 420px;
         }
         .bvw-photo img {
           width: 100%; height: 100%;
@@ -776,19 +776,19 @@ export default function HomePage() {
         .split-grid {
           display: grid;
           grid-template-columns: 1fr 1fr;
-          min-height: 860px;
+          min-height: 500px;
         }
         .split-photo {
           background-size: cover;
           background-repeat: no-repeat;
           background-position: center center;
-          min-height: 860px;
+          min-height: 500px;
         }
         .split-photo-contain {
           background-size: contain;
           background-repeat: no-repeat;
           background-position: center center;
-          min-height: 860px;
+          min-height: 500px;
           background-color: #08122a;
         }
         .split-text {
@@ -871,7 +871,7 @@ export default function HomePage() {
             </p>
             <ValuationInlineButton />
           </div>
-          <div className="split-img-panel" style={{ overflow: 'hidden', minHeight: 860, display: 'flex', alignItems: 'stretch', position: 'relative' }}>
+          <div className="split-img-panel" style={{ overflow: 'hidden', minHeight: 500, display: 'flex', alignItems: 'stretch', position: 'relative' }}>
             <img
               src="/images/Landlord_Book_valuation_background.png"
               alt="Book a Valuation"
@@ -890,7 +890,7 @@ export default function HomePage() {
 
       {/* Viewing — photo left, text right */}
       <section className="split-section" style={{ background: '#ffffff' }}>
-        <div className="split-grid" style={{ alignItems: 'stretch', minHeight: 560 }}>
+        <div className="split-grid" style={{ alignItems: 'stretch', minHeight: 500 }}>
           <div
             className="split-photo"
             style={{ backgroundImage: 'url(/images/Tenants_Book_viewing_background.png)', backgroundPosition: 'center center', alignSelf: 'stretch', minHeight: 560 }}

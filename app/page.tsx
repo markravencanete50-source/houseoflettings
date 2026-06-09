@@ -81,7 +81,7 @@ function ValuationInlineButton() {
           border: 'none', borderRadius: 6, fontSize: 16, fontWeight: 700,
           letterSpacing: '0.5px', cursor: 'pointer', transition: 'background 0.2s',
           fontFamily: "'Poppins', sans-serif",
-          display: 'inline-block', width: '220px', textAlign: 'center',
+          display: 'block', width: '100%', maxWidth: '260px', textAlign: 'center',
         }}
         onMouseEnter={e => (e.currentTarget.style.background = '#1d4ed8')}
         onMouseLeave={e => (e.currentTarget.style.background = '#2563eb')}
@@ -107,7 +107,7 @@ function BookViewingInlineButton() {
           border: 'none', borderRadius: 6, fontSize: 16, fontWeight: 700,
           letterSpacing: '0.5px', cursor: 'pointer', transition: 'background 0.2s',
           fontFamily: "'Poppins', sans-serif",
-          display: 'inline-block', width: '220px', textAlign: 'center',
+          display: 'block', width: '100%', maxWidth: '260px', textAlign: 'center',
         }}
         onMouseEnter={e => (e.currentTarget.style.background = '#1d4ed8')}
         onMouseLeave={e => (e.currentTarget.style.background = '#2563eb')}
@@ -578,7 +578,7 @@ export default function HomePage() {
         minHeight: '100vh', background: '#0f1f3d', 
         position: 'relative', display: 'flex', alignItems: 'center',
         justifyContent: 'center',
-        padding: '60px 5%',
+        padding: 'calc(var(--navbar-height, 72px) + 40px) 5% 60px',
       }}>
         {/* Hero background image - Leeds city */}
         <div style={{
@@ -645,8 +645,11 @@ export default function HomePage() {
             }
             .hero-btn:hover { background: #1d4ed8; }
             @media (max-width: 480px) {
-              .hero-btns { gap: 10px; }
-              .hero-btn { padding: 11px 18px; font-size: 11px; }
+              .hero-btns { flex-direction: column; gap: 10px; align-items: stretch; }
+              .hero-btn {
+                padding: 14px 18px; font-size: 12px;
+                text-align: center; width: 100%;
+              }
             }
           `}</style>
           <div className="hero-btns">
@@ -657,9 +660,6 @@ export default function HomePage() {
             <HeroValuationButton />
             <Link href="/pricing" className="hero-btn">
               Pricing
-            </Link>
-            <Link href="/terms" className="hero-btn">
-              Terms &amp; Conditions
             </Link>
           </div>
         </div>
@@ -811,21 +811,37 @@ export default function HomePage() {
             {
               title: 'For Landlords',
               body: 'Renting your property should feel straightforward and cost-effective. Our service keeps the process clear with transparent pricing and flexible options, from free tools to low-cost packages including advertising, enquiry handling, and professional tenancy setup.',
+              href: '/landlords',
             },
             {
               title: 'For Tenants',
               body: 'Our goal is to make finding your next home straightforward, safe, and comfortable. We offer flexible search options for different needs — pet-friendly homes, student accommodation, and properties suitable for a range of lifestyles. No pressure, no unnecessary office visits.',
+              href: '/tenants',
             },
             {
               title: 'Property Management',
               body: 'From accurate valuations and professional photography to comprehensive tenant screening and 12-month guarantee insurance, we ensure your property is in the best hands at every stage of the letting process.',
+              href: '/property-management',
             },
           ].map((card, i) => (
-            <div key={card.title} className={`service-card reveal reveal-delay-${i + 1}`} style={{
+            <Link key={card.title} href={card.href} className={`service-card reveal reveal-delay-${i + 1}`} style={{
               background: '#162849',
               borderRadius: 10, padding: '40px 32px',
               border: '1px solid rgba(255,255,255,0.08)',
-            }}>
+              textDecoration: 'none', display: 'block',
+              transition: 'transform 0.25s ease, border-color 0.25s ease, background 0.25s ease',
+            }}
+              onMouseEnter={e => {
+                (e.currentTarget as HTMLElement).style.transform = 'translateY(-5px)';
+                (e.currentTarget as HTMLElement).style.borderColor = 'rgba(74,144,217,0.5)';
+                (e.currentTarget as HTMLElement).style.background = '#1a3060';
+              }}
+              onMouseLeave={e => {
+                (e.currentTarget as HTMLElement).style.transform = 'translateY(0)';
+                (e.currentTarget as HTMLElement).style.borderColor = 'rgba(255,255,255,0.08)';
+                (e.currentTarget as HTMLElement).style.background = '#162849';
+              }}
+            >
               <h3 style={{
                 fontFamily: "'Poppins', sans-serif",
                 fontSize: 20, fontWeight: 700, color: '#fff',
@@ -833,10 +849,13 @@ export default function HomePage() {
               }}>
                 {card.title}
               </h3>
-              <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.65)', lineHeight: 1.8, margin: 0 }}>
+              <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.65)', lineHeight: 1.8, margin: '0 0 20px' }}>
                 {card.body}
               </p>
-            </div>
+              <span style={{ fontSize: 13, color: '#4a90d9', fontWeight: 600, letterSpacing: 0.5 }}>
+                Learn more →
+              </span>
+            </Link>
           ))}
         </div>
         </div>
@@ -903,6 +922,7 @@ export default function HomePage() {
         @media (max-width: 768px) {
           .split-grid {
             grid-template-columns: 1fr !important;
+            min-height: auto !important;
           }
           .split-photo, .split-photo-contain {
             min-height: 320px !important;
@@ -996,7 +1016,7 @@ export default function HomePage() {
           .pricing-teaser-grid { grid-template-columns: repeat(3, 1fr); }
         }
         @media (max-width: 560px) {
-          .pricing-teaser-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+          .pricing-teaser-grid { grid-template-columns: repeat(1, 1fr); gap: 12px; }
         }
       `}</style>
       <section style={{ padding: 'clamp(60px, 8vw, 100px) clamp(20px, 5%, 5%)', position: 'relative', overflow: 'hidden' }}>
@@ -1423,7 +1443,12 @@ export default function HomePage() {
         background: '#050a12', borderTop: '1px solid rgba(255,255,255,0.06)',
         padding: 'clamp(32px, 5vw, 48px) clamp(20px, 5%, 5%)',
       }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 16 }}>
+        <style>{`
+          @media (max-width: 600px) {
+            .hol-footer-inner { flex-direction: column !important; align-items: flex-start !important; gap: 20px !important; }
+          }
+        `}</style>
+        <div className="hol-footer-inner" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 16 }}>
           <div style={{
             fontFamily: "'Poppins', sans-serif", fontSize: 20, fontWeight: 700,
             color: '#fff', display: 'flex', alignItems: 'center', gap: 10,

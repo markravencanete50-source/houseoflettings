@@ -24,13 +24,13 @@ export default function LandlordsPage() {
           position: 'absolute', inset: 0,
           backgroundImage: 'url(/images/Landlord_page.png)',
           backgroundSize: 'cover',
-          backgroundPosition: 'center right',
+          backgroundPosition: 'center center',
           backgroundRepeat: 'no-repeat',
         }} />
-        {/* Dark gradient overlay — left heavy so text is readable */}
+        {/* Dark overlay */}
         <div style={{
           position: 'absolute', inset: 0,
-          background: 'linear-gradient(90deg, rgba(8,18,42,0.92) 0%, rgba(8,18,42,0.75) 55%, rgba(8,18,42,0.2) 100%)',
+          background: 'linear-gradient(90deg, rgba(8,18,42,0.88) 0%, rgba(8,18,42,0.70) 50%, rgba(8,18,42,0.50) 100%)',
         }} />
 
         <div style={{ position: 'relative', zIndex: 1, padding: 'clamp(100px,12vw,140px) clamp(24px,7%,100px) clamp(80px,10vw,120px)', maxWidth: 680 }}>
@@ -104,22 +104,17 @@ export default function LandlordsPage() {
           justifyContent: 'space-around', alignItems: 'center',
         }}>
           {[
-            { num: '500+', label: 'Properties Managed' },
-            { num: '£0', label: 'Hidden Fees' },
-            { num: '2', label: 'Cities — Leeds & Manchester' },
-            { num: '98%', label: 'Landlord Satisfaction' },
-          ].map(stat => (
-            <div key={stat.label} style={{ textAlign: 'center' }}>
+            'Properties Managed',
+            'No Hidden Fees',
+            'Leeds & Manchester',
+            'Landlord Satisfaction Guaranteed',
+          ].map(label => (
+            <div key={label} style={{ textAlign: 'center' }}>
               <div style={{
                 fontFamily: "'Poppins', sans-serif",
-                fontSize: 'clamp(28px,3vw,42px)', fontWeight: 800,
-                color: '#4a90d9', lineHeight: 1,
-              }}>{stat.num}</div>
-              <div style={{
-                fontFamily: "'Poppins', sans-serif",
-                fontSize: 13, color: 'rgba(255,255,255,0.55)',
-                marginTop: 8, letterSpacing: 0.5,
-              }}>{stat.label}</div>
+                fontSize: 14, color: 'rgba(255,255,255,0.6)',
+                letterSpacing: 1, fontWeight: 500,
+              }}>{label}</div>
             </div>
           ))}
         </div>
@@ -205,7 +200,7 @@ export default function LandlordsPage() {
               borderRadius: 12, overflow: 'hidden',
               minHeight: 520,
               backgroundImage: 'url(/images/Landlord_Book_valuation_background.png)',
-              backgroundSize: 'cover', backgroundPosition: 'center top',
+              backgroundSize: 'cover', backgroundPosition: 'center center',
             }}
           />
         </div>

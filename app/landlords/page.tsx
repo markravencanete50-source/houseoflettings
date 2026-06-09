@@ -14,8 +14,29 @@ export default function LandlordsPage() {
       <Navbar />
 
       {/* ── HERO ─────────────────────────────────────────────── */}
+      <style>{`
+        .hero-btn {
+          padding: 16px 0;
+          width: 260px;
+          font-size: 14px;
+          font-weight: 700;
+          letter-spacing: 0.5px;
+          border-radius: 6px;
+          cursor: pointer;
+          font-family: 'Poppins', sans-serif;
+          text-transform: uppercase;
+          text-align: center;
+          text-decoration: none;
+          display: inline-block;
+          transition: background 0.2s, border-color 0.2s;
+        }
+        @media (max-width: 600px) {
+          .hero-btn { width: 100%; }
+          .hero-btns { flex-direction: column !important; }
+        }
+      `}</style>
       <section style={{
-        position: 'relative', minHeight: '92vh',
+        position: 'relative', minHeight: '100vh',
         display: 'flex', alignItems: 'center',
         overflow: 'hidden',
       }}>
@@ -30,10 +51,14 @@ export default function LandlordsPage() {
         {/* Dark overlay */}
         <div style={{
           position: 'absolute', inset: 0,
-          background: 'linear-gradient(90deg, rgba(8,18,42,0.88) 0%, rgba(8,18,42,0.70) 50%, rgba(8,18,42,0.50) 100%)',
+          background: 'linear-gradient(90deg, rgba(8,18,42,0.92) 0%, rgba(8,18,42,0.75) 55%, rgba(8,18,42,0.40) 100%)',
         }} />
 
-        <div style={{ position: 'relative', zIndex: 1, padding: 'clamp(100px,12vw,140px) clamp(24px,7%,100px) clamp(80px,10vw,120px)', maxWidth: 680 }}>
+        <div style={{
+          position: 'relative', zIndex: 1,
+          padding: 'clamp(100px,12vw,140px) clamp(24px,7%,100px) clamp(80px,10vw,120px)',
+          maxWidth: 600,
+        }}>
           <div style={{
             fontSize: 11, fontWeight: 700, letterSpacing: 4,
             textTransform: 'uppercase', color: '#4a90d9', marginBottom: 20,
@@ -43,10 +68,10 @@ export default function LandlordsPage() {
           </div>
           <h1 style={{
             fontFamily: "'Poppins', sans-serif",
-            fontSize: 'clamp(36px,5.5vw,72px)',
+            fontSize: 'clamp(36px,4.5vw,58px)',
             fontWeight: 800, color: '#fff',
             lineHeight: 1.1, letterSpacing: '-1px',
-            marginBottom: 12,
+            marginBottom: 16,
           }}>
             Is Your Property<br />
             <span style={{ color: '#4a90d9' }}>Actually Making</span><br />
@@ -54,36 +79,30 @@ export default function LandlordsPage() {
           </h1>
           <p style={{
             fontFamily: "'Poppins', sans-serif",
-            fontSize: 'clamp(15px,1.8vw,19px)',
+            fontSize: 'clamp(14px,1.5vw,17px)',
             color: 'rgba(255,255,255,0.72)',
-            lineHeight: 1.75, marginBottom: 44,
-            fontWeight: 300, maxWidth: 520,
+            lineHeight: 1.75, marginBottom: 40,
+            fontWeight: 300, maxWidth: 460,
           }}>
             We handle the management. You enjoy the returns.<br />
             Serving landlords across Leeds &amp; Manchester.
           </p>
-          <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
+          <div className="hero-btns" style={{ display: 'flex', gap: 14, flexWrap: 'wrap' }}>
             <button
               onClick={() => setValuationOpen(true)}
-              style={{
-                padding: '16px 36px', background: '#2563eb', color: '#fff',
-                border: 'none', borderRadius: 6, fontSize: 15, fontWeight: 700,
-                letterSpacing: '0.5px', cursor: 'pointer', transition: 'background 0.2s',
-                fontFamily: "'Poppins', sans-serif", textTransform: 'uppercase',
-              }}
+              className="hero-btn"
+              style={{ background: '#2563eb', color: '#fff', border: 'none' }}
               onMouseEnter={e => (e.currentTarget.style.background = '#1d4ed8')}
               onMouseLeave={e => (e.currentTarget.style.background = '#2563eb')}
             >
               Book a Free Valuation
             </button>
-            <Link href="/pricing" style={{
-              padding: '16px 36px', background: 'transparent', color: '#fff',
-              border: '1.5px solid rgba(255,255,255,0.4)', borderRadius: 6,
-              fontSize: 15, fontWeight: 600, cursor: 'pointer',
-              fontFamily: "'Poppins', sans-serif", textTransform: 'uppercase',
-              textDecoration: 'none', letterSpacing: '0.5px',
-              transition: 'border-color 0.2s',
-            }}
+            <Link href="/pricing"
+              className="hero-btn"
+              style={{
+                background: 'transparent', color: '#fff',
+                border: '1.5px solid rgba(255,255,255,0.4)',
+              }}
               onMouseEnter={e => (e.currentTarget.style.borderColor = '#fff')}
               onMouseLeave={e => (e.currentTarget.style.borderColor = 'rgba(255,255,255,0.4)')}
             >

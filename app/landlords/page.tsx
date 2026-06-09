@@ -20,9 +20,7 @@ function HtiCarousel() {
   const total = HOL_IMAGES.length;
   const pages = Math.ceil(total / perPage);
 
-  const offset = current * (clampedCardWidth() + 20);
-
-  function clampedCardWidth() { return 320; }
+  const CARD_W = 340;
 
   const go = (idx: number) => setCurrent(Math.max(0, Math.min(idx, pages - 1)));
 
@@ -72,7 +70,7 @@ function HtiCarousel() {
       <div className="hti-track-wrap">
         <div
           className="hti-track"
-          style={{ transform: `translateX(-${current * (clampedCardWidth() + 20)}px)` }}
+          style={{ transform: `translateX(-${current * (CARD_W + 20)}px)` }}
         >
           {HOL_IMAGES.map((img, i) => (
             <div key={i} className="hti-card">
@@ -226,7 +224,7 @@ export default function LandlordsPage() {
           @media (max-width: 640px) {
             .hti-header { grid-template-columns: 1fr; gap: 12px; }
           }
-        \`}</style>
+        `}</style>
         <div className="hti-header">
           <div>
             <div style={{

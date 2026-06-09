@@ -111,7 +111,6 @@ export default function LandlordsPage() {
           }
           @media (max-width: 768px) {
             .ll-intro-grid { grid-template-columns: 1fr; gap: 40px; }
-            .ll-intro-img { min-height: 300px !important; }
           }
         `}</style>
         <div className="ll-intro-grid">
@@ -170,13 +169,14 @@ export default function LandlordsPage() {
               Get a Free Valuation
             </button>
           </div>
-          <div
+          <img
+            src="/images/Landlord_Book_valuation_background.png"
+            alt="Better Management. Better Tenants. Better Returns."
             className="ll-intro-img"
             style={{
-              borderRadius: 12, overflow: 'hidden',
-              minHeight: 520,
-              backgroundImage: 'url(/images/Landlord_Book_valuation_background.png)',
-              backgroundSize: 'cover', backgroundPosition: 'center center',
+              width: '100%', height: 'auto',
+              borderRadius: 12, display: 'block',
+              objectFit: 'cover',
             }}
           />
         </div>

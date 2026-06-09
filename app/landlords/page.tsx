@@ -7,11 +7,11 @@ import Navbar from '@/components/layout/Navbar';
 const ValuationModal = lazy(() => import('@/components/ValuationModal'));
 
 const HOL_IMAGES = [
-  { src: '/images/Landlord_Book_valuation_background.png', caption: 'Leeds & Manchester Experts', sub: 'Local knowledge, professional service.' },
-  { src: '/images/Landlord_page.png', caption: 'We Handle the Details.', sub: 'You enjoy the returns. Less time. More stress.' },
-  { src: '/images/Landlord_Book_valuation_background.png', caption: 'Full Lettings & Management', sub: 'AI-powered system, expert team.' },
-  { src: '/images/Landlord_page.png', caption: 'Everything You Need', sub: 'To succeed as a landlord.' },
-  { src: '/images/Landlord_Book_valuation_background.png', caption: 'Stay Fully Informed', sub: 'We track everything, so you don\'t have to.' },
+  { src: '/images/landlord-app.png', caption: 'Everything You Need', sub: 'To succeed as a landlord.' },
+  { src: '/images/brand-desk.jpeg', caption: 'We Handle the Details.', sub: 'You enjoy the returns.' },
+  { src: '/images/agent-photo.jpeg', caption: 'Tenant Pressure?', sub: 'We take it off your shoulders.' },
+  { src: '/images/compliance.jpeg', caption: 'Full Compliance Covered', sub: 'New rules, handled by experts.' },
+  { src: '/images/service-compare.png', caption: 'AI-Powered Management', sub: 'Your property. Our expertise.' },
 ];
 
 function HtiCarousel() {

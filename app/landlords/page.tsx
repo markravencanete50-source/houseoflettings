@@ -57,7 +57,7 @@ export default function LandlordsPage() {
         <div style={{
           position: 'relative', zIndex: 1,
           padding: 'clamp(100px,12vw,140px) clamp(24px,7%,100px) clamp(80px,10vw,120px)',
-          maxWidth: 600,
+          maxWidth: 600, margin: '0 auto', textAlign: 'center',
         }}>
           <div style={{
             fontSize: 11, fontWeight: 700, letterSpacing: 4,
@@ -87,7 +87,7 @@ export default function LandlordsPage() {
             We handle the management. You enjoy the returns.<br />
             Serving landlords across Leeds &amp; Manchester.
           </p>
-          <div className="hero-btns" style={{ display: 'flex', gap: 14, flexWrap: 'wrap' }}>
+          <div className="hero-btns" style={{ display: 'flex', gap: 14, flexWrap: 'wrap', justifyContent: 'center' }}>
             <button
               onClick={() => setValuationOpen(true)}
               className="hero-btn"

@@ -96,6 +96,11 @@ const steps = [
   },
   {
     num: "05",
+    title: "Complete your application",
+    body: "We guide you through referencing and paperwork — straightforward and handled quickly.",
+  },
+  {
+    num: "06",
     title: "Move in",
     body: "Referencing done, paperwork signed, keys in hand. Welcome home.",
   },

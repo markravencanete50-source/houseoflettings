@@ -13,8 +13,57 @@ const poppins = Poppins({
 });
 
 export const metadata: Metadata = {
-  title: 'House of Lettings — Find Your Next Home',
-  description: 'The UK\'s premier direct rental platform. No agency fees, no middlemen.',
+  title: 'House of Lettings | Letting Agents in Leeds & Manchester',
+  description:
+    'Award-winning letting agents in Leeds and Manchester. Transparent pricing from £499. Free valuations, full property management, and tenant find services. No hidden fees.',
+  metadataBase: new URL('https://www.houseoflettings.uk'),
+  openGraph: {
+    title: 'House of Lettings | Letting Agents in Leeds & Manchester',
+    description:
+      'Transparent pricing. No hidden fees. Free valuation from local experts in Leeds & Manchester.',
+    url: 'https://www.houseoflettings.uk',
+    siteName: 'House of Lettings',
+    images: [
+      {
+        url: '/images/brand-desk.jpeg',
+        width: 1200,
+        height: 630,
+        alt: 'House of Lettings – Letting Agents in Leeds & Manchester',
+      },
+    ],
+    locale: 'en_GB',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'House of Lettings | Letting Agents in Leeds & Manchester',
+    description: 'Transparent pricing. No hidden fees. Free valuation from local experts.',
+    images: ['/images/brand-desk.jpeg'],
+  },
+  icons: {
+    icon: '/images/logo_HOL.png',
+    apple: '/images/logo_HOL.png',
+  },
+};
+
+const organizationSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'RealEstateAgent',
+  name: 'House of Lettings',
+  url: 'https://www.houseoflettings.uk',
+  logo: 'https://www.houseoflettings.uk/images/logo_HOL.png',
+  image: 'https://www.houseoflettings.uk/images/logo_HOL.png',
+  description:
+    'Letting agents in Leeds and Manchester. Transparent pricing, free valuations, full property management and tenant find services.',
+  areaServed: ['Leeds', 'Manchester'],
+  address: {
+    '@type': 'PostalAddress',
+    addressLocality: 'Leeds',
+    addressRegion: 'West Yorkshire',
+    addressCountry: 'GB',
+  },
+  priceRange: '££',
+  sameAs: [],
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -25,6 +74,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           {children}
         </AuthProvider>
         <CookieBanner />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationSchema) }}
+        />
       </body>
     </html>
   );

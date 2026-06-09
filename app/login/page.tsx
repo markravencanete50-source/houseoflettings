@@ -46,12 +46,18 @@ export default function LoginPage() {
 
       <div style={{ position: 'relative', zIndex: 2, width: '100%', maxWidth: 440 }}>
         <div style={{ textAlign: 'center', marginBottom: 40 }}>
-          <Link href="/" style={{ display: 'inline-block', textDecoration: 'none' }}>
+          <Link href="/" style={{ display: 'inline-flex', alignItems: 'center', gap: 12, textDecoration: 'none' }}>
             <img
               src="/images/logo_HOL.png"
               alt="House of Lettings"
-              style={{ height: 72, width: 'auto', objectFit: 'contain' }}
+              style={{ height: 48, width: 'auto', objectFit: 'contain' }}
             />
+            <span style={{
+              fontFamily: 'Georgia, "Times New Roman", serif',
+              fontSize: 24, fontWeight: 700, color: '#fff', letterSpacing: '0.02em',
+            }}>
+              House of Lettings
+            </span>
           </Link>
           <p style={{ color: 'rgba(255,255,255,0.45)', fontSize: 14, marginTop: 10, fontFamily: 'Georgia, "Times New Roman", serif' }}>
             Sign in to your account

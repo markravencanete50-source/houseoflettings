@@ -825,21 +825,21 @@ export default function HomePage() {
             },
           ].map((card, i) => (
             <Link key={card.title} href={card.href} className={`service-card reveal reveal-delay-${i + 1}`} style={{
-              background: '#162849',
+              background: 'rgba(10,24,56,0.82)',
               borderRadius: 10, padding: '40px 32px',
-              border: '1px solid rgba(255,255,255,0.08)',
+              border: '2px solid #2563eb',
               textDecoration: 'none', display: 'block',
               transition: 'transform 0.25s ease, border-color 0.25s ease, background 0.25s ease',
             }}
               onMouseEnter={e => {
                 (e.currentTarget as HTMLElement).style.transform = 'translateY(-5px)';
-                (e.currentTarget as HTMLElement).style.borderColor = 'rgba(74,144,217,0.5)';
+                (e.currentTarget as HTMLElement).style.borderColor = '#4a90d9';
                 (e.currentTarget as HTMLElement).style.background = '#1a3060';
               }}
               onMouseLeave={e => {
                 (e.currentTarget as HTMLElement).style.transform = 'translateY(0)';
-                (e.currentTarget as HTMLElement).style.borderColor = 'rgba(255,255,255,0.08)';
-                (e.currentTarget as HTMLElement).style.background = '#162849';
+                (e.currentTarget as HTMLElement).style.borderColor = '#2563eb';
+                (e.currentTarget as HTMLElement).style.background = 'rgba(10,24,56,0.82)';
               }}
             >
               <h3 style={{

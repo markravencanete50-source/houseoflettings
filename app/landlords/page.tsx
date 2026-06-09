@@ -94,31 +94,7 @@ export default function LandlordsPage() {
       </section>
 
 
-      {/* ── INTRO STRIP ─────────────────────────────────────── */}
-      <section style={{
-        background: '#0f1f3d',
-        padding: 'clamp(32px, 4vw, 48px) clamp(24px, 7%, 100px)',
-      }}>
-        <div style={{
-          display: 'flex', gap: 48, flexWrap: 'wrap',
-          justifyContent: 'space-around', alignItems: 'center',
-        }}>
-          {[
-            'Properties Managed',
-            'No Hidden Fees',
-            'Leeds & Manchester',
-            'Landlord Satisfaction Guaranteed',
-          ].map(label => (
-            <div key={label} style={{ textAlign: 'center' }}>
-              <div style={{
-                fontFamily: "'Poppins', sans-serif",
-                fontSize: 14, color: 'rgba(255,255,255,0.6)',
-                letterSpacing: 1, fontWeight: 500,
-              }}>{label}</div>
-            </div>
-          ))}
-        </div>
-      </section>
+
 
 
       {/* ── WHY HOUSE OF LETTINGS ───────────────────────────── */}

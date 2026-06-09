@@ -129,8 +129,10 @@ export default function LandlordsPage() {
           .ll-intro-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 80px;
-            align-items: center;
+            gap: 56px;
+            align-items: start;
+            max-width: 1100px;
+            margin: 0 auto;
           }
           @media (max-width: 768px) {
             .ll-intro-grid { grid-template-columns: 1fr; gap: 40px; }
@@ -200,6 +202,7 @@ export default function LandlordsPage() {
               width: '100%', height: 'auto',
               borderRadius: 12, display: 'block',
               objectFit: 'cover',
+              marginTop: 4,
             }}
           />
         </div>

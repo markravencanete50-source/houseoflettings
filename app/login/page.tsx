@@ -50,11 +50,11 @@ export default function LoginPage() {
             <img
               src="/images/logo_HOL.png"
               alt="House of Lettings"
-              style={{ height: 48, width: 'auto', objectFit: 'contain' }}
+              style={{ height: 32, width: 'auto', objectFit: 'contain' }}
             />
             <span style={{
               fontFamily: 'Georgia, "Times New Roman", serif',
-              fontSize: 24, fontWeight: 700, color: '#fff', letterSpacing: '0.02em',
+              fontSize: 26, fontWeight: 700, color: '#fff', letterSpacing: '0.02em',
             }}>
               House of Lettings
             </span>

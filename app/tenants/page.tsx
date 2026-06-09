@@ -118,7 +118,7 @@ export default function TenantsPage() {
         style={{
           maxWidth: 1100,
           margin: "0 auto",
-          padding: "100px 24px 80px",
+          padding: "160px 24px 80px",
           textAlign: "center",
         }}
       >
@@ -414,7 +414,7 @@ export default function TenantsPage() {
             {[
               { label: "Agency fees", value: "£0", sub: "Always free for tenants" },
               { label: "Holding deposit", value: "Varies", sub: "Deducted from first month's rent" },
-              { label: "Application forms", value: "None", sub: "Just a quick conversation" },
+              { label: "Application forms", value: "Required", sub: "We'll walk you through it together" },
               { label: "Viewing fee", value: "£0", sub: "No charge to view a property" },
             ].map((row, i) => (
               <div

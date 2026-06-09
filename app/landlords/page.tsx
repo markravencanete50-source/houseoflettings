@@ -1,10 +1,99 @@
 'use client';
 // app/landlords/page.tsx
-import { useState, Suspense, lazy } from 'react';
+import { useState, useRef, Suspense, lazy } from 'react';
 import Link from 'next/link';
 import Navbar from '@/components/layout/Navbar';
 
 const ValuationModal = lazy(() => import('@/components/ValuationModal'));
+
+const HOL_IMAGES = [
+  { src: '/images/Landlord_Book_valuation_background.png', caption: 'Leeds & Manchester Experts', sub: 'Local knowledge, professional service.' },
+  { src: '/images/Landlord_page.png', caption: 'We Handle the Details.', sub: 'You enjoy the returns. Less time. More stress.' },
+  { src: '/images/Landlord_Book_valuation_background.png', caption: 'Full Lettings & Management', sub: 'AI-powered system, expert team.' },
+  { src: '/images/Landlord_page.png', caption: 'Everything You Need', sub: 'To succeed as a landlord.' },
+  { src: '/images/Landlord_Book_valuation_background.png', caption: 'Stay Fully Informed', sub: 'We track everything, so you don\'t have to.' },
+];
+
+function HtiCarousel() {
+  const [current, setCurrent] = useState(0);
+  const perPage = 4;
+  const total = HOL_IMAGES.length;
+  const pages = Math.ceil(total / perPage);
+
+  const offset = current * (clampedCardWidth() + 20);
+
+  function clampedCardWidth() { return 320; }
+
+  const go = (idx: number) => setCurrent(Math.max(0, Math.min(idx, pages - 1)));
+
+  return (
+    <>
+      <style>{`
+        .hti-track-wrap { overflow: hidden; width: 100%; }
+        .hti-track {
+          display: flex; gap: 20px;
+          padding: 0 clamp(24px,7%,100px);
+          transition: transform 0.45s cubic-bezier(0.4,0,0.2,1);
+          will-change: transform;
+        }
+        .hti-card {
+          flex-shrink: 0;
+          width: clamp(240px, 26vw, 340px);
+          border-radius: 14px; overflow: hidden;
+          position: relative; cursor: pointer;
+        }
+        .hti-card img {
+          width: 100%;
+          height: clamp(300px, 34vw, 440px);
+          object-fit: cover; display: block; border-radius: 14px;
+          transition: transform 0.4s ease;
+        }
+        .hti-card:hover img { transform: scale(1.03); }
+        .hti-card-label {
+          position: absolute; bottom: 0; left: 0; right: 0;
+          padding: 20px 18px 18px;
+          background: linear-gradient(0deg, rgba(8,18,42,0.85) 0%, transparent 100%);
+          border-radius: 0 0 14px 14px;
+        }
+        .hti-dots {
+          display: flex; gap: 8px; justify-content: center; margin-top: 36px;
+        }
+        .hti-dot {
+          width: 8px; height: 8px; border-radius: 50%;
+          background: #d1d5db; border: none; cursor: pointer; padding: 0;
+          transition: background 0.2s, width 0.2s;
+        }
+        .hti-dot.active { background: #2563eb; width: 28px; border-radius: 4px; }
+        @media (max-width: 640px) {
+          .hti-card { width: 80vw !important; }
+        }
+      `}</style>
+
+      <div className="hti-track-wrap">
+        <div
+          className="hti-track"
+          style={{ transform: `translateX(-${current * (clampedCardWidth() + 20)}px)` }}
+        >
+          {HOL_IMAGES.map((img, i) => (
+            <div key={i} className="hti-card">
+              <img src={img.src} alt={img.caption} />
+              <div className="hti-card-label">
+                <div style={{ fontFamily: "'Poppins',sans-serif", fontSize: 15, fontWeight: 700, color: '#fff' }}>{img.caption}</div>
+                <div style={{ fontFamily: "'Poppins',sans-serif", fontSize: 12, color: 'rgba(255,255,255,0.65)', marginTop: 4 }}>{img.sub}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="hti-dots">
+        {Array.from({ length: pages }).map((_, i) => (
+          <button key={i} className={`hti-dot${current === i ? ' active' : ''}`} onClick={() => go(i)} aria-label={`Page ${i + 1}`} />
+        ))}
+      </div>
+    </>
+  );
+}
 
 export default function LandlordsPage() {
   const [valuationOpen, setValuationOpen] = useState(false);
@@ -120,7 +209,49 @@ export default function LandlordsPage() {
 
 
 
-      {/* ── WHY HOUSE OF LETTINGS ───────────────────────────── */}
+      
+
+      {/* ── HOMES THAT INSPIRE ──────────────────────────────── */}
+      <section style={{ padding: 'clamp(60px,8vw,100px) 0', background: '#fff', overflow: 'hidden' }}>
+        <style>{`
+          .hti-header {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            align-items: end;
+            gap: 32px;
+            padding: 0 clamp(24px,7%,100px);
+            max-width: 1300px;
+            margin: 0 auto 48px;
+          }
+          @media (max-width: 640px) {
+            .hti-header { grid-template-columns: 1fr; gap: 12px; }
+          }
+        \`}</style>
+        <div className="hti-header">
+          <div>
+            <div style={{
+              fontSize: 11, fontWeight: 700, letterSpacing: 4,
+              textTransform: 'uppercase', color: '#2563eb', marginBottom: 14,
+              fontFamily: "'Poppins', sans-serif",
+            }}>Properties We Love</div>
+            <h2 style={{
+              fontFamily: "'Poppins', sans-serif",
+              fontSize: 'clamp(32px,4vw,52px)', fontWeight: 800,
+              color: '#0f1f3d', margin: 0, lineHeight: 1.1,
+            }}>Homes That Inspire</h2>
+          </div>
+          <p style={{
+            fontFamily: "'Poppins', sans-serif",
+            fontSize: 16, color: '#6b7280', lineHeight: 1.7,
+            margin: 0, fontWeight: 300,
+          }}>
+            From compact city flats to sprawling countryside homes — every property listed directly by landlords across the UK.
+          </p>
+        </div>
+        <HtiCarousel />
+      </section>
+
+{/* ── WHY HOUSE OF LETTINGS ───────────────────────────── */}
       <section style={{
         padding: 'clamp(60px, 8vw, 100px) clamp(24px, 7%, 100px)',
         background: '#f7f8fa',

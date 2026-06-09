@@ -68,21 +68,21 @@ export default function LandlordsPage() {
           </div>
           <h1 style={{
             fontFamily: "'Poppins', sans-serif",
-            fontSize: 'clamp(36px,4.5vw,58px)',
+            fontSize: 'clamp(32px,3.2vw,48px)',
             fontWeight: 800, color: '#fff',
-            lineHeight: 1.1, letterSpacing: '-1px',
-            marginBottom: 16,
+            lineHeight: 1.15, letterSpacing: '-0.5px',
+            marginBottom: 20, maxWidth: 480,
           }}>
-            Is Your Property<br />
-            <span style={{ color: '#4a90d9' }}>Actually Making</span><br />
+            Is Your Property{' '}
+            <span style={{ color: '#4a90d9' }}>Actually Making</span>{' '}
             You Money?
           </h1>
           <p style={{
             fontFamily: "'Poppins', sans-serif",
-            fontSize: 'clamp(14px,1.5vw,17px)',
+            fontSize: 'clamp(14px,1.2vw,16px)',
             color: 'rgba(255,255,255,0.72)',
-            lineHeight: 1.75, marginBottom: 40,
-            fontWeight: 300, maxWidth: 460,
+            lineHeight: 1.6, marginBottom: 40,
+            fontWeight: 300,
           }}>
             We handle the management. You enjoy the returns.<br />
             Serving landlords across Leeds &amp; Manchester.

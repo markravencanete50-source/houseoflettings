@@ -68,18 +68,18 @@ export default function LandlordsPage() {
           </div>
           <h1 style={{
             fontFamily: "'Poppins', sans-serif",
-            fontSize: 'clamp(32px,3.2vw,48px)',
+            fontSize: 'clamp(32px,2.8vw,44px)',
             fontWeight: 800, color: '#fff',
             lineHeight: 1.15, letterSpacing: '-0.5px',
-            marginBottom: 20, maxWidth: 480,
+            marginBottom: 20,
           }}>
-            Is Your Property{' '}
-            <span style={{ color: '#4a90d9' }}>Actually Making</span>{' '}
+            Is Your Property<br />
+            <span style={{ color: '#4a90d9' }}>Actually Making</span><br />
             You Money?
           </h1>
           <p style={{
             fontFamily: "'Poppins', sans-serif",
-            fontSize: 'clamp(14px,1.2vw,16px)',
+            fontSize: 'clamp(13px,1vw,15px)',
             color: 'rgba(255,255,255,0.72)',
             lineHeight: 1.6, marginBottom: 40,
             fontWeight: 300,

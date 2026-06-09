@@ -46,7 +46,7 @@ export default function LoginPage() {
 
       <div style={{ position: 'relative', zIndex: 2, width: '100%', maxWidth: 440 }}>
         <div style={{ textAlign: 'center', marginBottom: 40 }}>
-          <Link href="/" style={{ display: 'inline-flex', alignItems: 'center', gap: 12, textDecoration: 'none' }}>
+          <Link href="/" style={{ display: 'inline-flex', alignItems: 'center', gap: 4, textDecoration: 'none' }}>
             <img
               src="/images/logo_HOL.png"
               alt="House of Lettings"

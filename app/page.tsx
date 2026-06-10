@@ -605,6 +605,7 @@ export default function HomePage() {
             }
             .hero-btn {
               padding: 14px 28px;
+              min-width: 200px; text-align: center;
               background: #2563eb; color: #fff; border: none;
               border-radius: 6px; font-size: 13px; font-weight: 700;
               letter-spacing: 0.5px; text-transform: uppercase;

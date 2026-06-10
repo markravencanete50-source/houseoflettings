@@ -158,7 +158,14 @@ export default function BookViewingPage() {
       </section>
 
       {/* ── SPLIT FORM SECTION ── */}
-      <section style={{ position: "relative", overflow: "hidden" }}>
+      <section style={{
+        position: "relative",
+        overflow: "hidden",
+        backgroundImage: "linear-gradient(160deg, rgba(2,11,26,0.88) 0%, rgba(4,18,48,0.84) 60%, rgba(6,26,66,0.80) 100%), url(/images/Book_a_viewing_page_background.png)",
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+        backgroundAttachment: "fixed",
+      }}>
         {/* Animated bg orbs */}
         <div style={{ position: "absolute", inset: 0, pointerEvents: "none", zIndex: 0 }}>
           <div style={{

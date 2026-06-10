@@ -446,7 +446,12 @@ export default function TenantsPage() {
         </div>
 
         <div style={{ position: "relative", zIndex: 1, maxWidth: 1100, margin: "0 auto", padding: "80px 24px" }}>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 48, alignItems: "center" }}>
+          <style>{`
+            @media (max-width: 700px) {
+              .deposit-grid { grid-template-columns: 1fr !important; gap: 32px !important; }
+            }
+          `}</style>
+          <div className="deposit-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 48, alignItems: "center" }}>
             <div>
               <p style={{ color: "#60a5fa", fontSize: 12, letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 12 }}>
                 Transparent Costs
@@ -462,8 +467,8 @@ export default function TenantsPage() {
                 <span style={{ color: "#fff", fontWeight: 600 }}>deducted from your first month's rent</span>{" "}
                 — so you're not paying it on top of anything. It's just paying your rent a little early.
               </p>
-              <a href="/contact" style={{ background: "#2563eb", color: "#fff", padding: "13px 28px", borderRadius: 8, fontWeight: 700, fontSize: 14, textDecoration: "none", display: "inline-block" }}>
-                Start your enquiry
+              <a href="/book-viewing" style={{ background: "#2563eb", color: "#fff", padding: "13px 28px", borderRadius: 8, fontWeight: 700, fontSize: 14, textDecoration: "none", display: "inline-block" }}>
+                Book a Viewing
               </a>
             </div>
 
@@ -571,8 +576,8 @@ export default function TenantsPage() {
             <p style={{ color: "rgba(255,255,255,0.6)", fontSize: 16, marginBottom: 36, maxWidth: 460, margin: "0 auto 36px", lineHeight: 1.65 }}>
               Send us an enquiry and we'll take it from there. No forms, no fees, no hassle.
             </p>
-            <a href="/contact" style={{ background: "#2563eb", color: "#fff", padding: "15px 36px", borderRadius: 8, fontWeight: 700, fontSize: 16, textDecoration: "none", display: "inline-block" }}>
-              Get in Touch
+            <a href="/book-viewing" style={{ background: "#2563eb", color: "#fff", padding: "15px 36px", borderRadius: 8, fontWeight: 700, fontSize: 16, textDecoration: "none", display: "inline-block" }}>
+              Book a Viewing
             </a>
           </div>
         </div>

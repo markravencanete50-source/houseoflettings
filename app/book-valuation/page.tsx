@@ -125,8 +125,11 @@ export default function BookValuationPage() {
 
         {/* ── HERO STRIP ── */}
         <div style={{
-          background: 'linear-gradient(135deg, #0a162f 0%, #0f1f3d 60%, #162849 100%)',
-          padding: 'clamp(48px, 7vw, 80px) clamp(20px, 5%, 5%)',
+          backgroundImage: 'linear-gradient(135deg, rgba(10,22,47,0.82) 0%, rgba(15,31,61,0.75) 60%, rgba(22,40,73,0.70) 100%), url(/images/Background_Book_Valuation.png)',
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          backgroundRepeat: 'no-repeat',
+          padding: 'clamp(64px, 9vw, 100px) clamp(20px, 5%, 5%)',
           textAlign: 'center',
         }}>
           <div style={{

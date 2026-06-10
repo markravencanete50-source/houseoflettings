@@ -118,12 +118,18 @@ export default function TenantsPage() {
       {/* ── HERO ── */}
       <section
         style={{
-          maxWidth: 1100,
-          margin: "0 auto",
-          padding: "calc(68px + 100px) 24px 80px",
-          textAlign: "center",
+          backgroundImage: "linear-gradient(160deg, rgba(2,11,26,0.80) 0%, rgba(4,18,48,0.75) 60%, rgba(6,26,66,0.70) 100%), url(/images/Tenants_Book_viewing_background.png)",
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+          backgroundRepeat: "no-repeat",
         }}
       >
+        <div style={{
+          maxWidth: 1100,
+          margin: "0 auto",
+          padding: "calc(68px + 100px) 24px 100px",
+          textAlign: "center",
+        }}>
         <span
           style={{
             display: "inline-block",
@@ -188,7 +194,7 @@ export default function TenantsPage() {
               letterSpacing: "0.02em",
             }}
           >
-            Send an Enquiry
+            Book a Viewing
           </a>
           <a
             href="/properties"
@@ -204,6 +210,7 @@ export default function TenantsPage() {
           >
             Browse Properties
           </a>
+        </div>
         </div>
       </section>
 

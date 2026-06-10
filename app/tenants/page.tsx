@@ -262,61 +262,76 @@ export default function TenantsPage() {
         </div>
       </section>
 
-      {/* ── HOW IT WORKS — animated background ── */}
+      {/* ── HOW IT WORKS — constellation background ── */}
       <section
         style={{
           position: "relative",
           overflow: "hidden",
+          background: "#020c1f",
         }}
       >
-        {/* Animated background orbs */}
-        <div style={{ position: "absolute", inset: 0, pointerEvents: "none", zIndex: 0 }}>
-          <div style={{
-            position: "absolute", width: 420, height: 420, borderRadius: "50%",
-            background: "radial-gradient(circle, rgba(37,99,235,0.13) 0%, transparent 70%)",
-            top: "-80px", left: "-100px",
-            animation: "t-orb-move 14s ease-in-out infinite",
-          }} />
-          <div style={{
-            position: "absolute", width: 320, height: 320, borderRadius: "50%",
-            background: "radial-gradient(circle, rgba(96,165,250,0.10) 0%, transparent 70%)",
-            bottom: "-60px", right: "-80px",
-            animation: "t-orb-move 18s ease-in-out infinite reverse",
-          }} />
-          {/* Floating house/key icons */}
-          {[
-            { top: "12%", left: "6%", size: 38, delay: "0s", dur: "7s" },
-            { top: "55%", left: "3%", size: 28, delay: "2s", dur: "9s" },
-            { top: "20%", right: "5%", size: 32, delay: "1s", dur: "8s" },
-            { top: "70%", right: "8%", size: 24, delay: "3s", dur: "6s" },
-          ].map((pos, i) => (
-            <div key={i} style={{
-              position: "absolute", ...pos as any,
-              animation: `t-float-slow ${pos.dur} ease-in-out ${pos.delay} infinite`,
-            }}>
-              {i % 2 === 0 ? (
-                <svg width={pos.size} height={pos.size} fill="none" stroke="rgba(96,165,250,0.5)" strokeWidth="1.5" viewBox="0 0 24 24">
-                  <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
-                  <polyline points="9 22 9 12 15 12 15 22" />
-                </svg>
-              ) : (
-                <svg width={pos.size} height={pos.size} fill="none" stroke="rgba(96,165,250,0.5)" strokeWidth="1.5" viewBox="0 0 24 24">
-                  <circle cx="7.5" cy="15.5" r="5.5" />
-                  <path d="M21 2l-9.6 9.6M15.5 2H21v5.5" />
-                </svg>
-              )}
-            </div>
-          ))}
-          {/* Grid shimmer lines */}
-          {[20, 40, 60, 80].map((pct, i) => (
-            <div key={i} style={{
-              position: "absolute", left: 0, right: 0,
-              top: `${pct}%`, height: 1,
-              background: "linear-gradient(90deg, transparent 0%, rgba(37,99,235,0.12) 50%, transparent 100%)",
-              animation: `t-shimmer ${5 + i}s ease-in-out ${i * 0.8}s infinite`,
-            }} />
-          ))}
-        </div>
+        {/* Canvas constellation */}
+        <canvas
+          id="constellation-canvas"
+          style={{ position: "absolute", inset: 0, width: "100%", height: "100%", zIndex: 0, opacity: 0.85 }}
+          ref={(canvas) => {
+            if (!canvas) return;
+            const ctx = canvas.getContext("2d");
+            if (!ctx) return;
+            let animId: number;
+            const resize = () => {
+              canvas.width = canvas.offsetWidth;
+              canvas.height = canvas.offsetHeight;
+            };
+            resize();
+            window.addEventListener("resize", resize);
+            const NODE_COUNT = 55;
+            const CONNECT_DIST = 160;
+            const nodes = Array.from({ length: NODE_COUNT }, () => ({
+              x: Math.random() * canvas.width,
+              y: Math.random() * canvas.height,
+              vx: (Math.random() - 0.5) * 0.35,
+              vy: (Math.random() - 0.5) * 0.35,
+              r: Math.random() * 2 + 1.2,
+            }));
+            const draw = () => {
+              ctx.clearRect(0, 0, canvas.width, canvas.height);
+              // Move nodes
+              for (const n of nodes) {
+                n.x += n.vx; n.y += n.vy;
+                if (n.x < 0 || n.x > canvas.width) n.vx *= -1;
+                if (n.y < 0 || n.y > canvas.height) n.vy *= -1;
+              }
+              // Draw lines
+              for (let i = 0; i < nodes.length; i++) {
+                for (let j = i + 1; j < nodes.length; j++) {
+                  const dx = nodes[i].x - nodes[j].x;
+                  const dy = nodes[i].y - nodes[j].y;
+                  const dist = Math.sqrt(dx * dx + dy * dy);
+                  if (dist < CONNECT_DIST) {
+                    const alpha = (1 - dist / CONNECT_DIST) * 0.35;
+                    ctx.beginPath();
+                    ctx.moveTo(nodes[i].x, nodes[i].y);
+                    ctx.lineTo(nodes[j].x, nodes[j].y);
+                    ctx.strokeStyle = `rgba(96,165,250,${alpha})`;
+                    ctx.lineWidth = 0.8;
+                    ctx.stroke();
+                  }
+                }
+              }
+              // Draw nodes
+              for (const n of nodes) {
+                ctx.beginPath();
+                ctx.arc(n.x, n.y, n.r, 0, Math.PI * 2);
+                ctx.fillStyle = "rgba(147,196,255,0.7)";
+                ctx.fill();
+              }
+              animId = requestAnimationFrame(draw);
+            };
+            draw();
+            return () => { cancelAnimationFrame(animId); window.removeEventListener("resize", resize); };
+          }}
+        />
 
         <div style={{ position: "relative", zIndex: 1, maxWidth: 1100, margin: "0 auto", padding: "60px 24px 80px" }}>
           <p style={{ color: "#60a5fa", fontSize: 12, letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 12 }}>

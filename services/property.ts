@@ -150,12 +150,13 @@ export function subscribeToProperties(
 ) {
   let q: Query = query(
     collection(db, 'properties'),
-    where('status', '==', 'active'),
-    orderBy('createdAt', 'desc')
+    where('status', '==', 'active')
   );
 
   return onSnapshot(q, (snap) => {
     let properties = snap.docs.map(d => ({ id: d.id, ...d.data() })) as Property[];
+    // Sort client-side to avoid composite index
+    properties.sort((a: any, b: any) => (b.createdAt?.seconds ?? 0) - (a.createdAt?.seconds ?? 0));
 
     // Client-side filters
     if (filters.minPrice !== '') {

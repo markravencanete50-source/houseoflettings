@@ -9,7 +9,6 @@ import {
   getDoc,
   query,
   where,
-  orderBy,
   serverTimestamp,
   onSnapshot,
   Query,
@@ -94,27 +93,33 @@ export async function getProperty(id: string): Promise<Property | null> {
 
 // ── Get All Active Properties (with filters) ──────────────────
 export async function getProperties(filters?: SearchFilters): Promise<Property[]> {
+  // Use simple query to avoid composite index requirement
+  // Sorting and extra filtering done client-side
   let q: Query = query(
     collection(db, 'properties'),
-    where('status', '==', 'active'),
-    orderBy('createdAt', 'desc')
+    where('status', '==', 'active')
   );
-
-  // Apply price range filters via Firestore
-  if (filters?.minPrice !== '' && filters?.minPrice !== undefined) {
-    q = query(q, where('price', '>=', Number(filters.minPrice)));
-  }
-  if (filters?.maxPrice !== '' && filters?.maxPrice !== undefined) {
-    q = query(q, where('price', '<=', Number(filters.maxPrice)));
-  }
-  if (filters?.bedrooms !== '' && filters?.bedrooms !== undefined) {
-    q = query(q, where('bedrooms', '>=', Number(filters.bedrooms)));
-  }
 
   const snap = await getDocs(q);
   let properties = snap.docs.map(d => ({ id: d.id, ...d.data() })) as Property[];
 
-  // Apply location filter on frontend (Firestore doesn't support full-text)
+  // Sort by createdAt descending client-side (avoids composite index)
+  properties.sort((a: any, b: any) => {
+    const aTime = a.createdAt?.seconds ?? 0;
+    const bTime = b.createdAt?.seconds ?? 0;
+    return bTime - aTime;
+  });
+
+  // Apply filters client-side
+  if (filters?.minPrice !== '' && filters?.minPrice !== undefined) {
+    properties = properties.filter(p => p.price >= Number(filters.minPrice));
+  }
+  if (filters?.maxPrice !== '' && filters?.maxPrice !== undefined) {
+    properties = properties.filter(p => p.price <= Number(filters.maxPrice));
+  }
+  if (filters?.bedrooms !== '' && filters?.bedrooms !== undefined) {
+    properties = properties.filter(p => p.bedrooms >= Number(filters.bedrooms));
+  }
   if (filters?.location) {
     const loc = filters.location.toLowerCase();
     properties = properties.filter(p =>
@@ -130,11 +135,12 @@ export async function getProperties(filters?: SearchFilters): Promise<Property[]
 export async function getLandlordProperties(landlordId: string): Promise<Property[]> {
   const q = query(
     collection(db, 'properties'),
-    where('landlordId', '==', landlordId),
-    orderBy('createdAt', 'desc')
+    where('landlordId', '==', landlordId)
   );
   const snap = await getDocs(q);
-  return snap.docs.map(d => ({ id: d.id, ...d.data() })) as Property[];
+  const properties = snap.docs.map(d => ({ id: d.id, ...d.data() })) as Property[];
+  // Sort client-side to avoid composite index
+  return properties.sort((a: any, b: any) => (b.createdAt?.seconds ?? 0) - (a.createdAt?.seconds ?? 0));
 }
 
 // ── Real-time listener for property listing ───────────────────

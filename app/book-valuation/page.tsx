@@ -139,7 +139,7 @@ export default function BookValuationPage() {
       <style>{PAGE_CSS}</style>
       <Navbar />
 
-      <div style={{ paddingTop: 68, minHeight: '100vh', fontFamily: "'Poppins', sans-serif" }} className="hol-page-bg">
+      <div style={{ minHeight: '100vh', fontFamily: "'Poppins', sans-serif" }} className="hol-page-bg">
 
         {/* ── HERO STRIP ── */}
         <div style={{
@@ -147,7 +147,10 @@ export default function BookValuationPage() {
           backgroundSize: 'cover',
           backgroundPosition: 'center',
           backgroundRepeat: 'no-repeat',
-          padding: 'clamp(64px, 9vw, 100px) clamp(20px, 5%, 5%)',
+          paddingTop: 'calc(68px + clamp(64px, 9vw, 100px))',
+          paddingBottom: 'clamp(64px, 9vw, 100px)',
+          paddingLeft: 'clamp(20px, 5%, 5%)',
+          paddingRight: 'clamp(20px, 5%, 5%)',
           textAlign: 'center',
         }}>
           <div style={{

@@ -6,25 +6,7 @@ import { useRouter, usePathname } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
 import { signOut } from '@/services/auth';
 
-const ValuationModal = lazy(() => import('@/components/ValuationModal'));
 const TenantEnquiryModal = lazy(() => import('@/components/property/TenantEnquiryModal'));
-
-function NavValuationButton() {
-  const [open, setOpen] = useState(false);
-  return (
-    <>
-      <button
-        onClick={() => setOpen(true)}
-        className="nav-btn-primary"
-      >
-        Book a Valuation
-      </button>
-      <Suspense fallback={null}>
-        {open && <ValuationModal isOpen={open} onClose={() => setOpen(false)} />}
-      </Suspense>
-    </>
-  );
-}
 
 function NavViewingButton() {
   const [open, setOpen] = useState(false);
@@ -100,7 +82,7 @@ export default function Navbar() {
             {!loading && profile && (
               <Link href={dashLink} className="hol-nav__link">Dashboard</Link>
             )}
-            <NavValuationButton />
+            <Link href="/book-valuation" className="nav-btn-primary">Book a Valuation</Link>
             <NavViewingButton />
             <Link href="/pricing" className="nav-btn-outline">Pricing</Link>
             <Link href="/terms" className="nav-btn-outline">Terms</Link>

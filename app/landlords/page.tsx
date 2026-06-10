@@ -1,15 +1,9 @@
 'use client';
 // app/landlords/page.tsx
-import { useState, Suspense, lazy } from 'react';
 import Link from 'next/link';
 import Navbar from '@/components/layout/Navbar';
 
-const ValuationModal = lazy(() => import('@/components/ValuationModal'));
-
-
-
 export default function LandlordsPage() {
-  const [valuationOpen, setValuationOpen] = useState(false);
 
   return (
     <>
@@ -94,15 +88,14 @@ export default function LandlordsPage() {
             Serving landlords across Leeds &amp; Manchester.
           </p>
           <div className="hero-btns" style={{ display: 'flex', gap: 14, flexWrap: 'wrap', justifyContent: 'center' }}>
-            <button
-              onClick={() => setValuationOpen(true)}
+            <Link href="/book-valuation"
               className="hero-btn"
               style={{ background: '#2563eb', color: '#fff', border: 'none' }}
               onMouseEnter={e => (e.currentTarget.style.background = '#1d4ed8')}
               onMouseLeave={e => (e.currentTarget.style.background = '#2563eb')}
             >
               Book a Free Valuation
-            </button>
+            </Link>
             <Link href="/pricing"
               className="hero-btn"
               style={{
@@ -186,19 +179,19 @@ export default function LandlordsPage() {
                 </li>
               ))}
             </ul>
-            <button
-              onClick={() => setValuationOpen(true)}
+            <Link href="/book-valuation"
               style={{
                 padding: '14px 32px', background: '#0f1f3d', color: '#fff',
                 border: 'none', borderRadius: 6, fontSize: 14, fontWeight: 700,
                 letterSpacing: '0.5px', cursor: 'pointer', transition: 'background 0.2s',
                 fontFamily: "'Poppins', sans-serif", textTransform: 'uppercase',
+                textDecoration: 'none', display: 'inline-block',
               }}
               onMouseEnter={e => (e.currentTarget.style.background = '#162849')}
               onMouseLeave={e => (e.currentTarget.style.background = '#0f1f3d')}
             >
               Get a Free Valuation
-            </button>
+            </Link>
           </div>
           <img
             src="/images/Landlord_Book_valuation_background.png"
@@ -475,19 +468,19 @@ export default function LandlordsPage() {
             Book a free valuation today and find out exactly what your property could be earning.
           </p>
           <div style={{ display: 'flex', gap: 16, justifyContent: 'center', flexWrap: 'wrap' }}>
-            <button
-              onClick={() => setValuationOpen(true)}
+            <Link href="/book-valuation"
               style={{
                 padding: '16px 44px', background: '#2563eb', color: '#fff',
                 border: 'none', borderRadius: 6, fontSize: 15, fontWeight: 700,
                 letterSpacing: '0.5px', cursor: 'pointer', transition: 'background 0.2s',
                 fontFamily: "'Poppins', sans-serif", textTransform: 'uppercase',
+                textDecoration: 'none', display: 'inline-block',
               }}
               onMouseEnter={e => (e.currentTarget.style.background = '#1d4ed8')}
               onMouseLeave={e => (e.currentTarget.style.background = '#2563eb')}
             >
               Book a Free Valuation
-            </button>
+            </Link>
             <Link href="/pricing" style={{
               padding: '16px 44px', background: 'transparent', color: '#fff',
               border: '1.5px solid rgba(255,255,255,0.35)', borderRadius: 6,
@@ -531,9 +524,6 @@ export default function LandlordsPage() {
         </div>
       </footer>
 
-      <Suspense fallback={null}>
-        {valuationOpen && <ValuationModal isOpen={valuationOpen} onClose={() => setValuationOpen(false)} />}
-      </Suspense>
     </>
   );
 }

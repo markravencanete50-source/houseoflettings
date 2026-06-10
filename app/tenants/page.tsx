@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Navbar from "@/components/layout/Navbar";
 
 const faqs = [
   {
@@ -113,12 +114,13 @@ export default function TenantsPage() {
         fontFamily: "'Inter', 'Helvetica Neue', sans-serif",
       }}
     >
+      <Navbar />
       {/* ── HERO ── */}
       <section
         style={{
           maxWidth: 1100,
           margin: "0 auto",
-          padding: "100px 24px 80px",
+          padding: "calc(68px + 100px) 24px 80px",
           textAlign: "center",
         }}
       >

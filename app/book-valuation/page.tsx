@@ -8,8 +8,8 @@ const UK_PHONE_REGEX = /^(\+44|0)[\s-]?[1-9][\d\s-]{8,11}$/;
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 const EMPTY_FORM = {
-  fullName: '', email: '', phone: '', address: '',
-  postcode: '', city: '', street: '',
+  fullName: '', email: '', phone: '',
+  street: '', city: '', postcode: '',
   propertyType: '', bedrooms: '', notes: '', preferredDateTime: '',
 };
 
@@ -21,14 +21,19 @@ function validate(form: typeof EMPTY_FORM) {
   if (!form.phone.trim()) errors.phone = 'Phone number is required';
   else if (!UK_PHONE_REGEX.test(form.phone.replace(/\s/g, '')))
     errors.phone = 'Enter a valid UK phone number';
-  if (!form.address.trim()) errors.address = 'Property address is required';
+  if (!form.street.trim()) errors.street = '1st line of address is required';
+  if (!form.city.trim()) errors.city = 'City is required';
+  if (!form.postcode.trim()) errors.postcode = 'Postcode is required';
   if (!form.propertyType) errors.propertyType = 'Please select a property type';
   if (!form.bedrooms) errors.bedrooms = 'Please select number of bedrooms';
   if (!form.preferredDateTime) errors.preferredDateTime = 'Please choose a preferred date & time';
   return errors;
 }
 
-function usePlacesAutocomplete(onSelect: (data: { address: string; postcode: string; city: string; street: string }) => void) {
+function usePlacesAutocomplete(
+  onSelect: (data: { street: string; city: string; postcode: string }) => void,
+  fieldKey: 'street' | 'city' | 'postcode'
+) {
   const inputRef = useRef<HTMLInputElement>(null);
   useEffect(() => {
     let ac: any = null;
@@ -38,18 +43,21 @@ function usePlacesAutocomplete(onSelect: (data: { address: string; postcode: str
       ac = new (window as any).google.maps.places.Autocomplete(inputRef.current, {
         types: ['address'],
         componentRestrictions: { country: 'gb' },
-        fields: ['formatted_address', 'address_components'],
+        fields: ['address_components'],
       });
       listener = ac.addListener('place_changed', () => {
         const place = ac.getPlace();
-        if (!place?.formatted_address) return;
+        if (!place?.address_components) return;
         let postcode = '', city = '', street = '';
-        place.address_components?.forEach((comp: any) => {
+        let streetNumber = '', route = '';
+        place.address_components.forEach((comp: any) => {
+          if (comp.types.includes('street_number')) streetNumber = comp.long_name;
+          if (comp.types.includes('route')) route = comp.long_name;
           if (comp.types.includes('postal_code')) postcode = comp.long_name;
           if (comp.types.includes('postal_town') || comp.types.includes('locality')) city = comp.long_name;
-          if (comp.types.includes('route')) street = comp.long_name;
         });
-        onSelect({ address: place.formatted_address, postcode, city, street });
+        street = [streetNumber, route].filter(Boolean).join(' ');
+        onSelect({ street, city, postcode });
       });
     }
     if ((window as any).google?.maps?.places) {
@@ -61,7 +69,7 @@ function usePlacesAutocomplete(onSelect: (data: { address: string; postcode: str
       return () => clearInterval(interval);
     }
     return () => { if (listener) (window as any).google?.maps?.event.removeListener(listener); };
-  }, [onSelect]);
+  }, [onSelect, fieldKey]);
   return inputRef;
 }
 
@@ -84,12 +92,19 @@ export default function BookValuationPage() {
     document.head.appendChild(script);
   }, []);
 
-  const handlePlaceSelect = useCallback((data: { address: string; postcode: string; city: string; street: string }) => {
-    setForm(f => ({ ...f, ...data }));
-    setErrors(e => ({ ...e, address: '' }));
+  const handlePlaceSelect = useCallback((data: { street: string; city: string; postcode: string }) => {
+    setForm(f => ({
+      ...f,
+      ...(data.street ? { street: data.street } : {}),
+      ...(data.city ? { city: data.city } : {}),
+      ...(data.postcode ? { postcode: data.postcode } : {}),
+    }));
+    setErrors(e => ({ ...e, street: '', city: '', postcode: '' }));
   }, []);
 
-  const addressInputRef = usePlacesAutocomplete(handlePlaceSelect);
+  const streetInputRef = usePlacesAutocomplete(handlePlaceSelect, 'street');
+  const cityInputRef = usePlacesAutocomplete(handlePlaceSelect, 'city');
+  const postcodeInputRef = usePlacesAutocomplete(handlePlaceSelect, 'postcode');
 
   const set = (key: string) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     setForm(f => ({ ...f, [key]: e.target.value }));
@@ -105,7 +120,10 @@ export default function BookValuationPage() {
       const res = await fetch('/api/book-valuation', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(form),
+        body: JSON.stringify({
+          ...form,
+          address: `${form.street}, ${form.city}, ${form.postcode}`,
+        }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || 'Submission failed');
@@ -121,7 +139,7 @@ export default function BookValuationPage() {
       <style>{PAGE_CSS}</style>
       <Navbar />
 
-      <div style={{ paddingTop: 68, minHeight: '100vh', background: '#f7f8fa', fontFamily: "'Poppins', sans-serif" }}>
+      <div style={{ paddingTop: 68, minHeight: '100vh', fontFamily: "'Poppins', sans-serif" }} className="hol-page-bg">
 
         {/* ── HERO STRIP ── */}
         <div style={{
@@ -177,7 +195,7 @@ export default function BookValuationPage() {
                 Valuation Booked!
               </h2>
               <p style={{ fontSize: 15, color: '#374151', maxWidth: 400, margin: '0 auto 8px', lineHeight: 1.6 }}>
-                Thank you, {form.fullName.split(' ')[0]}. We've received your request for <strong>{form.address}</strong>.
+                Thank you, {form.fullName.split(' ')[0]}. We've received your request for <strong>{form.street}, {form.city}</strong>.
               </p>
               <p style={{ fontSize: 13, color: '#9ca3af', marginBottom: 28 }}>
                 Our team will be in touch within 24 hours to confirm your appointment.
@@ -250,20 +268,56 @@ export default function BookValuationPage() {
                       {errors.preferredDateTime && <p className="hol-err">{errors.preferredDateTime}</p>}
                     </div>
 
+                    {/* ── ADDRESS SECTION LABEL ── */}
+                    <div className="hol-field hol-field--full" style={{ marginBottom: -4 }}>
+                      <p style={{ fontSize: 12, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.08em', margin: 0, fontFamily: "'Poppins', sans-serif" }}>
+                        Property Address
+                      </p>
+                    </div>
+
+                    {/* 1st Line of Address — full width, autocomplete triggers here */}
                     <div className="hol-field hol-field--full">
-                      <label className="hol-label">Property Address<span className="hol-req">*</span></label>
-                      <div style={{ position: 'relative' }}>
-                        <svg style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: '#9ca3af', pointerEvents: 'none' }}
-                          width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                          <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" /><circle cx="12" cy="10" r="3" />
-                        </svg>
-                        <input ref={addressInputRef} type="text"
-                          className={`hol-input${errors.address ? ' hol-input--error' : ''}`}
-                          style={{ paddingLeft: 36 }}
-                          placeholder="Start typing your UK address..."
-                          value={form.address} onChange={set('address')} autoComplete="off" />
-                      </div>
-                      {errors.address && <p className="hol-err">{errors.address}</p>}
+                      <label className="hol-label">1st Line of Address<span className="hol-req">*</span></label>
+                      <input
+                        ref={streetInputRef}
+                        type="text"
+                        className={`hol-input${errors.street ? ' hol-input--error' : ''}`}
+                        placeholder="e.g. 12 Whitfield Street"
+                        value={form.street}
+                        onChange={set('street')}
+                        autoComplete="off"
+                      />
+                      {errors.street && <p className="hol-err">{errors.street}</p>}
+                    </div>
+
+                    {/* City */}
+                    <div className="hol-field">
+                      <label className="hol-label">City<span className="hol-req">*</span></label>
+                      <input
+                        ref={cityInputRef}
+                        type="text"
+                        className={`hol-input${errors.city ? ' hol-input--error' : ''}`}
+                        placeholder="e.g. Manchester"
+                        value={form.city}
+                        onChange={set('city')}
+                        autoComplete="off"
+                      />
+                      {errors.city && <p className="hol-err">{errors.city}</p>}
+                    </div>
+
+                    {/* Postcode */}
+                    <div className="hol-field">
+                      <label className="hol-label">Postcode<span className="hol-req">*</span></label>
+                      <input
+                        ref={postcodeInputRef}
+                        type="text"
+                        className={`hol-input${errors.postcode ? ' hol-input--error' : ''}`}
+                        placeholder="e.g. M1 1AE"
+                        value={form.postcode}
+                        onChange={set('postcode')}
+                        autoComplete="off"
+                      />
+                      {errors.postcode && <p className="hol-err">{errors.postcode}</p>}
                     </div>
 
                     <div className="hol-field">
@@ -371,6 +425,19 @@ export default function BookValuationPage() {
 
 const PAGE_CSS = `
   @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap');
+
+  /* ── Animated background ── */
+  @keyframes hol-bg-shift {
+    0%   { background-position: 0% 50%; }
+    50%  { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
+  .hol-page-bg {
+    background: linear-gradient(135deg, #eef2ff 0%, #f0f4ff 25%, #e8f0fe 50%, #f7f8fa 75%, #eef2ff 100%);
+    background-size: 400% 400%;
+    animation: hol-bg-shift 12s ease infinite;
+  }
+
   .hol-form-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:20px;}
   .hol-field{display:flex;flex-direction:column;gap:6px;}
   .hol-field--full{grid-column:1/-1;}

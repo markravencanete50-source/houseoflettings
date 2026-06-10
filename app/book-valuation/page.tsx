@@ -154,9 +154,10 @@ export default function BookValuationPage() {
           textAlign: 'center',
         }}>
           <div style={{
-            display: 'inline-block', background: 'rgba(37,99,235,0.18)', color: '#4a90d9',
+            display: 'inline-block', background: 'rgba(74,144,217,0.35)', color: '#93c5fd',
             fontSize: 11, fontWeight: 700, letterSpacing: 3, textTransform: 'uppercase',
             padding: '5px 14px', borderRadius: 20, marginBottom: 18,
+            border: '1px solid rgba(147,197,253,0.4)',
           }}>
             Free Valuation
           </div>
@@ -175,7 +176,7 @@ export default function BookValuationPage() {
         </div>
 
         {/* ── FORM CARD ── */}
-        <div style={{ maxWidth: 720, margin: '0 auto', padding: 'clamp(32px, 5vw, 56px) clamp(16px, 4%, 4%)' }}>
+        <div style={{ maxWidth: 960, margin: '0 auto', padding: 'clamp(32px, 5vw, 56px) clamp(16px, 4%, 4%)' }}>
 
           {status === 'success' ? (
             <div style={{

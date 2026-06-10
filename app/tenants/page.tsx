@@ -230,7 +230,7 @@ export default function TenantsPage() {
 
           <div style={{ display: "flex", gap: 14, justifyContent: "center", flexWrap: "wrap" }}>
             <a
-              href="/contact"
+              href="/book-viewing"
               style={{
                 background: "#2563eb",
                 color: "#fff",
@@ -467,9 +467,6 @@ export default function TenantsPage() {
                 <span style={{ color: "#fff", fontWeight: 600 }}>deducted from your first month's rent</span>{" "}
                 — so you're not paying it on top of anything. It's just paying your rent a little early.
               </p>
-              <a href="/book-viewing" style={{ background: "#2563eb", color: "#fff", padding: "13px 28px", borderRadius: 8, fontWeight: 700, fontSize: 14, textDecoration: "none", display: "inline-block" }}>
-                Book a Viewing
-              </a>
             </div>
 
             <div style={{ border: "2px solid #2563eb", borderRadius: 16, padding: "36px 32px", background: "rgba(10,24,56,0.85)", backdropFilter: "blur(12px)", animation: "t-cta-pulse 6s ease-in-out infinite" }}>
@@ -576,9 +573,6 @@ export default function TenantsPage() {
             <p style={{ color: "rgba(255,255,255,0.6)", fontSize: 16, marginBottom: 36, maxWidth: 460, margin: "0 auto 36px", lineHeight: 1.65 }}>
               Send us an enquiry and we'll take it from there. No forms, no fees, no hassle.
             </p>
-            <a href="/book-viewing" style={{ background: "#2563eb", color: "#fff", padding: "15px 36px", borderRadius: 8, fontWeight: 700, fontSize: 16, textDecoration: "none", display: "inline-block" }}>
-              Book a Viewing
-            </a>
           </div>
         </div>
       </section>

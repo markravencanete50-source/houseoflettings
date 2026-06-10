@@ -1,452 +1,596 @@
-'use client';
-import { useState } from 'react';
-import Link from 'next/link';
-import Navbar from '@/components/layout/Navbar';
+"use client";
 
-// ── FAQ ACCORDION ─────────────────────────────────────────────────────────────
-const FAQS = [
+import { useState } from "react";
+
+const faqs = [
   {
-    q: 'Do I need to pay any fees as a tenant?',
-    a: 'No. We charge zero agency fees to tenants. The only money you pay upfront is a holding deposit (capped at one week\'s rent) to secure the property while referencing is completed, and your first month\'s rent plus deposit on move-in day.',
+    q: "Is it free to rent through House of Lettings?",
+    a: "Yes — there are no agency fees for tenants. The only payment before moving in is a holding deposit to secure the property, which is deducted from your first month's rent. You're not losing anything.",
   },
   {
-    q: 'How much is the holding deposit?',
-    a: 'The holding deposit is capped at one week\'s rent by law (Tenant Fees Act 2019). It is deducted from your first month\'s rent on move-in, so it\'s not an extra cost — just an advance.',
+    q: "What is the holding deposit?",
+    a: "A holding deposit reserves the property while your application is processed. It's fully deducted from your first rent payment, so it comes straight off what you'd pay anyway.",
   },
   {
-    q: 'How long does the referencing process take?',
-    a: 'Typically 3–5 working days. We use a streamlined referencing process and will keep you updated throughout. If there are any delays we\'ll let you know immediately.',
+    q: "How quickly can I book a viewing?",
+    a: "Once you send an enquiry and answer a few quick questions, we arrange the viewing as fast as possible — usually within a few days.",
   },
   {
-    q: 'Can I book a viewing before applying?',
-    a: 'Yes — always. We never ask for money or personal information before you\'ve viewed the property and decided you\'d like to proceed.',
+    q: "What checks do you run?",
+    a: "Standard referencing: employment/income checks and a previous landlord reference where applicable. We keep it straightforward — no unnecessary hoops.",
   },
   {
-    q: 'What happens if my application is unsuccessful?',
-    a: 'Your holding deposit is returned to you in full within 7 days, unless you provided false information or withdraw without good reason.',
+    q: "Which areas do you cover?",
+    a: "We operate across Leeds and Manchester, covering a wide range of property types from city-centre apartments to family homes.",
   },
   {
-    q: 'Do you manage properties in Leeds and Manchester only?',
-    a: 'Currently yes — we specialise in Leeds and Manchester. This lets us offer a genuinely local, hands-on service rather than a faceless national operation.',
+    q: "Can I apply if I'm self-employed or a student?",
+    a: "Yes. We assess applications individually and work with a range of tenant profiles. Get in touch and we'll let you know what we need from you.",
   },
 ];
 
-function FAQItem({ q, a }: { q: string; a: string }) {
-  const [open, setOpen] = useState(false);
+const whyCards = [
+  {
+    icon: (
+      <svg width="28" height="28" fill="none" stroke="#2563eb" strokeWidth="2" viewBox="0 0 24 24">
+        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+      </svg>
+    ),
+    title: "No agency fees",
+    body: "Renting through us costs you nothing extra. The holding deposit is the only upfront payment — and it comes off your first rent.",
+  },
+  {
+    icon: (
+      <svg width="28" height="28" fill="none" stroke="#2563eb" strokeWidth="2" viewBox="0 0 24 24">
+        <circle cx="12" cy="12" r="10" />
+        <polyline points="12 6 12 12 16 14" />
+      </svg>
+    ),
+    title: "Fast, simple process",
+    body: "Send an enquiry, answer a few questions, book your viewing. No lengthy forms, no waiting weeks to hear back.",
+  },
+  {
+    icon: (
+      <svg width="28" height="28" fill="none" stroke="#2563eb" strokeWidth="2" viewBox="0 0 24 24">
+        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+        <circle cx="9" cy="7" r="4" />
+        <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+        <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+      </svg>
+    ),
+    title: "Direct landlord contact",
+    body: "We work closely with our landlords — no middlemen, no miscommunication. Questions get answered quickly.",
+  },
+  {
+    icon: (
+      <svg width="28" height="28" fill="none" stroke="#2563eb" strokeWidth="2" viewBox="0 0 24 24">
+        <rect x="3" y="3" width="18" height="18" rx="2" />
+        <path d="M3 9h18M9 21V9" />
+      </svg>
+    ),
+    title: "Leeds & Manchester",
+    body: "City-centre flats, suburban houses, and everything in between — across two of the UK's most in-demand rental markets.",
+  },
+];
+
+const steps = [
+  {
+    num: "01",
+    title: "Send an enquiry",
+    body: "Tell us what you're looking for — property type, area, move-in date. No long forms.",
+  },
+  {
+    num: "02",
+    title: "Answer a few quick questions",
+    body: "We ask a handful of straightforward questions to match you with the right property.",
+  },
+  {
+    num: "03",
+    title: "Book your viewing",
+    body: "We arrange the viewing fast. See the property in person before committing to anything.",
+  },
+  {
+    num: "04",
+    title: "Secure it with a holding deposit",
+    body: "To take the property off the market, pay a holding deposit — deducted from your first month's rent.",
+  },
+  {
+    num: "05",
+    title: "Move in",
+    body: "Referencing done, paperwork signed, keys in hand. Welcome home.",
+  },
+];
+
+export default function TenantsPage() {
+  const [openFaq, setOpenFaq] = useState<number | null>(null);
+
   return (
-    <div style={{
-      borderBottom: '1px solid rgba(255,255,255,0.08)',
-      padding: '20px 0',
-    }}>
-      <button
-        onClick={() => setOpen(!open)}
+    <main
+      style={{
+        background: "linear-gradient(160deg, #020b1a 0%, #041230 60%, #061a42 100%)",
+        minHeight: "100vh",
+        color: "#fff",
+        fontFamily: "'Inter', 'Helvetica Neue', sans-serif",
+      }}
+    >
+      {/* ── HERO ── */}
+      <section
         style={{
-          background: 'none', border: 'none', cursor: 'pointer',
-          width: '100%', textAlign: 'left', display: 'flex',
-          justifyContent: 'space-between', alignItems: 'center', gap: 16,
+          maxWidth: 1100,
+          margin: "0 auto",
+          padding: "100px 24px 80px",
+          textAlign: "center",
         }}
       >
-        <span style={{ fontSize: 16, fontWeight: 600, color: '#fff', fontFamily: "'Poppins', sans-serif" }}>
-          {q}
+        <span
+          style={{
+            display: "inline-block",
+            border: "1px solid rgba(37,99,235,0.5)",
+            borderRadius: 999,
+            padding: "6px 18px",
+            fontSize: 13,
+            color: "#93b4fd",
+            letterSpacing: "0.08em",
+            marginBottom: 28,
+            textTransform: "uppercase",
+          }}
+        >
+          Leeds &amp; Manchester
         </span>
-        <span style={{
-          fontSize: 22, color: '#2563eb', flexShrink: 0,
-          transform: open ? 'rotate(45deg)' : 'none',
-          transition: 'transform 0.2s',
-          display: 'inline-block',
-        }}>+</span>
-      </button>
-      {open && (
-        <p style={{
-          marginTop: 12, fontSize: 15, color: 'rgba(255,255,255,0.6)',
-          lineHeight: 1.7, fontFamily: "'Poppins', sans-serif",
-        }}>
-          {a}
-        </p>
-      )}
-    </div>
-  );
-}
 
-// ── ENQUIRY BUTTON ────────────────────────────────────────────────────────────
-function EnquiryButton({ label, style }: { label: string; style?: React.CSSProperties }) {
-  return (
-    <Link href="/listings" style={style}>
-      {label}
-    </Link>
-  );
-}
-
-// ── PAGE ──────────────────────────────────────────────────────────────────────
-export default function TenantsPage() {
-  return (
-    <>
-      <Navbar />
-
-      <style>{`
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { background: #0a1628; }
-
-        .tenants-hero {
-          background: #0a1628;
-          padding: 160px clamp(20px, 5%, 5%) 100px;
-          text-align: center;
-          position: relative;
-          overflow: hidden;
-        }
-        .tenants-hero::before {
-          content: '';
-          position: absolute;
-          inset: 0;
-          background: radial-gradient(ellipse at 50% 0%, rgba(37,99,235,0.12) 0%, transparent 65%);
-          pointer-events: none;
-        }
-
-        .steps-grid {
-          display: grid;
-          grid-template-columns: repeat(3, 1fr);
-          gap: 20px;
-        }
-        @media (max-width: 900px) {
-          .steps-grid { grid-template-columns: repeat(2, 1fr); }
-        }
-        @media (max-width: 540px) {
-          .steps-grid { grid-template-columns: 1fr; }
-        }
-
-        .why-grid {
-          display: grid;
-          grid-template-columns: repeat(4, 1fr);
-          gap: 20px;
-        }
-        @media (max-width: 900px) {
-          .why-grid { grid-template-columns: repeat(2, 1fr); }
-        }
-        @media (max-width: 500px) {
-          .why-grid { grid-template-columns: 1fr; }
-        }
-
-        .cost-table { width: 100%; border-collapse: collapse; }
-        .cost-table tr td {
-          padding: 14px 16px;
-          border-bottom: 1px solid rgba(255,255,255,0.06);
-          font-size: 15px;
-          color: rgba(255,255,255,0.75);
-          font-family: 'Poppins', sans-serif;
-        }
-        .cost-table tr td:first-child { color: rgba(255,255,255,0.45); font-size: 13px; }
-        .cost-table tr:last-child td { border-bottom: none; }
-
-        .split-layout {
-          display: grid;
-          grid-template-columns: 1fr 1fr;
-          gap: 60px;
-          align-items: start;
-        }
-        @media (max-width: 768px) {
-          .split-layout { grid-template-columns: 1fr; gap: 40px; }
-        }
-      `}</style>
-
-      {/* ── HERO ─────────────────────────────────────────────────────────────── */}
-      <section className="tenants-hero">
-        <div style={{ position: 'relative' }}>
-          <div style={{
-            fontSize: 11, fontWeight: 700, letterSpacing: 3, textTransform: 'uppercase',
-            color: '#2563eb', marginBottom: 20,
-            fontFamily: "'Poppins', sans-serif",
-          }}>
-            For Tenants
-          </div>
-          <h1 style={{
-            fontFamily: "'Poppins', sans-serif",
-            fontSize: 'clamp(38px, 6vw, 72px)',
-            fontWeight: 800, lineHeight: 1.08,
-            letterSpacing: '-1.5px', color: '#fff',
+        <h1
+          style={{
+            fontSize: "clamp(2.4rem, 6vw, 4rem)",
+            fontWeight: 800,
+            lineHeight: 1.1,
             marginBottom: 24,
-          }}>
-            Rent without<br />
-            <span style={{ color: '#2563eb' }}>the runaround.</span>
-          </h1>
-          <p style={{
-            fontSize: 17, color: 'rgba(255,255,255,0.55)', lineHeight: 1.7,
-            maxWidth: 480, margin: '0 auto 44px',
-            fontFamily: "'Poppins', sans-serif",
-          }}>
-            No agency fees. No hidden charges. Direct contact with landlords.
-            We make renting straightforward — the way it should be.
-          </p>
-          <div style={{ display: 'flex', gap: 16, justifyContent: 'center', flexWrap: 'wrap' }}>
-            <Link href="/listings" style={{
-              padding: '16px 36px', background: '#2563eb', color: '#fff',
-              borderRadius: 4, fontSize: 14, fontWeight: 700,
-              letterSpacing: '0.5px', textTransform: 'uppercase',
-              textDecoration: 'none', transition: 'background 0.2s',
-              fontFamily: "'Poppins', sans-serif",
-            }}>
-              Browse Properties
-            </Link>
-            <Link href="/contact" style={{
-              padding: '16px 36px', background: 'transparent', color: '#fff',
-              border: '1px solid rgba(255,255,255,0.25)', borderRadius: 4,
-              fontSize: 14, fontWeight: 500, letterSpacing: '0.5px',
-              textTransform: 'uppercase', textDecoration: 'none',
-              fontFamily: "'Poppins', sans-serif",
-            }}>
-              Send an Enquiry
-            </Link>
-          </div>
-        </div>
-      </section>
+            letterSpacing: "-0.02em",
+          }}
+        >
+          Rent without{" "}
+          <span
+            style={{
+              background: "linear-gradient(90deg, #2563eb, #60a5fa)",
+              WebkitBackgroundClip: "text",
+              WebkitTextFillColor: "transparent",
+            }}
+          >
+            the runaround.
+          </span>
+        </h1>
 
-      {/* ── HOW IT WORKS ─────────────────────────────────────────────────────── */}
-      <section style={{ background: '#0d1b35', padding: 'clamp(60px, 8vw, 90px) clamp(20px, 5%, 5%)' }}>
-        <div style={{ marginBottom: 48 }}>
-          <div style={{
-            fontSize: 11, fontWeight: 700, letterSpacing: 3, textTransform: 'uppercase',
-            color: '#2563eb', marginBottom: 14, fontFamily: "'Poppins', sans-serif",
-          }}>
-            Your Journey
-          </div>
-          <h2 style={{
-            fontFamily: "'Poppins', sans-serif",
-            fontSize: 'clamp(28px, 4vw, 48px)', fontWeight: 700,
-            color: '#fff', lineHeight: 1.15,
-          }}>
-            How it works
-          </h2>
-        </div>
-
-        <div className="steps-grid">
-          {[
-            { n: 1, title: 'Send an Enquiry', desc: 'Browse our listings and send a direct enquiry on any property that interests you.' },
-            { n: 2, title: 'We Answer Your Questions', desc: 'We\'ll respond quickly with all the details you need — no sales pressure.' },
-            { n: 3, title: 'Book a Viewing', desc: 'Arrange a viewing at a time that suits you. See the property before committing to anything.' },
-            { n: 4, title: 'Secure with Holding Deposit', desc: 'Pay a holding deposit (one week\'s rent) to take the property off the market while referencing is completed.' },
-            { n: 5, title: 'Application & Referencing', desc: 'Complete your application and referencing. We\'ll discuss the process with you and guide you through each step.' },
-            { n: 6, title: 'Move In', desc: 'Sign your tenancy agreement, pay your first month\'s rent and deposit, and collect your keys.' },
-          ].map(step => (
-            <div key={step.n} style={{
-              border: '1px solid rgba(37,99,235,0.3)',
-              borderRadius: 8, padding: '28px 24px',
-              background: 'rgba(37,99,235,0.04)',
-            }}>
-              <div style={{
-                width: 36, height: 36, background: '#2563eb', borderRadius: '50%',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontSize: 13, fontWeight: 700, color: '#fff', marginBottom: 16,
-                fontFamily: "'Poppins', sans-serif",
-              }}>
-                {step.n}
-              </div>
-              <h3 style={{
-                fontSize: 16, fontWeight: 700, color: '#fff', marginBottom: 8,
-                fontFamily: "'Poppins', sans-serif",
-              }}>
-                {step.title}
-              </h3>
-              <p style={{
-                fontSize: 14, color: 'rgba(255,255,255,0.5)', lineHeight: 1.65,
-                fontFamily: "'Poppins', sans-serif",
-              }}>
-                {step.desc}
-              </p>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* ── WHY RENT WITH US ─────────────────────────────────────────────────── */}
-      <section style={{ background: '#0a1628', padding: 'clamp(60px, 8vw, 90px) clamp(20px, 5%, 5%)' }}>
-        <div style={{ marginBottom: 48 }}>
-          <div style={{
-            fontSize: 11, fontWeight: 700, letterSpacing: 3, textTransform: 'uppercase',
-            color: '#2563eb', marginBottom: 14, fontFamily: "'Poppins', sans-serif",
-          }}>
-            Why Us
-          </div>
-          <h2 style={{
-            fontFamily: "'Poppins', sans-serif",
-            fontSize: 'clamp(28px, 4vw, 48px)', fontWeight: 700,
-            color: '#fff', lineHeight: 1.15,
-          }}>
-            Why rent with House of Lettings?
-          </h2>
-        </div>
-
-        <div className="why-grid">
-          {[
-            { icon: '£', title: 'Zero Tenant Fees', desc: 'No admin fees, no referencing fees, no check-in fees. Nothing.' },
-            { icon: '⚡', title: 'Fast Process', desc: 'From enquiry to keys in as little as 2 weeks. We don\'t drag our feet.' },
-            { icon: '🤝', title: 'Direct Landlord Contact', desc: 'You deal with us directly — no call centres, no passing the buck.' },
-            { icon: '📍', title: 'Leeds & Manchester', desc: 'Local experts who know the market, the areas, and the properties.' },
-          ].map(card => (
-            <div key={card.title} style={{
-              border: '1px solid rgba(37,99,235,0.25)',
-              borderRadius: 8, padding: '28px 24px',
-              background: 'rgba(255,255,255,0.02)',
-            }}>
-              <div style={{ fontSize: 28, marginBottom: 16 }}>{card.icon}</div>
-              <h3 style={{
-                fontSize: 16, fontWeight: 700, color: '#fff', marginBottom: 8,
-                fontFamily: "'Poppins', sans-serif",
-              }}>
-                {card.title}
-              </h3>
-              <p style={{
-                fontSize: 14, color: 'rgba(255,255,255,0.5)', lineHeight: 1.65,
-                fontFamily: "'Poppins', sans-serif",
-              }}>
-                {card.desc}
-              </p>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* ── HOLDING DEPOSIT EXPLAINER ─────────────────────────────────────────── */}
-      <section style={{ background: '#0d1b35', padding: 'clamp(60px, 8vw, 90px) clamp(20px, 5%, 5%)' }}>
-        <div className="split-layout">
-          <div>
-            <div style={{
-              fontSize: 11, fontWeight: 700, letterSpacing: 3, textTransform: 'uppercase',
-              color: '#2563eb', marginBottom: 14, fontFamily: "'Poppins', sans-serif",
-            }}>
-              Transparent Costs
-            </div>
-            <h2 style={{
-              fontFamily: "'Poppins', sans-serif",
-              fontSize: 'clamp(26px, 3.5vw, 42px)', fontWeight: 700,
-              color: '#fff', lineHeight: 1.2, marginBottom: 20,
-            }}>
-              What you actually pay
-            </h2>
-            <p style={{
-              fontSize: 15, color: 'rgba(255,255,255,0.55)', lineHeight: 1.75,
-              fontFamily: "'Poppins', sans-serif", marginBottom: 24,
-            }}>
-              Under the Tenant Fees Act 2019, we are legally prohibited from charging
-              admin or agency fees. The only permitted upfront payments are a holding
-              deposit and your first month's rent + security deposit.
-            </p>
-            <p style={{
-              fontSize: 15, color: 'rgba(255,255,255,0.55)', lineHeight: 1.75,
-              fontFamily: "'Poppins', sans-serif",
-            }}>
-              The holding deposit is capped at one week's rent and is deducted from
-              your first payment — so it's not an extra cost, just an advance.
-            </p>
-          </div>
-          <div>
-            <table className="cost-table">
-              <tbody>
-                {[
-                  { label: 'Agency fee', value: '£0 — prohibited by law' },
-                  { label: 'Referencing fee', value: '£0 — we cover this' },
-                  { label: 'Viewing fee', value: '£0 — always free' },
-                  { label: 'Admin / check-in fee', value: '£0 — not permitted' },
-                  { label: 'Holding deposit', value: 'Max 1 week's rent (deducted from move-in)' },
-                  { label: 'Security deposit', value: 'Max 5 weeks' rent (held in TDS)' },
-                  { label: 'First month's rent', value: 'Paid on move-in day' },
-                ].map(row => (
-                  <tr key={row.label}>
-                    <td>{row.label}</td>
-                    <td style={{ fontWeight: 600, color: '#fff' }}>{row.value}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </section>
-
-      {/* ── FAQ ──────────────────────────────────────────────────────────────── */}
-      <section style={{ background: '#0a1628', padding: 'clamp(60px, 8vw, 90px) clamp(20px, 5%, 5%)' }}>
-        <div style={{ maxWidth: 780, margin: '0 auto' }}>
-          <div style={{ marginBottom: 48, textAlign: 'center' }}>
-            <div style={{
-              fontSize: 11, fontWeight: 700, letterSpacing: 3, textTransform: 'uppercase',
-              color: '#2563eb', marginBottom: 14, fontFamily: "'Poppins', sans-serif",
-            }}>
-              FAQ
-            </div>
-            <h2 style={{
-              fontFamily: "'Poppins', sans-serif",
-              fontSize: 'clamp(28px, 4vw, 44px)', fontWeight: 700,
-              color: '#fff', lineHeight: 1.15,
-            }}>
-              Common questions
-            </h2>
-          </div>
-          {FAQS.map(faq => <FAQItem key={faq.q} q={faq.q} a={faq.a} />)}
-        </div>
-      </section>
-
-      {/* ── CTA BANNER ───────────────────────────────────────────────────────── */}
-      <section style={{
-        background: '#0d1b35',
-        border: '1px solid rgba(37,99,235,0.3)',
-        margin: 'clamp(40px, 6vw, 80px) clamp(20px, 5%, 5%)',
-        borderRadius: 12,
-        padding: 'clamp(48px, 6vw, 72px) clamp(24px, 5%, 60px)',
-        textAlign: 'center',
-      }}>
-        <h2 style={{
-          fontFamily: "'Poppins', sans-serif",
-          fontSize: 'clamp(26px, 4vw, 44px)', fontWeight: 800,
-          color: '#fff', marginBottom: 16, lineHeight: 1.1,
-        }}>
-          Ready to find your next home?
-        </h2>
-        <p style={{
-          fontSize: 16, color: 'rgba(255,255,255,0.5)',
-          marginBottom: 36, fontFamily: "'Poppins', sans-serif",
-        }}>
-          Browse our available properties in Leeds and Manchester.
+        <p
+          style={{
+            fontSize: "clamp(1rem, 2.5vw, 1.2rem)",
+            color: "rgba(255,255,255,0.65)",
+            maxWidth: 560,
+            margin: "0 auto 40px",
+            lineHeight: 1.7,
+          }}
+        >
+          No agency fees. No endless forms. Send an enquiry, answer a few quick questions,
+          and we'll get you in for a viewing — usually within days.
         </p>
-        <div style={{ display: 'flex', gap: 16, justifyContent: 'center', flexWrap: 'wrap' }}>
-          <Link href="/listings" style={{
-            padding: '16px 40px', background: '#2563eb', color: '#fff',
-            borderRadius: 4, fontSize: 14, fontWeight: 700,
-            letterSpacing: '0.5px', textTransform: 'uppercase',
-            textDecoration: 'none', fontFamily: "'Poppins', sans-serif",
-          }}>
+
+        <div style={{ display: "flex", gap: 14, justifyContent: "center", flexWrap: "wrap" }}>
+          <a
+            href="/contact"
+            style={{
+              background: "#2563eb",
+              color: "#fff",
+              padding: "14px 32px",
+              borderRadius: 8,
+              fontWeight: 700,
+              fontSize: 15,
+              textDecoration: "none",
+              letterSpacing: "0.02em",
+            }}
+          >
+            Send an Enquiry
+          </a>
+          <a
+            href="/properties"
+            style={{
+              border: "2px solid #2563eb",
+              color: "#fff",
+              padding: "14px 32px",
+              borderRadius: 8,
+              fontWeight: 600,
+              fontSize: 15,
+              textDecoration: "none",
+            }}
+          >
             Browse Properties
-          </Link>
-          <Link href="/contact" style={{
-            padding: '16px 40px', background: 'transparent', color: '#fff',
-            border: '1px solid rgba(255,255,255,0.2)', borderRadius: 4,
-            fontSize: 14, fontWeight: 500, letterSpacing: '0.5px',
-            textTransform: 'uppercase', textDecoration: 'none',
-            fontFamily: "'Poppins', sans-serif",
-          }}>
-            Contact Us
-          </Link>
+          </a>
         </div>
       </section>
 
-      {/* ── FOOTER ───────────────────────────────────────────────────────────── */}
-      <footer style={{
-        background: '#050a12', borderTop: '1px solid rgba(255,255,255,0.06)',
-        padding: 'clamp(32px, 5vw, 48px) clamp(20px, 5%, 5%)',
-      }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 16 }}>
-          <div style={{
-            fontFamily: "'Poppins', sans-serif", fontSize: 20, fontWeight: 700,
-            color: '#fff', display: 'flex', alignItems: 'center', gap: 10,
-          }}>
-            <span style={{ width: 7, height: 7, background: '#2563eb', borderRadius: '50%', display: 'inline-block' }} />
-            House of Lettings
-          </div>
-          <p style={{ color: 'rgba(255,255,255,0.25)', fontSize: 13, fontFamily: "'Poppins', sans-serif" }}>
-            © {new Date().getFullYear()} House of Lettings Ltd. All rights reserved.
+      {/* ── HOW IT WORKS ── */}
+      <section style={{ maxWidth: 1100, margin: "0 auto", padding: "60px 24px 80px" }}>
+        <p
+          style={{
+            color: "#60a5fa",
+            fontSize: 12,
+            letterSpacing: "0.12em",
+            textTransform: "uppercase",
+            marginBottom: 12,
+          }}
+        >
+          The Process
+        </p>
+        <h2
+          style={{
+            fontSize: "clamp(1.6rem, 4vw, 2.4rem)",
+            fontWeight: 700,
+            marginBottom: 48,
+            letterSpacing: "-0.02em",
+          }}
+        >
+          From enquiry to keys — five steps.
+        </h2>
+
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
+            gap: 20,
+          }}
+        >
+          {steps.map((step) => (
+            <div
+              key={step.num}
+              style={{
+                border: "2px solid #2563eb",
+                borderRadius: 12,
+                padding: "28px 24px",
+                background: "rgba(10,24,56,0.82)",
+                backdropFilter: "blur(8px)",
+              }}
+            >
+              <div
+                style={{
+                  fontSize: 11,
+                  fontWeight: 700,
+                  color: "#2563eb",
+                  letterSpacing: "0.1em",
+                  marginBottom: 12,
+                  textTransform: "uppercase",
+                }}
+              >
+                {step.num}
+              </div>
+              <h3 style={{ fontSize: 17, fontWeight: 700, marginBottom: 10 }}>{step.title}</h3>
+              <p style={{ fontSize: 14, color: "rgba(255,255,255,0.6)", lineHeight: 1.65 }}>
+                {step.body}
+              </p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* ── WHY RENT WITH US ── */}
+      <section
+        style={{
+          background: "rgba(255,255,255,0.025)",
+          borderTop: "1px solid rgba(37,99,235,0.15)",
+          borderBottom: "1px solid rgba(37,99,235,0.15)",
+        }}
+      >
+        <div style={{ maxWidth: 1100, margin: "0 auto", padding: "80px 24px" }}>
+          <p
+            style={{
+              color: "#60a5fa",
+              fontSize: 12,
+              letterSpacing: "0.12em",
+              textTransform: "uppercase",
+              marginBottom: 12,
+            }}
+          >
+            Why Us
           </p>
-          <div style={{ display: 'flex', gap: 24 }}>
-            <Link href="/cookie-policy" style={{ color: 'rgba(255,255,255,0.35)', fontSize: 13, textDecoration: 'none' }}>Cookie Policy</Link>
-            <Link href="/terms" style={{ color: 'rgba(255,255,255,0.35)', fontSize: 13, textDecoration: 'none' }}>Terms</Link>
+          <h2
+            style={{
+              fontSize: "clamp(1.6rem, 4vw, 2.4rem)",
+              fontWeight: 700,
+              marginBottom: 48,
+              letterSpacing: "-0.02em",
+            }}
+          >
+            What makes us different.
+          </h2>
+
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
+              gap: 20,
+            }}
+          >
+            {whyCards.map((card) => (
+              <div
+                key={card.title}
+                style={{
+                  border: "2px solid #2563eb",
+                  borderRadius: 12,
+                  padding: "28px 24px",
+                  background: "rgba(10,24,56,0.82)",
+                }}
+              >
+                <div style={{ marginBottom: 16 }}>{card.icon}</div>
+                <h3 style={{ fontSize: 17, fontWeight: 700, marginBottom: 10 }}>{card.title}</h3>
+                <p style={{ fontSize: 14, color: "rgba(255,255,255,0.6)", lineHeight: 1.65 }}>
+                  {card.body}
+                </p>
+              </div>
+            ))}
           </div>
         </div>
-      </footer>
-    </>
+      </section>
+
+      {/* ── HOLDING DEPOSIT EXPLAINER ── */}
+      <section style={{ maxWidth: 1100, margin: "0 auto", padding: "80px 24px" }}>
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "1fr 1fr",
+            gap: 48,
+            alignItems: "center",
+          }}
+        >
+          <div>
+            <p
+              style={{
+                color: "#60a5fa",
+                fontSize: 12,
+                letterSpacing: "0.12em",
+                textTransform: "uppercase",
+                marginBottom: 12,
+              }}
+            >
+              Transparent Costs
+            </p>
+            <h2
+              style={{
+                fontSize: "clamp(1.6rem, 4vw, 2.2rem)",
+                fontWeight: 700,
+                marginBottom: 20,
+                letterSpacing: "-0.02em",
+                lineHeight: 1.2,
+              }}
+            >
+              The holding deposit explained.
+            </h2>
+            <p
+              style={{
+                color: "rgba(255,255,255,0.65)",
+                fontSize: 15,
+                lineHeight: 1.75,
+                marginBottom: 20,
+              }}
+            >
+              When you've seen the property and want to move forward, a holding deposit takes it off
+              the market while your application is processed.
+            </p>
+            <p
+              style={{
+                color: "rgba(255,255,255,0.65)",
+                fontSize: 15,
+                lineHeight: 1.75,
+                marginBottom: 32,
+              }}
+            >
+              That deposit is{" "}
+              <span style={{ color: "#fff", fontWeight: 600 }}>
+                deducted from your first month's rent
+              </span>{" "}
+              — so you're not paying it on top of anything. It's just paying your rent a little
+              early.
+            </p>
+            <a
+              href="/contact"
+              style={{
+                background: "#2563eb",
+                color: "#fff",
+                padding: "13px 28px",
+                borderRadius: 8,
+                fontWeight: 700,
+                fontSize: 14,
+                textDecoration: "none",
+                display: "inline-block",
+              }}
+            >
+              Start your enquiry
+            </a>
+          </div>
+
+          <div
+            style={{
+              border: "2px solid #2563eb",
+              borderRadius: 16,
+              padding: "36px 32px",
+              background: "rgba(10,24,56,0.82)",
+            }}
+          >
+            {[
+              { label: "Agency fees", value: "£0", sub: "Always free for tenants" },
+              { label: "Holding deposit", value: "Varies", sub: "Deducted from first month's rent" },
+              { label: "Application forms", value: "None", sub: "Just a quick conversation" },
+              { label: "Viewing fee", value: "£0", sub: "No charge to view a property" },
+            ].map((row, i) => (
+              <div
+                key={i}
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "flex-start",
+                  padding: "16px 0",
+                  borderBottom:
+                    i < 3 ? "1px solid rgba(255,255,255,0.07)" : "none",
+                }}
+              >
+                <div>
+                  <div style={{ fontWeight: 600, fontSize: 15 }}>{row.label}</div>
+                  <div style={{ color: "rgba(255,255,255,0.45)", fontSize: 12, marginTop: 3 }}>
+                    {row.sub}
+                  </div>
+                </div>
+                <div
+                  style={{
+                    color: "#60a5fa",
+                    fontWeight: 700,
+                    fontSize: 16,
+                    flexShrink: 0,
+                    marginLeft: 16,
+                  }}
+                >
+                  {row.value}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── FAQ ── */}
+      <section
+        style={{
+          background: "rgba(255,255,255,0.025)",
+          borderTop: "1px solid rgba(37,99,235,0.15)",
+        }}
+      >
+        <div style={{ maxWidth: 760, margin: "0 auto", padding: "80px 24px" }}>
+          <p
+            style={{
+              color: "#60a5fa",
+              fontSize: 12,
+              letterSpacing: "0.12em",
+              textTransform: "uppercase",
+              marginBottom: 12,
+            }}
+          >
+            Common Questions
+          </p>
+          <h2
+            style={{
+              fontSize: "clamp(1.6rem, 4vw, 2.4rem)",
+              fontWeight: 700,
+              marginBottom: 40,
+              letterSpacing: "-0.02em",
+            }}
+          >
+            FAQs
+          </h2>
+
+          <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
+            {faqs.map((faq, i) => (
+              <div
+                key={i}
+                style={{
+                  borderTop: "1px solid rgba(255,255,255,0.08)",
+                  borderBottom: i === faqs.length - 1 ? "1px solid rgba(255,255,255,0.08)" : "none",
+                }}
+              >
+                <button
+                  onClick={() => setOpenFaq(openFaq === i ? null : i)}
+                  style={{
+                    width: "100%",
+                    background: "none",
+                    border: "none",
+                    color: "#fff",
+                    textAlign: "left",
+                    padding: "20px 0",
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    cursor: "pointer",
+                    fontSize: 16,
+                    fontWeight: 600,
+                    gap: 16,
+                  }}
+                >
+                  {faq.q}
+                  <span
+                    style={{
+                      color: "#2563eb",
+                      fontSize: 22,
+                      flexShrink: 0,
+                      lineHeight: 1,
+                      transform: openFaq === i ? "rotate(45deg)" : "none",
+                      transition: "transform 0.2s",
+                    }}
+                  >
+                    +
+                  </span>
+                </button>
+                {openFaq === i && (
+                  <p
+                    style={{
+                      color: "rgba(255,255,255,0.6)",
+                      fontSize: 15,
+                      lineHeight: 1.7,
+                      paddingBottom: 20,
+                      margin: 0,
+                    }}
+                  >
+                    {faq.a}
+                  </p>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── CTA BANNER ── */}
+      <section style={{ maxWidth: 1100, margin: "0 auto", padding: "80px 24px 100px" }}>
+        <div
+          style={{
+            border: "2px solid #2563eb",
+            borderRadius: 16,
+            padding: "60px 40px",
+            background: "rgba(10,24,56,0.82)",
+            textAlign: "center",
+          }}
+        >
+          <h2
+            style={{
+              fontSize: "clamp(1.6rem, 4vw, 2.4rem)",
+              fontWeight: 800,
+              marginBottom: 16,
+              letterSpacing: "-0.02em",
+            }}
+          >
+            Ready to find your next home?
+          </h2>
+          <p
+            style={{
+              color: "rgba(255,255,255,0.6)",
+              fontSize: 16,
+              marginBottom: 36,
+              maxWidth: 460,
+              margin: "0 auto 36px",
+              lineHeight: 1.65,
+            }}
+          >
+            Send us an enquiry and we'll take it from there. No forms, no fees, no hassle.
+          </p>
+          <a
+            href="/contact"
+            style={{
+              background: "#2563eb",
+              color: "#fff",
+              padding: "15px 36px",
+              borderRadius: 8,
+              fontWeight: 700,
+              fontSize: 16,
+              textDecoration: "none",
+              display: "inline-block",
+            }}
+          >
+            Get in Touch
+          </a>
+        </div>
+      </section>
+    </main>
   );
 }

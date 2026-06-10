@@ -288,7 +288,7 @@ export default function LandlordsPage() {
             ].map(pkg => (
               <Link key={pkg.name} href="/pricing" style={{
                 background: pkg.popular ? '#162849' : '#162849',
-                border: pkg.popular ? '2px solid #2563eb' : '1px solid rgba(255,255,255,0.08)',
+                border: '2px solid #2563eb',
                 borderRadius: 10, padding: '32px 28px',
                 textDecoration: 'none', display: 'block',
                 position: 'relative',
@@ -300,7 +300,7 @@ export default function LandlordsPage() {
                 }}
                 onMouseLeave={e => {
                   (e.currentTarget as HTMLElement).style.transform = 'translateY(0)';
-                  (e.currentTarget as HTMLElement).style.borderColor = pkg.popular ? '#2563eb' : 'rgba(255,255,255,0.08)';
+                  (e.currentTarget as HTMLElement).style.borderColor = '#2563eb';
                 }}
               >
                 {pkg.popular && (

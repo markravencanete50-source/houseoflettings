@@ -109,21 +109,6 @@ export default function BookViewingPage() {
           background: "linear-gradient(135deg, rgba(10,20,50,0.88) 0%, rgba(10,20,50,0.65) 60%, rgba(10,20,50,0.4) 100%)",
         }} />
         <div style={{ maxWidth: 660, margin: "0 auto", padding: "0 24px", position: "relative" }}>
-          <span style={{
-            display: "inline-block",
-            border: "1.5px solid rgba(37,99,235,0.8)",
-            borderRadius: 999,
-            padding: "7px 20px",
-            fontSize: 13,
-            fontWeight: 700,
-            color: "#bfdbfe",
-            letterSpacing: "0.1em",
-            marginBottom: 28,
-            textTransform: "uppercase",
-            background: "rgba(37,99,235,0.15)",
-          }}>
-            Book a Viewing
-          </span>
           <h1 style={{
             fontSize: "clamp(2.2rem, 5.5vw, 3.6rem)",
             fontWeight: 800,

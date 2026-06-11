@@ -39,7 +39,7 @@ export default function BookViewingPage() {
     outline: "none",
     fontFamily: "inherit",
     boxSizing: "border-box",
-    transition: "border-color 0.2s, background 0.2s",
+    transition: "border-color 0.2s",
   };
 
   const labelStyle: React.CSSProperties = {
@@ -47,28 +47,22 @@ export default function BookViewingPage() {
     fontSize: 13,
     fontWeight: 600,
     color: "#374151",
-    marginBottom: 7,
-    letterSpacing: "0.02em",
+    marginBottom: 6,
   };
 
   return (
     <main
       style={{
-        background: "#f0f2f7",
+        background: "#eef0f7",
         minHeight: "100vh",
-        color: "#111827",
         fontFamily: "'Inter', 'Helvetica Neue', sans-serif",
       }}
     >
       <style>{`
-        @keyframes bv-pulse {
-          0%, 100% { box-shadow: 0 4px 24px rgba(0,0,0,0.08); }
-          50% { box-shadow: 0 8px 40px rgba(0,0,0,0.12); }
-        }
-        input::placeholder { color: #9ca3af; }
-        input:focus, select:focus {
+        input::placeholder, textarea::placeholder { color: #9ca3af; }
+        input:focus, select:focus, textarea:focus {
           border-color: #2563eb !important;
-          background: #fff !important;
+          outline: none;
           box-shadow: 0 0 0 3px rgba(37,99,235,0.08);
         }
         select option { background: #fff; color: #111827; }
@@ -76,12 +70,11 @@ export default function BookViewingPage() {
         .bv-radio-label {
           display: flex; align-items: center; gap: 10px;
           border: 1.5px solid #d1d5db;
-          border-radius: 8px; padding: 12px 18px;
+          border-radius: 8px; padding: 11px 16px;
           cursor: pointer; font-size: 14px; font-weight: 500;
-          color: #374151;
-          background: #fff;
+          color: #374151; background: #fff;
           transition: border-color 0.2s, background 0.2s;
-          flex: 1; min-width: 120px;
+          flex: 1; min-width: 110px;
         }
         .bv-radio-label:has(input:checked) {
           border-color: #2563eb;
@@ -89,10 +82,6 @@ export default function BookViewingPage() {
           color: #1d4ed8;
         }
         .bv-radio-label input { accent-color: #2563eb; }
-        @media (max-width: 860px) {
-          .bv-split { flex-direction: column !important; }
-          .bv-left { padding-right: 0 !important; border-right: none !important; border-bottom: 1px solid #e5e7eb !important; padding-bottom: 40px !important; }
-        }
       `}</style>
 
       <Navbar />
@@ -107,7 +96,6 @@ export default function BookViewingPage() {
           overflow: "hidden",
         }}
       >
-        {/* Background photo */}
         <div style={{
           position: "absolute", inset: 0,
           backgroundImage: "url(/images/Tenants_Book_viewing_background.png)",
@@ -116,7 +104,6 @@ export default function BookViewingPage() {
           backgroundRepeat: "no-repeat",
           filter: "brightness(1.4)",
         }} />
-        {/* Dark overlay for text readability */}
         <div style={{
           position: "absolute", inset: 0,
           background: "linear-gradient(135deg, rgba(10,20,50,0.88) 0%, rgba(10,20,50,0.65) 60%, rgba(10,20,50,0.4) 100%)",
@@ -145,14 +132,7 @@ export default function BookViewingPage() {
             letterSpacing: "-0.02em",
             color: "#fff",
           }}>
-            Looking to rent{" "}
-            <span style={{
-              background: "linear-gradient(90deg, #2563eb, #60a5fa)",
-              WebkitBackgroundClip: "text",
-              WebkitTextFillColor: "transparent",
-            }}>
-              a property?
-            </span>
+            Looking to rent a property?
           </h1>
           <p style={{
             fontSize: "clamp(1rem, 2.2vw, 1.15rem)",
@@ -161,130 +141,64 @@ export default function BookViewingPage() {
             margin: "0 auto",
             lineHeight: 1.7,
           }}>
-            Register your requirements and we'll match you with suitable properties before they hit the market.
+            Register your requirements and we&apos;ll match you with suitable properties before they hit the market.
           </p>
         </div>
       </section>
 
-      {/* ── SPLIT FORM SECTION ── */}
-      <section style={{
-        position: "relative",
-        overflow: "hidden",
-      }}>
-
-        <div style={{ position: "relative", zIndex: 1, maxWidth: 1100, margin: "0 auto", padding: "80px 24px 100px" }}>
-          <div
-            className="bv-split"
-            style={{
-              display: "flex",
-              gap: 0,
-              border: "1px solid #e5e7eb",
-              borderRadius: 20,
-              background: "#fff",
-              boxShadow: "0 4px 24px rgba(0,0,0,0.08)",
-              overflow: "hidden",
-              
-            }}
-          >
-            {/* LEFT — info panel */}
-            <div
-              className="bv-left"
-              style={{
-                flex: "0 0 380px",
-                padding: "52px 44px",
-                borderRight: "1px solid #e5e7eb",
-                display: "flex",
-                flexDirection: "column",
-                justifyContent: "center",
-                background: "#f8faff",
-              }}
-            >
-              <span style={{
-                display: "inline-block",
-                background: "#2563eb",
-                color: "#111827",
-                borderRadius: 999,
-                padding: "6px 16px",
-                fontSize: 12,
-                fontWeight: 700,
-                letterSpacing: "0.08em",
-                textTransform: "uppercase",
-                marginBottom: 28,
-                alignSelf: "flex-start",
-              }}>
-                Book a Viewing
-              </span>
-
-              <h2 style={{
-                fontSize: "clamp(1.6rem, 3vw, 2.2rem)",
-                fontWeight: 800,
-                lineHeight: 1.15,
-                marginBottom: 16,
-                letterSpacing: "-0.02em",
-              }}>
-                Book a Viewing
-              </h2>
-              <p style={{
-                color: "#6b7280",
-                fontSize: 15,
-                lineHeight: 1.7,
-                marginBottom: 36,
-              }}>
-                Register your requirements and we'll match you with suitable properties before they hit the market.
-              </p>
-
-              {/* Trust badges */}
-              <div style={{
-                background: "#eff6ff",
-                border: "1px solid #bfdbfe",
-                borderRadius: 12,
-                padding: "20px 22px",
-                display: "flex",
-                flexDirection: "column",
-                gap: 12,
-              }}>
-                {[
-                  "Takes less than two minutes",
-                  "Helps us match you faster",
-                  "Saves time on calls with agents",
-                ].map((text) => (
-                  <div key={text} style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                      <path d="M3 8l3.5 3.5L13 5" stroke="#2563eb" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                    </svg>
-                    <span style={{ fontSize: 14, color: "#374151" }}>{text}</span>
-                  </div>
-                ))}
+      {/* ── FORM SECTION ── */}
+      <section style={{ padding: "60px 24px 80px" }}>
+        <div style={{ maxWidth: 680, margin: "0 auto" }}>
+          <div style={{
+            background: "#fff",
+            borderRadius: 16,
+            boxShadow: "0 2px 16px rgba(0,0,0,0.07)",
+            padding: "48px 52px",
+          }}>
+            {submitted ? (
+              <div style={{ textAlign: "center", padding: "40px 0" }}>
+                <div style={{ fontSize: 48, marginBottom: 20 }}>✅</div>
+                <h3 style={{ fontSize: "1.6rem", fontWeight: 800, marginBottom: 12, color: "#111827" }}>Viewing Request Received</h3>
+                <p style={{ color: "#6b7280", fontSize: 15, lineHeight: 1.7 }}>
+                  Our team will review your request and get back to you shortly to confirm the details.
+                </p>
               </div>
-            </div>
-
-            {/* RIGHT — form */}
-            <div style={{ flex: 1, padding: "52px 44px" }}>
-              {submitted ? (
-                <div style={{ textAlign: "center", padding: "60px 0" }}>
-                  <div style={{ fontSize: 48, marginBottom: 20 }}>✅</div>
-                  <h3 style={{ fontSize: "1.6rem", fontWeight: 800, marginBottom: 12, color: "#111827" }}>Viewing Request Received</h3>
-                  <p style={{ color: "#6b7280", fontSize: 15, lineHeight: 1.7 }}>
-                    Our team will review your request and get back to you shortly to confirm the details.
+            ) : (
+              <>
+                {/* Card header */}
+                <div style={{ marginBottom: 36 }}>
+                  <span style={{
+                    display: "inline-block",
+                    background: "#1e3a5f",
+                    color: "#fff",
+                    borderRadius: 999,
+                    padding: "5px 14px",
+                    fontSize: 12,
+                    fontWeight: 700,
+                    letterSpacing: "0.08em",
+                    textTransform: "uppercase",
+                    marginBottom: 16,
+                  }}>
+                    Book a Viewing
+                  </span>
+                  <h2 style={{ fontSize: "1.75rem", fontWeight: 800, color: "#111827", marginBottom: 8, letterSpacing: "-0.02em" }}>
+                    Book a Viewing
+                  </h2>
+                  <p style={{ color: "#6b7280", fontSize: 15, lineHeight: 1.6 }}>
+                    Register your requirements and we&apos;ll match you with suitable properties before they hit the market.
                   </p>
                 </div>
-              ) : (
-                <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 22 }}>
 
-                  {/* Section: Your details */}
-                  <h3 style={{ fontSize: 16, fontWeight: 700, color: "#111827", margin: "0 0 4px", letterSpacing: "-0.01em" }}>
-                    Your details
-                  </h3>
-                  <div style={{ height: 1, background: "#e5e7eb", margin: "-10px 0 2px" }} />
+                <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 20 }}>
 
                   {/* First + Last name */}
                   <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
                     <div>
-                      <label style={labelStyle}>First name <span style={{ color: "#60a5fa" }}>*</span></label>
+                      <label style={labelStyle}>First name <span style={{ color: "#ef4444" }}>*</span></label>
                       <input name="firstName" required value={formData.firstName} onChange={handleChange} placeholder="e.g. James" style={inputStyle} />
                     </div>
                     <div>
-                      <label style={labelStyle}>Last name <span style={{ color: "#60a5fa" }}>*</span></label>
+                      <label style={labelStyle}>Last name <span style={{ color: "#ef4444" }}>*</span></label>
                       <input name="lastName" required value={formData.lastName} onChange={handleChange} placeholder="e.g. Whitfield" style={inputStyle} />
                     </div>
                   </div>
@@ -292,49 +206,33 @@ export default function BookViewingPage() {
                   {/* Email + Phone */}
                   <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
                     <div>
-                      <label style={labelStyle}>Email address <span style={{ color: "#60a5fa" }}>*</span></label>
+                      <label style={labelStyle}>Email Address <span style={{ color: "#ef4444" }}>*</span></label>
                       <input name="email" type="email" required value={formData.email} onChange={handleChange} placeholder="james@example.co.uk" style={inputStyle} />
                     </div>
                     <div>
-                      <label style={labelStyle}>Phone number <span style={{ color: "#60a5fa" }}>*</span></label>
+                      <label style={labelStyle}>Phone Number <span style={{ color: "#ef4444" }}>*</span></label>
                       <input name="phone" type="tel" required value={formData.phone} onChange={handleChange} placeholder="e.g. 07700 900123" style={inputStyle} />
                     </div>
                   </div>
 
                   {/* Postcode */}
                   <div>
-                    <label style={labelStyle}>What property postcode are you looking for?</label>
-                    <input name="postcode" value={formData.postcode} onChange={handleChange} placeholder="e.g. M1 1AE or LS1 1BA" style={{ ...inputStyle, maxWidth: 320 }} />
+                    <label style={labelStyle}>Property Postcode</label>
+                    <input name="postcode" value={formData.postcode} onChange={handleChange} placeholder="e.g. M1 1AE or LS1 1BA" style={inputStyle} />
                   </div>
 
-                  {/* Section: About your move */}
-                  <h3 style={{ fontSize: 16, fontWeight: 700, color: "#111827", margin: "8px 0 4px", letterSpacing: "-0.01em" }}>
-                    About your move
-                  </h3>
-                  <div style={{ height: 1, background: "#e5e7eb", margin: "-10px 0 2px" }} />
-
-                  {/* Move-in timeline — radio */}
+                  {/* Move-in */}
                   <div>
-                    <label style={labelStyle}>When do you want to move in by? <span style={{ color: "#60a5fa" }}>*</span></label>
+                    <label style={labelStyle}>When do you want to move in by? <span style={{ color: "#ef4444" }}>*</span></label>
                     <div className="bv-radio-group">
                       {["Within 2 weeks", "Within 1 month", "Other"].map((opt) => (
-                        <label key={opt} className="bv-radio-label" style={{
-                          display: "flex", alignItems: "center", gap: 10,
-                          border: `1.5px solid ${formData.moveIn === opt ? "#2563eb" : "#d1d5db"}`,
-                          borderRadius: 8, padding: "12px 18px",
-                          cursor: "pointer", fontSize: 14, fontWeight: 500,
-                          color: formData.moveIn === opt ? "#1d4ed8" : "#374151",
-                          background: formData.moveIn === opt ? "#eff6ff" : "#fff",
-                          transition: "all 0.2s",
-                          flex: 1, minWidth: 120,
-                        }}>
+                        <label key={opt} className="bv-radio-label">
                           <input
                             type="radio"
                             name="moveIn"
                             value={opt}
                             checked={formData.moveIn === opt}
                             onChange={handleChange}
-                            style={{ accentColor: "#2563eb" }}
                           />
                           {opt}
                         </label>
@@ -355,30 +253,55 @@ export default function BookViewingPage() {
                     </select>
                   </div>
 
-                  <div style={{ paddingTop: 8 }}>
+                  {/* Footer row */}
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingTop: 8 }}>
+                    <span style={{ fontSize: 13, color: "#9ca3af", display: "flex", alignItems: "center", gap: 6 }}>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" strokeWidth="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                      Your details are secure and never shared.
+                    </span>
                     <button
                       type="submit"
                       disabled={loading}
                       style={{
-                        background: loading ? "rgba(37,99,235,0.5)" : "#2563eb",
-                        color: "#111827",
+                        background: loading ? "#93c5fd" : "#1e3a5f",
+                        color: "#fff",
                         border: "none",
                         borderRadius: 8,
-                        padding: "15px 40px",
-                        fontSize: 16,
+                        padding: "13px 28px",
+                        fontSize: 15,
                         fontWeight: 700,
                         cursor: loading ? "not-allowed" : "pointer",
-                        letterSpacing: "0.02em",
                         transition: "background 0.2s",
-                        width: "100%",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 8,
                       }}
                     >
+                      {!loading && <span>→</span>}
                       {loading ? "Sending…" : "Book a Viewing"}
                     </button>
                   </div>
                 </form>
-              )}
-            </div>
+              </>
+            )}
+          </div>
+
+          {/* Footer trust line */}
+          <div style={{
+            display: "flex",
+            justifyContent: "center",
+            gap: 32,
+            marginTop: 28,
+            flexWrap: "wrap",
+          }}>
+            {["No obligation", "Response within 24 hours", "Leeds & Manchester experts"].map((t) => (
+              <span key={t} style={{ fontSize: 13, color: "#6b7280", display: "flex", alignItems: "center", gap: 6 }}>
+                <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+                  <path d="M3 8l3.5 3.5L13 5" stroke="#2563eb" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+                {t}
+              </span>
+            ))}
           </div>
         </div>
       </section>

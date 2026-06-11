@@ -30,10 +30,10 @@ export default function BookViewingPage() {
 
   const inputStyle: React.CSSProperties = {
     width: "100%",
-    background: "rgba(255,255,255,0.06)",
-    border: "1.5px solid rgba(37,99,235,0.35)",
+    background: "#fff",
+    border: "1.5px solid #d1d5db",
     borderRadius: 8,
-    color: "#fff",
+    color: "#111827",
     fontSize: 15,
     padding: "13px 16px",
     outline: "none",
@@ -46,7 +46,7 @@ export default function BookViewingPage() {
     display: "block",
     fontSize: 13,
     fontWeight: 600,
-    color: "rgba(255,255,255,0.7)",
+    color: "#374151",
     marginBottom: 7,
     letterSpacing: "0.02em",
   };
@@ -56,46 +56,42 @@ export default function BookViewingPage() {
       style={{
         background: "#f0f2f7",
         minHeight: "100vh",
-        color: "#fff",
+        color: "#111827",
         fontFamily: "'Inter', 'Helvetica Neue', sans-serif",
       }}
     >
       <style>{`
-        @keyframes bv-orb {
-          0%, 100% { transform: translate(0,0); }
-          33% { transform: translate(40px,-30px); }
-          66% { transform: translate(-25px,35px); }
-        }
         @keyframes bv-pulse {
-          0%, 100% { box-shadow: 0 0 0 0 rgba(37,99,235,0); }
-          50% { box-shadow: 0 0 60px 8px rgba(37,99,235,0.10); }
+          0%, 100% { box-shadow: 0 4px 24px rgba(0,0,0,0.08); }
+          50% { box-shadow: 0 8px 40px rgba(0,0,0,0.12); }
         }
-        input::placeholder { color: rgba(255,255,255,0.28); }
+        input::placeholder { color: #9ca3af; }
         input:focus, select:focus {
           border-color: #2563eb !important;
-          background: rgba(37,99,235,0.08) !important;
+          background: #fff !important;
+          box-shadow: 0 0 0 3px rgba(37,99,235,0.08);
         }
-        select option { background: #041230; color: #fff; }
+        select option { background: #fff; color: #111827; }
         .bv-radio-group { display: flex; gap: 12px; flex-wrap: wrap; }
         .bv-radio-label {
           display: flex; align-items: center; gap: 10px;
-          border: 1.5px solid rgba(37,99,235,0.35);
-          borderRadius: 8px; padding: 12px 18px;
+          border: 1.5px solid #d1d5db;
+          border-radius: 8px; padding: 12px 18px;
           cursor: pointer; font-size: 14px; font-weight: 500;
-          color: rgba(255,255,255,0.8);
-          background: rgba(255,255,255,0.04);
+          color: #374151;
+          background: #fff;
           transition: border-color 0.2s, background 0.2s;
           flex: 1; min-width: 120px;
         }
         .bv-radio-label:has(input:checked) {
           border-color: #2563eb;
-          background: rgba(37,99,235,0.12);
-          color: #fff;
+          background: #eff6ff;
+          color: #1d4ed8;
         }
         .bv-radio-label input { accent-color: #2563eb; }
         @media (max-width: 860px) {
           .bv-split { flex-direction: column !important; }
-          .bv-left { padding-right: 0 !important; border-right: none !important; border-bottom: 1px solid rgba(37,99,235,0.15) !important; padding-bottom: 40px !important; }
+          .bv-left { padding-right: 0 !important; border-right: none !important; border-bottom: 1px solid #e5e7eb !important; padding-bottom: 40px !important; }
         }
       `}</style>
 
@@ -181,12 +177,12 @@ export default function BookViewingPage() {
             style={{
               display: "flex",
               gap: 0,
-              border: "2px solid rgba(37,99,235,0.45)",
+              border: "1px solid #e5e7eb",
               borderRadius: 20,
-              background: "rgba(10,24,56,0.88)",
-              backdropFilter: "blur(16px)",
+              background: "#fff",
+              boxShadow: "0 4px 24px rgba(0,0,0,0.08)",
               overflow: "hidden",
-              animation: "bv-pulse 6s ease-in-out infinite",
+              
             }}
           >
             {/* LEFT — info panel */}
@@ -195,16 +191,17 @@ export default function BookViewingPage() {
               style={{
                 flex: "0 0 380px",
                 padding: "52px 44px",
-                borderRight: "1px solid rgba(37,99,235,0.18)",
+                borderRight: "1px solid #e5e7eb",
                 display: "flex",
                 flexDirection: "column",
                 justifyContent: "center",
+                background: "#f8faff",
               }}
             >
               <span style={{
                 display: "inline-block",
                 background: "#2563eb",
-                color: "#fff",
+                color: "#111827",
                 borderRadius: 999,
                 padding: "6px 16px",
                 fontSize: 12,
@@ -227,7 +224,7 @@ export default function BookViewingPage() {
                 Book a Viewing
               </h2>
               <p style={{
-                color: "rgba(255,255,255,0.55)",
+                color: "#6b7280",
                 fontSize: 15,
                 lineHeight: 1.7,
                 marginBottom: 36,
@@ -237,8 +234,8 @@ export default function BookViewingPage() {
 
               {/* Trust badges */}
               <div style={{
-                background: "rgba(37,99,235,0.08)",
-                border: "1px solid rgba(37,99,235,0.2)",
+                background: "#eff6ff",
+                border: "1px solid #bfdbfe",
                 borderRadius: 12,
                 padding: "20px 22px",
                 display: "flex",
@@ -254,7 +251,7 @@ export default function BookViewingPage() {
                     <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
                       <path d="M3 8l3.5 3.5L13 5" stroke="#2563eb" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                     </svg>
-                    <span style={{ fontSize: 14, color: "rgba(255,255,255,0.75)" }}>{text}</span>
+                    <span style={{ fontSize: 14, color: "#374151" }}>{text}</span>
                   </div>
                 ))}
               </div>
@@ -265,8 +262,8 @@ export default function BookViewingPage() {
               {submitted ? (
                 <div style={{ textAlign: "center", padding: "60px 0" }}>
                   <div style={{ fontSize: 48, marginBottom: 20 }}>✅</div>
-                  <h3 style={{ fontSize: "1.6rem", fontWeight: 800, marginBottom: 12 }}>Viewing Request Received</h3>
-                  <p style={{ color: "rgba(255,255,255,0.6)", fontSize: 15, lineHeight: 1.7 }}>
+                  <h3 style={{ fontSize: "1.6rem", fontWeight: 800, marginBottom: 12, color: "#111827" }}>Viewing Request Received</h3>
+                  <p style={{ color: "#6b7280", fontSize: 15, lineHeight: 1.7 }}>
                     Our team will review your request and get back to you shortly to confirm the details.
                   </p>
                 </div>
@@ -274,10 +271,10 @@ export default function BookViewingPage() {
                 <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 22 }}>
 
                   {/* Section: Your details */}
-                  <h3 style={{ fontSize: 16, fontWeight: 700, color: "#fff", margin: "0 0 4px", letterSpacing: "-0.01em" }}>
+                  <h3 style={{ fontSize: 16, fontWeight: 700, color: "#111827", margin: "0 0 4px", letterSpacing: "-0.01em" }}>
                     Your details
                   </h3>
-                  <div style={{ height: 1, background: "rgba(255,255,255,0.07)", margin: "-10px 0 2px" }} />
+                  <div style={{ height: 1, background: "#e5e7eb", margin: "-10px 0 2px" }} />
 
                   {/* First + Last name */}
                   <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
@@ -310,10 +307,10 @@ export default function BookViewingPage() {
                   </div>
 
                   {/* Section: About your move */}
-                  <h3 style={{ fontSize: 16, fontWeight: 700, color: "#fff", margin: "8px 0 4px", letterSpacing: "-0.01em" }}>
+                  <h3 style={{ fontSize: 16, fontWeight: 700, color: "#111827", margin: "8px 0 4px", letterSpacing: "-0.01em" }}>
                     About your move
                   </h3>
-                  <div style={{ height: 1, background: "rgba(255,255,255,0.07)", margin: "-10px 0 2px" }} />
+                  <div style={{ height: 1, background: "#e5e7eb", margin: "-10px 0 2px" }} />
 
                   {/* Move-in timeline — radio */}
                   <div>
@@ -322,11 +319,11 @@ export default function BookViewingPage() {
                       {["Within 2 weeks", "Within 1 month", "Other"].map((opt) => (
                         <label key={opt} className="bv-radio-label" style={{
                           display: "flex", alignItems: "center", gap: 10,
-                          border: `1.5px solid ${formData.moveIn === opt ? "#2563eb" : "rgba(37,99,235,0.35)"}`,
+                          border: `1.5px solid ${formData.moveIn === opt ? "#2563eb" : "#d1d5db"}`,
                           borderRadius: 8, padding: "12px 18px",
                           cursor: "pointer", fontSize: 14, fontWeight: 500,
-                          color: formData.moveIn === opt ? "#fff" : "rgba(255,255,255,0.75)",
-                          background: formData.moveIn === opt ? "rgba(37,99,235,0.15)" : "rgba(255,255,255,0.04)",
+                          color: formData.moveIn === opt ? "#1d4ed8" : "#374151",
+                          background: formData.moveIn === opt ? "#eff6ff" : "#fff",
                           transition: "all 0.2s",
                           flex: 1, minWidth: 120,
                         }}>
@@ -363,7 +360,7 @@ export default function BookViewingPage() {
                       disabled={loading}
                       style={{
                         background: loading ? "rgba(37,99,235,0.5)" : "#2563eb",
-                        color: "#fff",
+                        color: "#111827",
                         border: "none",
                         borderRadius: 8,
                         padding: "15px 40px",

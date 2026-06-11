@@ -173,34 +173,7 @@ export default function BookViewingPage() {
       <section style={{
         position: "relative",
         overflow: "hidden",
-        backgroundImage: "url('/images/Book_a_viewing_page_background.png')",
-        backgroundSize: "cover",
-        backgroundPosition: "center",
       }}>
-        {/* Dark overlay */}
-        <div style={{
-          position: "absolute", inset: 0, zIndex: 0, pointerEvents: "none",
-          background: "linear-gradient(160deg, rgba(2,11,26,0.88) 0%, rgba(4,18,48,0.84) 60%, rgba(6,26,66,0.80) 100%)",
-        }} />
-        {/* Animated bg orbs */}
-        <div style={{ position: "absolute", inset: 0, pointerEvents: "none", zIndex: 0 }}>
-          <div style={{
-            position: "absolute", width: 600, height: 600, borderRadius: "50%",
-            background: "radial-gradient(circle, rgba(37,99,235,0.07) 0%, transparent 65%)",
-            top: "-150px", right: "-200px",
-            animation: "bv-orb 18s ease-in-out infinite",
-          }} />
-          <div style={{
-            position: "absolute", width: 500, height: 500, borderRadius: "50%",
-            background: "radial-gradient(circle, rgba(96,165,250,0.05) 0%, transparent 65%)",
-            bottom: "-100px", left: "-150px",
-            animation: "bv-orb 14s ease-in-out infinite reverse",
-          }} />
-          <div style={{
-            position: "absolute", inset: 0,
-            background: "repeating-linear-gradient(135deg, transparent 0px, transparent 60px, rgba(37,99,235,0.018) 60px, rgba(37,99,235,0.018) 61px)",
-          }} />
-        </div>
 
         <div style={{ position: "relative", zIndex: 1, maxWidth: 1100, margin: "0 auto", padding: "80px 24px 100px" }}>
           <div

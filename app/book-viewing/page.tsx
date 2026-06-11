@@ -54,7 +54,7 @@ export default function BookViewingPage() {
   return (
     <main
       style={{
-        background: "linear-gradient(160deg, #020b1a 0%, #041230 60%, #061a42 100%)",
+        background: "#f0f2f7",
         minHeight: "100vh",
         color: "#fff",
         fontFamily: "'Inter', 'Helvetica Neue', sans-serif",

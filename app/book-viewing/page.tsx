@@ -104,16 +104,28 @@ export default function BookViewingPage() {
       {/* ── HERO ── */}
       <section
         style={{
-          backgroundImage:
-            "linear-gradient(160deg, rgba(2,11,26,0.82) 0%, rgba(4,18,48,0.76) 60%, rgba(6,26,66,0.72) 100%), url(/images/Tenants_Book_viewing_background.png)",
-          backgroundSize: "cover",
-          backgroundPosition: "center",
+          position: "relative",
           paddingTop: "calc(68px + 72px)",
           paddingBottom: 72,
           textAlign: "center",
+          overflow: "hidden",
         }}
       >
-        <div style={{ maxWidth: 660, margin: "0 auto", padding: "0 24px" }}>
+        {/* Background photo */}
+        <div style={{
+          position: "absolute", inset: 0,
+          backgroundImage: "url(/images/Tenants_Book_viewing_background.png)",
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+          backgroundRepeat: "no-repeat",
+          filter: "brightness(1.4)",
+        }} />
+        {/* Dark overlay for text readability */}
+        <div style={{
+          position: "absolute", inset: 0,
+          background: "linear-gradient(135deg, rgba(10,20,50,0.88) 0%, rgba(10,20,50,0.65) 60%, rgba(10,20,50,0.4) 100%)",
+        }} />
+        <div style={{ maxWidth: 660, margin: "0 auto", padding: "0 24px", position: "relative" }}>
           <span style={{
             display: "inline-block",
             border: "1.5px solid rgba(37,99,235,0.8)",

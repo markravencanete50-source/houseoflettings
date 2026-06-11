@@ -774,7 +774,7 @@ export default function HomePage() {
         }} />
         <div style={{ position: 'relative', zIndex: 1 }}>
         <div style={{ marginBottom: 56, textAlign: 'center' }}>
-          <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 3, textTransform: 'uppercase', color: '#4a90d9', marginBottom: 14 }}>
+          <div style={{ fontSize: 14, fontWeight: 700, letterSpacing: 3, textTransform: 'uppercase', color: '#4a90d9', marginBottom: 14 }}>
             Our Services
           </div>
           <h2 style={{ fontFamily: "'Poppins', sans-serif", fontSize: 'clamp(28px,4vw,48px)', fontWeight: 700, color: '#fff', margin: 0 }}>
@@ -1006,8 +1006,8 @@ export default function HomePage() {
 
           {/* Header */}
           <div style={{ marginBottom: 56, textAlign: 'center' }}>
-            <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 3, textTransform: 'uppercase', color: '#4a90d9', marginBottom: 14 }}>
-              Transparent Pricing
+            <div style={{ fontSize: 14, fontWeight: 700, letterSpacing: 3, textTransform: 'uppercase', color: '#4a90d9', marginBottom: 14 }}>
+              Landlords Pricing
             </div>
             <h2 style={{ fontFamily: "'Poppins', sans-serif", fontSize: 'clamp(28px,4vw,48px)', fontWeight: 700, color: '#fff', margin: '0 0 16px' }}>
               Choose Your Package

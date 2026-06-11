@@ -143,6 +143,7 @@ export default function BookViewingPage() {
             lineHeight: 1.1,
             marginBottom: 20,
             letterSpacing: "-0.02em",
+            color: "#fff",
           }}>
             Looking to rent{" "}
             <span style={{

@@ -555,6 +555,7 @@ export default function HomePage() {
           backgroundImage: 'url(/images/Background_of_the_Homepage.png)',
           backgroundSize: 'cover', backgroundPosition: 'center',
           backgroundRepeat: 'no-repeat',
+          filter: 'brightness(1.4)',
         }} />
         {/* Dark overlay for text readability */}
         <div style={{

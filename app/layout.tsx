@@ -41,8 +41,12 @@ export const metadata: Metadata = {
     images: ['/images/brand-desk.jpeg'],
   },
   icons: {
-    icon: '/images/logo_HOL.png',
-    apple: '/images/logo_HOL.png',
+    icon: [
+      { url: '/favicon.ico' },
+      { url: '/favicon-32x32.png', sizes: '32x32', type: 'image/png' },
+      { url: '/favicon-16x16.png', sizes: '16x16', type: 'image/png' },
+    ],
+    apple: '/apple-touch-icon.png',
   },
 };
 
@@ -51,8 +55,8 @@ const organizationSchema = {
   '@type': 'RealEstateAgent',
   name: 'House of Lettings',
   url: 'https://www.houseoflettings.uk',
-  logo: 'https://www.houseoflettings.uk/images/logo_HOL.png',
-  image: 'https://www.houseoflettings.uk/images/logo_HOL.png',
+  logo: 'https://www.houseoflettings.uk/images/logo_HOL_tight.png',
+  image: 'https://www.houseoflettings.uk/images/logo_HOL_tight.png',
   description:
     'Letting agents in Leeds and Manchester. Transparent pricing, free valuations, full property management and tenant find services.',
   areaServed: ['Leeds', 'Manchester'],

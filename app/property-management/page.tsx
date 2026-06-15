@@ -205,7 +205,7 @@ export default function PropertyManagementPage() {
           </p>
           <div style={{ display: 'flex', gap: 16, justifyContent: 'center', flexWrap: 'wrap' }}>
             <Link href="/book-valuation" style={{
-              background: colors.red,
+              background: colors.blue,
               color: colors.white,
               padding: '14px 32px',
               borderRadius: 8,
@@ -237,7 +237,7 @@ export default function PropertyManagementPage() {
             gap: 40,
             flexWrap: 'wrap',
           }}>
-            {['500+ Properties Managed', 'Leeds & Manchester', 'No Hidden Fees', 'Renters\' Rights Act Compliant'].map(t => (
+            {['Leeds & Manchester', 'No Hidden Fees', 'Renters\' Rights Act Compliant'].map(t => (
               <div key={t} style={{ color: 'rgba(255,255,255,0.6)', fontSize: 13, fontWeight: 500 }}>
                 <span style={{ color: colors.lightBlue, marginRight: 6 }}>✓</span>{t}
               </div>

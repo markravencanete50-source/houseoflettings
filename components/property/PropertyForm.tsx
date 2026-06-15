@@ -650,8 +650,8 @@ export default function PropertyForm({
                     ref={provided.innerRef}
                     {...provided.droppableProps}
                     style={{
-                      display: 'grid',
-                      gridTemplateColumns: 'repeat(4, 1fr)',
+                      display: 'flex',
+                      flexWrap: 'wrap',
                       gap: 12,
                       marginTop: 4,
                     }}
@@ -666,14 +666,16 @@ export default function PropertyForm({
                             style={{
                               ...provided.draggableProps.style,
                               position: 'relative',
+                              width: 'calc(25% - 9px)',
+                              flexShrink: 0,
                               height: 100,
                               borderRadius: 4,
                               overflow: 'hidden',
-                              cursor: 'grab',
+                              cursor: snapshot.isDragging ? 'grabbing' : 'grab',
                               outline: snapshot.isDragging ? '2px solid var(--red)' : 'none',
                               opacity: snapshot.isDragging ? 0.85 : 1,
                               boxShadow: snapshot.isDragging ? '0 4px 16px rgba(0,0,0,0.18)' : 'none',
-                              transition: 'box-shadow 0.15s, opacity 0.15s',
+                              transition: snapshot.isDragging ? 'none' : 'box-shadow 0.15s, opacity 0.15s',
                             }}
                           >
                             <img src={src} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', pointerEvents: 'none' }} />

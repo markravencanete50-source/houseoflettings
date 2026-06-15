@@ -2,6 +2,7 @@
 // components/property/PropertyForm.tsx
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { useDropzone } from 'react-dropzone';
+import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd';
 import { Property } from '@/lib/types';
 import { createProperty, updateProperty } from '@/services/property';
 
@@ -125,16 +126,27 @@ export default function PropertyForm({
   };
 
   // ── Images ──────────────────────────────────────────────────────────────
-  const [imageFiles, setImageFiles] = useState<File[]>([]);
-  const [previews, setPreviews]     = useState<string[]>(existing?.images || []);
+  // Each entry is either an already-uploaded URL (string) or a new local File.
+  type ImageEntry = { kind: 'url'; url: string } | { kind: 'file'; file: File; preview: string };
+  const [imageEntries, setImageEntries] = useState<ImageEntry[]>(() =>
+    (existing?.images || []).map(url => ({ kind: 'url' as const, url }))
+  );
+
+  // Derived helpers consumed by the rest of the form
+  const previews   = imageEntries.map(e => e.kind === 'url' ? e.url : e.preview);
+  const imageFiles = imageEntries.filter((e): e is Extract<ImageEntry, { kind: 'file' }> => e.kind === 'file').map(e => e.file);
+
   const [uploadProgress, setUploadProgress] = useState<string>('');
   const [loading, setLoading]       = useState(false);
   const [error, setError]           = useState('');
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
-    setImageFiles(prev => [...prev, ...acceptedFiles]);
-    const newPreviews = acceptedFiles.map(f => URL.createObjectURL(f));
-    setPreviews(prev => [...prev, ...newPreviews]);
+    const newEntries: ImageEntry[] = acceptedFiles.map(file => ({
+      kind: 'file' as const,
+      file,
+      preview: URL.createObjectURL(file),
+    }));
+    setImageEntries(prev => [...prev, ...newEntries]);
   }, []);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
@@ -144,8 +156,21 @@ export default function PropertyForm({
   });
 
   const removeImage = (idx: number) => {
-    setPreviews(prev => prev.filter((_, i) => i !== idx));
-    setImageFiles(prev => prev.filter((_, i) => i !== idx));
+    setImageEntries(prev => {
+      const entry = prev[idx];
+      if (entry.kind === 'file') URL.revokeObjectURL(entry.preview);
+      return prev.filter((_, i) => i !== idx);
+    });
+  };
+
+  const reorderImages = (result: DropResult) => {
+    if (!result.destination) return;
+    setImageEntries(prev => {
+      const next = Array.from(prev);
+      const [moved] = next.splice(result.source.index, 1);
+      next.splice(result.destination!.index, 0, moved);
+      return next;
+    });
   };
 
   // ── Submit ───────────────────────────────────────────────────────────────
@@ -165,26 +190,29 @@ export default function PropertyForm({
 
     setLoading(true);
     try {
-      // Upload new image files to Cloudinary
-      let uploadedUrls: string[] = [];
-      if (imageFiles.length > 0) {
-        setUploadProgress(`Uploading 0 of ${imageFiles.length} images...`);
-        const uploadPromises = imageFiles.map(async (file, i) => {
+      // Upload new local files to Cloudinary; track results in a Map keyed by File
+      const fileToUrl = new Map<File, string>();
+      const newFileEntries = imageEntries.filter(e => e.kind === 'file') as { kind: 'file'; file: File; preview: string }[];
+      if (newFileEntries.length > 0) {
+        let uploaded = 0;
+        setUploadProgress(`Uploading 0 of ${newFileEntries.length} images...`);
+        await Promise.all(newFileEntries.map(async ({ file }) => {
           const formData = new FormData();
           formData.append('file', file);
           const res = await fetch('/api/upload', { method: 'POST', body: formData });
           const json = await res.json();
           if (!res.ok) throw new Error(json.error || 'Upload failed');
-          setUploadProgress(`Uploaded ${i + 1} of ${imageFiles.length} images...`);
-          return json.url as string;
-        });
-        uploadedUrls = await Promise.all(uploadPromises);
+          fileToUrl.set(file, json.url as string);
+          uploaded++;
+          setUploadProgress(`Uploaded ${uploaded} of ${newFileEntries.length} images...`);
+        }));
         setUploadProgress('');
       }
 
-      // Merge existing already-uploaded images with new Cloudinary URLs
-      const existingUrls = (existing?.images || []).filter(img => !img.startsWith('blob:'));
-      const allImages = [...existingUrls, ...uploadedUrls];
+      // Build final image array preserving the admin's drag order
+      const allImages = imageEntries
+        .map(e => e.kind === 'url' ? e.url : fileToUrl.get(e.file) ?? null)
+        .filter((u): u is string => !!u);
 
       const data: Omit<Property, 'id' | 'createdAt'> = {
         title,
@@ -611,31 +639,78 @@ export default function PropertyForm({
         </div>
 
         {previews.length > 0 && (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginTop: 16 }}>
-            {previews.map((src, i) => (
-              <div key={i} style={{ position: 'relative', height: 100, borderRadius: 4, overflow: 'hidden' }}>
-                <img src={src} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                {i === 0 && (
-                  <div style={{
-                    position: 'absolute', bottom: 0, left: 0, right: 0,
-                    background: 'rgba(0,0,0,0.55)', color: '#fff',
-                    fontSize: 10, fontWeight: 700, textAlign: 'center', padding: '3px 0',
-                    letterSpacing: 0.5,
-                  }}>COVER</div>
+          <>
+            <div style={{ fontSize: 12, color: 'var(--gray-400)', marginTop: 12, marginBottom: 6 }}>
+              🖱️ Drag images to reorder · First image is the cover photo
+            </div>
+            <DragDropContext onDragEnd={reorderImages}>
+              <Droppable droppableId="property-images" direction="horizontal">
+                {(provided) => (
+                  <div
+                    ref={provided.innerRef}
+                    {...provided.droppableProps}
+                    style={{
+                      display: 'grid',
+                      gridTemplateColumns: 'repeat(4, 1fr)',
+                      gap: 12,
+                      marginTop: 4,
+                    }}
+                  >
+                    {previews.map((src, i) => (
+                      <Draggable key={src + i} draggableId={`img-${i}-${src.slice(-20)}`} index={i}>
+                        {(provided, snapshot) => (
+                          <div
+                            ref={provided.innerRef}
+                            {...provided.draggableProps}
+                            {...provided.dragHandleProps}
+                            style={{
+                              ...provided.draggableProps.style,
+                              position: 'relative',
+                              height: 100,
+                              borderRadius: 4,
+                              overflow: 'hidden',
+                              cursor: 'grab',
+                              outline: snapshot.isDragging ? '2px solid var(--red)' : 'none',
+                              opacity: snapshot.isDragging ? 0.85 : 1,
+                              boxShadow: snapshot.isDragging ? '0 4px 16px rgba(0,0,0,0.18)' : 'none',
+                              transition: 'box-shadow 0.15s, opacity 0.15s',
+                            }}
+                          >
+                            <img src={src} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', pointerEvents: 'none' }} />
+                            {i === 0 && (
+                              <div style={{
+                                position: 'absolute', bottom: 0, left: 0, right: 0,
+                                background: 'rgba(0,0,0,0.55)', color: '#fff',
+                                fontSize: 10, fontWeight: 700, textAlign: 'center', padding: '3px 0',
+                                letterSpacing: 0.5,
+                              }}>COVER</div>
+                            )}
+                            <button
+                              type="button"
+                              onClick={() => removeImage(i)}
+                              style={{
+                                position: 'absolute', top: 4, right: 4, width: 22, height: 22,
+                                background: 'rgba(0,0,0,0.6)', color: '#fff', border: 'none',
+                                borderRadius: '50%', cursor: 'pointer', fontSize: 12, display: 'flex',
+                                alignItems: 'center', justifyContent: 'center',
+                              }}
+                            >✕</button>
+                            <div style={{
+                              position: 'absolute', top: 4, left: 4,
+                              background: 'rgba(0,0,0,0.45)', color: '#fff',
+                              fontSize: 9, fontWeight: 600, padding: '2px 5px',
+                              borderRadius: 3, letterSpacing: 0.3,
+                            }}>{i + 1}</div>
+                          </div>
+                        )}
+                      </Draggable>
+                    ))}
+                    {provided.placeholder}
+                  </div>
                 )}
-                <button
-                  type="button"
-                  onClick={() => removeImage(i)}
-                  style={{
-                    position: 'absolute', top: 4, right: 4, width: 22, height: 22,
-                    background: 'rgba(0,0,0,0.6)', color: '#fff', border: 'none',
-                    borderRadius: '50%', cursor: 'pointer', fontSize: 12, display: 'flex',
-                    alignItems: 'center', justifyContent: 'center',
-                  }}
-                >✕</button>
-              </div>
-            ))}
-          </div>
+              </Droppable>
+            </DragDropContext>
+          </>
         )}
       </div>
 

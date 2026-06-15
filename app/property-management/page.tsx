@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { useState } from 'react';
+import Navbar from '@/components/layout/Navbar';
 
 const colors = {
   navy: '#0f1f3d',
@@ -152,6 +153,7 @@ export default function PropertyManagementPage() {
 
   return (
     <div style={{ fontFamily: 'Poppins, sans-serif', color: colors.textDark, background: colors.white }}>
+      <Navbar />
 
       {/* Hero */}
       <section style={{
@@ -211,23 +213,21 @@ export default function PropertyManagementPage() {
               fontSize: 16,
               textDecoration: 'none',
               display: 'inline-block',
-              transition: 'opacity 0.2s',
             }}>
-              Book a Free Valuation
+              Book Valuation
             </Link>
-            <a href="tel:+441234567890" style={{
-              background: 'transparent',
+            <Link href="/book-viewing" style={{
+              background: colors.blue,
               color: colors.white,
               padding: '14px 32px',
               borderRadius: 8,
               fontWeight: 600,
               fontSize: 16,
               textDecoration: 'none',
-              border: `2px solid rgba(255,255,255,0.4)`,
               display: 'inline-block',
             }}>
-              Call Us Today
-            </a>
+              Book a Viewing
+            </Link>
           </div>
           {/* Trust bar */}
           <div style={{
@@ -649,21 +649,20 @@ export default function PropertyManagementPage() {
               textDecoration: 'none',
               display: 'inline-block',
             }}>
-              Book Free Valuation
+              Book Valuation
             </Link>
-            <a href="tel:+441234567890" style={{
-              background: 'transparent',
+            <Link href="/book-viewing" style={{
+              background: colors.blue,
               color: colors.white,
               padding: '16px 36px',
               borderRadius: 8,
               fontWeight: 600,
               fontSize: 16,
               textDecoration: 'none',
-              border: '2px solid rgba(255,255,255,0.5)',
               display: 'inline-block',
             }}>
-              Call Us Now
-            </a>
+              Book a Viewing
+            </Link>
           </div>
         </div>
       </section>

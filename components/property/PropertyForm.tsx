@@ -2,7 +2,6 @@
 // components/property/PropertyForm.tsx
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { useDropzone } from 'react-dropzone';
-import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd';
 import { Property } from '@/lib/types';
 import { createProperty, updateProperty } from '@/services/property';
 
@@ -163,14 +162,43 @@ export default function PropertyForm({
     });
   };
 
-  const reorderImages = (result: DropResult) => {
-    if (!result.destination) return;
+  // Native HTML5 drag-to-reorder state
+  const [dragSrcIdx, setDragSrcIdx] = useState<number | null>(null);
+  const [dragOverIdx, setDragOverIdx] = useState<number | null>(null);
+
+  const handleDragStart = (e: React.DragEvent, idx: number) => {
+    // Kill the giant browser ghost image — replace with invisible 1px div
+    const ghost = document.createElement('div');
+    ghost.style.cssText = 'width:1px;height:1px;opacity:0;position:fixed;top:-9999px;left:-9999px';
+    document.body.appendChild(ghost);
+    e.dataTransfer.setDragImage(ghost, 0, 0);
+    setTimeout(() => { if (document.body.contains(ghost)) document.body.removeChild(ghost); }, 0);
+    e.dataTransfer.effectAllowed = 'move';
+    setDragSrcIdx(idx);
+  };
+
+  const handleDragOver = (e: React.DragEvent, idx: number) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    if (dragOverIdx !== idx) setDragOverIdx(idx);
+  };
+
+  const handleDrop = (e: React.DragEvent, idx: number) => {
+    e.preventDefault();
+    if (dragSrcIdx === null || dragSrcIdx === idx) { setDragSrcIdx(null); setDragOverIdx(null); return; }
     setImageEntries(prev => {
       const next = Array.from(prev);
-      const [moved] = next.splice(result.source.index, 1);
-      next.splice(result.destination!.index, 0, moved);
+      const [moved] = next.splice(dragSrcIdx, 1);
+      next.splice(idx, 0, moved);
       return next;
     });
+    setDragSrcIdx(null);
+    setDragOverIdx(null);
+  };
+
+  const handleDragEnd = () => {
+    setDragSrcIdx(null);
+    setDragOverIdx(null);
   };
 
   // ── Submit ───────────────────────────────────────────────────────────────
@@ -643,75 +671,64 @@ export default function PropertyForm({
             <div style={{ fontSize: 12, color: 'var(--gray-400)', marginTop: 12, marginBottom: 6 }}>
               🖱️ Drag images to reorder · First image is the cover photo
             </div>
-            <DragDropContext onDragEnd={reorderImages}>
-              <Droppable droppableId="property-images" direction="horizontal">
-                {(provided) => (
-                  <div
-                    ref={provided.innerRef}
-                    {...provided.droppableProps}
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(4, 1fr)',
+                gap: 12,
+                marginTop: 4,
+              }}
+            >
+              {previews.map((src, i) => (
+                <div
+                  key={src + i}
+                  draggable
+                  onDragStart={(e) => handleDragStart(e, i)}
+                  onDragOver={(e) => handleDragOver(e, i)}
+                  onDrop={(e) => handleDrop(e, i)}
+                  onDragEnd={handleDragEnd}
+                  style={{
+                    position: 'relative',
+                    height: 100,
+                    borderRadius: 4,
+                    overflow: 'hidden',
+                    cursor: 'grab',
+                    outline: dragOverIdx === i && dragSrcIdx !== i
+                      ? '2px solid var(--red)'
+                      : 'none',
+                    opacity: dragSrcIdx === i ? 0.35 : 1,
+                    transition: 'opacity 0.15s, outline 0.1s',
+                    userSelect: 'none',
+                  }}
+                >
+                  <img src={src} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', pointerEvents: 'none', display: 'block' }} />
+                  {i === 0 && (
+                    <div style={{
+                      position: 'absolute', bottom: 0, left: 0, right: 0,
+                      background: 'rgba(0,0,0,0.55)', color: '#fff',
+                      fontSize: 10, fontWeight: 700, textAlign: 'center', padding: '3px 0',
+                      letterSpacing: 0.5, pointerEvents: 'none',
+                    }}>COVER</div>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => removeImage(i)}
                     style={{
-                      display: 'flex',
-                      flexWrap: 'wrap',
-                      gap: 12,
-                      marginTop: 4,
+                      position: 'absolute', top: 4, right: 4, width: 22, height: 22,
+                      background: 'rgba(0,0,0,0.6)', color: '#fff', border: 'none',
+                      borderRadius: '50%', cursor: 'pointer', fontSize: 12, display: 'flex',
+                      alignItems: 'center', justifyContent: 'center',
                     }}
-                  >
-                    {previews.map((src, i) => (
-                      <Draggable key={src + i} draggableId={`img-${i}-${src.slice(-20)}`} index={i}>
-                        {(provided, snapshot) => (
-                          <div
-                            ref={provided.innerRef}
-                            {...provided.draggableProps}
-                            {...provided.dragHandleProps}
-                            style={{
-                              ...provided.draggableProps.style,
-                              position: 'relative',
-                              width: 'calc(25% - 9px)',
-                              flexShrink: 0,
-                              height: 100,
-                              borderRadius: 4,
-                              overflow: 'hidden',
-                              cursor: snapshot.isDragging ? 'grabbing' : 'grab',
-                              outline: snapshot.isDragging ? '2px solid var(--red)' : 'none',
-                              opacity: snapshot.isDragging ? 0.85 : 1,
-                              boxShadow: snapshot.isDragging ? '0 4px 16px rgba(0,0,0,0.18)' : 'none',
-                              transition: snapshot.isDragging ? 'none' : 'box-shadow 0.15s, opacity 0.15s',
-                            }}
-                          >
-                            <img src={src} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', pointerEvents: 'none' }} />
-                            {i === 0 && (
-                              <div style={{
-                                position: 'absolute', bottom: 0, left: 0, right: 0,
-                                background: 'rgba(0,0,0,0.55)', color: '#fff',
-                                fontSize: 10, fontWeight: 700, textAlign: 'center', padding: '3px 0',
-                                letterSpacing: 0.5,
-                              }}>COVER</div>
-                            )}
-                            <button
-                              type="button"
-                              onClick={() => removeImage(i)}
-                              style={{
-                                position: 'absolute', top: 4, right: 4, width: 22, height: 22,
-                                background: 'rgba(0,0,0,0.6)', color: '#fff', border: 'none',
-                                borderRadius: '50%', cursor: 'pointer', fontSize: 12, display: 'flex',
-                                alignItems: 'center', justifyContent: 'center',
-                              }}
-                            >✕</button>
-                            <div style={{
-                              position: 'absolute', top: 4, left: 4,
-                              background: 'rgba(0,0,0,0.45)', color: '#fff',
-                              fontSize: 9, fontWeight: 600, padding: '2px 5px',
-                              borderRadius: 3, letterSpacing: 0.3,
-                            }}>{i + 1}</div>
-                          </div>
-                        )}
-                      </Draggable>
-                    ))}
-                    {provided.placeholder}
-                  </div>
-                )}
-              </Droppable>
-            </DragDropContext>
+                  >✕</button>
+                  <div style={{
+                    position: 'absolute', top: 4, left: 4,
+                    background: 'rgba(0,0,0,0.45)', color: '#fff',
+                    fontSize: 9, fontWeight: 600, padding: '2px 5px',
+                    borderRadius: 3, letterSpacing: 0.3, pointerEvents: 'none',
+                  }}>{i + 1}</div>
+                </div>
+              ))}
+            </div>
           </>
         )}
       </div>

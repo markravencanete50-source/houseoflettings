@@ -437,23 +437,23 @@ export default function PropertyManagementPage() {
               alignItems: 'center',
               justifyContent: 'space-between',
               flexWrap: 'wrap',
-              gap: 16,
+              gap: 20,
             }}>
-              <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: 14, margin: 0 }}>
+              <p style={{ color: colors.white, fontSize: 20, fontWeight: 700, margin: 0, lineHeight: 1.3 }}>
                 Not sure if your property is compliant?
               </p>
-              <Link href="/contact" style={{
+              <Link href="/book-valuation" style={{
                 background: colors.blue,
                 color: colors.white,
-                padding: '10px 24px',
+                padding: '14px 32px',
                 borderRadius: 6,
-                fontWeight: 600,
-                fontSize: 14,
+                fontWeight: 700,
+                fontSize: 15,
                 textDecoration: 'none',
                 display: 'inline-block',
                 whiteSpace: 'nowrap',
               }}>
-                Speak to Us Today
+                Book Valuation
               </Link>
             </div>
           </div>

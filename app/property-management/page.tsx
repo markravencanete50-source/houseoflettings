@@ -315,90 +315,149 @@ export default function PropertyManagementPage() {
         </div>
       </section>
 
-      {/* Renters Rights Act Section */}
+      {/* Renters Rights Act Section — redesigned */}
       <section style={{ padding: '80px 24px', background: colors.navy }}>
         <div style={{ maxWidth: 1000, margin: '0 auto' }}>
-          <div style={{ textAlign: 'center', marginBottom: 52 }}>
-            <div style={{
-              display: 'inline-block',
-              background: 'rgba(229,62,62,0.2)',
-              border: '1px solid rgba(229,62,62,0.4)',
-              borderRadius: 20,
-              padding: '6px 16px',
-              color: '#fc8181',
-              fontSize: 13,
-              fontWeight: 600,
-              marginBottom: 16,
-            }}>
-              Important — In Force from 1 May 2026
-            </div>
-            <h2 style={{ color: colors.white, fontSize: 'clamp(24px, 3.5vw, 36px)', fontWeight: 700, margin: '0 0 16px' }}>
-              The Renters&apos; Rights Act 2025:<br />What Landlords Must Know
-            </h2>
-            <p style={{ color: 'rgba(255,255,255,0.65)', maxWidth: 620, margin: '0 auto', lineHeight: 1.7 }}>
-              This is the biggest change to the UK rental market in over 30 years. Here&apos;s what has changed — and how we handle it for you.
-            </p>
-          </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 20 }}>
-            {[
-              {
-                icon: '🚫',
-                title: 'Section 21 Abolished',
-                body: 'No-fault evictions are gone. From 1 May 2026, you can only end a tenancy using Section 8 with valid legal grounds (e.g. rent arrears, property sale, anti-social behaviour). We manage this process correctly.',
-              },
-              {
-                icon: '🔄',
-                title: 'All Tenancies Now Periodic',
-                body: 'Fixed-term assured shorthold tenancies no longer exist. All tenancies are now rolling periodic contracts from the start. This means tenants have more stability — and landlords need proper grounds to repossess.',
-              },
-              {
-                icon: '📄',
-                title: 'Information Sheet Required',
-                body: "You must provide all tenants with the government's official Renters' Rights Information Sheet. Failure to do so carries a fine of up to £7,000. We issue this automatically for every new tenancy.",
-              },
-              {
-                icon: '💷',
-                title: 'Rent Increase Rules',
-                body: 'Rent can only be increased once per year via a formal Section 13 notice with at least 2 months\' written notice. We handle all Section 13 notices on your behalf.',
-              },
-              {
-                icon: '🐾',
-                title: 'Tenant Pet Rights',
-                body: 'Tenants now have the legal right to request permission to keep a pet. You cannot unreasonably refuse. We manage these requests and advise on pet insurance to protect your property.',
-              },
-              {
-                icon: '🏛️',
-                title: 'Landlord Database & Ombudsman',
-                body: 'A national landlord database and Private Rented Sector Ombudsman are being introduced later in 2026. We will guide you through registration requirements as they come into effect.',
-              },
-            ].map(item => (
-              <div key={item.title} style={{
-                background: 'rgba(255,255,255,0.06)',
-                border: '1px solid rgba(255,255,255,0.1)',
-                borderRadius: 12,
-                padding: 28,
+
+          {/* Header */}
+          <div style={{ display: 'flex', alignItems: 'flex-start', gap: 40, flexWrap: 'wrap', marginBottom: 56 }}>
+            <div style={{ flex: '1 1 320px' }}>
+              <div style={{
+                display: 'inline-block',
+                background: 'rgba(229,62,62,0.15)',
+                border: '1px solid rgba(229,62,62,0.35)',
+                borderRadius: 6,
+                padding: '4px 12px',
+                color: '#fc8181',
+                fontSize: 12,
+                fontWeight: 700,
+                letterSpacing: '0.06em',
+                textTransform: 'uppercase',
+                marginBottom: 16,
               }}>
-                <div style={{ fontSize: 28, marginBottom: 12 }}>{item.icon}</div>
-                <h3 style={{ color: colors.white, fontSize: 16, fontWeight: 700, margin: '0 0 10px' }}>{item.title}</h3>
-                <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: 14, lineHeight: 1.7, margin: 0 }}>{item.body}</p>
+                In Force — 1 May 2026
               </div>
-            ))}
+              <h2 style={{ color: colors.white, fontSize: 'clamp(24px, 3.5vw, 36px)', fontWeight: 700, margin: '0 0 14px', lineHeight: 1.25 }}>
+                The Renters&apos; Rights Act 2025
+              </h2>
+              <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: 15, lineHeight: 1.7, margin: 0 }}>
+                The biggest shake-up to UK renting in 30 years. Here&apos;s what changed — and what we handle so you don&apos;t have to.
+              </p>
+            </div>
+            {/* Fine callout */}
+            <div style={{
+              flex: '0 0 auto',
+              background: 'rgba(229,62,62,0.1)',
+              border: '1px solid rgba(229,62,62,0.25)',
+              borderRadius: 12,
+              padding: '24px 32px',
+              textAlign: 'center',
+              minWidth: 200,
+            }}>
+              <div style={{ color: '#fc8181', fontSize: 36, fontWeight: 800, lineHeight: 1 }}>£7,000</div>
+              <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: 13, marginTop: 6 }}>max fine for non-compliance</div>
+            </div>
           </div>
-          <div style={{
-            marginTop: 40,
-            background: 'rgba(37,99,235,0.15)',
-            border: '1px solid rgba(74,144,217,0.3)',
-            borderRadius: 12,
-            padding: '24px 32px',
-            textAlign: 'center',
-          }}>
-            <p style={{ color: 'rgba(255,255,255,0.8)', margin: 0, lineHeight: 1.7 }}>
-              <strong style={{ color: colors.lightBlue }}>Already a landlord with existing tenants?</strong>{' '}
-              All existing tenancies automatically became periodic assured tenancies on 1 May 2026.
-              If you haven&apos;t already issued the Information Sheet to existing tenants, you may still be at risk of a fine.{' '}
-              <Link href="/contact" style={{ color: colors.lightBlue, fontWeight: 600 }}>Speak to us today.</Link>
+
+          {/* Zone 1 — 3 key changes, horizontal */}
+          <div style={{ marginBottom: 40 }}>
+            <p style={{ color: 'rgba(255,255,255,0.35)', fontSize: 11, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 20 }}>
+              What&apos;s Changed
             </p>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 2 }}>
+              {[
+                {
+                  num: '01',
+                  title: 'Section 21 Gone',
+                  body: 'No-fault evictions are abolished. Possession now requires a valid Section 8 ground — rent arrears, property sale, anti-social behaviour.',
+                },
+                {
+                  num: '02',
+                  title: 'All Tenancies Periodic',
+                  body: 'Fixed-term ASTs no longer exist. Every tenancy is now a rolling periodic contract from day one.',
+                },
+                {
+                  num: '03',
+                  title: 'Information Sheet Required',
+                  body: 'Must be issued to every tenant before the tenancy begins. Fines up to £7,000 for failure. We issue it automatically.',
+                },
+              ].map((item, i) => (
+                <div key={item.num} style={{
+                  borderLeft: `3px solid ${i === 0 ? '#fc8181' : i === 1 ? colors.lightBlue : colors.blue}`,
+                  padding: '20px 24px',
+                  background: 'rgba(255,255,255,0.04)',
+                }}>
+                  <div style={{ color: 'rgba(255,255,255,0.2)', fontSize: 12, fontWeight: 700, letterSpacing: '0.08em', marginBottom: 8 }}>{item.num}</div>
+                  <div style={{ color: colors.white, fontSize: 16, fontWeight: 700, marginBottom: 8 }}>{item.title}</div>
+                  <div style={{ color: 'rgba(255,255,255,0.55)', fontSize: 14, lineHeight: 1.6 }}>{item.body}</div>
+                </div>
+              ))}
+            </div>
           </div>
+
+          {/* Zone 2 — We handle checklist */}
+          <div style={{
+            background: 'rgba(255,255,255,0.04)',
+            border: '1px solid rgba(255,255,255,0.08)',
+            borderRadius: 12,
+            padding: '28px 32px',
+          }}>
+            <p style={{ color: 'rgba(255,255,255,0.35)', fontSize: 11, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 20 }}>
+              We Also Handle
+            </p>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 16 }}>
+              {[
+                { label: 'Section 13 rent increase notices', sub: 'Once per year, 2 months\' notice required' },
+                { label: 'Tenant pet requests', sub: 'Cannot be unreasonably refused' },
+                { label: 'Landlord database registration', sub: 'Coming later in 2026' },
+              ].map(item => (
+                <div key={item.label} style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
+                  <div style={{
+                    width: 20, height: 20, borderRadius: '50%',
+                    background: 'rgba(37,99,235,0.3)',
+                    border: '1px solid rgba(74,144,217,0.4)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    flexShrink: 0, marginTop: 2,
+                    fontSize: 11, color: colors.lightBlue, fontWeight: 700,
+                  }}>✓</div>
+                  <div>
+                    <div style={{ color: colors.white, fontSize: 14, fontWeight: 600 }}>{item.label}</div>
+                    <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: 12, marginTop: 2 }}>{item.sub}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* CTA line */}
+            <div style={{
+              marginTop: 28,
+              paddingTop: 24,
+              borderTop: '1px solid rgba(255,255,255,0.08)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              flexWrap: 'wrap',
+              gap: 16,
+            }}>
+              <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: 14, margin: 0 }}>
+                Not sure if your property is compliant?
+              </p>
+              <Link href="/contact" style={{
+                background: colors.blue,
+                color: colors.white,
+                padding: '10px 24px',
+                borderRadius: 6,
+                fontWeight: 600,
+                fontSize: 14,
+                textDecoration: 'none',
+                display: 'inline-block',
+                whiteSpace: 'nowrap',
+              }}>
+                Speak to Us Today
+              </Link>
+            </div>
+          </div>
+
         </div>
       </section>
 

@@ -113,7 +113,7 @@ export default function TenantsPage() {
   return (
     <main
       style={{
-        background: "#ebebeb",
+        background: "#f3f4f6",
         minHeight: "100vh",
         color: "#fff",
         fontFamily: "'Inter', 'Helvetica Neue', sans-serif",
@@ -267,7 +267,7 @@ export default function TenantsPage() {
         style={{
           position: "relative",
           overflow: "hidden",
-          background: "#ebebeb",
+          background: "#f3f4f6",
         }}
       >
         {/* Canvas constellation */}
@@ -367,7 +367,7 @@ export default function TenantsPage() {
       {/* ── WHY RENT WITH US ── */}
       <section
         style={{
-          background: "#e0e0e0",
+          background: "#f3f4f6",
           borderTop: "1px solid rgba(37,99,235,0.15)",
           borderBottom: "1px solid rgba(37,99,235,0.15)",
         }}
@@ -490,7 +490,7 @@ export default function TenantsPage() {
       </section>
 
       {/* ── FAQ ── */}
-      <section style={{ background: "#e0e0e0", borderTop: "1px solid rgba(37,99,235,0.15)" }}>
+      <section style={{ background: "#f3f4f6", borderTop: "1px solid rgba(37,99,235,0.15)" }}>
         <div style={{ maxWidth: 760, margin: "0 auto", padding: "80px 24px" }}>
           <p style={{ color: "#60a5fa", fontSize: 12, letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 12 }}>
             Common Questions

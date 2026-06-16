@@ -645,7 +645,7 @@ export default function HomePage() {
         .bav-text {
           padding: clamp(56px, 7vw, 100px) clamp(32px, 5vw, 80px);
           display: flex; flex-direction: column; justify-content: center;
-          background: #08122a;
+          background: #f3f4f6;
         }
         .bav-photo {
           position: relative; overflow: hidden; min-height: 560px;
@@ -662,18 +662,18 @@ export default function HomePage() {
           .bav-text { padding: 48px 24px; }
         }
       `}</style>
-      <section style={{ overflow: 'hidden', background: '#08122a' }}>
+      <section style={{ overflow: 'hidden', background: '#f3f4f6' }}>
         <div className="bav-grid">
           <div className="bav-text reveal">
             <h2 style={{
               fontFamily: "'Poppins', sans-serif",
               fontSize: 'clamp(28px,4vw,48px)', fontWeight: 700,
-              color: '#fff', lineHeight: 1.2, marginBottom: 24,
+              color: '#0f1f3d', lineHeight: 1.2, marginBottom: 24,
             }}>
               Are you ready to sell or let your property?
             </h2>
             <p style={{
-              fontSize: 17, color: 'rgba(255,255,255,0.75)', lineHeight: 1.8,
+              fontSize: 17, color: '#4b5563', lineHeight: 1.8,
               marginBottom: 44, fontWeight: 300,
             }}>
               Book a free sales or lettings valuation with your local agent, and they will use their local knowledge and expertise to give you the most accurate sales or lettings valuation.
@@ -705,7 +705,7 @@ export default function HomePage() {
         .bvw-text {
           padding: clamp(56px, 7vw, 100px) clamp(32px, 5vw, 80px);
           display: flex; flex-direction: column; justify-content: center;
-          background: #08122a;
+          background: #f3f4f6;
         }
         @media (max-width: 768px) {
           .bvw-grid { grid-template-columns: 1fr; }
@@ -714,7 +714,7 @@ export default function HomePage() {
           .bvw-text { padding: 48px 24px; }
         }
       `}</style>
-      <section style={{ overflow: 'hidden', background: '#08122a' }}>
+      <section style={{ overflow: 'hidden', background: '#f3f4f6' }}>
         <div className="bvw-grid">
           <div className="bvw-photo">
             <img src="/images/agent-photo.jpeg" alt="Book a Viewing" />
@@ -723,12 +723,12 @@ export default function HomePage() {
             <h2 style={{
               fontFamily: "'Poppins', sans-serif",
               fontSize: 'clamp(28px,4vw,48px)', fontWeight: 700,
-              color: '#fff', lineHeight: 1.2, marginBottom: 24,
+              color: '#0f1f3d', lineHeight: 1.2, marginBottom: 24,
             }}>
               Looking to rent a property?
             </h2>
             <p style={{
-              fontSize: 17, color: 'rgba(255,255,255,0.75)', lineHeight: 1.8,
+              fontSize: 17, color: '#4b5563', lineHeight: 1.8,
               marginBottom: 44, fontWeight: 300,
             }}>
               Register your requirements and we&apos;ll match you with suitable properties before they hit the market.

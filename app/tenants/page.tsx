@@ -113,10 +113,10 @@ export default function TenantsPage() {
   return (
     <main
       style={{
-        background: "#f3f4f6",
+        background: "#0a162f",
         minHeight: "100vh",
-        color: "#0f172a",
-        fontFamily: "'Inter', 'Helvetica Neue', sans-serif",
+        color: "#fff",
+        fontFamily: "'Poppins', 'Inter', sans-serif",
       }}
     >
       <style>{`
@@ -267,7 +267,7 @@ export default function TenantsPage() {
         style={{
           position: "relative",
           overflow: "hidden",
-          background: "#f3f4f6",
+          background: "#0a162f",
         }}
       >
         {/* Canvas constellation */}
@@ -334,10 +334,10 @@ export default function TenantsPage() {
         />
 
         <div style={{ position: "relative", zIndex: 1, maxWidth: 1100, margin: "0 auto", padding: "60px 24px 80px" }}>
-          <p style={{ color: "#2563eb", fontSize: 12, letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 12 }}>
+          <p style={{ color: "#60a5fa", fontSize: 12, letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 12 }}>
             The Process
           </p>
-          <h2 style={{ fontSize: "clamp(1.6rem, 4vw, 2.4rem)", fontWeight: 700, marginBottom: 48, letterSpacing: "-0.02em", color: "#0f172a" }}>
+          <h2 style={{ fontSize: "clamp(1.6rem, 4vw, 2.4rem)", fontWeight: 700, marginBottom: 48, letterSpacing: "-0.02em", color: "#fff", fontFamily: "'Barlow Condensed', sans-serif" }}>
             From enquiry to keys — six steps.
           </h2>
 
@@ -367,16 +367,16 @@ export default function TenantsPage() {
       {/* ── WHY RENT WITH US ── */}
       <section
         style={{
-          background: "#f3f4f6",
+          background: "#0f1f3d",
           borderTop: "1px solid rgba(37,99,235,0.15)",
           borderBottom: "1px solid rgba(37,99,235,0.15)",
         }}
       >
         <div style={{ maxWidth: 1100, margin: "0 auto", padding: "80px 24px" }}>
-          <p style={{ color: "#2563eb", fontSize: 12, letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 12 }}>
+          <p style={{ color: "#60a5fa", fontSize: 12, letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 12 }}>
             Why Us
           </p>
-          <h2 style={{ fontSize: "clamp(1.6rem, 4vw, 2.4rem)", fontWeight: 700, marginBottom: 48, letterSpacing: "-0.02em", color: "#0f172a" }}>
+          <h2 style={{ fontSize: "clamp(1.6rem, 4vw, 2.4rem)", fontWeight: 700, marginBottom: 48, letterSpacing: "-0.02em", color: "#fff", fontFamily: "'Barlow Condensed', sans-serif" }}>
             What makes us different.
           </h2>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 20 }}>
@@ -392,7 +392,7 @@ export default function TenantsPage() {
       </section>
 
       {/* ── HOLDING DEPOSIT EXPLAINER — animated ── */}
-      <section style={{ position: "relative", overflow: "hidden", background: "#f3f4f6" }}>
+      <section style={{ position: "relative", overflow: "hidden", background: "#0a162f" }}>
         {/* Animated background */}
         <div style={{ position: "absolute", inset: 0, pointerEvents: "none", zIndex: 0 }}>
           {/* Pulsing rings */}
@@ -453,18 +453,18 @@ export default function TenantsPage() {
           `}</style>
           <div className="deposit-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 48, alignItems: "center" }}>
             <div>
-              <p style={{ color: "#2563eb", fontSize: 12, letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 12 }}>
+              <p style={{ color: "#60a5fa", fontSize: 12, letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 12 }}>
                 Transparent Costs
               </p>
-              <h2 style={{ fontSize: "clamp(1.6rem, 4vw, 2.2rem)", fontWeight: 700, marginBottom: 20, letterSpacing: "-0.02em", lineHeight: 1.2, color: "#0f172a" }}>
+              <h2 style={{ fontSize: "clamp(1.6rem, 4vw, 2.2rem)", fontWeight: 700, marginBottom: 20, letterSpacing: "-0.02em", lineHeight: 1.2, color: "#fff", fontFamily: "'Barlow Condensed', sans-serif" }}>
                 The holding deposit explained.
               </h2>
-              <p style={{ color: "#475569", fontSize: 15, lineHeight: 1.75, marginBottom: 20 }}>
+              <p style={{ color: "rgba(255,255,255,0.65)", fontSize: 15, lineHeight: 1.75, marginBottom: 20 }}>
                 When you've seen the property and want to move forward, a holding deposit takes it off the market while your application is processed.
               </p>
-              <p style={{ color: "#475569", fontSize: 15, lineHeight: 1.75, marginBottom: 32 }}>
+              <p style={{ color: "rgba(255,255,255,0.65)", fontSize: 15, lineHeight: 1.75, marginBottom: 32 }}>
                 That deposit is{" "}
-                <span style={{ color: "#0f172a", fontWeight: 600 }}>deducted from your first month's rent</span>{" "}
+                <span style={{ color: "#fff", fontWeight: 600 }}>deducted from your first month's rent</span>{" "}
                 — so you're not paying it on top of anything. It's just paying your rent a little early.
               </p>
             </div>

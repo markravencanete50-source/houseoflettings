@@ -272,9 +272,6 @@ export default function TenantsPage() {
       >
 
         <div style={{ position: "relative", zIndex: 1, maxWidth: 1100, margin: "0 auto", padding: "60px 24px 80px" }}>
-          <p style={{ color: "#2563eb", fontSize: 12, letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 12 }}>
-            The Process
-          </p>
           <h2 style={{ fontSize: "clamp(1.6rem, 4vw, 2.4rem)", fontWeight: 700, marginBottom: 48, letterSpacing: "-0.02em", color: "#111827", fontFamily: "'Barlow Condensed', sans-serif" }}>
             From enquiry to keys — six steps.
           </h2>
@@ -284,7 +281,7 @@ export default function TenantsPage() {
               <div
                 key={step.num}
                 style={{
-                  border: "2px solid #2563eb",
+                  border: "2px solid #1a3a6b",
                   borderRadius: 12,
                   padding: "28px 24px",
                   background: "#ffffff",
@@ -310,15 +307,12 @@ export default function TenantsPage() {
         }}
       >
         <div style={{ maxWidth: 1100, margin: "0 auto", padding: "80px 24px" }}>
-          <p style={{ color: "#2563eb", fontSize: 12, letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 12 }}>
-            Why Us
-          </p>
           <h2 style={{ fontSize: "clamp(1.6rem, 4vw, 2.4rem)", fontWeight: 700, marginBottom: 48, letterSpacing: "-0.02em", color: "#111827", fontFamily: "'Barlow Condensed', sans-serif" }}>
             What makes us different.
           </h2>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 20 }}>
             {whyCards.map((card) => (
-              <div key={card.title} style={{ border: "2px solid #2563eb", borderRadius: 12, padding: "28px 24px", background: "#ffffff" }}>
+              <div key={card.title} style={{ border: "2px solid #1a3a6b", borderRadius: 12, padding: "28px 24px", background: "#ffffff" }}>
                 <div style={{ marginBottom: 16 }}>{card.icon}</div>
                 <h3 style={{ fontSize: 17, fontWeight: 700, marginBottom: 10, color: "#111827" }}>{card.title}</h3>
                 <p style={{ fontSize: 14, color: "#4b5563", lineHeight: 1.65 }}>{card.body}</p>
@@ -390,9 +384,6 @@ export default function TenantsPage() {
           `}</style>
           <div className="deposit-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 48, alignItems: "center" }}>
             <div>
-              <p style={{ color: "#60a5fa", fontSize: 12, letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 12 }}>
-                Transparent Costs
-              </p>
               <h2 style={{ fontSize: "clamp(1.6rem, 4vw, 2.2rem)", fontWeight: 700, marginBottom: 20, letterSpacing: "-0.02em", lineHeight: 1.2, color: "#fff", fontFamily: "'Barlow Condensed', sans-serif" }}>
                 The holding deposit explained.
               </h2>
@@ -406,7 +397,7 @@ export default function TenantsPage() {
               </p>
             </div>
 
-            <div style={{ border: "2px solid #2563eb", borderRadius: 16, padding: "36px 32px", background: "rgba(10,24,56,0.85)", backdropFilter: "blur(12px)", animation: "t-cta-pulse 6s ease-in-out infinite" }}>
+            <div style={{ borderRadius: 16, padding: "36px 32px", background: "rgba(10,24,56,0.85)", backdropFilter: "blur(12px)", animation: "t-cta-pulse 6s ease-in-out infinite" }}>
               {[
                 { label: "Agency fees", value: "£0", sub: "Always free for tenants" },
                 { label: "Holding deposit", value: "Varies", sub: "Deducted from first month's rent" },
@@ -415,10 +406,10 @@ export default function TenantsPage() {
               ].map((row, i) => (
                 <div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", padding: "16px 0", borderBottom: i < 3 ? "1px solid rgba(255,255,255,0.07)" : "none" }}>
                   <div>
-                    <div style={{ fontWeight: 600, fontSize: 15 }}>{row.label}</div>
-                    <div style={{ color: "rgba(255,255,255,0.45)", fontSize: 12, marginTop: 3 }}>{row.sub}</div>
+                    <div style={{ fontWeight: 600, fontSize: 15, color: "#d1d5db" }}>{row.label}</div>
+                    <div style={{ color: "rgba(209,213,219,0.55)", fontSize: 12, marginTop: 3 }}>{row.sub}</div>
                   </div>
-                  <div style={{ color: "#60a5fa", fontWeight: 700, fontSize: 16, flexShrink: 0, marginLeft: 16 }}>{row.value}</div>
+                  <div style={{ color: "#d1d5db", fontWeight: 700, fontSize: 16, flexShrink: 0, marginLeft: 16 }}>{row.value}</div>
                 </div>
               ))}
             </div>
@@ -429,7 +420,7 @@ export default function TenantsPage() {
       {/* ── FAQ ── */}
       <section style={{ background: "#f3f4f6", borderTop: "1px solid rgba(37,99,235,0.15)" }}>
         <div style={{ maxWidth: 760, margin: "0 auto", padding: "80px 24px" }}>
-          <p style={{ color: "#2563eb", fontSize: 12, letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 12 }}>
+          <p style={{ color: "#0f1f3d", fontSize: 12, letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 12, fontWeight: 800 }}>
             Common Questions
           </p>
           <h2 style={{ fontSize: "clamp(1.6rem, 4vw, 2.4rem)", fontWeight: 700, marginBottom: 40, letterSpacing: "-0.02em", color: "#0f172a" }}>
@@ -437,7 +428,7 @@ export default function TenantsPage() {
           </h2>
           <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
             {faqs.map((faq, i) => (
-              <div key={i} style={{ borderTop: "1px solid rgba(0,0,0,0.1)", borderBottom: i === faqs.length - 1 ? "1px solid rgba(0,0,0,0.1)" : "none" }}>
+              <div key={i} style={{ borderTop: "1px solid rgba(0,0,0,0.25)", borderBottom: i === faqs.length - 1 ? "1px solid rgba(0,0,0,0.25)" : "none" }}>
                 <button
                   onClick={() => setOpenFaq(openFaq === i ? null : i)}
                   style={{ width: "100%", background: "none", border: "none", color: "#0f172a", textAlign: "left", padding: "20px 0", display: "flex", justifyContent: "space-between", alignItems: "center", cursor: "pointer", fontSize: 16, fontWeight: 600, gap: 16 }}

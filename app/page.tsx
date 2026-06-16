@@ -624,17 +624,11 @@ export default function HomePage() {
             }
           `}</style>
           <div className="hero-btns">
-            <Link href="/listings" className="hero-btn">
-              Browse Properties
-            </Link>
             <Link href="/tenants" className="hero-btn">
               Book a Viewing
             </Link>
             <Link href="/landlords" className="hero-btn">
               Book a Valuation
-            </Link>
-            <Link href="/pricing" className="hero-btn">
-              Pricing
             </Link>
           </div>
         </div>

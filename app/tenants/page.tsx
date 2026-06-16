@@ -115,7 +115,7 @@ export default function TenantsPage() {
       style={{
         background: "#f3f4f6",
         minHeight: "100vh",
-        color: "#fff",
+        color: "#0f172a",
         fontFamily: "'Inter', 'Helvetica Neue', sans-serif",
       }}
     >
@@ -334,10 +334,10 @@ export default function TenantsPage() {
         />
 
         <div style={{ position: "relative", zIndex: 1, maxWidth: 1100, margin: "0 auto", padding: "60px 24px 80px" }}>
-          <p style={{ color: "#60a5fa", fontSize: 12, letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 12 }}>
+          <p style={{ color: "#2563eb", fontSize: 12, letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 12 }}>
             The Process
           </p>
-          <h2 style={{ fontSize: "clamp(1.6rem, 4vw, 2.4rem)", fontWeight: 700, marginBottom: 48, letterSpacing: "-0.02em" }}>
+          <h2 style={{ fontSize: "clamp(1.6rem, 4vw, 2.4rem)", fontWeight: 700, marginBottom: 48, letterSpacing: "-0.02em", color: "#0f172a" }}>
             From enquiry to keys — six steps.
           </h2>
 
@@ -373,10 +373,10 @@ export default function TenantsPage() {
         }}
       >
         <div style={{ maxWidth: 1100, margin: "0 auto", padding: "80px 24px" }}>
-          <p style={{ color: "#60a5fa", fontSize: 12, letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 12 }}>
+          <p style={{ color: "#2563eb", fontSize: 12, letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 12 }}>
             Why Us
           </p>
-          <h2 style={{ fontSize: "clamp(1.6rem, 4vw, 2.4rem)", fontWeight: 700, marginBottom: 48, letterSpacing: "-0.02em" }}>
+          <h2 style={{ fontSize: "clamp(1.6rem, 4vw, 2.4rem)", fontWeight: 700, marginBottom: 48, letterSpacing: "-0.02em", color: "#0f172a" }}>
             What makes us different.
           </h2>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 20 }}>
@@ -492,24 +492,24 @@ export default function TenantsPage() {
       {/* ── FAQ ── */}
       <section style={{ background: "#f3f4f6", borderTop: "1px solid rgba(37,99,235,0.15)" }}>
         <div style={{ maxWidth: 760, margin: "0 auto", padding: "80px 24px" }}>
-          <p style={{ color: "#60a5fa", fontSize: 12, letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 12 }}>
+          <p style={{ color: "#2563eb", fontSize: 12, letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 12 }}>
             Common Questions
           </p>
-          <h2 style={{ fontSize: "clamp(1.6rem, 4vw, 2.4rem)", fontWeight: 700, marginBottom: 40, letterSpacing: "-0.02em" }}>
+          <h2 style={{ fontSize: "clamp(1.6rem, 4vw, 2.4rem)", fontWeight: 700, marginBottom: 40, letterSpacing: "-0.02em", color: "#0f172a" }}>
             FAQs
           </h2>
           <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
             {faqs.map((faq, i) => (
-              <div key={i} style={{ borderTop: "1px solid rgba(255,255,255,0.08)", borderBottom: i === faqs.length - 1 ? "1px solid rgba(255,255,255,0.08)" : "none" }}>
+              <div key={i} style={{ borderTop: "1px solid rgba(0,0,0,0.1)", borderBottom: i === faqs.length - 1 ? "1px solid rgba(0,0,0,0.1)" : "none" }}>
                 <button
                   onClick={() => setOpenFaq(openFaq === i ? null : i)}
-                  style={{ width: "100%", background: "none", border: "none", color: "#fff", textAlign: "left", padding: "20px 0", display: "flex", justifyContent: "space-between", alignItems: "center", cursor: "pointer", fontSize: 16, fontWeight: 600, gap: 16 }}
+                  style={{ width: "100%", background: "none", border: "none", color: "#0f172a", textAlign: "left", padding: "20px 0", display: "flex", justifyContent: "space-between", alignItems: "center", cursor: "pointer", fontSize: 16, fontWeight: 600, gap: 16 }}
                 >
                   {faq.q}
                   <span style={{ color: "#2563eb", fontSize: 22, flexShrink: 0, lineHeight: 1, transform: openFaq === i ? "rotate(45deg)" : "none", transition: "transform 0.2s" }}>+</span>
                 </button>
                 {openFaq === i && (
-                  <p style={{ color: "rgba(255,255,255,0.6)", fontSize: 15, lineHeight: 1.7, paddingBottom: 20, margin: 0 }}>{faq.a}</p>
+                  <p style={{ color: "#475569", fontSize: 15, lineHeight: 1.7, paddingBottom: 20, margin: 0 }}>{faq.a}</p>
                 )}
               </div>
             ))}

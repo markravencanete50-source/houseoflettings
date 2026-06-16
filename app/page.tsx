@@ -764,7 +764,7 @@ export default function HomePage() {
         {/* Dark overlay */}
         <div style={{
           position: 'absolute', inset: 0,
-          background: 'rgba(8, 18, 40, 0.82)',
+          background: 'rgba(8, 18, 40, 0.55)',
         }} />
         <div style={{ position: 'relative', zIndex: 1 }}>
         <div style={{ marginBottom: 56, textAlign: 'center' }}>

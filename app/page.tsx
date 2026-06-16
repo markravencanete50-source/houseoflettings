@@ -507,12 +507,13 @@ export default function HomePage() {
 
         /* Services card hover */
         .service-card {
-          transition: transform 0.3s ease, border-color 0.3s ease, background 0.3s ease !important;
+          transition: transform 0.3s ease, border-color 0.3s ease, background 0.3s ease, box-shadow 0.3s ease !important;
         }
         .service-card:hover {
           transform: translateY(-4px) !important;
-          border-color: rgba(74,144,217,0.4) !important;
-          background: #1a3060 !important;
+          border-color: #2563eb !important;
+          background: #f8fafc !important;
+          box-shadow: 0 20px 50px rgba(0,0,0,0.12) !important;
         }
 
         /* How it works step reveal */
@@ -753,25 +754,12 @@ export default function HomePage() {
           .services-grid { grid-template-columns: 1fr; }
         }
       `}</style>
-      <section style={{ padding: 'clamp(60px, 8vw, 100px) clamp(20px, 5%, 5%)', position: 'relative', overflow: 'hidden' }}>
-        {/* Services background image - agent with clients */}
-        <div style={{
-          position: 'absolute', inset: 0,
-          backgroundImage: 'url(/images/Background_of_the_services.png)',
-          backgroundSize: 'cover', backgroundPosition: 'center top',
-          backgroundRepeat: 'no-repeat',
-        }} />
-        {/* Dark overlay */}
-        <div style={{
-          position: 'absolute', inset: 0,
-          background: 'rgba(8, 18, 40, 0.55)',
-        }} />
-        <div style={{ position: 'relative', zIndex: 1 }}>
+      <section style={{ padding: 'clamp(60px, 8vw, 100px) clamp(20px, 5%, 5%)', background: '#f3f4f6' }}>
         <div style={{ marginBottom: 56, textAlign: 'center' }}>
-          <div style={{ fontSize: 14, fontWeight: 700, letterSpacing: 3, textTransform: 'uppercase', color: '#4a90d9', marginBottom: 14 }}>
+          <div style={{ fontSize: 14, fontWeight: 700, letterSpacing: 3, textTransform: 'uppercase', color: '#2563eb', marginBottom: 14 }}>
             Our Services
           </div>
-          <h2 style={{ fontFamily: "'Poppins', sans-serif", fontSize: 'clamp(28px,4vw,48px)', fontWeight: 700, color: '#fff', margin: 0 }}>
+          <h2 style={{ fontFamily: "'Poppins', sans-serif", fontSize: 'clamp(28px,4vw,48px)', fontWeight: 700, color: '#0f1f3d', margin: 0 }}>
             How We Can Help
           </h2>
         </div>
@@ -794,39 +782,41 @@ export default function HomePage() {
             },
           ].map((card, i) => (
             <Link key={card.title} href={card.href} className={`service-card reveal reveal-delay-${i + 1}`} style={{
-              background: 'rgba(10,24,56,0.82)',
+              background: '#fff',
               borderRadius: 10, padding: '40px 32px',
-              border: '2px solid #2563eb',
+              border: '1px solid #e5e7eb',
+              boxShadow: '0 4px 32px rgba(0,0,0,0.06)',
               textDecoration: 'none', display: 'block',
-              transition: 'transform 0.25s ease, border-color 0.25s ease, background 0.25s ease',
+              transition: 'transform 0.25s ease, border-color 0.25s ease, background 0.25s ease, box-shadow 0.25s ease',
             }}
               onMouseEnter={e => {
                 (e.currentTarget as HTMLElement).style.transform = 'translateY(-5px)';
-                (e.currentTarget as HTMLElement).style.borderColor = '#4a90d9';
-                (e.currentTarget as HTMLElement).style.background = '#1a3060';
+                (e.currentTarget as HTMLElement).style.borderColor = '#2563eb';
+                (e.currentTarget as HTMLElement).style.background = '#f8fafc';
+                (e.currentTarget as HTMLElement).style.boxShadow = '0 20px 50px rgba(0,0,0,0.12)';
               }}
               onMouseLeave={e => {
                 (e.currentTarget as HTMLElement).style.transform = 'translateY(0)';
-                (e.currentTarget as HTMLElement).style.borderColor = '#2563eb';
-                (e.currentTarget as HTMLElement).style.background = 'rgba(10,24,56,0.82)';
+                (e.currentTarget as HTMLElement).style.borderColor = '#e5e7eb';
+                (e.currentTarget as HTMLElement).style.background = '#fff';
+                (e.currentTarget as HTMLElement).style.boxShadow = '0 4px 32px rgba(0,0,0,0.06)';
               }}
             >
               <h3 style={{
                 fontFamily: "'Poppins', sans-serif",
-                fontSize: 20, fontWeight: 700, color: '#fff',
+                fontSize: 20, fontWeight: 700, color: '#0f1f3d',
                 marginBottom: 16,
               }}>
                 {card.title}
               </h3>
-              <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.65)', lineHeight: 1.8, margin: '0 0 20px' }}>
+              <p style={{ fontSize: 14, color: '#4b5563', lineHeight: 1.8, margin: '0 0 20px' }}>
                 {card.body}
               </p>
-              <span style={{ fontSize: 13, color: '#4a90d9', fontWeight: 600, letterSpacing: 0.5 }}>
+              <span style={{ fontSize: 13, color: '#2563eb', fontWeight: 600, letterSpacing: 0.5 }}>
                 Learn more →
               </span>
             </Link>
           ))}
-        </div>
         </div>
       </section>
 

@@ -392,7 +392,7 @@ export default function TenantsPage() {
       </section>
 
       {/* ── HOLDING DEPOSIT EXPLAINER — animated ── */}
-      <section style={{ position: "relative", overflow: "hidden" }}>
+      <section style={{ position: "relative", overflow: "hidden", background: "#f3f4f6" }}>
         {/* Animated background */}
         <div style={{ position: "absolute", inset: 0, pointerEvents: "none", zIndex: 0 }}>
           {/* Pulsing rings */}
@@ -453,18 +453,18 @@ export default function TenantsPage() {
           `}</style>
           <div className="deposit-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 48, alignItems: "center" }}>
             <div>
-              <p style={{ color: "#60a5fa", fontSize: 12, letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 12 }}>
+              <p style={{ color: "#2563eb", fontSize: 12, letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 12 }}>
                 Transparent Costs
               </p>
-              <h2 style={{ fontSize: "clamp(1.6rem, 4vw, 2.2rem)", fontWeight: 700, marginBottom: 20, letterSpacing: "-0.02em", lineHeight: 1.2 }}>
+              <h2 style={{ fontSize: "clamp(1.6rem, 4vw, 2.2rem)", fontWeight: 700, marginBottom: 20, letterSpacing: "-0.02em", lineHeight: 1.2, color: "#0f172a" }}>
                 The holding deposit explained.
               </h2>
-              <p style={{ color: "rgba(255,255,255,0.65)", fontSize: 15, lineHeight: 1.75, marginBottom: 20 }}>
+              <p style={{ color: "#475569", fontSize: 15, lineHeight: 1.75, marginBottom: 20 }}>
                 When you've seen the property and want to move forward, a holding deposit takes it off the market while your application is processed.
               </p>
-              <p style={{ color: "rgba(255,255,255,0.65)", fontSize: 15, lineHeight: 1.75, marginBottom: 32 }}>
+              <p style={{ color: "#475569", fontSize: 15, lineHeight: 1.75, marginBottom: 32 }}>
                 That deposit is{" "}
-                <span style={{ color: "#fff", fontWeight: 600 }}>deducted from your first month's rent</span>{" "}
+                <span style={{ color: "#0f172a", fontWeight: 600 }}>deducted from your first month's rent</span>{" "}
                 — so you're not paying it on top of anything. It's just paying your rent a little early.
               </p>
             </div>

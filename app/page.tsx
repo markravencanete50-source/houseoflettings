@@ -549,18 +549,18 @@ export default function HomePage() {
         justifyContent: 'center',
         padding: 'calc(var(--navbar-height, 72px) + 40px) 5% 60px',
       }}>
-        {/* Hero background image - Leeds city */}
+        {/* Hero background image - happy family */}
         <div style={{
           position: 'absolute', inset: 0,
-          backgroundImage: 'url(/images/Background_of_the_Homepage.png)',
-          backgroundSize: 'cover', backgroundPosition: 'center',
+          backgroundImage: 'url(/images/heropage.png)',
+          backgroundSize: 'cover', backgroundPosition: 'center top',
           backgroundRepeat: 'no-repeat',
-          filter: 'brightness(1.4)',
+          filter: 'brightness(1.0)',
         }} />
         {/* Dark overlay for text readability */}
         <div style={{
           position: 'absolute', inset: 0,
-          background: 'linear-gradient(135deg,rgba(10,20,50,0.88) 0%,rgba(10,20,50,0.65) 60%, rgba(10,20,50,0.4) 100%)',
+          background: 'linear-gradient(135deg,rgba(10,20,50,0.75) 0%,rgba(10,20,50,0.55) 60%, rgba(10,20,50,0.3) 100%)',
         }} />
         {/* Subtle radial accent */}
         <div style={{

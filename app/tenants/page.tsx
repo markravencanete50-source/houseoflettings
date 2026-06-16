@@ -504,12 +504,31 @@ export default function TenantsPage() {
           </div>
 
           <div style={{ position: "relative", zIndex: 1 }}>
-            <h2 style={{ fontSize: "clamp(1.6rem, 4vw, 2.4rem)", fontWeight: 800, marginBottom: 16, letterSpacing: "-0.02em" }}>
+            <h2 style={{ fontSize: "clamp(1.6rem, 4vw, 2.4rem)", fontWeight: 700, marginBottom: 16, letterSpacing: "-0.02em", fontFamily: "'Barlow Condensed', sans-serif" }}>
               Ready to find your next home?
             </h2>
             <p style={{ color: "rgba(255,255,255,0.6)", fontSize: 16, marginBottom: 36, maxWidth: 460, margin: "0 auto 36px", lineHeight: 1.65 }}>
               Send us an enquiry and we'll take it from there. No forms, no fees, no hassle.
             </p>
+            <a
+              href="/book-viewing"
+              style={{
+                display: "inline-block",
+                background: "#0f1f3d",
+                color: "#fff",
+                padding: "14px 36px",
+                borderRadius: 8,
+                fontWeight: 700,
+                fontSize: 15,
+                textDecoration: "none",
+                letterSpacing: "0.06em",
+                textTransform: "uppercase",
+                border: "2px solid rgba(255,255,255,0.12)",
+                marginTop: 8,
+              }}
+            >
+              Send an Enquiry
+            </a>
           </div>
         </div>
       </section>

@@ -113,9 +113,9 @@ export default function TenantsPage() {
   return (
     <main
       style={{
-        background: "#0a162f",
+        background: "#f3f4f6",
         minHeight: "100vh",
-        color: "#fff",
+        color: "#111827",
         fontFamily: "'Poppins', 'Inter', sans-serif",
       }}
     >
@@ -262,82 +262,20 @@ export default function TenantsPage() {
         </div>
       </section>
 
-      {/* ── HOW IT WORKS — constellation background ── */}
+      {/* ── HOW IT WORKS ── */}
       <section
         style={{
           position: "relative",
           overflow: "hidden",
-          background: "#0a162f",
+          background: "#f3f4f6",
         }}
       >
-        {/* Canvas constellation */}
-        <canvas
-          id="constellation-canvas"
-          style={{ position: "absolute", inset: 0, width: "100%", height: "100%", zIndex: 0, opacity: 0.85 }}
-          ref={(canvas) => {
-            if (!canvas) return;
-            const ctx = canvas.getContext("2d");
-            if (!ctx) return;
-            let animId: number;
-            const resize = () => {
-              canvas.width = canvas.offsetWidth;
-              canvas.height = canvas.offsetHeight;
-            };
-            resize();
-            window.addEventListener("resize", resize);
-            const NODE_COUNT = 55;
-            const CONNECT_DIST = 160;
-            const nodes = Array.from({ length: NODE_COUNT }, () => ({
-              x: Math.random() * canvas.width,
-              y: Math.random() * canvas.height,
-              vx: (Math.random() - 0.5) * 0.35,
-              vy: (Math.random() - 0.5) * 0.35,
-              r: Math.random() * 2 + 1.2,
-            }));
-            const draw = () => {
-              ctx.clearRect(0, 0, canvas.width, canvas.height);
-              // Move nodes
-              for (const n of nodes) {
-                n.x += n.vx; n.y += n.vy;
-                if (n.x < 0 || n.x > canvas.width) n.vx *= -1;
-                if (n.y < 0 || n.y > canvas.height) n.vy *= -1;
-              }
-              // Draw lines
-              for (let i = 0; i < nodes.length; i++) {
-                for (let j = i + 1; j < nodes.length; j++) {
-                  const dx = nodes[i].x - nodes[j].x;
-                  const dy = nodes[i].y - nodes[j].y;
-                  const dist = Math.sqrt(dx * dx + dy * dy);
-                  if (dist < CONNECT_DIST) {
-                    const alpha = (1 - dist / CONNECT_DIST) * 0.35;
-                    ctx.beginPath();
-                    ctx.moveTo(nodes[i].x, nodes[i].y);
-                    ctx.lineTo(nodes[j].x, nodes[j].y);
-                    ctx.strokeStyle = `rgba(96,165,250,${alpha})`;
-                    ctx.lineWidth = 0.8;
-                    ctx.stroke();
-                  }
-                }
-              }
-              // Draw nodes
-              for (const n of nodes) {
-                ctx.beginPath();
-                ctx.arc(n.x, n.y, n.r, 0, Math.PI * 2);
-                ctx.fillStyle = "rgba(147,196,255,0.7)";
-                ctx.fill();
-              }
-              animId = requestAnimationFrame(draw);
-            };
-            draw();
-            return () => { cancelAnimationFrame(animId); window.removeEventListener("resize", resize); };
-          }}
-        />
 
         <div style={{ position: "relative", zIndex: 1, maxWidth: 1100, margin: "0 auto", padding: "60px 24px 80px" }}>
-          <p style={{ color: "#60a5fa", fontSize: 12, letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 12 }}>
+          <p style={{ color: "#2563eb", fontSize: 12, letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 12 }}>
             The Process
           </p>
-          <h2 style={{ fontSize: "clamp(1.6rem, 4vw, 2.4rem)", fontWeight: 700, marginBottom: 48, letterSpacing: "-0.02em", color: "#fff", fontFamily: "'Barlow Condensed', sans-serif" }}>
+          <h2 style={{ fontSize: "clamp(1.6rem, 4vw, 2.4rem)", fontWeight: 700, marginBottom: 48, letterSpacing: "-0.02em", color: "#111827", fontFamily: "'Barlow Condensed', sans-serif" }}>
             From enquiry to keys — six steps.
           </h2>
 
@@ -349,15 +287,14 @@ export default function TenantsPage() {
                   border: "2px solid #2563eb",
                   borderRadius: 12,
                   padding: "28px 24px",
-                  background: "rgba(10,24,56,0.82)",
-                  backdropFilter: "blur(8px)",
+                  background: "#ffffff",
                 }}
               >
                 <div style={{ fontSize: 11, fontWeight: 700, color: "#2563eb", letterSpacing: "0.1em", marginBottom: 12, textTransform: "uppercase" }}>
                   {step.num}
                 </div>
-                <h3 style={{ fontSize: 17, fontWeight: 700, marginBottom: 10 }}>{step.title}</h3>
-                <p style={{ fontSize: 14, color: "rgba(255,255,255,0.6)", lineHeight: 1.65 }}>{step.body}</p>
+                <h3 style={{ fontSize: 17, fontWeight: 700, marginBottom: 10, color: "#111827" }}>{step.title}</h3>
+                <p style={{ fontSize: 14, color: "#4b5563", lineHeight: 1.65 }}>{step.body}</p>
               </div>
             ))}
           </div>
@@ -367,24 +304,24 @@ export default function TenantsPage() {
       {/* ── WHY RENT WITH US ── */}
       <section
         style={{
-          background: "#0f1f3d",
+          background: "#e8eaed",
           borderTop: "1px solid rgba(37,99,235,0.15)",
           borderBottom: "1px solid rgba(37,99,235,0.15)",
         }}
       >
         <div style={{ maxWidth: 1100, margin: "0 auto", padding: "80px 24px" }}>
-          <p style={{ color: "#60a5fa", fontSize: 12, letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 12 }}>
+          <p style={{ color: "#2563eb", fontSize: 12, letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 12 }}>
             Why Us
           </p>
-          <h2 style={{ fontSize: "clamp(1.6rem, 4vw, 2.4rem)", fontWeight: 700, marginBottom: 48, letterSpacing: "-0.02em", color: "#fff", fontFamily: "'Barlow Condensed', sans-serif" }}>
+          <h2 style={{ fontSize: "clamp(1.6rem, 4vw, 2.4rem)", fontWeight: 700, marginBottom: 48, letterSpacing: "-0.02em", color: "#111827", fontFamily: "'Barlow Condensed', sans-serif" }}>
             What makes us different.
           </h2>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 20 }}>
             {whyCards.map((card) => (
-              <div key={card.title} style={{ border: "2px solid #2563eb", borderRadius: 12, padding: "28px 24px", background: "rgba(10,24,56,0.82)" }}>
+              <div key={card.title} style={{ border: "2px solid #2563eb", borderRadius: 12, padding: "28px 24px", background: "#ffffff" }}>
                 <div style={{ marginBottom: 16 }}>{card.icon}</div>
-                <h3 style={{ fontSize: 17, fontWeight: 700, marginBottom: 10 }}>{card.title}</h3>
-                <p style={{ fontSize: 14, color: "rgba(255,255,255,0.6)", lineHeight: 1.65 }}>{card.body}</p>
+                <h3 style={{ fontSize: 17, fontWeight: 700, marginBottom: 10, color: "#111827" }}>{card.title}</h3>
+                <p style={{ fontSize: 14, color: "#4b5563", lineHeight: 1.65 }}>{card.body}</p>
               </div>
             ))}
           </div>

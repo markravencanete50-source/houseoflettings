@@ -147,7 +147,7 @@ const GALLERY_ITEMS = [
   {
     img: '/images/service-compare.png',
     label: 'Full Lettings & Management',
-    sub: 'AI-powered system, expert team.',
+    sub: 'AI powered system, expert team.',
   },
   {
     img: '/images/landlord-app.png',
@@ -955,7 +955,7 @@ export default function HomePage() {
             },
             {
               title: 'For Tenants',
-              body: 'Our goal is to make finding your next home straightforward, safe, and comfortable. We offer flexible search options for different needs: pet-friendly homes, student accommodation, and properties suitable for a range of lifestyles. No pressure, no unnecessary office visits.',
+              body: 'Our goal is to make finding your next home straightforward, safe, and comfortable. We offer flexible search options for different needs: pet friendly homes, student accommodation, and properties suitable for a range of lifestyles. No pressure, no unnecessary office visits.',
               href: '/tenants',
               icon: (
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="#2563eb" xmlns="http://www.w3.org/2000/svg">
@@ -965,7 +965,7 @@ export default function HomePage() {
             },
             {
               title: 'Property Management',
-              body: 'From accurate valuations and professional photography to comprehensive tenant screening and 12-month guarantee insurance, we ensure your property is in the best hands at every stage of the letting process.',
+              body: 'From accurate valuations and professional photography to comprehensive tenant screening and 12 month guarantee insurance, we ensure your property is in the best hands at every stage of the letting process.',
               href: '/property-management',
               icon: (
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="#2563eb" xmlns="http://www.w3.org/2000/svg">
@@ -1110,10 +1110,10 @@ export default function HomePage() {
             <p className="split-eyebrow">For Landlords</p>
             <h2 className="split-title">Why book a valuation with House of Lettings?</h2>
             <p className="split-body">
-              Booking a valuation with House of Lettings will save you time, money, and stress. Our local experts give you an honest, data-driven view of what your property is worth, so you can make informed decisions with confidence.
+              Booking a valuation with House of Lettings will save you time, money, and stress. Our local experts give you an honest, data driven view of what your property is worth, so you can make informed decisions with confidence.
             </p>
             <ul className="split-list">
-              <li><span className="split-check" style={{color:"#2563eb",fontWeight:700}}>&#10003;</span>Free, no-obligation valuation from a local expert</li>
+              <li><span className="split-check" style={{color:"#2563eb",fontWeight:700}}>&#10003;</span>Free, no obligation valuation from a local expert</li>
               <li><span className="split-check" style={{color:"#2563eb",fontWeight:700}}>&#10003;</span>Accurate rental and sales valuations backed by live market data</li>
               <li><span className="split-check" style={{color:"#2563eb",fontWeight:700}}>&#10003;</span>Advice on how to maximise your property&apos;s return</li>
               <li><span className="split-check" style={{color:"#2563eb",fontWeight:700}}>&#10003;</span>Better tenant quality. We find and secure reliable tenants</li>
@@ -1206,8 +1206,8 @@ export default function HomePage() {
           {/* 5 teaser tiles */}
           <div className="pricing-teaser-grid">
             {[
-              { price: '£499', label: 'Virtual Tenant Find', type: 'One-time fee', popular: false },
-              { price: '£799', label: 'Expert Tenant Find', type: 'One-time fee', popular: true },
+              { price: '£499', label: 'Virtual Tenant Find', type: 'One time fee', popular: false },
+              { price: '£799', label: 'Expert Tenant Find', type: 'One time fee', popular: true },
               { price: '6%',   label: 'Rent Collection',    type: 'Monthly',       popular: false },
               { price: '8%',   label: 'Full Management',    type: 'Monthly',       popular: false },
               { price: '10%',  label: 'Comprehensive Management', type: 'Monthly', popular: false },

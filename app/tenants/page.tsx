@@ -211,14 +211,13 @@ export default function TenantsPage() {
               lineHeight: 1.1,
               marginBottom: 24,
               letterSpacing: "-0.02em",
+              color: "#ffffff",
             }}
           >
             Rent without{" "}
             <span
               style={{
-                background: "linear-gradient(90deg, #2563eb, #60a5fa)",
-                WebkitBackgroundClip: "text",
-                WebkitTextFillColor: "transparent",
+                color: "#ffffff",
               }}
             >
               the runaround.
@@ -506,10 +505,10 @@ export default function TenantsPage() {
           </div>
 
           <div style={{ position: "relative", zIndex: 1 }}>
-            <h2 style={{ fontSize: "clamp(1.6rem, 4vw, 2.4rem)", fontWeight: 700, marginBottom: 16, letterSpacing: "-0.02em", fontFamily: "'Barlow Condensed', sans-serif" }}>
+            <h2 style={{ fontSize: "clamp(1.6rem, 4vw, 2.4rem)", fontWeight: 700, marginBottom: 16, letterSpacing: "-0.02em", fontFamily: "'Barlow Condensed', sans-serif", color: "#ffffff" }}>
               Ready to find your next home?
             </h2>
-            <p style={{ color: "rgba(255,255,255,0.6)", fontSize: 16, marginBottom: 36, maxWidth: 460, margin: "0 auto 36px", lineHeight: 1.65 }}>
+            <p style={{ color: "#ffffff", fontSize: 16, marginBottom: 36, maxWidth: 460, margin: "0 auto 36px", lineHeight: 1.65 }}>
               Send us an enquiry and we'll take it from there. No forms, no fees, no hassle.
             </p>
             <a

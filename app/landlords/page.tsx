@@ -58,13 +58,6 @@ export default function LandlordsPage() {
           padding: 'clamp(100px,12vw,140px) clamp(32px,6%,80px) clamp(80px,10vw,120px)',
           textAlign: 'center',
         }}>
-          <div style={{
-            fontSize: 12, fontWeight: 700, letterSpacing: 4,
-            textTransform: 'uppercase', color: '#4a90d9', marginBottom: 24,
-            fontFamily: "'Poppins', sans-serif",
-          }}>
-            For Landlords
-          </div>
           <h1 style={{
             fontFamily: "'Poppins', sans-serif",
             fontSize: 'clamp(40px,5.5vw,72px)',
@@ -72,9 +65,8 @@ export default function LandlordsPage() {
             lineHeight: 1.12, letterSpacing: '-1px',
             marginBottom: 28,
           }}>
-            Is Your Property<br />
-            <span style={{ color: '#4a90d9' }}>Actually Making</span><br />
-            You Money?
+            We handle the management.<br />
+            You enjoy the returns.
           </h1>
           <p style={{
             fontFamily: "'Poppins', sans-serif",
@@ -84,7 +76,6 @@ export default function LandlordsPage() {
             fontWeight: 300,
             maxWidth: 560, margin: '0 auto 44px',
           }}>
-            We handle the management. You enjoy the returns.<br />
             Serving landlords across Leeds &amp; Manchester.
           </p>
           <div className="hero-btns" style={{ display: 'flex', gap: 14, flexWrap: 'wrap', justifyContent: 'center' }}>
@@ -446,19 +437,12 @@ export default function LandlordsPage() {
           pointerEvents: 'none',
         }} />
         <div style={{ position: 'relative', zIndex: 1 }}>
-          <div style={{
-            fontSize: 11, fontWeight: 700, letterSpacing: 3,
-            textTransform: 'uppercase', color: '#4a90d9', marginBottom: 16,
-            fontFamily: "'Poppins', sans-serif",
-          }}>
-            Get Started Today
-          </div>
           <h2 style={{
             fontFamily: "'Poppins', sans-serif",
             fontSize: 'clamp(28px,4vw,52px)', fontWeight: 700,
             color: '#fff', marginBottom: 16,
           }}>
-            Ready to maximise your <span style={{ color: '#4a90d9' }}>rental returns?</span>
+            Ready to maximise your <span style={{ color: '#fff' }}>rental returns?</span>
           </h2>
           <p style={{
             fontFamily: "'Poppins', sans-serif",
@@ -480,15 +464,6 @@ export default function LandlordsPage() {
               onMouseLeave={e => (e.currentTarget.style.background = '#2563eb')}
             >
               Book a Free Valuation
-            </Link>
-            <Link href="/pricing" style={{
-              padding: '16px 44px', background: 'transparent', color: '#fff',
-              border: '1.5px solid rgba(255,255,255,0.35)', borderRadius: 6,
-              fontSize: 15, fontWeight: 600, textDecoration: 'none',
-              fontFamily: "'Poppins', sans-serif", textTransform: 'uppercase',
-              letterSpacing: '0.5px',
-            }}>
-              View Pricing
             </Link>
           </div>
         </div>

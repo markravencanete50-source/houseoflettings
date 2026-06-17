@@ -56,7 +56,7 @@ function HeroCycler() {
         .hero-cycler.fade-out { opacity: 0; transform: translateY(-8px); }
       `}</style>
       <p className={`hero-cycler ${fade ? 'fade-in' : 'fade-out'}`} style={{
-        fontSize: 17, color: 'rgba(255,255,255,0.6)', lineHeight: 1.65,
+        fontSize: 17, color: 'rgba(255,255,255,0.95)', lineHeight: 1.65,
         maxWidth: 480, margin: '0 auto 44px', fontWeight: 400, letterSpacing: '0.2px',
         fontFamily: "'Poppins', sans-serif", textAlign: 'center',
       }}>
@@ -591,9 +591,8 @@ export default function HomePage() {
           </h1>
 
           {/* Divider */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 20, justifyContent: 'center' }}>
-            <div style={{ width: 32, height: 1, background: 'rgba(255,255,255,0.25)' }} />
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="rgba(255,255,255,0.4)" xmlns="http://www.w3.org/2000/svg">
+          <div style={{ display: 'flex', alignItems: 'center', marginBottom: 20, justifyContent: 'center' }}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="rgba(255,255,255,0.6)" xmlns="http://www.w3.org/2000/svg">
               <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
             </svg>
           </div>

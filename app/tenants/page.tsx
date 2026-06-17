@@ -6,7 +6,7 @@ import Navbar from "@/components/layout/Navbar";
 const faqs = [
   {
     q: "Is it free to rent through House of Lettings?",
-    a: "Yes — there are no agency fees for tenants. The only payment before moving in is a holding deposit to secure the property, which is deducted from your first month's rent. You're not losing anything.",
+    a: "Yes, there are no agency fees for tenants. The only payment before moving in is a holding deposit to secure the property, which is deducted from your first month's rent. You're not losing anything.",
   },
   {
     q: "What is the holding deposit?",
@@ -14,18 +14,18 @@ const faqs = [
   },
   {
     q: "How quickly can I book a viewing?",
-    a: "Once you send an enquiry and answer a few quick questions, we arrange the viewing as fast as possible — usually within a few days.",
+    a: "Once you send an enquiry and answer a few quick questions, we arrange the viewing as fast as possible, usually within a few days.",
   },
   {
     q: "What checks do you run?",
-    a: "Standard referencing: employment/income checks and a previous landlord reference where applicable. We keep it straightforward — no unnecessary hoops.",
+    a: "Standard referencing: employment/income checks and a previous landlord reference where applicable. We keep it straightforward, no unnecessary hoops.",
   },
   {
     q: "Which areas do you cover?",
-    a: "We operate across Leeds and Manchester, covering a wide range of property types from city-centre apartments to family homes.",
+    a: "We operate across Leeds and Manchester, covering a wide range of property types from city centre apartments to family homes.",
   },
   {
-    q: "Can I apply if I'm self-employed or a student?",
+    q: "Can I apply if I'm self employed or a student?",
     a: "Yes. We assess applications individually and work with a range of tenant profiles. Get in touch and we'll let you know what we need from you.",
   },
 ];
@@ -38,7 +38,7 @@ const whyCards = [
       </svg>
     ),
     title: "No agency fees",
-    body: "Renting through us costs you nothing extra. The holding deposit is the only upfront payment — and it comes off your first rent.",
+    body: "Renting through us costs you nothing extra. The holding deposit is the only upfront payment, and it comes off your first rent.",
   },
   {
     icon: (
@@ -60,7 +60,7 @@ const whyCards = [
       </svg>
     ),
     title: "Direct landlord contact",
-    body: "We work closely with our landlords — no middlemen, no miscommunication. Questions get answered quickly.",
+    body: "We work closely with our landlords, no middlemen, no miscommunication. Questions get answered quickly.",
   },
   {
     icon: (
@@ -70,7 +70,7 @@ const whyCards = [
       </svg>
     ),
     title: "Leeds & Manchester",
-    body: "City-centre flats, suburban houses, and everything in between — across two of the UK's most in-demand rental markets.",
+    body: "City centre flats, suburban houses, and everything in between, across two of the UK's most in demand rental markets.",
   },
 ];
 
@@ -78,7 +78,7 @@ const steps = [
   {
     num: "01",
     title: "Send an enquiry",
-    body: "Tell us what you're looking for — property type, area, move-in date. No long forms.",
+    body: "Tell us what you're looking for, property type, area, move in date. No long forms.",
   },
   {
     num: "02",
@@ -93,12 +93,12 @@ const steps = [
   {
     num: "04",
     title: "Secure it with a holding deposit",
-    body: "To take the property off the market, pay a holding deposit — deducted from your first month's rent.",
+    body: "To take the property off the market, pay a holding deposit, deducted from your first month's rent.",
   },
   {
     num: "05",
     title: "Submit your application",
-    body: "Our team guides you through the full application process — referencing, ID checks, and everything in between.",
+    body: "Our team guides you through the full application process, referencing, ID checks, and everything in between.",
   },
   {
     num: "06",
@@ -282,7 +282,7 @@ export default function TenantsPage() {
 
         <div style={{ position: "relative", zIndex: 1, maxWidth: 1100, margin: "0 auto", padding: "60px 24px 80px" }}>
           <h2 style={{ fontSize: "clamp(1.6rem, 4vw, 2.4rem)", fontWeight: 700, marginBottom: 48, letterSpacing: "-0.02em", color: "#111827", fontFamily: "'Barlow Condensed', sans-serif" }}>
-            From enquiry to keys — eight steps.
+            From enquiry to keys, eight steps.
           </h2>
 
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 20 }}>
@@ -403,7 +403,7 @@ export default function TenantsPage() {
               <p style={{ color: "rgba(255,255,255,0.65)", fontSize: 15, lineHeight: 1.75, marginBottom: 32 }}>
                 That deposit is{" "}
                 <span style={{ color: "#fff", fontWeight: 600 }}>deducted from your first month's rent</span>{" "}
-                — so you're not paying it on top of anything. It's just paying your rent a little early.
+                , so you're not paying it on top of anything. It's just paying your rent a little early.
               </p>
             </div>
 

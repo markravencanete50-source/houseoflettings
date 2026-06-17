@@ -1014,7 +1014,8 @@ export default function HomePage() {
                 {card.body}
               </p>
               <span style={{ fontSize: 13, color: '#2563eb', fontWeight: 600, letterSpacing: 0.5, position: 'relative', zIndex: 1 }}>
-                Learn more <span className="learn-more-arrow">-></span>
+                Learn more <span className="learn-more-arrow">{'->'}
+                </span>
               </span>
             </Link>
           ))}

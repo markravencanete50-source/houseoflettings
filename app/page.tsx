@@ -1237,7 +1237,7 @@ export default function HomePage() {
                   {pkg.label}
                 </div>
                 <div style={{ marginTop: 16, fontSize: 11, color: '#4a90d9', fontWeight: 600, letterSpacing: 0.5, textTransform: 'uppercase' }}>
-                  View details ->
+                  View details &rarr;
                 </div>
               </Link>
             ))}

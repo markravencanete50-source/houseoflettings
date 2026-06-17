@@ -221,14 +221,14 @@ function ImageGallery() {
       {/* Lightbox */}
       {lightbox !== null && (
         <div className="hol-lightbox" onClick={() => setLightbox(null)}>
-          <button className="hol-lb-close" onClick={() => setLightbox(null)}>✕</button>
-          <button className="hol-lb-prev" onClick={e => { e.stopPropagation(); setLightbox((lightbox - 1 + GALLERY_ITEMS.length) % GALLERY_ITEMS.length); }}>‹</button>
+          <button className="hol-lb-close" onClick={() => setLightbox(null)}>&times;</button>
+          <button className="hol-lb-prev" onClick={e => { e.stopPropagation(); setLightbox((lightbox - 1 + GALLERY_ITEMS.length) % GALLERY_ITEMS.length); }}>&lsaquo;</button>
           <img
             src={GALLERY_ITEMS[lightbox].img}
             alt={GALLERY_ITEMS[lightbox].label}
             onClick={e => e.stopPropagation()}
           />
-          <button className="hol-lb-next" onClick={e => { e.stopPropagation(); setLightbox((lightbox + 1) % GALLERY_ITEMS.length); }}>›</button>
+          <button className="hol-lb-next" onClick={e => { e.stopPropagation(); setLightbox((lightbox + 1) % GALLERY_ITEMS.length); }}>&rsaquo;</button>
           <div className="hol-lb-caption">{GALLERY_ITEMS[lightbox].label}</div>
         </div>
       )}
@@ -251,7 +251,7 @@ function ImageGallery() {
             Homes That Inspire
           </h2>
           <p style={{ fontSize: 15, color: '#6b7280', maxWidth: 380, lineHeight: 1.65, margin: 0, fontWeight: 300 }}>
-            From compact city flats to sprawling countryside homes — every property listed directly by landlords across the UK.
+            From compact city flats to sprawling countryside homes, every property listed directly by landlords across the UK.
           </p>
         </div>
       </div>
@@ -450,7 +450,7 @@ export default function HomePage() {
           to   { opacity: 1; transform: translateY(0); }
         }
 
-        /* Section breathing gaps — navy so dark sections flow naturally */
+        /* Section breathing gaps - navy so dark sections flow naturally */
         .section-gap, .section-gap-light, .section-gap-dark {
           height: clamp(56px, 7vw, 88px);
           background: #08122a;
@@ -955,7 +955,7 @@ export default function HomePage() {
             },
             {
               title: 'For Tenants',
-              body: 'Our goal is to make finding your next home straightforward, safe, and comfortable. We offer flexible search options for different needs — pet-friendly homes, student accommodation, and properties suitable for a range of lifestyles. No pressure, no unnecessary office visits.',
+              body: 'Our goal is to make finding your next home straightforward, safe, and comfortable. We offer flexible search options for different needs: pet-friendly homes, student accommodation, and properties suitable for a range of lifestyles. No pressure, no unnecessary office visits.',
               href: '/tenants',
               icon: (
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="#2563eb" xmlns="http://www.w3.org/2000/svg">
@@ -1014,7 +1014,7 @@ export default function HomePage() {
                 {card.body}
               </p>
               <span style={{ fontSize: 13, color: '#2563eb', fontWeight: 600, letterSpacing: 0.5, position: 'relative', zIndex: 1 }}>
-                Learn more <span className="learn-more-arrow">→</span>
+                Learn more <span className="learn-more-arrow">-></span>
               </span>
             </Link>
           ))}
@@ -1102,25 +1102,25 @@ export default function HomePage() {
         }
       `}</style>
 
-      {/* Valuation — text left, photo right */}
+      {/* Valuation - text left, photo right */}
       <section className="split-section" style={{ background: '#f7f8fa' }}>
         <div className="split-grid">
           <div className="split-text reveal" style={{ background: '#f7f8fa' }}>
             <p className="split-eyebrow">For Landlords</p>
             <h2 className="split-title">Why book a valuation with House of Lettings?</h2>
             <p className="split-body">
-              Booking a valuation with House of Lettings will save you time, money, and stress. Our local experts give you an honest, data-driven view of what your property is worth — so you can make informed decisions with confidence.
+              Booking a valuation with House of Lettings will save you time, money, and stress. Our local experts give you an honest, data-driven view of what your property is worth, so you can make informed decisions with confidence.
             </p>
             <ul className="split-list">
-              <li><span className="split-check">✓</span>Free, no-obligation valuation from a local expert</li>
-              <li><span className="split-check">✓</span>Accurate rental and sales valuations backed by live market data</li>
-              <li><span className="split-check">✓</span>Advice on how to maximise your property&apos;s return</li>
-              <li><span className="split-check">✓</span>Better tenant quality — we find and secure reliable tenants</li>
-              <li><span className="split-check">✓</span>Full compliance, legal, and rent protection support</li>
-              <li><span className="split-check">✓</span>Day-to-day management handled by experts</li>
+              <li><span className="split-check" style={{color:"#2563eb",fontWeight:700}}>&#10003;</span>Free, no-obligation valuation from a local expert</li>
+              <li><span className="split-check" style={{color:"#2563eb",fontWeight:700}}>&#10003;</span>Accurate rental and sales valuations backed by live market data</li>
+              <li><span className="split-check" style={{color:"#2563eb",fontWeight:700}}>&#10003;</span>Advice on how to maximise your property&apos;s return</li>
+              <li><span className="split-check" style={{color:"#2563eb",fontWeight:700}}>&#10003;</span>Better tenant quality. We find and secure reliable tenants</li>
+              <li><span className="split-check" style={{color:"#2563eb",fontWeight:700}}>&#10003;</span>Full compliance, legal, and rent protection support</li>
+              <li><span className="split-check" style={{color:"#2563eb",fontWeight:700}}>&#10003;</span>Day-to-day management handled by experts</li>
             </ul>
             <p style={{ fontFamily: "'Poppins', sans-serif", fontSize: 13, color: '#6b7280', lineHeight: 1.7, marginBottom: 28 }}>
-              Whether you own one property or a full portfolio, our team is here to protect your investment and maximise your returns — so you can enjoy the freedom of hands-off landlording.
+              Whether you own one property or a full portfolio, our team is here to protect your investment and maximise your returns, so you can enjoy the freedom of hands-off landlording.
             </p>
             <div className="inline-btn-wrap"><ValuationInlineButton /></div>
           </div>
@@ -1198,7 +1198,7 @@ export default function HomePage() {
               Choose Your Package
             </h2>
             <p style={{ fontSize: 15, color: 'rgba(255,255,255,0.5)', maxWidth: 560, margin: '0 auto', lineHeight: 1.7, fontWeight: 300, fontFamily: "'Poppins', sans-serif" }}>
-              Every package builds on the last. Start with what you need — upgrade whenever you&apos;re ready.
+              Every package builds on the last. Start with what you need and upgrade whenever you&apos;re ready.
             </p>
           </div>
 
@@ -1236,7 +1236,7 @@ export default function HomePage() {
                   {pkg.label}
                 </div>
                 <div style={{ marginTop: 16, fontSize: 11, color: '#4a90d9', fontWeight: 600, letterSpacing: 0.5, textTransform: 'uppercase' }}>
-                  View details →
+                  View details ->
                 </div>
               </Link>
             ))}
@@ -1263,7 +1263,7 @@ export default function HomePage() {
       </section>
 
 
-      {/* Viewing — photo left, text right */}
+      {/* Viewing - photo left, text right */}
       <section className="split-section" style={{ background: '#ffffff' }}>
         <div className="split-grid" style={{ alignItems: 'stretch', minHeight: 560 }}>
           <div
@@ -1274,12 +1274,12 @@ export default function HomePage() {
             <p className="split-eyebrow">For Tenants</p>
             <h2 className="split-title">Find your perfect home with House of Lettings</h2>
             <p className="split-body">
-              Booking a viewing with us is quick, easy, and puts you first. We take the pressure off your search — matching you with the right properties and guiding you every step of the way.
+              Booking a viewing with us is quick, easy, and puts you first. We take the pressure off your search, matching you with the right properties and guiding you every step of the way.
             </p>
             <ul className="split-list">
-              <li><span className="split-check">✓</span>View properties before they hit the open market</li>
-              <li><span className="split-check">✓</span>Dedicated agent to handle all enquiries and negotiations</li>
-              <li><span className="split-check">✓</span>Transparent process with no hidden fees for tenants</li>
+              <li><span className="split-check" style={{color:"#2563eb",fontWeight:700}}>&#10003;</span>View properties before they hit the open market</li>
+              <li><span className="split-check" style={{color:"#2563eb",fontWeight:700}}>&#10003;</span>Dedicated agent to handle all enquiries and negotiations</li>
+              <li><span className="split-check" style={{color:"#2563eb",fontWeight:700}}>&#10003;</span>Transparent process with no hidden fees for tenants</li>
             </ul>
             <div className="inline-btn-wrap"><BookViewingInlineButton /></div>
           </div>
@@ -1328,7 +1328,7 @@ export default function HomePage() {
                   minPrice && `from £${Number(minPrice).toLocaleString()}/mo`,
                   maxPrice && `to £${Number(maxPrice).toLocaleString()}/mo`,
                   bedrooms === '0' ? 'Studio' : bedrooms ? `${bedrooms}+ beds` : '',
-                ].filter(Boolean).join(' · ')}
+                ].filter(Boolean).join('  ')}
               </span>
             )}
           </div>
@@ -1436,7 +1436,7 @@ export default function HomePage() {
             fontSize: 13, fontWeight: 600, color: '#0f1f3d', textTransform: 'uppercase',
             letterSpacing: '0.5px', transition: 'all .2s', textDecoration: 'none',
           }}>
-            View All →
+            View All ->
           </Link>
         </div>
 
@@ -1454,7 +1454,7 @@ export default function HomePage() {
               background: '#1e3a6e', color: '#ffffff', borderRadius: 4, fontSize: 14, fontWeight: 700,
               textDecoration: 'none',
             }}>
-              List Your Property →
+              List Your Property ->
             </Link>
           </div>
         )}

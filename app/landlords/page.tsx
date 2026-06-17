@@ -1,9 +1,38 @@
 'use client';
 // app/landlords/page.tsx
+import { useState } from 'react';
 import Link from 'next/link';
 import Navbar from '@/components/layout/Navbar';
 
+const landlordFaqs = [
+  {
+    q: 'What legal certificates do I need before letting my property?',
+    a: 'You\u2019ll need a valid Gas Safety Certificate (renewed annually if the property has gas appliances), an Electrical Installation Condition Report (EICR, renewed every 5 years), and an Energy Performance Certificate (EPC) rated E or above. Working smoke alarms on every floor and a carbon monoxide alarm in any room with a fuel-burning appliance are also required by law. We arrange and track all of this for you under our managed packages.',
+  },
+  {
+    q: 'Do I need to protect my tenant\u2019s deposit?',
+    a: 'Yes \u2014 any deposit taken must be placed in a government-approved tenancy deposit scheme (such as the DPS, mydeposits, or TDS) within 30 days of receiving it, and the tenant must be given the prescribed information. Failing to do this properly can prevent you from serving a valid Section 21 notice and can result in a financial penalty.',
+  },
+  {
+    q: 'Do I need a licence to rent out my property?',
+    a: 'It depends on the property and the local authority. Houses in Multiple Occupation (HMOs) above a certain size need a mandatory HMO licence, and many areas of Leeds and Manchester also fall under selective licensing schemes that apply to all rental properties in that zone. We check the licensing requirements for every property we manage and handle the application if one is needed.',
+  },
+  {
+    q: 'How much notice do I need to give a tenant to end a tenancy?',
+    a: 'For a no-fault eviction under Section 21, landlords currently need to give at least 2 months\u2019 notice, and the property must be fully compliant (deposit protected, certificates served, EPC and gas safety provided) for the notice to be valid. Section 8 notices, used for rent arrears or breach of tenancy, have different notice periods depending on the grounds. Rules in this area are changing under upcoming reform, so we keep landlords updated as things shift.',
+  },
+  {
+    q: 'Is my rental income taxable?',
+    a: 'Yes \u2014 rental profit is taxable income and must be declared via Self Assessment. Mortgage interest is no longer fully deductible; instead, landlords receive a 20% tax credit on finance costs. Allowable expenses (letting agent fees, maintenance, insurance, etc.) can still be deducted from rental income before tax. We\u2019d always recommend speaking with an accountant about your specific position.',
+  },
+  {
+    q: 'Do I need landlord insurance?',
+    a: 'It\u2019s not a legal requirement, but it\u2019s strongly recommended \u2014 a standard home insurance policy typically won\u2019t cover a let property. Landlord insurance covers the building and your liability as a landlord, and can be extended with rent guarantee or legal expenses cover. We can point you toward providers who specialise in this if you don\u2019t already have a policy.',
+  },
+];
+
 export default function LandlordsPage() {
+  const [openFaq, setOpenFaq] = useState<number | null>(null);
 
   return (
     <>
@@ -420,6 +449,57 @@ export default function LandlordsPage() {
               }}>{step.desc}</p>
             </div>
           ))}
+        </div>
+      </section>
+
+
+      {/* ── FAQ ─────────────────────────────────────────────── */}
+      <section style={{
+        padding: 'clamp(60px, 8vw, 100px) clamp(24px, 7%, 100px)',
+        background: '#f7f8fa',
+      }}>
+        <div style={{ maxWidth: 760, margin: '0 auto' }}>
+          <div style={{
+            textAlign: 'center', fontSize: 11, fontWeight: 700, letterSpacing: 3,
+            textTransform: 'uppercase', color: '#2563eb', marginBottom: 14,
+            fontFamily: "'Poppins', sans-serif",
+          }}>
+            Common Questions
+          </div>
+          <h2 style={{
+            fontFamily: "'Poppins', sans-serif",
+            fontSize: 'clamp(28px,4vw,44px)', fontWeight: 700,
+            color: '#0f1f3d', textAlign: 'center', marginBottom: 48,
+          }}>
+            What landlords should know
+          </h2>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
+            {landlordFaqs.map((faq, i) => (
+              <div key={i} style={{ borderTop: '1px solid rgba(15,31,61,0.12)', borderBottom: i === landlordFaqs.length - 1 ? '1px solid rgba(15,31,61,0.12)' : 'none' }}>
+                <button
+                  onClick={() => setOpenFaq(openFaq === i ? null : i)}
+                  style={{
+                    width: '100%', background: 'none', border: 'none', color: '#0f1f3d',
+                    textAlign: 'left', padding: '22px 0', display: 'flex',
+                    justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer',
+                    fontFamily: "'Poppins', sans-serif", fontSize: 16, fontWeight: 700, gap: 16,
+                  }}
+                >
+                  {faq.q}
+                  <span style={{
+                    color: '#2563eb', fontSize: 22, flexShrink: 0, lineHeight: 1,
+                    transform: openFaq === i ? 'rotate(45deg)' : 'none', transition: 'transform 0.2s',
+                  }}>+</span>
+                </button>
+                {openFaq === i && (
+                  <p style={{
+                    fontFamily: "'Poppins', sans-serif",
+                    color: '#4b5563', fontSize: 14, lineHeight: 1.8, paddingBottom: 24, margin: 0,
+                  }}>{faq.a}</p>
+                )}
+              </div>
+            ))}
+          </div>
         </div>
       </section>
 

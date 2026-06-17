@@ -214,13 +214,13 @@ export default function TenantsPage() {
               color: "#ffffff",
             }}
           >
-            Rent without{" "}
+            Looking for Your Next Home?{" "}
             <span
               style={{
                 color: "#ffffff",
               }}
             >
-              the runaround.
+              House of Lettings Holds the Key.
             </span>
           </h1>
 

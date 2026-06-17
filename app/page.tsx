@@ -747,6 +747,8 @@ export default function HomePage() {
           display: grid;
           grid-template-columns: repeat(3, 1fr);
           gap: 28px;
+          position: relative;
+          z-index: 1;
         }
         @media (max-width: 900px) {
           .services-grid { grid-template-columns: 1fr 1fr; }
@@ -754,6 +756,60 @@ export default function HomePage() {
         @media (max-width: 600px) {
           .services-grid { grid-template-columns: 1fr; }
         }
+
+        /* ── Animated background orbs ── */
+        @keyframes hcw-float-a {
+          0%, 100% { transform: translate(0, 0) scale(1); }
+          33%       { transform: translate(40px, -30px) scale(1.06); }
+          66%       { transform: translate(-20px, 20px) scale(0.97); }
+        }
+        @keyframes hcw-float-b {
+          0%, 100% { transform: translate(0, 0) scale(1); }
+          40%       { transform: translate(-50px, 30px) scale(1.05); }
+          70%       { transform: translate(25px, -15px) scale(0.96); }
+        }
+        @keyframes hcw-float-c {
+          0%, 100% { transform: translate(0, 0) scale(1); }
+          50%       { transform: translate(30px, 40px) scale(1.08); }
+        }
+        .hcw-orb-a {
+          position: absolute; border-radius: 50%; pointer-events: none;
+          width: 480px; height: 480px;
+          top: -120px; left: -80px;
+          background: radial-gradient(circle, rgba(37,99,235,0.13) 0%, transparent 70%);
+          animation: hcw-float-a 14s ease-in-out infinite;
+        }
+        .hcw-orb-b {
+          position: absolute; border-radius: 50%; pointer-events: none;
+          width: 380px; height: 380px;
+          bottom: -80px; right: -60px;
+          background: radial-gradient(circle, rgba(74,144,217,0.12) 0%, transparent 70%);
+          animation: hcw-float-b 18s ease-in-out infinite;
+        }
+        .hcw-orb-c {
+          position: absolute; border-radius: 50%; pointer-events: none;
+          width: 260px; height: 260px;
+          top: 50%; left: 50%; transform: translate(-50%, -50%);
+          background: radial-gradient(circle, rgba(37,99,235,0.07) 0%, transparent 70%);
+          animation: hcw-float-c 10s ease-in-out infinite;
+        }
+
+        /* ── Animated grid lines in background ── */
+        @keyframes hcw-grid-pulse {
+          0%, 100% { opacity: 0.18; }
+          50%       { opacity: 0.32; }
+        }
+        .hcw-grid-lines {
+          position: absolute; inset: 0; pointer-events: none;
+          background-image:
+            linear-gradient(rgba(37,99,235,0.07) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(37,99,235,0.07) 1px, transparent 1px);
+          background-size: 60px 60px;
+          animation: hcw-grid-pulse 6s ease-in-out infinite;
+          mask-image: radial-gradient(ellipse 80% 80% at 50% 50%, black 30%, transparent 100%);
+        }
+
+        /* ── Card styles ── */
         .service-card.reveal {
           opacity: 0;
           transform: translateY(28px) scale(0.94);
@@ -765,21 +821,61 @@ export default function HomePage() {
         }
         .service-card {
           position: relative;
+          overflow: hidden;
         }
+
+        /* Top accent bar */
         .service-card::before {
           content: '';
           position: absolute;
           top: 0; left: 0; right: 0;
-          height: 4px;
+          height: 3px;
           border-radius: 10px 10px 0 0;
           background: linear-gradient(90deg, #2563eb, #4a90d9);
           transform: scaleX(0);
           transform-origin: left center;
           transition: transform 0.35s ease;
+          z-index: 2;
         }
         .service-card:hover::before {
           transform: scaleX(1);
         }
+
+        /* Inner glow on hover */
+        .service-card::after {
+          content: '';
+          position: absolute;
+          inset: 0;
+          border-radius: 10px;
+          background: radial-gradient(ellipse 70% 60% at 50% 110%, rgba(37,99,235,0.08) 0%, transparent 70%);
+          opacity: 0;
+          transition: opacity 0.4s ease;
+          pointer-events: none;
+          z-index: 0;
+        }
+        .service-card:hover::after {
+          opacity: 1;
+        }
+
+        /* ── Icon badge ── */
+        .svc-icon {
+          width: 52px; height: 52px;
+          border-radius: 12px;
+          background: linear-gradient(135deg, #e8f0fe 0%, #dbeafe 100%);
+          display: flex; align-items: center; justify-content: center;
+          margin-bottom: 20px;
+          transition: background 0.3s ease, transform 0.3s ease;
+          flex-shrink: 0;
+          position: relative; z-index: 1;
+        }
+        .service-card:hover .svc-icon {
+          background: linear-gradient(135deg, #2563eb 0%, #4a90d9 100%);
+          transform: rotate(-4deg) scale(1.08);
+        }
+        .svc-icon svg { transition: fill 0.3s ease; }
+        .service-card:hover .svc-icon svg { fill: #fff !important; }
+
+        /* ── Arrow ── */
         .learn-more-arrow {
           display: inline-block;
           transition: transform 0.25s ease;
@@ -787,73 +883,138 @@ export default function HomePage() {
         .service-card:hover .learn-more-arrow {
           transform: translateX(6px);
         }
+
+        /* ── Subtle card shimmer on hover ── */
+        @keyframes hcw-shimmer {
+          0%   { left: -80%; }
+          100% { left: 140%; }
+        }
+        .svc-shimmer {
+          position: absolute; top: 0; bottom: 0;
+          width: 60px;
+          background: linear-gradient(90deg, transparent, rgba(255,255,255,0.45), transparent);
+          transform: skewX(-15deg);
+          opacity: 0;
+          pointer-events: none;
+          z-index: 3;
+        }
+        .service-card:hover .svc-shimmer {
+          opacity: 1;
+          animation: hcw-shimmer 0.65s ease forwards;
+        }
+
+        /* Section heading underline animation */
+        @keyframes hcw-underline-grow {
+          from { width: 0; }
+          to   { width: 64px; }
+        }
+        .hcw-heading-line {
+          display: block;
+          height: 3px;
+          border-radius: 2px;
+          background: linear-gradient(90deg, #2563eb, #4a90d9);
+          margin: 14px auto 0;
+          animation: hcw-underline-grow 0.8s cubic-bezier(.22,1,.36,1) 0.3s both;
+        }
       `}</style>
       <section style={{
         padding: 'clamp(60px, 8vw, 100px) clamp(20px, 5%, 5%)',
-        background: 'radial-gradient(ellipse 900px 420px at 50% -10%, rgba(37,99,235,0.08) 0%, transparent 65%), #f3f4f6',
-        borderTop: '1px solid rgba(37,99,235,0.12)',
-        borderBottom: '1px solid rgba(37,99,235,0.12)',
+        background: 'linear-gradient(160deg, #e8edf5 0%, #f3f4f6 40%, #eef1f8 100%)',
+        borderTop: '1px solid rgba(37,99,235,0.10)',
+        borderBottom: '1px solid rgba(37,99,235,0.10)',
         position: 'relative',
+        overflow: 'hidden',
       }}>
-        <div style={{ marginBottom: 56, textAlign: 'center' }}>
-          <div style={{ fontSize: 14, fontWeight: 700, letterSpacing: 3, textTransform: 'uppercase', color: '#2563eb', marginBottom: 14 }}>
+        {/* Animated background elements */}
+        <div className="hcw-orb-a" />
+        <div className="hcw-orb-b" />
+        <div className="hcw-orb-c" />
+        <div className="hcw-grid-lines" />
+
+        <div style={{ marginBottom: 56, textAlign: 'center', position: 'relative', zIndex: 1 }}>
+          <div style={{ fontSize: 12, fontWeight: 700, letterSpacing: 3, textTransform: 'uppercase', color: '#2563eb', marginBottom: 14 }}>
             Our Services
           </div>
           <h2 style={{ fontFamily: "'Poppins', sans-serif", fontSize: 'clamp(28px,4vw,48px)', fontWeight: 700, color: '#0f1f3d', margin: 0 }}>
             How We Can Help
           </h2>
+          <span className="hcw-heading-line" />
         </div>
+
         <div className="services-grid">
           {[
             {
               title: 'For Landlords',
               body: 'Renting your property should feel straightforward and cost-effective. Our service keeps the process clear with transparent pricing and flexible options, from free tools to low-cost packages including advertising, enquiry handling, and professional tenancy setup.',
               href: '/landlords',
+              icon: (
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="#2563eb" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
+                </svg>
+              ),
             },
             {
               title: 'For Tenants',
               body: 'Our goal is to make finding your next home straightforward, safe, and comfortable. We offer flexible search options for different needs — pet-friendly homes, student accommodation, and properties suitable for a range of lifestyles. No pressure, no unnecessary office visits.',
               href: '/tenants',
+              icon: (
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="#2563eb" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M12.65 10C11.83 7.67 9.61 6 7 6c-3.31 0-6 2.69-6 6s2.69 6 6 6c2.61 0 4.83-1.67 5.65-4H17v4h4v-4h2v-4H12.65zM7 14c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2z"/>
+                </svg>
+              ),
             },
             {
               title: 'Property Management',
               body: 'From accurate valuations and professional photography to comprehensive tenant screening and 12-month guarantee insurance, we ensure your property is in the best hands at every stage of the letting process.',
               href: '/property-management',
+              icon: (
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="#2563eb" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm-1 14l-3-3 1.41-1.41L11 12.17l4.59-4.58L17 9l-6 6z"/>
+                </svg>
+              ),
             },
           ].map((card, i) => (
             <Link key={card.title} href={card.href} className={`service-card reveal reveal-delay-${i + 1}`} style={{
               background: '#fff',
               borderRadius: 10, padding: '40px 32px',
-              border: '1px solid #e5e7eb',
+              border: '1px solid rgba(229,231,235,0.8)',
               boxShadow: '0 4px 32px rgba(0,0,0,0.06)',
               textDecoration: 'none', display: 'block',
-              transition: 'transform 0.25s ease, border-color 0.25s ease, background 0.25s ease, box-shadow 0.25s ease',
+              transition: 'transform 0.3s ease, border-color 0.3s ease, background 0.3s ease, box-shadow 0.3s ease',
             }}
               onMouseEnter={e => {
-                (e.currentTarget as HTMLElement).style.transform = 'translateY(-5px)';
-                (e.currentTarget as HTMLElement).style.borderColor = '#2563eb';
-                (e.currentTarget as HTMLElement).style.background = '#f8fafc';
-                (e.currentTarget as HTMLElement).style.boxShadow = '0 20px 50px rgba(0,0,0,0.12)';
+                (e.currentTarget as HTMLElement).style.transform = 'translateY(-6px)';
+                (e.currentTarget as HTMLElement).style.borderColor = 'rgba(37,99,235,0.35)';
+                (e.currentTarget as HTMLElement).style.background = '#fafcff';
+                (e.currentTarget as HTMLElement).style.boxShadow = '0 24px 56px rgba(37,99,235,0.14), 0 4px 12px rgba(0,0,0,0.06)';
               }}
               onMouseLeave={e => {
                 (e.currentTarget as HTMLElement).style.transform = 'translateY(0)';
-                (e.currentTarget as HTMLElement).style.borderColor = '#e5e7eb';
+                (e.currentTarget as HTMLElement).style.borderColor = 'rgba(229,231,235,0.8)';
                 (e.currentTarget as HTMLElement).style.background = '#fff';
                 (e.currentTarget as HTMLElement).style.boxShadow = '0 4px 32px rgba(0,0,0,0.06)';
               }}
             >
+              {/* Shimmer sweep */}
+              <div className="svc-shimmer" />
+
+              {/* Icon */}
+              <div className="svc-icon">
+                {card.icon}
+              </div>
+
               <h3 style={{
                 fontFamily: "'Poppins', sans-serif",
                 fontSize: 20, fontWeight: 700, color: '#0f1f3d',
-                marginBottom: 16,
+                marginBottom: 16, position: 'relative', zIndex: 1,
               }}>
                 {card.title}
               </h3>
-              <p style={{ fontSize: 14, color: '#4b5563', lineHeight: 1.8, margin: '0 0 20px' }}>
+              <p style={{ fontSize: 14, color: '#4b5563', lineHeight: 1.8, margin: '0 0 20px', position: 'relative', zIndex: 1 }}>
                 {card.body}
               </p>
-              <span style={{ fontSize: 13, color: '#2563eb', fontWeight: 600, letterSpacing: 0.5 }}>
-                Learn more →
+              <span style={{ fontSize: 13, color: '#2563eb', fontWeight: 600, letterSpacing: 0.5, position: 'relative', zIndex: 1 }}>
+                Learn more <span className="learn-more-arrow">→</span>
               </span>
             </Link>
           ))}

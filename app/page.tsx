@@ -1437,7 +1437,7 @@ export default function HomePage() {
             fontSize: 13, fontWeight: 600, color: '#0f1f3d', textTransform: 'uppercase',
             letterSpacing: '0.5px', transition: 'all .2s', textDecoration: 'none',
           }}>
-            View All ->
+            View All &rarr;
           </Link>
         </div>
 
@@ -1455,7 +1455,7 @@ export default function HomePage() {
               background: '#1e3a6e', color: '#ffffff', borderRadius: 4, fontSize: 14, fontWeight: 700,
               textDecoration: 'none',
             }}>
-              List Your Property ->
+              List Your Property &rarr;
             </Link>
           </div>
         )}

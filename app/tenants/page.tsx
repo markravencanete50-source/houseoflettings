@@ -102,6 +102,16 @@ const steps = [
   },
   {
     num: "06",
+    title: "Credit and right to rent check",
+    body: "We run a credit check and verify your right to rent in the UK as part of your referencing.",
+  },
+  {
+    num: "07",
+    title: "Payment",
+    body: "Once you're approved, you'll settle your first month's rent and any agreed fees ahead of moving in.",
+  },
+  {
+    num: "08",
     title: "Move in",
     body: "Referencing done, paperwork signed, keys in hand. Welcome home.",
   },
@@ -273,7 +283,7 @@ export default function TenantsPage() {
 
         <div style={{ position: "relative", zIndex: 1, maxWidth: 1100, margin: "0 auto", padding: "60px 24px 80px" }}>
           <h2 style={{ fontSize: "clamp(1.6rem, 4vw, 2.4rem)", fontWeight: 700, marginBottom: 48, letterSpacing: "-0.02em", color: "#111827", fontFamily: "'Barlow Condensed', sans-serif" }}>
-            From enquiry to keys — six steps.
+            From enquiry to keys — eight steps.
           </h2>
 
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 20 }}>
@@ -281,7 +291,8 @@ export default function TenantsPage() {
               <div
                 key={step.num}
                 style={{
-                  border: "2px solid #1a3a6b",
+                  border: "none",
+                  boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
                   borderRadius: 12,
                   padding: "28px 24px",
                   background: "#ffffff",
@@ -312,7 +323,7 @@ export default function TenantsPage() {
           </h2>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 20 }}>
             {whyCards.map((card) => (
-              <div key={card.title} style={{ border: "2px solid #1a3a6b", borderRadius: 12, padding: "28px 24px", background: "#ffffff" }}>
+              <div key={card.title} style={{ border: "none", boxShadow: "0 1px 3px rgba(0,0,0,0.08)", borderRadius: 12, padding: "28px 24px", background: "#ffffff" }}>
                 <div style={{ marginBottom: 16 }}>{card.icon}</div>
                 <h3 style={{ fontSize: 17, fontWeight: 700, marginBottom: 10, color: "#111827" }}>{card.title}</h3>
                 <p style={{ fontSize: 14, color: "#4b5563", lineHeight: 1.65 }}>{card.body}</p>
@@ -397,7 +408,7 @@ export default function TenantsPage() {
               </p>
             </div>
 
-            <div style={{ borderRadius: 16, padding: "36px 32px", background: "rgba(10,24,56,0.85)", backdropFilter: "blur(12px)", animation: "t-cta-pulse 6s ease-in-out infinite" }}>
+            <div style={{ border: "1px solid rgba(245,245,240,0.22)", borderRadius: 16, padding: "36px 32px", background: "rgba(10,24,56,0.85)", backdropFilter: "blur(12px)", animation: "t-cta-pulse 6s ease-in-out infinite" }}>
               {[
                 { label: "Agency fees", value: "£0", sub: "Always free for tenants" },
                 { label: "Holding deposit", value: "Varies", sub: "Deducted from first month's rent" },
@@ -453,7 +464,7 @@ export default function TenantsPage() {
             border: "2px solid #2563eb",
             borderRadius: 16,
             padding: "60px 40px",
-            background: "rgba(10,24,56,0.82)",
+            background: "rgba(4,10,24,0.94)",
             textAlign: "center",
             overflow: "hidden",
             animation: "t-cta-pulse 5s ease-in-out infinite",
@@ -505,7 +516,7 @@ export default function TenantsPage() {
               href="/book-viewing"
               style={{
                 display: "inline-block",
-                background: "#0f1f3d",
+                background: "#060d1f",
                 color: "#fff",
                 padding: "14px 36px",
                 borderRadius: 8,

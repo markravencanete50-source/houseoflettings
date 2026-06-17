@@ -7,11 +7,11 @@ import Navbar from '@/components/layout/Navbar';
 const landlordFaqs = [
   {
     q: 'What legal certificates do I need before letting my property?',
-    a: 'You\u2019ll need a valid Gas Safety Certificate (renewed annually if the property has gas appliances), an Electrical Installation Condition Report (EICR, renewed every 5 years), and an Energy Performance Certificate (EPC) rated E or above. Working smoke alarms on every floor and a carbon monoxide alarm in any room with a fuel-burning appliance are also required by law. We arrange and track all of this for you under our managed packages.',
+    a: 'You\u2019ll need a valid Gas Safety Certificate (renewed annually if the property has gas appliances), an Electrical Installation Condition Report (EICR, renewed every 5 years), and an Energy Performance Certificate (EPC) rated E or above. Working smoke alarms on every floor and a carbon monoxide alarm in any room with a fuel burning appliance are also required by law. We arrange and track all of this for you under our managed packages.',
   },
   {
     q: 'Do I need to protect my tenant\u2019s deposit?',
-    a: 'Yes \u2014 any deposit taken must be placed in a government-approved tenancy deposit scheme (such as the DPS, mydeposits, or TDS) within 30 days of receiving it, and the tenant must be given the prescribed information. Failing to do this properly can prevent you from serving a valid Section 21 notice and can result in a financial penalty.',
+    a: 'Yes, any deposit taken must be placed in a government approved tenancy deposit scheme (such as the DPS, mydeposits, or TDS) within 30 days of receiving it, and the tenant must be given the prescribed information. Failing to do this properly can prevent you from serving a valid Section 21 notice and can result in a financial penalty.',
   },
   {
     q: 'Do I need a licence to rent out my property?',
@@ -19,15 +19,15 @@ const landlordFaqs = [
   },
   {
     q: 'How much notice do I need to give a tenant to end a tenancy?',
-    a: 'For a no-fault eviction under Section 21, landlords currently need to give at least 2 months\u2019 notice, and the property must be fully compliant (deposit protected, certificates served, EPC and gas safety provided) for the notice to be valid. Section 8 notices, used for rent arrears or breach of tenancy, have different notice periods depending on the grounds. Rules in this area are changing under upcoming reform, so we keep landlords updated as things shift.',
+    a: 'For a no fault eviction under Section 21, landlords currently need to give at least 2 months\u2019 notice, and the property must be fully compliant (deposit protected, certificates served, EPC and gas safety provided) for the notice to be valid. Section 8 notices, used for rent arrears or breach of tenancy, have different notice periods depending on the grounds. Rules in this area are changing under upcoming reform, so we keep landlords updated as things shift.',
   },
   {
     q: 'Is my rental income taxable?',
-    a: 'Yes \u2014 rental profit is taxable income and must be declared via Self Assessment. Mortgage interest is no longer fully deductible; instead, landlords receive a 20% tax credit on finance costs. Allowable expenses (letting agent fees, maintenance, insurance, etc.) can still be deducted from rental income before tax. We\u2019d always recommend speaking with an accountant about your specific position.',
+    a: 'Yes, rental profit is taxable income and must be declared via Self Assessment. Mortgage interest is no longer fully deductible; instead, landlords receive a 20% tax credit on finance costs. Allowable expenses (letting agent fees, maintenance, insurance, etc.) can still be deducted from rental income before tax. We\u2019d always recommend speaking with an accountant about your specific position.',
   },
   {
     q: 'Do I need landlord insurance?',
-    a: 'It\u2019s not a legal requirement, but it\u2019s strongly recommended \u2014 a standard home insurance policy typically won\u2019t cover a let property. Landlord insurance covers the building and your liability as a landlord, and can be extended with rent guarantee or legal expenses cover. We can point you toward providers who specialise in this if you don\u2019t already have a policy.',
+    a: 'It\u2019s not a legal requirement, but it\u2019s strongly recommended, a standard home insurance policy typically won\u2019t cover a let property. Landlord insurance covers the building and your liability as a landlord, and can be extended with rent guarantee or legal expenses cover. We can point you toward providers who specialise in this if you don\u2019t already have a policy.',
   },
 ];
 
@@ -178,12 +178,12 @@ export default function LandlordsPage() {
               fontSize: 15, color: '#4b5563', lineHeight: 1.85,
               marginBottom: 32,
             }}>
-              At House of Lettings, we believe landlords deserve more than just a property manager — they deserve a partner. Our local experts in Leeds and Manchester work to maximise your rental yield, keep your property compliant, and take the day-to-day stress completely off your plate.
+              At House of Lettings, we believe landlords deserve more than just a property manager, they deserve a partner. Our local experts in Leeds and Manchester work to maximise your rental yield, keep your property compliant, and take the day to day stress completely off your plate.
             </p>
             <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 36px', display: 'flex', flexDirection: 'column', gap: 14 }}>
               {[
-                'Free, no-obligation rental valuation',
-                'Transparent pricing — no hidden fees, ever',
+                'Free, no obligation rental valuation',
+                'Transparent pricing, no hidden fees, ever',
                 'Rigorous tenant referencing and screening',
                 'Full compliance with UK lettings legislation',
                 'Rent collection and arrears management',
@@ -259,7 +259,7 @@ export default function LandlordsPage() {
               fontSize: 15, color: 'rgba(255,255,255,0.5)',
               maxWidth: 520, margin: '0 auto', lineHeight: 1.7, fontWeight: 300,
             }}>
-              From a one-time tenant find to fully comprehensive management — choose what works for your portfolio.
+              From a one time tenant find to fully comprehensive management, choose what works for your portfolio.
             </p>
           </div>
           <style>{`
@@ -276,20 +276,20 @@ export default function LandlordsPage() {
           <div className="ll-packages-grid">
             {[
               {
-                price: '£499', name: 'Virtual Tenant Find', type: 'One-time fee',
-                desc: 'Advertise your property, handle enquiries, and secure a tenant — all managed online.',
-                features: ['Professional listing creation', 'Multi-portal advertising', 'Enquiry management', 'Tenant referencing'],
+                price: '£499', name: 'Virtual Tenant Find', type: 'One time fee',
+                desc: 'Advertise your property, handle enquiries, and secure a tenant, all managed online.',
+                features: ['Professional listing creation', 'Multi portal advertising', 'Enquiry management', 'Tenant referencing'],
                 popular: false,
               },
               {
-                price: '£799', name: 'Expert Tenant Find', type: 'One-time fee',
-                desc: 'Everything in Virtual, plus an in-person agent visit, accompanied viewings, and tenancy setup.',
+                price: '£799', name: 'Expert Tenant Find', type: 'One time fee',
+                desc: 'Everything in Virtual, plus an in person agent visit, accompanied viewings, and tenancy setup.',
                 features: ['Everything in Virtual', 'Agent property visit', 'Accompanied viewings', 'Full tenancy setup'],
                 popular: true,
               },
               {
                 price: '6%', name: 'Rent Collection', type: 'Monthly',
-                desc: 'We collect rent, chase arrears, and transfer funds — so you never have to chase a tenant.',
+                desc: 'We collect rent, chase arrears, and transfer funds, so you never have to chase a tenant.',
                 features: ['Monthly rent collection', 'Arrears management', 'Monthly statements', 'Direct landlord transfer'],
                 popular: false,
               },
@@ -301,7 +301,7 @@ export default function LandlordsPage() {
               },
               {
                 price: '10%', name: 'Comprehensive Management', type: 'Monthly',
-                desc: 'Our complete hands-off package with rent guarantee insurance and dedicated support.',
+                desc: 'Our complete hands off package with rent guarantee insurance and dedicated support.',
                 features: ['Everything in Full Management', 'Rent guarantee insurance', 'Legal eviction cover', 'Priority support'],
                 popular: false,
               },
@@ -424,7 +424,7 @@ export default function LandlordsPage() {
         `}</style>
         <div className="ll-steps-grid">
           {[
-            { n: '01', title: 'Book a Valuation', desc: 'Our local expert visits your property and gives you an honest, data-backed rental valuation — completely free.' },
+            { n: '01', title: 'Book a Valuation', desc: 'Our local expert visits your property and gives you an honest, data backed rental valuation, completely free.' },
             { n: '02', title: 'Choose Your Package', desc: 'Pick from Virtual Tenant Find, Expert Tenant Find, or one of our management packages. No pressure, no hard sell.' },
             { n: '03', title: 'We Find Your Tenant', desc: 'We advertise, screen applicants, conduct viewings, and handle all referencing so only the best tenants make it through.' },
             { n: '04', title: 'Sit Back & Collect', desc: 'Once your tenant is in, we handle everything from rent collection to maintenance calls. You just enjoy the returns.' },

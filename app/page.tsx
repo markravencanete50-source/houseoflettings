@@ -754,8 +754,47 @@ export default function HomePage() {
         @media (max-width: 600px) {
           .services-grid { grid-template-columns: 1fr; }
         }
+        .service-card.reveal {
+          opacity: 0;
+          transform: translateY(28px) scale(0.94);
+          transition: opacity 0.7s cubic-bezier(.22,1,.36,1), transform 0.7s cubic-bezier(.22,1,.36,1);
+        }
+        .service-card.reveal.revealed {
+          opacity: 1;
+          transform: translateY(0) scale(1);
+        }
+        .service-card {
+          position: relative;
+        }
+        .service-card::before {
+          content: '';
+          position: absolute;
+          top: 0; left: 0; right: 0;
+          height: 4px;
+          border-radius: 10px 10px 0 0;
+          background: linear-gradient(90deg, #2563eb, #4a90d9);
+          transform: scaleX(0);
+          transform-origin: left center;
+          transition: transform 0.35s ease;
+        }
+        .service-card:hover::before {
+          transform: scaleX(1);
+        }
+        .learn-more-arrow {
+          display: inline-block;
+          transition: transform 0.25s ease;
+        }
+        .service-card:hover .learn-more-arrow {
+          transform: translateX(6px);
+        }
       `}</style>
-      <section style={{ padding: 'clamp(60px, 8vw, 100px) clamp(20px, 5%, 5%)', background: '#f3f4f6' }}>
+      <section style={{
+        padding: 'clamp(60px, 8vw, 100px) clamp(20px, 5%, 5%)',
+        background: 'radial-gradient(ellipse 900px 420px at 50% -10%, rgba(37,99,235,0.08) 0%, transparent 65%), #f3f4f6',
+        borderTop: '1px solid rgba(37,99,235,0.12)',
+        borderBottom: '1px solid rgba(37,99,235,0.12)',
+        position: 'relative',
+      }}>
         <div style={{ marginBottom: 56, textAlign: 'center' }}>
           <div style={{ fontSize: 14, fontWeight: 700, letterSpacing: 3, textTransform: 'uppercase', color: '#2563eb', marginBottom: 14 }}>
             Our Services

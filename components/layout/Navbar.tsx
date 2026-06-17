@@ -37,12 +37,17 @@ export default function Navbar() {
   const router = useRouter();
   const pathname = usePathname();
   const [scrolled, setScrolled] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 12);
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
+  useEffect(() => {
+    setMobileMenuOpen(false);
+  }, [pathname]);
 
   const handleSignOut = async () => {
     await signOut();
@@ -76,8 +81,21 @@ export default function Navbar() {
             <span className="hol-nav__logo-sub">Leeds &amp; Manchester</span>
           </Link>
 
-          {/* Links + CTAs — always visible, wrap on mobile */}
-          <div className="hol-nav__links">
+          {/* Hamburger — mobile only */}
+          <button
+            type="button"
+            className="hol-nav__burger"
+            aria-label={mobileMenuOpen ? 'Close menu' : 'Open menu'}
+            aria-expanded={mobileMenuOpen}
+            onClick={() => setMobileMenuOpen((o) => !o)}
+          >
+            <span className={`hol-nav__burger-bar ${mobileMenuOpen ? 'is-open' : ''}`} />
+            <span className={`hol-nav__burger-bar ${mobileMenuOpen ? 'is-open' : ''}`} />
+            <span className={`hol-nav__burger-bar ${mobileMenuOpen ? 'is-open' : ''}`} />
+          </button>
+
+          {/* Links + CTAs — always visible on desktop, collapses into a dropdown on mobile */}
+          <div className={`hol-nav__links ${mobileMenuOpen ? 'hol-nav__links--open' : ''}`}>
             <Link href="/listings" className="hol-nav__link">Browse</Link>
             {!loading && profile && (
               <Link href={dashLink} className="hol-nav__link">Dashboard</Link>
@@ -141,6 +159,30 @@ export default function Navbar() {
             flex-wrap: wrap;
             padding: 8px 0;
           }
+          .hol-nav__burger {
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            gap: 5px;
+            width: 32px;
+            height: 32px;
+            background: transparent;
+            border: none;
+            padding: 0;
+            cursor: pointer;
+            flex-shrink: 0;
+          }
+          .hol-nav__burger-bar {
+            display: block;
+            width: 100%;
+            height: 2px;
+            background: #fff;
+            border-radius: 2px;
+            transition: transform 0.25s ease, opacity 0.25s ease;
+          }
+          .hol-nav__burger-bar.is-open:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+          .hol-nav__burger-bar.is-open:nth-child(2) { opacity: 0; }
+          .hol-nav__burger-bar.is-open:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
           .hol-nav__link {
             font-family: 'Poppins', sans-serif;
             color: #fff;
@@ -194,23 +236,43 @@ export default function Navbar() {
               padding: 0 4%;
               flex-wrap: nowrap;
               min-height: 60px;
+              position: relative;
             }
             .hol-nav__logo-top { font-size: 14px; }
             .hol-nav__logo-sub { font-size: 9px; }
-            .hol-nav__links {
-              flex-wrap: nowrap;
-              overflow-x: auto;
-              gap: 6px;
-              padding: 0;
-              -ms-overflow-style: none;
-              scrollbar-width: none;
+            .hol-nav__burger {
+              display: flex;
             }
-            .hol-nav__links::-webkit-scrollbar { display: none; }
-            .nav-btn-primary, .nav-btn-outline, .hol-nav__link {
-              font-size: 10px;
-              padding: 6px 8px;
-              white-space: nowrap;
-              flex-shrink: 0;
+            .hol-nav__links {
+              display: none;
+            }
+            .hol-nav__links--open {
+              display: flex;
+              flex-direction: column;
+              align-items: stretch;
+              position: absolute;
+              top: 100%;
+              left: 0;
+              right: 0;
+              background: rgba(10,22,47,0.98);
+              padding: 18px 5% 24px;
+              gap: 12px;
+              box-shadow: 0 12px 24px rgba(0,0,0,0.35);
+              border-top: 1px solid rgba(255,255,255,0.08);
+            }
+            .hol-nav__links--open .nav-btn-primary,
+            .hol-nav__links--open .nav-btn-outline,
+            .hol-nav__links--open .hol-nav__link {
+              width: 100%;
+              text-align: left;
+              font-size: 13px;
+              padding: 12px 4px;
+              white-space: normal;
+            }
+            .hol-nav__links--open .nav-btn-outline {
+              border: none;
+              border-top: 1px solid rgba(255,255,255,0.08);
+              border-radius: 0;
             }
           }
         `}</style>

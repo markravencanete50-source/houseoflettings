@@ -37,8 +37,7 @@ const PACKAGES = [
     priceType: 'One-time fee',
     color: '#2563eb',
     bg: 'radial-gradient(ellipse at 70% 30%, rgba(37,99,235,0.22) 0%, transparent 55%), radial-gradient(ellipse at 20% 80%, rgba(37,99,235,0.12) 0%, transparent 50%)',
-    badge: 'Most Popular',
-    badgeColor: '#2563eb',
+    badge: null,
     inherits: 'Everything in Virtual, plus:',
     features: [
       'Professional property photography',
@@ -76,7 +75,8 @@ const PACKAGES = [
     priceType: 'Monthly percentage',
     color: '#2563eb',
     bg: 'radial-gradient(ellipse at 10% 40%, rgba(99,37,235,0.16) 0%, transparent 55%), radial-gradient(ellipse at 85% 70%, rgba(37,99,235,0.14) 0%, transparent 50%)',
-    badge: null,
+    badge: 'Most Popular',
+    badgeColor: '#2563eb',
     inherits: 'Everything in Rent Collection, plus:',
     features: [
       'Dedicated property management team',

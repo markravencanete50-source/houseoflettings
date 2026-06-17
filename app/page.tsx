@@ -658,9 +658,10 @@ export default function HomePage() {
         }
         @media (max-width: 768px) {
           .bav-grid { grid-template-columns: 1fr; }
-          .bav-photo { min-height: 300px; order: -1; }
+          .bav-photo { min-height: 300px; }
           .bav-photo img { min-height: 300px; }
           .bav-text { padding: 48px 24px; }
+          .inline-btn-wrap { display: flex; justify-content: center; }
         }
       `}</style>
       <section style={{ overflow: 'hidden', background: '#f3f4f6' }}>
@@ -679,7 +680,7 @@ export default function HomePage() {
             }}>
               Book a free sales or lettings valuation with your local agent, and they will use their local knowledge and expertise to give you the most accurate sales or lettings valuation.
             </p>
-            <div><ValuationInlineButton /></div>
+            <div className="inline-btn-wrap"><ValuationInlineButton /></div>
           </div>
           <div className="bav-photo">
             <img src="/images/Background_Book_Valuation.png" alt="Book a Valuation" />
@@ -710,9 +711,9 @@ export default function HomePage() {
         }
         @media (max-width: 768px) {
           .bvw-grid { grid-template-columns: 1fr; }
-          .bvw-photo { min-height: 300px; order: -1; }
+          .bvw-photo { min-height: 300px; order: 1; }
           .bvw-photo img { min-height: 300px; }
-          .bvw-text { padding: 48px 24px; }
+          .bvw-text { padding: 48px 24px; order: 0; }
         }
       `}</style>
       <section style={{ overflow: 'hidden', background: '#f3f4f6' }}>
@@ -734,7 +735,7 @@ export default function HomePage() {
             }}>
               Register your requirements and we&apos;ll match you with suitable properties before they hit the market.
             </p>
-            <div><BookViewingInlineButton /></div>
+            <div className="inline-btn-wrap"><BookViewingInlineButton /></div>
           </div>
         </div>
       </section>
@@ -921,7 +922,7 @@ export default function HomePage() {
             <p style={{ fontFamily: "'Poppins', sans-serif", fontSize: 13, color: '#6b7280', lineHeight: 1.7, marginBottom: 28 }}>
               Whether you own one property or a full portfolio, our team is here to protect your investment and maximise your returns — so you can enjoy the freedom of hands-off landlording.
             </p>
-            <ValuationInlineButton />
+            <div className="inline-btn-wrap"><ValuationInlineButton /></div>
           </div>
           <div className="split-img-panel" style={{ overflow: 'hidden', minHeight: 860, display: 'flex', alignItems: 'stretch', position: 'relative' }}>
             <img
@@ -1080,7 +1081,7 @@ export default function HomePage() {
               <li><span className="split-check">✓</span>Dedicated agent to handle all enquiries and negotiations</li>
               <li><span className="split-check">✓</span>Transparent process with no hidden fees for tenants</li>
             </ul>
-            <BookViewingInlineButton />
+            <div className="inline-btn-wrap"><BookViewingInlineButton /></div>
           </div>
         </div>
       </section>
@@ -1353,9 +1354,9 @@ export default function HomePage() {
           flex-wrap: wrap;
         }
         @media (max-width: 600px) {
-          .cta-banner { flex-direction: column; align-items: flex-start; }
-          .cta-banner-btns { width: 100%; }
-          .cta-banner-btns a { flex: 1; text-align: center; }
+          .cta-banner { flex-direction: column; align-items: flex-start; gap: 28px; }
+          .cta-banner-btns { width: 100%; flex-direction: column; gap: 12px; }
+          .cta-banner-btns a { flex: none; width: 100%; text-align: center; box-sizing: border-box; white-space: nowrap; }
         }
       `}</style>
       <section style={{

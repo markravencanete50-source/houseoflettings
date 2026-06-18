@@ -1126,7 +1126,7 @@ export default function HomePage() {
           </div>
           <div className="split-img-panel" style={{ overflow: 'hidden', minHeight: 860, display: 'flex', alignItems: 'stretch', position: 'relative' }}>
             <img
-              src="/images/Landlord_Book_valuation_background.png"
+              src="/images/Landlord_pic.png"
               alt="Book a Valuation"
               style={{
                 width: '100%',

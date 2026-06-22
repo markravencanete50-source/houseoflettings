@@ -7,6 +7,7 @@ import Navbar from '@/components/layout/Navbar';
 import PropertyCard from '@/components/property/PropertyCard';
 import { getProperties } from '@/services/property';
 import { Property } from '@/lib/types';
+import ValuationEmbed from '@/components/ValuationEmbed';
 
 // ── SCROLL REVEAL HOOK ────────────────────────────────────────────────────────
 function useScrollReveal() {
@@ -127,9 +128,6 @@ function BookViewingInlineButton() {
     </>
   );
 }
-
-
-
 
 
 // ── GALLERY DATA ─────────────────────────────────────────────────────────────
@@ -571,8 +569,6 @@ export default function HomePage() {
         }} />
 
         <div style={{ position: 'relative', maxWidth: 700, margin: '0 auto', textAlign: 'center' }}>
-
-
           <h1 style={{
             fontFamily: "'Barlow Condensed', 'Poppins', sans-serif",
             fontSize: 'clamp(36px,5.5vw,68px)',
@@ -633,6 +629,10 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+
+
+      {/* ── VALUATION EMBED ──────────────────────────────────── */}
+      <ValuationEmbed />
 
 
       {/* ── BOOK A VALUATION ─────────────────────────────────── */}
@@ -756,7 +756,6 @@ export default function HomePage() {
           .services-grid { grid-template-columns: 1fr; }
         }
 
-        /* ── Animated background orbs ── */
         @keyframes hcw-float-a {
           0%, 100% { transform: translate(0, 0) scale(1); }
           33%       { transform: translate(40px, -30px) scale(1.06); }
@@ -793,7 +792,6 @@ export default function HomePage() {
           animation: hcw-float-c 10s ease-in-out infinite;
         }
 
-        /* ── Animated grid lines in background ── */
         @keyframes hcw-grid-pulse {
           0%, 100% { opacity: 0.18; }
           50%       { opacity: 0.32; }
@@ -808,7 +806,6 @@ export default function HomePage() {
           mask-image: radial-gradient(ellipse 80% 80% at 50% 50%, black 30%, transparent 100%);
         }
 
-        /* ── Card styles ── */
         .service-card.reveal {
           opacity: 0;
           transform: translateY(28px) scale(0.94);
@@ -822,8 +819,6 @@ export default function HomePage() {
           position: relative;
           overflow: hidden;
         }
-
-        /* Top accent bar */
         .service-card::before {
           content: '';
           position: absolute;
@@ -839,8 +834,6 @@ export default function HomePage() {
         .service-card:hover::before {
           transform: scaleX(1);
         }
-
-        /* Inner glow on hover */
         .service-card::after {
           content: '';
           position: absolute;
@@ -855,8 +848,6 @@ export default function HomePage() {
         .service-card:hover::after {
           opacity: 1;
         }
-
-        /* ── Icon badge ── */
         .svc-icon {
           width: 52px; height: 52px;
           border-radius: 12px;
@@ -873,8 +864,6 @@ export default function HomePage() {
         }
         .svc-icon svg { transition: fill 0.3s ease; }
         .service-card:hover .svc-icon svg { fill: #fff !important; }
-
-        /* ── Arrow ── */
         .learn-more-arrow {
           display: inline-block;
           transition: transform 0.25s ease;
@@ -882,8 +871,6 @@ export default function HomePage() {
         .service-card:hover .learn-more-arrow {
           transform: translateX(6px);
         }
-
-        /* ── Subtle card shimmer on hover ── */
         @keyframes hcw-shimmer {
           0%   { left: -80%; }
           100% { left: 140%; }
@@ -901,8 +888,6 @@ export default function HomePage() {
           opacity: 1;
           animation: hcw-shimmer 0.65s ease forwards;
         }
-
-        /* Section heading underline animation */
         @keyframes hcw-underline-grow {
           from { width: 0; }
           to   { width: 64px; }
@@ -924,7 +909,6 @@ export default function HomePage() {
         position: 'relative',
         overflow: 'hidden',
       }}>
-        {/* Animated background elements */}
         <div className="hcw-orb-a" />
         <div className="hcw-orb-b" />
         <div className="hcw-orb-c" />
@@ -994,14 +978,8 @@ export default function HomePage() {
                 (e.currentTarget as HTMLElement).style.boxShadow = '0 4px 32px rgba(0,0,0,0.06)';
               }}
             >
-              {/* Shimmer sweep */}
               <div className="svc-shimmer" />
-
-              {/* Icon */}
-              <div className="svc-icon">
-                {card.icon}
-              </div>
-
+              <div className="svc-icon">{card.icon}</div>
               <h3 style={{
                 fontFamily: "'Poppins', sans-serif",
                 fontSize: 20, fontWeight: 700, color: '#0f1f3d',
@@ -1013,8 +991,7 @@ export default function HomePage() {
                 {card.body}
               </p>
               <span style={{ fontSize: 13, color: '#2563eb', fontWeight: 600, letterSpacing: 0.5, position: 'relative', zIndex: 1 }}>
-                Learn more <span className="learn-more-arrow">{'->'}
-                </span>
+                Learn more <span className="learn-more-arrow">{'->'}</span>
               </span>
             </Link>
           ))}
@@ -1189,7 +1166,6 @@ export default function HomePage() {
         <div style={{ position: 'absolute', inset: 0, background: 'rgba(5,12,30,0.88)' }} />
         <div style={{ position: 'relative', zIndex: 1 }}>
 
-          {/* Header */}
           <div style={{ marginBottom: 56, textAlign: 'center' }}>
             <div style={{ fontSize: 14, fontWeight: 700, letterSpacing: 3, textTransform: 'uppercase', color: '#4a90d9', marginBottom: 14 }}>
               Landlords Pricing
@@ -1202,7 +1178,6 @@ export default function HomePage() {
             </p>
           </div>
 
-          {/* 5 teaser tiles */}
           <div className="pricing-teaser-grid">
             {[
               { price: '£499', label: 'Virtual Tenant Find', type: 'One time fee', popular: false },
@@ -1242,7 +1217,6 @@ export default function HomePage() {
             ))}
           </div>
 
-          {/* CTA to pricing page */}
           <div style={{ textAlign: 'center' }}>
             <Link href="/pricing" style={{
               display: 'inline-block', padding: '16px 48px',
@@ -1285,7 +1259,6 @@ export default function HomePage() {
           </div>
         </div>
       </section>
-
 
 
       {/* ── SEARCH BAR ───────────────────────────────────────── */}

@@ -14,7 +14,7 @@ export default function FreeAssessmentPage() {
       }}>
         <div style={{ maxWidth: 1280, margin: '0 auto' }}>
           <iframe
-            src="https://landlord-matching.vercel.app/#assessment"
+            src="https://landlord-matching.vercel.app/free-assessment?embed=true"
             title="Get My Free Assessment"
             style={{
               width: '100%',

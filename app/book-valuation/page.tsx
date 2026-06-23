@@ -9,7 +9,7 @@ const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 const EMPTY_FORM = {
   fullName: '', email: '', phone: '',
-  street: '', city: '', postcode: '',
+  street: '', city: '', county: '', postcode: '',
   propertyType: '', bedrooms: '', notes: '', preferredDateTime: '',
 };
 
@@ -30,46 +30,77 @@ function validate(form: typeof EMPTY_FORM) {
   return errors;
 }
 
-function usePlacesAutocomplete(
-  onSelect: (data: { street: string; city: string; postcode: string }) => void,
-  fieldKey: 'street' | 'city' | 'postcode'
-) {
+type AddressResult = {
+  street: string;
+  city: string;
+  county: string;
+  postcode: string;
+};
+
+/**
+ * Single autocomplete bound to the postcode field.
+ * User types a UK postcode, picks a suggestion, and the rest of the
+ * address (street, city, county) is filled in automatically.
+ */
+function usePostcodeAutocomplete(onSelect: (data: AddressResult) => void) {
   const inputRef = useRef<HTMLInputElement>(null);
+
   useEffect(() => {
     let ac: any = null;
     let listener: any = null;
+
     function initAutocomplete() {
       if (!inputRef.current || !(window as any).google?.maps?.places) return;
+
       ac = new (window as any).google.maps.places.Autocomplete(inputRef.current, {
-        types: ['address'],
+        // 'geocode' (not 'address') so postcode-only predictions show up,
+        // not just predictions that already include a street number.
+        types: ['geocode'],
         componentRestrictions: { country: 'gb' },
         fields: ['address_components'],
       });
+
       listener = ac.addListener('place_changed', () => {
         const place = ac.getPlace();
         if (!place?.address_components) return;
-        let postcode = '', city = '', street = '';
+
+        let postcode = '', city = '', county = '';
         let streetNumber = '', route = '';
+
         place.address_components.forEach((comp: any) => {
           if (comp.types.includes('street_number')) streetNumber = comp.long_name;
           if (comp.types.includes('route')) route = comp.long_name;
           if (comp.types.includes('postal_code')) postcode = comp.long_name;
           if (comp.types.includes('postal_town') || comp.types.includes('locality')) city = comp.long_name;
+          if (comp.types.includes('administrative_area_level_2')) county = comp.long_name;
         });
-        street = [streetNumber, route].filter(Boolean).join(' ');
-        onSelect({ street, city, postcode });
+
+        onSelect({
+          street: [streetNumber, route].filter(Boolean).join(' '),
+          city,
+          county,
+          postcode,
+        });
       });
     }
+
     if ((window as any).google?.maps?.places) {
       initAutocomplete();
     } else {
       const interval = setInterval(() => {
-        if ((window as any).google?.maps?.places) { clearInterval(interval); initAutocomplete(); }
+        if ((window as any).google?.maps?.places) {
+          clearInterval(interval);
+          initAutocomplete();
+        }
       }, 300);
       return () => clearInterval(interval);
     }
-    return () => { if (listener) (window as any).google?.maps?.event.removeListener(listener); };
-  }, [onSelect, fieldKey]);
+
+    return () => {
+      if (listener) (window as any).google?.maps?.event.removeListener(listener);
+    };
+  }, [onSelect]);
+
   return inputRef;
 }
 
@@ -78,6 +109,7 @@ export default function BookValuationPage() {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
   const [errorMsg, setErrorMsg] = useState('');
+  const [addressLookupActive, setAddressLookupActive] = useState(false);
 
   useEffect(() => {
     const apiKey = process.env.NEXT_PUBLIC_GOOGLE_PLACES_API_KEY;
@@ -92,19 +124,19 @@ export default function BookValuationPage() {
     document.head.appendChild(script);
   }, []);
 
-  const handlePlaceSelect = useCallback((data: { street: string; city: string; postcode: string }) => {
+  const handleAddressSelect = useCallback((data: AddressResult) => {
+    setAddressLookupActive(true);
     setForm(f => ({
       ...f,
-      ...(data.street ? { street: data.street } : {}),
-      ...(data.city ? { city: data.city } : {}),
-      ...(data.postcode ? { postcode: data.postcode } : {}),
+      street: data.street || f.street,
+      city: data.city || f.city,
+      county: data.county || f.county,
+      postcode: data.postcode || f.postcode,
     }));
     setErrors(e => ({ ...e, street: '', city: '', postcode: '' }));
   }, []);
 
-  const streetInputRef = usePlacesAutocomplete(handlePlaceSelect, 'street');
-  const cityInputRef = usePlacesAutocomplete(handlePlaceSelect, 'city');
-  const postcodeInputRef = usePlacesAutocomplete(handlePlaceSelect, 'postcode');
+  const postcodeInputRef = usePostcodeAutocomplete(handleAddressSelect);
 
   const set = (key: string) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     setForm(f => ({ ...f, [key]: e.target.value }));
@@ -122,7 +154,7 @@ export default function BookValuationPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...form,
-          address: `${form.street}, ${form.city}, ${form.postcode}`,
+          address: [form.street, form.city, form.county, form.postcode].filter(Boolean).join(', '),
         }),
       });
       const data = await res.json();
@@ -279,11 +311,28 @@ export default function BookValuationPage() {
                       </p>
                     </div>
 
-                    {/* 1st Line of Address — full width, autocomplete triggers here */}
+                    {/* Postcode — search here, rest of the address fills in automatically */}
+                    <div className="hol-field hol-field--full">
+                      <label className="hol-label">Postcode<span className="hol-req">*</span></label>
+                      <input
+                        ref={postcodeInputRef}
+                        type="text"
+                        className={`hol-input${errors.postcode ? ' hol-input--error' : ''}`}
+                        placeholder="Start typing a postcode, e.g. M1 1AE"
+                        value={form.postcode}
+                        onChange={set('postcode')}
+                        autoComplete="off"
+                      />
+                      {errors.postcode && <p className="hol-err">{errors.postcode}</p>}
+                      <p style={{ fontSize: 12, color: '#9ca3af', margin: '2px 0 0', fontFamily: "'Poppins', sans-serif" }}>
+                        Select a suggestion to auto-fill the address below.
+                      </p>
+                    </div>
+
+                    {/* 1st Line of Address — auto-filled, still editable */}
                     <div className="hol-field hol-field--full">
                       <label className="hol-label">1st Line of Address<span className="hol-req">*</span></label>
                       <input
-                        ref={streetInputRef}
                         type="text"
                         className={`hol-input${errors.street ? ' hol-input--error' : ''}`}
                         placeholder="e.g. 12 Whitfield Street"
@@ -298,7 +347,6 @@ export default function BookValuationPage() {
                     <div className="hol-field">
                       <label className="hol-label">City<span className="hol-req">*</span></label>
                       <input
-                        ref={cityInputRef}
                         type="text"
                         className={`hol-input${errors.city ? ' hol-input--error' : ''}`}
                         placeholder="e.g. Manchester"
@@ -309,19 +357,17 @@ export default function BookValuationPage() {
                       {errors.city && <p className="hol-err">{errors.city}</p>}
                     </div>
 
-                    {/* Postcode */}
+                    {/* County — new, auto-filled from postcode lookup */}
                     <div className="hol-field">
-                      <label className="hol-label">Postcode<span className="hol-req">*</span></label>
+                      <label className="hol-label">County <span style={{ color: '#9ca3af', fontWeight: 400 }}>(optional)</span></label>
                       <input
-                        ref={postcodeInputRef}
                         type="text"
-                        className={`hol-input${errors.postcode ? ' hol-input--error' : ''}`}
-                        placeholder="e.g. M1 1AE"
-                        value={form.postcode}
-                        onChange={set('postcode')}
+                        className="hol-input"
+                        placeholder="e.g. Greater Manchester"
+                        value={form.county}
+                        onChange={set('county')}
                         autoComplete="off"
                       />
-                      {errors.postcode && <p className="hol-err">{errors.postcode}</p>}
                     </div>
 
                     <div className="hol-field">

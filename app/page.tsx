@@ -7,7 +7,6 @@ import Navbar from '@/components/layout/Navbar';
 import PropertyCard from '@/components/property/PropertyCard';
 import { getProperties } from '@/services/property';
 import { Property } from '@/lib/types';
-import ValuationEmbed from '@/components/ValuationEmbed';
 
 // ── SCROLL REVEAL HOOK ────────────────────────────────────────────────────────
 function useScrollReveal() {
@@ -629,10 +628,6 @@ export default function HomePage() {
           </div>
         </div>
       </section>
-
-
-      {/* ── VALUATION EMBED ──────────────────────────────────── */}
-      <ValuationEmbed />
 
 
       {/* ── BOOK A VALUATION ─────────────────────────────────── */}

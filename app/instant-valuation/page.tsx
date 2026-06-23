@@ -14,7 +14,7 @@ export default function InstantValuationPage() {
       }}>
         <div style={{ maxWidth: 1280, margin: '0 auto' }}>
           <iframe
-            src="https://landlord-matching.vercel.app/instant-valuation"
+            src="https://landlord-matching.vercel.app/instant-valuation?embed=true"
             title="Instant Rent Valuation"
             style={{
               width: '100%',

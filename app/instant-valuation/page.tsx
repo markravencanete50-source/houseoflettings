@@ -8,7 +8,9 @@ import { lookupPostcode, isOperatingArea, TIER_PRICING_2026 } from '@/lib/valuat
 // ─── Types ──────────────────────────────────────────────────────────────────
 type ValuationType = 'rent' | 'sale';
 type PropertyType  = 'flat' | 'terraced' | 'semi' | 'detached';
-type Step          = 'type' | 'postcode' | 'property' | 'bedrooms' | 'result';
+type GardenType     = 'private' | 'shared' | 'patio' | 'none';
+type ParkingType    = 'garage' | 'driveway' | 'allocated' | 'permit' | 'on_street' | 'none';
+type Step          = 'type' | 'postcode' | 'property' | 'bedrooms' | 'features' | 'outdoor' | 'result';
 
 interface ValuationResult {
   low:  number;
@@ -18,6 +20,7 @@ interface ValuationResult {
   subArea: string;
   currency: string;
   period: string;
+  adjustmentPct: number;
 }
 
 // ─── Bedroom multipliers ────────────────────────────────────────────────────
@@ -33,11 +36,42 @@ const PROP_RENT_MULT: Record<PropertyType, number> = {
   flat: 0.82, terraced: 0.92, semi: 1.00, detached: 1.18,
 };
 
+// ─── Feature adjustment percentages ─────────────────────────────────────────
+// Grounded in typical UK estate-agent guideline ranges (additive, capped).
+// Bathrooms: +4.5% per bathroom beyond the first (most homes have 1 as standard)
+const BATHROOM_PCT_PER_EXTRA = 0.045;
+const MAX_BATHROOM_BONUS_COUNT = 3; // caps uplift beyond 4 bathrooms
+
+// Garden: private gardens carry the largest premium; shared/patio smaller
+const GARDEN_PCT: Record<GardenType, number> = {
+  private: 0.09,
+  shared:  0.03,
+  patio:   0.02,
+  none:    0,
+};
+
+// Parking: matches Rightmove/Zoopla/Material Information Rules categories
+const PARKING_PCT: Record<ParkingType, number> = {
+  garage:    0.06,
+  driveway:  0.05,
+  allocated: 0.04,
+  permit:    0.015,
+  on_street: 0,
+  none:      0,
+};
+
+// Balcony: most relevant uplift on flats/apartments
+const BALCONY_PCT = 0.03;
+
 function calculate(
   postcode: string,
   propType: PropertyType,
   bedrooms: number,
   valType: ValuationType,
+  bathrooms: number,
+  hasBalcony: boolean,
+  garden: GardenType,
+  parking: ParkingType,
 ): ValuationResult | null {
   const info = lookupPostcode(postcode);
   if (!info) return null;
@@ -49,7 +83,17 @@ function calculate(
   const propMult = valType === 'rent' ? PROP_RENT_MULT[propType] : PROP_SALE_MULT[propType];
   const bedMult  = BEDROOM_MULT[Math.min(Math.max(bedrooms, 0), 6)] ?? 1.0;
 
-  const mid  = Math.round((base * propMult * bedMult) / 500) * 500;
+  // Feature adjustment — additive percentage on top of the base estimate
+  const extraBathrooms = Math.min(Math.max(bathrooms - 1, 0), MAX_BATHROOM_BONUS_COUNT);
+  const bathroomPct = extraBathrooms * BATHROOM_PCT_PER_EXTRA;
+  const balconyPct  = hasBalcony ? BALCONY_PCT : 0;
+  const gardenPct    = GARDEN_PCT[garden];
+  const parkingPct   = PARKING_PCT[parking];
+
+  const adjustmentPct = bathroomPct + balconyPct + gardenPct + parkingPct;
+  const featureMult = 1 + adjustmentPct;
+
+  const mid  = Math.round((base * propMult * bedMult * featureMult) / 500) * 500;
   const low  = Math.round(mid * 0.92 / 500) * 500;
   const high = Math.round(mid * 1.08 / 500) * 500;
 
@@ -59,6 +103,7 @@ function calculate(
     subArea: info.subArea,
     currency: valType === 'rent' ? '£' : '£',
     period: valType === 'rent' ? '/month' : '',
+    adjustmentPct,
   };
 }
 
@@ -170,6 +215,105 @@ function StepBedrooms({
   );
 }
 
+// ─── Bathrooms + Balcony step ────────────────────────────────────────────────
+function StepFeatures({
+  bathrooms, onBathrooms, balcony, onBalcony,
+}: {
+  bathrooms: number; onBathrooms: (v: number) => void;
+  balcony: boolean; onBalcony: (v: boolean) => void;
+}) {
+  return (
+    <div className="iv-step">
+      <h2 className="iv-step__title">Bathrooms &amp; balcony</h2>
+      <p className="iv-step__sub">These details help us sharpen the accuracy of your estimate</p>
+
+      <p className="iv-field-label">How many bathrooms?</p>
+      <div className="iv-beds">
+        {[1, 2, 3, 4].map((n) => (
+          <button
+            key={n}
+            onClick={() => onBathrooms(n)}
+            className={`iv-bed-btn ${bathrooms === n ? 'iv-bed-btn--active' : ''}`}
+          >
+            {n === 4 ? '4+' : n} bath{n > 1 ? 's' : ''}
+          </button>
+        ))}
+      </div>
+
+      <p className="iv-field-label" style={{ marginTop: '1.75rem' }}>Does the property have a balcony?</p>
+      <div className="iv-cards">
+        {[true, false].map((v) => (
+          <button
+            key={String(v)}
+            onClick={() => onBalcony(v)}
+            className={`iv-card iv-card--compact ${balcony === v ? 'iv-card--active' : ''}`}
+          >
+            <span className="iv-card__icon">{v ? '🌇' : '🚫'}</span>
+            <span className="iv-card__label">{v ? 'Yes' : 'No'}</span>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ─── Garden + Parking step ───────────────────────────────────────────────────
+function StepOutdoor({
+  garden, onGarden, parking, onParking,
+}: {
+  garden: GardenType; onGarden: (v: GardenType) => void;
+  parking: ParkingType; onParking: (v: ParkingType) => void;
+}) {
+  const gardenOptions: { id: GardenType; label: string; icon: string }[] = [
+    { id: 'private', label: 'Private garden',    icon: '🌳' },
+    { id: 'shared',   label: 'Shared / communal', icon: '🌿' },
+    { id: 'patio',    label: 'Patio / courtyard',  icon: '🪴' },
+    { id: 'none',     label: 'No garden',          icon: '🚫' },
+  ];
+  const parkingOptions: { id: ParkingType; label: string; icon: string }[] = [
+    { id: 'garage',    label: 'Garage',                 icon: '🚪' },
+    { id: 'driveway',  label: 'Driveway (off-street)',  icon: '🛣️' },
+    { id: 'allocated', label: 'Allocated space',         icon: '🅿️' },
+    { id: 'permit',    label: 'Permit parking',          icon: '🎫' },
+    { id: 'on_street', label: 'On-street (unrestricted)',icon: '🚗' },
+    { id: 'none',      label: 'No parking',              icon: '🚫' },
+  ];
+  return (
+    <div className="iv-step">
+      <h2 className="iv-step__title">Garden &amp; parking</h2>
+      <p className="iv-step__sub">Outdoor space and parking type both affect local market value</p>
+
+      <p className="iv-field-label">What type of garden does it have?</p>
+      <div className="iv-cards iv-cards--four">
+        {gardenOptions.map(({ id, label, icon }) => (
+          <button
+            key={id}
+            onClick={() => onGarden(id)}
+            className={`iv-card iv-card--compact ${garden === id ? 'iv-card--active' : ''}`}
+          >
+            <span className="iv-card__icon">{icon}</span>
+            <span className="iv-card__label">{label}</span>
+          </button>
+        ))}
+      </div>
+
+      <p className="iv-field-label" style={{ marginTop: '1.75rem' }}>What type of parking is available?</p>
+      <div className="iv-cards iv-cards--four">
+        {parkingOptions.map(({ id, label, icon }) => (
+          <button
+            key={id}
+            onClick={() => onParking(id)}
+            className={`iv-card iv-card--compact ${parking === id ? 'iv-card--active' : ''}`}
+          >
+            <span className="iv-card__icon">{icon}</span>
+            <span className="iv-card__label">{label}</span>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function StepResult({
   result, type, postcode, onReset,
 }: {
@@ -201,6 +345,12 @@ function StepResult({
         </div>
       </div>
 
+      {result.adjustmentPct > 0 && (
+        <p className="iv-result__adjustment">
+          Includes a +{(result.adjustmentPct * 100).toFixed(1)}% uplift for your property's bathrooms, balcony, garden, and parking.
+        </p>
+      )}
+
       <p className="iv-result__disclaimer">
         This estimate is based on 2026 regional market data for the{' '}
         <strong>{result.subArea}</strong> area. It is indicative only and not a
@@ -221,7 +371,7 @@ function StepResult({
 }
 
 // ─── Progress bar ────────────────────────────────────────────────────────────
-const STEPS: Step[] = ['type', 'postcode', 'property', 'bedrooms', 'result'];
+const STEPS: Step[] = ['type', 'postcode', 'property', 'bedrooms', 'features', 'outdoor', 'result'];
 
 function ProgressBar({ current }: { current: Step }) {
   const idx = STEPS.indexOf(current);
@@ -241,7 +391,27 @@ export default function InstantValuationPage() {
   const [postcodeErr,setPostcodeErr]= useState('');
   const [propType,   setPropType]  = useState<PropertyType>('semi');
   const [bedrooms,   setBedrooms]  = useState(3);
+  const [bathrooms,  setBathrooms] = useState(1);
+  const [balcony,    setBalcony]   = useState(false);
+  const [garden,     setGarden]    = useState<GardenType>('none');
+  const [parking,    setParking]   = useState<ParkingType>('none');
   const [result,     setResult]    = useState<ValuationResult | null>(null);
+
+  const runCalculation = useCallback((overrides?: Partial<{
+    bedrooms: number; bathrooms: number; balcony: boolean; garden: GardenType; parking: ParkingType;
+  }>) => {
+    const r = calculate(
+      postcode,
+      propType,
+      overrides?.bedrooms ?? bedrooms,
+      valType,
+      overrides?.bathrooms ?? bathrooms,
+      overrides?.balcony ?? balcony,
+      overrides?.garden ?? garden,
+      overrides?.parking ?? parking,
+    );
+    if (r) { setResult(r); setStep('result'); }
+  }, [postcode, propType, bedrooms, valType, bathrooms, balcony, garden, parking]);
 
   const handleNext = useCallback(() => {
     if (step === 'type')     { setStep('postcode');  return; }
@@ -260,16 +430,15 @@ export default function InstantValuationPage() {
       return;
     }
     if (step === 'property') { setStep('bedrooms'); return; }
-    if (step === 'bedrooms') {
-      const r = calculate(postcode, propType, bedrooms, valType);
-      if (r) { setResult(r); setStep('result'); }
-      return;
-    }
-  }, [step, postcode, propType, bedrooms, valType]);
+    if (step === 'bedrooms') { setStep('features'); return; }
+    if (step === 'features') { setStep('outdoor'); return; }
+    if (step === 'outdoor')  { runCalculation(); return; }
+  }, [step, postcode, runCalculation]);
 
   const handleBack = () => {
     const prev: Partial<Record<Step, Step>> = {
-      postcode: 'type', property: 'postcode', bedrooms: 'property', result: 'bedrooms',
+      postcode: 'type', property: 'postcode', bedrooms: 'property',
+      features: 'bedrooms', outdoor: 'features', result: 'outdoor',
     };
     const p = prev[step];
     if (p) setStep(p);
@@ -277,18 +446,15 @@ export default function InstantValuationPage() {
 
   const handleReset = () => {
     setStep('type'); setPostcode(''); setPostcodeErr('');
-    setPropType('semi'); setBedrooms(3); setResult(null);
+    setPropType('semi'); setBedrooms(3); setBathrooms(1);
+    setBalcony(false); setGarden('none'); setParking('none');
+    setResult(null);
   };
 
   // Auto-advance on card click for steps that don't need a "Next" button
   const handleTypeChange = (v: ValuationType) => { setValType(v); setTimeout(() => setStep('postcode'), 150); };
   const handlePropChange = (v: PropertyType) => { setPropType(v); setTimeout(() => setStep('bedrooms'), 150); };
-  const handleBedsChange = (v: number)        => { setBedrooms(v); setTimeout(() => handleNextBeds(v), 150); };
-
-  const handleNextBeds = (beds: number) => {
-    const r = calculate(postcode, propType, beds, valType);
-    if (r) { setResult(r); setStep('result'); }
-  };
+  const handleBedsChange = (v: number)        => { setBedrooms(v); setTimeout(() => setStep('features'), 150); };
 
   return (
     <>
@@ -366,6 +532,12 @@ export default function InstantValuationPage() {
           font-size: 0.9375rem;
           margin: 0 0 1.75rem;
         }
+        .iv-field-label {
+          color: rgba(255,255,255,0.8);
+          font-size: 0.9375rem;
+          font-weight: 600;
+          margin: 0 0 0.875rem;
+        }
         /* ── Selection cards ──────────────────────────────────────────── */
         .iv-cards {
           display: grid;
@@ -388,6 +560,9 @@ export default function InstantValuationPage() {
           text-align: left;
           transition: border-color 0.2s, background 0.2s, transform 0.15s;
           color: #fff;
+        }
+        .iv-card--compact {
+          padding: 0.9375rem;
         }
         .iv-card:hover {
           background: rgba(255,255,255,0.11);
@@ -424,7 +599,7 @@ export default function InstantValuationPage() {
           font-size: 0.875rem;
           margin: 0.5rem 0 0;
         }
-        /* ── Bedroom buttons ──────────────────────────────────────────── */
+        /* ── Bedroom / bathroom buttons ───────────────────────────────── */
         .iv-beds {
           display: flex;
           flex-wrap: wrap;
@@ -535,6 +710,11 @@ export default function InstantValuationPage() {
           font-size: 1.5rem;
           color: #93c5fd;
         }
+        .iv-result__adjustment {
+          font-size: 0.8125rem;
+          color: #93c5fd;
+          margin: 0 0 1rem;
+        }
         .iv-result__disclaimer {
           font-size: 0.8125rem;
           color: rgba(255,255,255,0.4);
@@ -603,10 +783,29 @@ export default function InstantValuationPage() {
             <StepPropertyType value={propType} onChange={handlePropChange} />
           )}
           {step === 'bedrooms' && (
+            <StepBedrooms value={bedrooms} onChange={handleBedsChange} />
+          )}
+          {step === 'features' && (
             <>
-              <StepBedrooms value={bedrooms} onChange={handleBedsChange} />
+              <StepFeatures
+                bathrooms={bathrooms} onBathrooms={setBathrooms}
+                balcony={balcony} onBalcony={setBalcony}
+              />
               <div className="iv-footer">
                 <button className="iv-btn-back" onClick={handleBack}>← Back</button>
+                <button className="iv-btn-next" onClick={handleNext}>Continue →</button>
+              </div>
+            </>
+          )}
+          {step === 'outdoor' && (
+            <>
+              <StepOutdoor
+                garden={garden} onGarden={setGarden}
+                parking={parking} onParking={setParking}
+              />
+              <div className="iv-footer">
+                <button className="iv-btn-back" onClick={handleBack}>← Back</button>
+                <button className="iv-btn-next" onClick={handleNext}>Get my estimate →</button>
               </div>
             </>
           )}

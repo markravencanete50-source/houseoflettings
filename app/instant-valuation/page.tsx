@@ -10,7 +10,14 @@ type ValuationType = 'rent' | 'sale';
 type PropertyType  = 'flat' | 'terraced' | 'semi' | 'detached';
 type GardenType     = 'private' | 'shared' | 'patio' | 'none';
 type ParkingType    = 'garage' | 'driveway' | 'allocated' | 'permit' | 'on_street' | 'none';
-type Step          = 'type' | 'postcode' | 'property' | 'bedrooms' | 'features' | 'outdoor' | 'result';
+type Step          = 'contact' | 'type' | 'postcode' | 'property' | 'bedrooms' | 'features' | 'outdoor' | 'result';
+
+interface LeadInfo {
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string;
+}
 
 interface ValuationResult {
   low:  number;
@@ -107,12 +114,121 @@ function calculate(
   };
 }
 
+// ─── Lead capture ────────────────────────────────────────────────────────────
+function isValidEmail(email: string): boolean {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
+}
+
+function isValidUKPhone(phone: string): boolean {
+  const cleaned = phone.replace(/[\s()-]/g, '');
+  // Accepts UK landline/mobile in national (0...) or international (+44...) format
+  return /^(\+44\d{9,10}|0\d{9,10})$/.test(cleaned);
+}
+
+/**
+ * PLACEHOLDER — wire this up to the real admin dashboard backend once
+ * the leads API/endpoint is ready. For now it just logs the lead so the
+ * rest of the funnel (and the UI) is fully functional and testable.
+ *
+ * Suggested future implementation:
+ *   await fetch('/api/leads', {
+ *     method: 'POST',
+ *     headers: { 'Content-Type': 'application/json' },
+ *     body: JSON.stringify({ ...lead, source: 'instant-valuation', submittedAt: new Date().toISOString() }),
+ *   });
+ */
+async function submitLead(lead: LeadInfo): Promise<{ ok: boolean }> {
+  console.log('[Instant Valuation] Lead captured (placeholder — not yet sent to dashboard):', lead);
+  // Simulate a successful async call so the UI flow behaves like a real submit.
+  await new Promise((resolve) => setTimeout(resolve, 250));
+  return { ok: true };
+}
+
 // ─── Formatting ─────────────────────────────────────────────────────────────
 function fmt(n: number) {
   return n >= 1000 ? `£${(n / 1000).toFixed(0)}k` : `£${n}`;
 }
 function fmtFull(n: number) {
   return `£${n.toLocaleString('en-GB')}`;
+}
+
+// ─── Contact capture step ────────────────────────────────────────────────────
+function StepContact({
+  value, onChange, errors,
+}: {
+  value: LeadInfo;
+  onChange: (v: LeadInfo) => void;
+  errors: Partial<LeadInfo>;
+}) {
+  const update = (field: keyof LeadInfo, val: string) => {
+    onChange({ ...value, [field]: val });
+  };
+  return (
+    <div className="iv-step">
+      <h2 className="iv-step__title">Let's get your details first</h2>
+      <p className="iv-step__sub">So we can send your valuation and follow up if you have questions</p>
+
+      <div className="iv-form-grid">
+        <div className="iv-form-field">
+          <label className="iv-field-label" htmlFor="iv-first-name">First name</label>
+          <input
+            id="iv-first-name"
+            type="text"
+            className={`iv-input ${errors.firstName ? 'iv-input--error' : ''}`}
+            placeholder="Jane"
+            value={value.firstName}
+            onChange={(e) => update('firstName', e.target.value)}
+            autoFocus
+          />
+          {errors.firstName && <p className="iv-error">{errors.firstName}</p>}
+        </div>
+
+        <div className="iv-form-field">
+          <label className="iv-field-label" htmlFor="iv-last-name">Last name</label>
+          <input
+            id="iv-last-name"
+            type="text"
+            className={`iv-input ${errors.lastName ? 'iv-input--error' : ''}`}
+            placeholder="Smith"
+            value={value.lastName}
+            onChange={(e) => update('lastName', e.target.value)}
+          />
+          {errors.lastName && <p className="iv-error">{errors.lastName}</p>}
+        </div>
+
+        <div className="iv-form-field">
+          <label className="iv-field-label" htmlFor="iv-email">Email address</label>
+          <input
+            id="iv-email"
+            type="email"
+            className={`iv-input ${errors.email ? 'iv-input--error' : ''}`}
+            placeholder="jane.smith@email.com"
+            value={value.email}
+            onChange={(e) => update('email', e.target.value)}
+          />
+          {errors.email && <p className="iv-error">{errors.email}</p>}
+        </div>
+
+        <div className="iv-form-field">
+          <label className="iv-field-label" htmlFor="iv-phone">Phone number</label>
+          <input
+            id="iv-phone"
+            type="tel"
+            className={`iv-input ${errors.phone ? 'iv-input--error' : ''}`}
+            placeholder="07123 456789"
+            value={value.phone}
+            onChange={(e) => update('phone', e.target.value)}
+          />
+          {errors.phone && <p className="iv-error">{errors.phone}</p>}
+        </div>
+      </div>
+
+      <p className="iv-privacy-note">
+        We'll only use your details to send your valuation and discuss your property.
+        We never share your information with third parties.
+      </p>
+    </div>
+  );
 }
 
 // ─── Step components ─────────────────────────────────────────────────────────
@@ -371,7 +487,7 @@ function StepResult({
 }
 
 // ─── Progress bar ────────────────────────────────────────────────────────────
-const STEPS: Step[] = ['type', 'postcode', 'property', 'bedrooms', 'features', 'outdoor', 'result'];
+const STEPS: Step[] = ['contact', 'type', 'postcode', 'property', 'bedrooms', 'features', 'outdoor', 'result'];
 
 function ProgressBar({ current }: { current: Step }) {
   const idx = STEPS.indexOf(current);
@@ -385,7 +501,10 @@ function ProgressBar({ current }: { current: Step }) {
 
 // ─── Main page component ─────────────────────────────────────────────────────
 export default function InstantValuationPage() {
-  const [step,       setStep]      = useState<Step>('type');
+  const [step,       setStep]      = useState<Step>('contact');
+  const [lead,       setLead]      = useState<LeadInfo>({ firstName: '', lastName: '', email: '', phone: '' });
+  const [leadErrors, setLeadErrors]= useState<Partial<LeadInfo>>({});
+  const [leadSubmitting, setLeadSubmitting] = useState(false);
   const [valType,    setValType]   = useState<ValuationType>('rent');
   const [postcode,   setPostcode]  = useState('');
   const [postcodeErr,setPostcodeErr]= useState('');
@@ -413,7 +532,30 @@ export default function InstantValuationPage() {
     if (r) { setResult(r); setStep('result'); }
   }, [postcode, propType, bedrooms, valType, bathrooms, balcony, garden, parking]);
 
-  const handleNext = useCallback(() => {
+  const validateLead = (): boolean => {
+    const errors: Partial<LeadInfo> = {};
+    if (!lead.firstName.trim()) errors.firstName = 'First name is required.';
+    if (!lead.lastName.trim())  errors.lastName  = 'Last name is required.';
+    if (!lead.email.trim())          errors.email = 'Email address is required.';
+    else if (!isValidEmail(lead.email)) errors.email = 'Please enter a valid email address.';
+    if (!lead.phone.trim())          errors.phone = 'Phone number is required.';
+    else if (!isValidUKPhone(lead.phone)) errors.phone = 'Please enter a valid UK phone number.';
+    setLeadErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
+  const handleNext = useCallback(async () => {
+    if (step === 'contact') {
+      if (!validateLead()) return;
+      setLeadSubmitting(true);
+      try {
+        await submitLead(lead);
+      } finally {
+        setLeadSubmitting(false);
+      }
+      setStep('type');
+      return;
+    }
     if (step === 'type')     { setStep('postcode');  return; }
     if (step === 'postcode') {
       const clean = postcode.trim();
@@ -433,11 +575,11 @@ export default function InstantValuationPage() {
     if (step === 'bedrooms') { setStep('features'); return; }
     if (step === 'features') { setStep('outdoor'); return; }
     if (step === 'outdoor')  { runCalculation(); return; }
-  }, [step, postcode, runCalculation]);
+  }, [step, postcode, runCalculation, lead]);
 
   const handleBack = () => {
     const prev: Partial<Record<Step, Step>> = {
-      postcode: 'type', property: 'postcode', bedrooms: 'property',
+      type: 'contact', postcode: 'type', property: 'postcode', bedrooms: 'property',
       features: 'bedrooms', outdoor: 'features', result: 'outdoor',
     };
     const p = prev[step];
@@ -445,7 +587,8 @@ export default function InstantValuationPage() {
   };
 
   const handleReset = () => {
-    setStep('type'); setPostcode(''); setPostcodeErr('');
+    setStep('contact'); setLead({ firstName: '', lastName: '', email: '', phone: '' }); setLeadErrors({});
+    setPostcode(''); setPostcodeErr('');
     setPropType('semi'); setBedrooms(3); setBathrooms(1);
     setBalcony(false); setGarden('none'); setParking('none');
     setResult(null);
@@ -537,6 +680,32 @@ export default function InstantValuationPage() {
           font-size: 0.9375rem;
           font-weight: 600;
           margin: 0 0 0.875rem;
+        }
+        /* ── Contact form ─────────────────────────────────────────────── */
+        .iv-form-grid {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 1.25rem;
+        }
+        .iv-form-field {
+          display: flex;
+          flex-direction: column;
+        }
+        .iv-form-field .iv-field-label {
+          margin: 0 0 0.5rem;
+          font-size: 0.8125rem;
+          text-transform: uppercase;
+          letter-spacing: 0.04em;
+          color: rgba(255,255,255,0.55);
+        }
+        .iv-privacy-note {
+          font-size: 0.8125rem;
+          color: rgba(255,255,255,0.4);
+          line-height: 1.6;
+          margin: 1.75rem 0 0;
+        }
+        @media (max-width: 480px) {
+          .iv-form-grid { grid-template-columns: 1fr; }
         }
         /* ── Selection cards ──────────────────────────────────────────── */
         .iv-cards {
@@ -649,6 +818,7 @@ export default function InstantValuationPage() {
           margin-left: auto;
         }
         .iv-btn-next:hover { background: #1d4ed8; transform: translateY(-1px); }
+        .iv-btn-next:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
         /* ── Result ───────────────────────────────────────────────────── */
         .iv-step--result { text-align: center; }
         .iv-result-badge {
@@ -767,6 +937,17 @@ export default function InstantValuationPage() {
         <ProgressBar current={step} />
 
         <div className="iv-card-wrap">
+          {step === 'contact' && (
+            <>
+              <StepContact value={lead} onChange={setLead} errors={leadErrors} />
+              <div className="iv-footer">
+                <span />
+                <button className="iv-btn-next" onClick={handleNext} disabled={leadSubmitting}>
+                  {leadSubmitting ? 'Please wait…' : 'Continue →'}
+                </button>
+              </div>
+            </>
+          )}
           {step === 'type' && (
             <StepValuationType value={valType} onChange={handleTypeChange} />
           )}

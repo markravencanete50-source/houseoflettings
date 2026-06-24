@@ -431,12 +431,13 @@ function StepOutdoor({
 }
 
 function StepResult({
-  result, type, postcode, onReset,
+  result, type, postcode, onReset, reportStatus,
 }: {
   result: ValuationResult;
   type: ValuationType;
   postcode: string;
   onReset: () => void;
+  reportStatus: 'idle' | 'sending' | 'sent' | 'error';
 }) {
   return (
     <div className="iv-step iv-step--result">
@@ -466,6 +467,24 @@ function StepResult({
           Includes a +{(result.adjustmentPct * 100).toFixed(1)}% uplift for your property's bathrooms, balcony, garden, and parking.
         </p>
       )}
+
+      <div className="iv-report-status">
+        {reportStatus === 'sending' && (
+          <p className="iv-report-status__text iv-report-status__text--pending">
+            📧 Sending your full report to your email…
+          </p>
+        )}
+        {reportStatus === 'sent' && (
+          <p className="iv-report-status__text iv-report-status__text--success">
+            ✅ Your full PDF report has been emailed to you.
+          </p>
+        )}
+        {reportStatus === 'error' && (
+          <p className="iv-report-status__text iv-report-status__text--error">
+            We couldn't email your report just now — your estimate above is still accurate. Please try again shortly.
+          </p>
+        )}
+      </div>
 
       <p className="iv-result__disclaimer">
         This estimate is based on 2026 regional market data for the{' '}
@@ -515,22 +534,72 @@ export default function InstantValuationPage() {
   const [garden,     setGarden]    = useState<GardenType>('none');
   const [parking,    setParking]   = useState<ParkingType>('none');
   const [result,     setResult]    = useState<ValuationResult | null>(null);
+  const [reportStatus, setReportStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle');
+
+  const sendReportEmail = useCallback(async (
+    r: ValuationResult,
+    finalBedrooms: number, finalBathrooms: number, finalBalcony: boolean,
+    finalGarden: GardenType, finalParking: ParkingType,
+  ) => {
+    setReportStatus('sending');
+    try {
+      const res = await fetch('/api/instant-valuation', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          firstName: lead.firstName,
+          lastName: lead.lastName,
+          email: lead.email,
+          phone: lead.phone,
+          valuationType: valType,
+          postcode,
+          area: r.area,
+          subArea: r.subArea,
+          propertyType: propType,
+          bedrooms: finalBedrooms,
+          bathrooms: finalBathrooms,
+          balcony: finalBalcony,
+          garden: finalGarden,
+          parking: finalParking,
+          low: r.low,
+          mid: r.mid,
+          high: r.high,
+          adjustmentPct: r.adjustmentPct,
+          period: r.period,
+        }),
+      });
+      if (!res.ok) throw new Error('Report email failed');
+      setReportStatus('sent');
+    } catch (err) {
+      console.error('Failed to send instant valuation report email:', err);
+      setReportStatus('error');
+    }
+  }, [lead, valType, postcode, propType]);
 
   const runCalculation = useCallback((overrides?: Partial<{
     bedrooms: number; bathrooms: number; balcony: boolean; garden: GardenType; parking: ParkingType;
   }>) => {
+    const finalBedrooms = overrides?.bedrooms ?? bedrooms;
+    const finalBathrooms = overrides?.bathrooms ?? bathrooms;
+    const finalBalcony = overrides?.balcony ?? balcony;
+    const finalGarden = overrides?.garden ?? garden;
+    const finalParking = overrides?.parking ?? parking;
     const r = calculate(
       postcode,
       propType,
-      overrides?.bedrooms ?? bedrooms,
+      finalBedrooms,
       valType,
-      overrides?.bathrooms ?? bathrooms,
-      overrides?.balcony ?? balcony,
-      overrides?.garden ?? garden,
-      overrides?.parking ?? parking,
+      finalBathrooms,
+      finalBalcony,
+      finalGarden,
+      finalParking,
     );
-    if (r) { setResult(r); setStep('result'); }
-  }, [postcode, propType, bedrooms, valType, bathrooms, balcony, garden, parking]);
+    if (r) {
+      setResult(r);
+      setStep('result');
+      sendReportEmail(r, finalBedrooms, finalBathrooms, finalBalcony, finalGarden, finalParking);
+    }
+  }, [postcode, propType, bedrooms, valType, bathrooms, balcony, garden, parking, sendReportEmail]);
 
   const validateLead = (): boolean => {
     const errors: Partial<LeadInfo> = {};
@@ -591,7 +660,7 @@ export default function InstantValuationPage() {
     setPostcode(''); setPostcodeErr('');
     setPropType('semi'); setBedrooms(3); setBathrooms(1);
     setBalcony(false); setGarden('none'); setParking('none');
-    setResult(null);
+    setResult(null); setReportStatus('idle');
   };
 
   // Auto-advance on card click for steps that don't need a "Next" button
@@ -885,6 +954,30 @@ export default function InstantValuationPage() {
           color: #93c5fd;
           margin: 0 0 1rem;
         }
+        .iv-report-status {
+          margin: 0 0 1.25rem;
+        }
+        .iv-report-status__text {
+          font-size: 0.8125rem;
+          line-height: 1.6;
+          margin: 0;
+          padding: 0.625rem 0.875rem;
+          border-radius: 0.625rem;
+        }
+        .iv-report-status__text--pending {
+          background: rgba(255,255,255,0.06);
+          color: rgba(255,255,255,0.6);
+        }
+        .iv-report-status__text--success {
+          background: rgba(34,197,94,0.12);
+          color: #86efac;
+          border: 1px solid rgba(34,197,94,0.25);
+        }
+        .iv-report-status__text--error {
+          background: rgba(239,68,68,0.1);
+          color: #fca5a5;
+          border: 1px solid rgba(239,68,68,0.25);
+        }
         .iv-result__disclaimer {
           font-size: 0.8125rem;
           color: rgba(255,255,255,0.4);
@@ -992,7 +1085,7 @@ export default function InstantValuationPage() {
           )}
           {step === 'result' && result && (
             <>
-              <StepResult result={result} type={valType} postcode={postcode} onReset={handleReset} />
+              <StepResult result={result} type={valType} postcode={postcode} onReset={handleReset} reportStatus={reportStatus} />
               <div className="iv-footer">
                 <button className="iv-btn-back" onClick={handleBack}>← Adjust details</button>
               </div>

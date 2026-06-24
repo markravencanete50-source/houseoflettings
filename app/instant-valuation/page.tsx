@@ -1,696 +1,291 @@
 'use client';
 
-import { useState, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useCallback, useEffect } from 'react';
 import Link from 'next/link';
 import { lookupPostcode, isOperatingArea, TIER_PRICING_2026 } from '@/lib/valuation/operatingAreaPostcodes';
 
-// ─── Types ──────────────────────────────────────────────────────────────────
-type ValuationType = 'rent' | 'sale';
+// ─── Types ───────────────────────────────────────────────────────────────────
+type ValuationType = 'let' | 'sale' | 'both';
 type PropertyType  = 'flat' | 'terraced' | 'semi' | 'detached';
-type GardenType     = 'private' | 'shared' | 'patio' | 'none';
-type ParkingType    = 'garage' | 'driveway' | 'allocated' | 'permit' | 'on_street' | 'none';
-type Step          = 'contact' | 'type' | 'postcode' | 'property' | 'bedrooms' | 'features' | 'outdoor' | 'result';
+type GardenType    = 'private' | 'shared' | 'patio' | 'none';
+type ParkingType   = 'garage' | 'driveway' | 'allocated' | 'permit' | 'on_street' | 'none';
+type View          = 'questions' | 'contact' | 'declined' | 'sent';
 
 interface LeadInfo {
   firstName: string;
-  lastName: string;
-  email: string;
-  phone: string;
+  lastName:  string;
+  email:     string;
+  phone:     string;
 }
 
 interface ValuationResult {
-  low:  number;
-  mid:  number;
-  high: number;
-  area: string;
-  subArea: string;
-  currency: string;
-  period: string;
+  low:           number;
+  mid:           number;
+  high:          number;
+  area:          string;
+  subArea:       string;
   adjustmentPct: number;
+  // for 'both' we also store sale figures
+  saleLow?:  number;
+  saleMid?:  number;
+  saleHigh?: number;
 }
 
-// ─── Bedroom multipliers ────────────────────────────────────────────────────
+// ─── Multipliers & adjustments ───────────────────────────────────────────────
 const BEDROOM_MULT: Record<number, number> = {
   0: 0.55, 1: 0.70, 2: 0.88, 3: 1.00, 4: 1.22, 5: 1.45, 6: 1.65,
 };
-
-// ─── Property type multipliers ──────────────────────────────────────────────
 const PROP_SALE_MULT: Record<PropertyType, number> = {
   flat: 0.72, terraced: 0.88, semi: 1.00, detached: 1.32,
 };
 const PROP_RENT_MULT: Record<PropertyType, number> = {
   flat: 0.82, terraced: 0.92, semi: 1.00, detached: 1.18,
 };
-
-// ─── Feature adjustment percentages ─────────────────────────────────────────
-// Grounded in typical UK estate-agent guideline ranges (additive, capped).
-// Bathrooms: +4.5% per bathroom beyond the first (most homes have 1 as standard)
 const BATHROOM_PCT_PER_EXTRA = 0.045;
-const MAX_BATHROOM_BONUS_COUNT = 3; // caps uplift beyond 4 bathrooms
-
-// Garden: private gardens carry the largest premium; shared/patio smaller
+const MAX_BATHROOM_BONUS_COUNT = 3;
 const GARDEN_PCT: Record<GardenType, number> = {
-  private: 0.09,
-  shared:  0.03,
-  patio:   0.02,
-  none:    0,
+  private: 0.09, shared: 0.03, patio: 0.02, none: 0,
 };
-
-// Parking: matches Rightmove/Zoopla/Material Information Rules categories
 const PARKING_PCT: Record<ParkingType, number> = {
-  garage:    0.06,
-  driveway:  0.05,
-  allocated: 0.04,
-  permit:    0.015,
-  on_street: 0,
-  none:      0,
+  garage: 0.06, driveway: 0.05, allocated: 0.04, permit: 0.015, on_street: 0, none: 0,
 };
-
-// Balcony: most relevant uplift on flats/apartments
 const BALCONY_PCT = 0.03;
 
-function calculate(
-  postcode: string,
-  propType: PropertyType,
-  bedrooms: number,
-  valType: ValuationType,
-  bathrooms: number,
-  hasBalcony: boolean,
-  garden: GardenType,
-  parking: ParkingType,
-): ValuationResult | null {
+function calcForType(
+  postcode: string, propType: PropertyType, bedrooms: number,
+  valType: 'rent' | 'sale',
+  bathrooms: number, hasBalcony: boolean, garden: GardenType, parking: ParkingType,
+): { low: number; mid: number; high: number; area: string; subArea: string; adjustmentPct: number } | null {
   const info = lookupPostcode(postcode);
   if (!info) return null;
-
   const base = valType === 'rent'
     ? TIER_PRICING_2026[info.tier].avgRent
     : TIER_PRICING_2026[info.tier].avgSale;
-
   const propMult = valType === 'rent' ? PROP_RENT_MULT[propType] : PROP_SALE_MULT[propType];
   const bedMult  = BEDROOM_MULT[Math.min(Math.max(bedrooms, 0), 6)] ?? 1.0;
-
-  // Feature adjustment — additive percentage on top of the base estimate
-  const extraBathrooms = Math.min(Math.max(bathrooms - 1, 0), MAX_BATHROOM_BONUS_COUNT);
-  const bathroomPct = extraBathrooms * BATHROOM_PCT_PER_EXTRA;
-  const balconyPct  = hasBalcony ? BALCONY_PCT : 0;
-  const gardenPct    = GARDEN_PCT[garden];
-  const parkingPct   = PARKING_PCT[parking];
-
-  const adjustmentPct = bathroomPct + balconyPct + gardenPct + parkingPct;
-  const featureMult = 1 + adjustmentPct;
-
-  const mid  = Math.round((base * propMult * bedMult * featureMult) / 500) * 500;
+  const extraBath = Math.min(Math.max(bathrooms - 1, 0), MAX_BATHROOM_BONUS_COUNT);
+  const adjustmentPct = (extraBath * BATHROOM_PCT_PER_EXTRA)
+    + (hasBalcony ? BALCONY_PCT : 0)
+    + GARDEN_PCT[garden]
+    + PARKING_PCT[parking];
+  const mid  = Math.round((base * propMult * bedMult * (1 + adjustmentPct)) / 500) * 500;
   const low  = Math.round(mid * 0.92 / 500) * 500;
   const high = Math.round(mid * 1.08 / 500) * 500;
-
-  return {
-    low, mid, high,
-    area: info.area,
-    subArea: info.subArea,
-    currency: valType === 'rent' ? '£' : '£',
-    period: valType === 'rent' ? '/month' : '',
-    adjustmentPct,
-  };
+  return { low, mid, high, area: info.area, subArea: info.subArea, adjustmentPct };
 }
 
-// ─── Lead capture ────────────────────────────────────────────────────────────
-function isValidEmail(email: string): boolean {
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
+// ─── Validation ───────────────────────────────────────────────────────────────
+function isValidEmail(e: string) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e.trim());
+}
+function isValidUKPhone(p: string) {
+  const c = p.replace(/[\s()-]/g, '');
+  return /^(\+44\d{9,10}|0\d{9,10})$/.test(c);
 }
 
-function isValidUKPhone(phone: string): boolean {
-  const cleaned = phone.replace(/[\s()-]/g, '');
-  // Accepts UK landline/mobile in national (0...) or international (+44...) format
-  return /^(\+44\d{9,10}|0\d{9,10})$/.test(cleaned);
-}
-
-/**
- * PLACEHOLDER — wire this up to the real admin dashboard backend once
- * the leads API/endpoint is ready. For now it just logs the lead so the
- * rest of the funnel (and the UI) is fully functional and testable.
- *
- * Suggested future implementation:
- *   await fetch('/api/leads', {
- *     method: 'POST',
- *     headers: { 'Content-Type': 'application/json' },
- *     body: JSON.stringify({ ...lead, source: 'instant-valuation', submittedAt: new Date().toISOString() }),
- *   });
- */
-async function submitLead(lead: LeadInfo): Promise<{ ok: boolean }> {
-  console.log('[Instant Valuation] Lead captured (placeholder — not yet sent to dashboard):', lead);
-  // Simulate a successful async call so the UI flow behaves like a real submit.
-  await new Promise((resolve) => setTimeout(resolve, 250));
-  return { ok: true };
-}
-
-// ─── Formatting ─────────────────────────────────────────────────────────────
-function fmt(n: number) {
-  return n >= 1000 ? `£${(n / 1000).toFixed(0)}k` : `£${n}`;
-}
+// ─── Helpers ──────────────────────────────────────────────────────────────────
 function fmtFull(n: number) {
   return `£${n.toLocaleString('en-GB')}`;
 }
 
-// ─── Contact capture step ────────────────────────────────────────────────────
-function StepContact({
-  value, onChange, errors,
-}: {
-  value: LeadInfo;
-  onChange: (v: LeadInfo) => void;
-  errors: Partial<LeadInfo>;
-}) {
-  const update = (field: keyof LeadInfo, val: string) => {
-    onChange({ ...value, [field]: val });
-  };
-  return (
-    <div className="iv-step">
-      <h2 className="iv-step__title">Let's get your details first</h2>
-      <p className="iv-step__sub">So we can send your valuation and follow up if you have questions</p>
-
-      <div className="iv-form-grid">
-        <div className="iv-form-field">
-          <label className="iv-field-label" htmlFor="iv-first-name">First name</label>
-          <input
-            id="iv-first-name"
-            type="text"
-            className={`iv-input ${errors.firstName ? 'iv-input--error' : ''}`}
-            placeholder="Jane"
-            value={value.firstName}
-            onChange={(e) => update('firstName', e.target.value)}
-            autoFocus
-          />
-          {errors.firstName && <p className="iv-error">{errors.firstName}</p>}
-        </div>
-
-        <div className="iv-form-field">
-          <label className="iv-field-label" htmlFor="iv-last-name">Last name</label>
-          <input
-            id="iv-last-name"
-            type="text"
-            className={`iv-input ${errors.lastName ? 'iv-input--error' : ''}`}
-            placeholder="Smith"
-            value={value.lastName}
-            onChange={(e) => update('lastName', e.target.value)}
-          />
-          {errors.lastName && <p className="iv-error">{errors.lastName}</p>}
-        </div>
-
-        <div className="iv-form-field">
-          <label className="iv-field-label" htmlFor="iv-email">Email address</label>
-          <input
-            id="iv-email"
-            type="email"
-            className={`iv-input ${errors.email ? 'iv-input--error' : ''}`}
-            placeholder="jane.smith@email.com"
-            value={value.email}
-            onChange={(e) => update('email', e.target.value)}
-          />
-          {errors.email && <p className="iv-error">{errors.email}</p>}
-        </div>
-
-        <div className="iv-form-field">
-          <label className="iv-field-label" htmlFor="iv-phone">Phone number</label>
-          <input
-            id="iv-phone"
-            type="tel"
-            className={`iv-input ${errors.phone ? 'iv-input--error' : ''}`}
-            placeholder="07123 456789"
-            value={value.phone}
-            onChange={(e) => update('phone', e.target.value)}
-          />
-          {errors.phone && <p className="iv-error">{errors.phone}</p>}
-        </div>
-      </div>
-
-      <p className="iv-privacy-note">
-        We'll only use your details to send your valuation and discuss your property.
-        We never share your information with third parties.
-      </p>
-    </div>
-  );
-}
-
-// ─── Step components ─────────────────────────────────────────────────────────
-
-function StepValuationType({
-  value, onChange,
-}: { value: ValuationType; onChange: (v: ValuationType) => void }) {
-  return (
-    <div className="iv-step">
-      <h2 className="iv-step__title">What would you like to value?</h2>
-      <p className="iv-step__sub">Select the type of valuation you need</p>
-      <div className="iv-cards">
-        {(['rent', 'sale'] as ValuationType[]).map((t) => (
-          <button
-            key={t}
-            onClick={() => onChange(t)}
-            className={`iv-card ${value === t ? 'iv-card--active' : ''}`}
-          >
-            <span className="iv-card__icon">{t === 'rent' ? '🏠' : '🏷️'}</span>
-            <span className="iv-card__label">{t === 'rent' ? 'Rental Valuation' : 'Sale Valuation'}</span>
-            <span className="iv-card__desc">
-              {t === 'rent' ? 'Find out your monthly rental value' : 'Estimate your property sale price'}
-            </span>
-          </button>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-function StepPostcode({
-  value, onChange, error,
-}: { value: string; onChange: (v: string) => void; error: string }) {
-  return (
-    <div className="iv-step">
-      <h2 className="iv-step__title">What's the property postcode?</h2>
-      <p className="iv-step__sub">We cover Leeds, Manchester, Bradford, and across Yorkshire</p>
-      <input
-        type="text"
-        className={`iv-input ${error ? 'iv-input--error' : ''}`}
-        placeholder="e.g. LS6 1AA"
-        value={value}
-        onChange={(e) => onChange(e.target.value.toUpperCase())}
-        maxLength={8}
-        autoFocus
-      />
-      {error && <p className="iv-error">{error}</p>}
-    </div>
-  );
-}
-
-function StepPropertyType({
-  value, onChange,
-}: { value: PropertyType; onChange: (v: PropertyType) => void }) {
-  const types: { id: PropertyType; label: string; icon: string }[] = [
-    { id: 'flat',      label: 'Flat / Apartment', icon: '🏢' },
-    { id: 'terraced',  label: 'Terraced House',   icon: '🏘️' },
-    { id: 'semi',      label: 'Semi-Detached',    icon: '🏡' },
-    { id: 'detached',  label: 'Detached House',   icon: '🏠' },
-  ];
-  return (
-    <div className="iv-step">
-      <h2 className="iv-step__title">What type of property is it?</h2>
-      <p className="iv-step__sub">Select the option that best describes the property</p>
-      <div className="iv-cards iv-cards--four">
-        {types.map(({ id, label, icon }) => (
-          <button
-            key={id}
-            onClick={() => onChange(id)}
-            className={`iv-card ${value === id ? 'iv-card--active' : ''}`}
-          >
-            <span className="iv-card__icon">{icon}</span>
-            <span className="iv-card__label">{label}</span>
-          </button>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-function StepBedrooms({
-  value, onChange,
-}: { value: number; onChange: (v: number) => void }) {
-  return (
-    <div className="iv-step">
-      <h2 className="iv-step__title">How many bedrooms?</h2>
-      <p className="iv-step__sub">Include all habitable rooms used as bedrooms</p>
-      <div className="iv-beds">
-        {[0, 1, 2, 3, 4, 5, 6].map((n) => (
-          <button
-            key={n}
-            onClick={() => onChange(n)}
-            className={`iv-bed-btn ${value === n ? 'iv-bed-btn--active' : ''}`}
-          >
-            {n === 0 ? 'Studio' : `${n} bed${n > 1 ? 's' : ''}`}
-          </button>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-// ─── Bathrooms + Balcony step ────────────────────────────────────────────────
-function StepFeatures({
-  bathrooms, onBathrooms, balcony, onBalcony,
-}: {
-  bathrooms: number; onBathrooms: (v: number) => void;
-  balcony: boolean; onBalcony: (v: boolean) => void;
-}) {
-  return (
-    <div className="iv-step">
-      <h2 className="iv-step__title">Bathrooms &amp; balcony</h2>
-      <p className="iv-step__sub">These details help us sharpen the accuracy of your estimate</p>
-
-      <p className="iv-field-label">How many bathrooms?</p>
-      <div className="iv-beds">
-        {[1, 2, 3, 4].map((n) => (
-          <button
-            key={n}
-            onClick={() => onBathrooms(n)}
-            className={`iv-bed-btn ${bathrooms === n ? 'iv-bed-btn--active' : ''}`}
-          >
-            {n === 4 ? '4+' : n} bath{n > 1 ? 's' : ''}
-          </button>
-        ))}
-      </div>
-
-      <p className="iv-field-label" style={{ marginTop: '1.75rem' }}>Does the property have a balcony?</p>
-      <div className="iv-cards">
-        {[true, false].map((v) => (
-          <button
-            key={String(v)}
-            onClick={() => onBalcony(v)}
-            className={`iv-card iv-card--compact ${balcony === v ? 'iv-card--active' : ''}`}
-          >
-            <span className="iv-card__icon">{v ? '🌇' : '🚫'}</span>
-            <span className="iv-card__label">{v ? 'Yes' : 'No'}</span>
-          </button>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-// ─── Garden + Parking step ───────────────────────────────────────────────────
-function StepOutdoor({
-  garden, onGarden, parking, onParking,
-}: {
-  garden: GardenType; onGarden: (v: GardenType) => void;
-  parking: ParkingType; onParking: (v: ParkingType) => void;
-}) {
-  const gardenOptions: { id: GardenType; label: string; icon: string }[] = [
-    { id: 'private', label: 'Private garden',    icon: '🌳' },
-    { id: 'shared',   label: 'Shared / communal', icon: '🌿' },
-    { id: 'patio',    label: 'Patio / courtyard',  icon: '🪴' },
-    { id: 'none',     label: 'No garden',          icon: '🚫' },
-  ];
-  const parkingOptions: { id: ParkingType; label: string; icon: string }[] = [
-    { id: 'garage',    label: 'Garage',                 icon: '🚪' },
-    { id: 'driveway',  label: 'Driveway (off-street)',  icon: '🛣️' },
-    { id: 'allocated', label: 'Allocated space',         icon: '🅿️' },
-    { id: 'permit',    label: 'Permit parking',          icon: '🎫' },
-    { id: 'on_street', label: 'On-street (unrestricted)',icon: '🚗' },
-    { id: 'none',      label: 'No parking',              icon: '🚫' },
-  ];
-  return (
-    <div className="iv-step">
-      <h2 className="iv-step__title">Garden &amp; parking</h2>
-      <p className="iv-step__sub">Outdoor space and parking type both affect local market value</p>
-
-      <p className="iv-field-label">What type of garden does it have?</p>
-      <div className="iv-cards iv-cards--four">
-        {gardenOptions.map(({ id, label, icon }) => (
-          <button
-            key={id}
-            onClick={() => onGarden(id)}
-            className={`iv-card iv-card--compact ${garden === id ? 'iv-card--active' : ''}`}
-          >
-            <span className="iv-card__icon">{icon}</span>
-            <span className="iv-card__label">{label}</span>
-          </button>
-        ))}
-      </div>
-
-      <p className="iv-field-label" style={{ marginTop: '1.75rem' }}>What type of parking is available?</p>
-      <div className="iv-cards iv-cards--four">
-        {parkingOptions.map(({ id, label, icon }) => (
-          <button
-            key={id}
-            onClick={() => onParking(id)}
-            className={`iv-card iv-card--compact ${parking === id ? 'iv-card--active' : ''}`}
-          >
-            <span className="iv-card__icon">{icon}</span>
-            <span className="iv-card__label">{label}</span>
-          </button>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-function StepResult({
-  result, type, postcode, onReset, reportStatus,
-}: {
-  result: ValuationResult;
-  type: ValuationType;
-  postcode: string;
-  onReset: () => void;
-  reportStatus: 'idle' | 'sending' | 'sent' | 'error';
-}) {
-  return (
-    <div className="iv-step iv-step--result">
-      <div className="iv-result-badge">
-        {type === 'rent' ? '🏠 Rental Estimate' : '🏷️ Sale Estimate'}
-      </div>
-      <h2 className="iv-result__postcode">{postcode.toUpperCase()}</h2>
-      <p className="iv-result__area">{result.subArea}, {result.area}</p>
-
-      <div className="iv-result__range">
-        <div className="iv-range-item iv-range-item--low">
-          <span className="iv-range-item__label">Low</span>
-          <span className="iv-range-item__value">{fmtFull(result.low)}{result.period}</span>
-        </div>
-        <div className="iv-range-item iv-range-item--mid">
-          <span className="iv-range-item__label">Estimate</span>
-          <span className="iv-range-item__value">{fmtFull(result.mid)}{result.period}</span>
-        </div>
-        <div className="iv-range-item iv-range-item--high">
-          <span className="iv-range-item__label">High</span>
-          <span className="iv-range-item__value">{fmtFull(result.high)}{result.period}</span>
-        </div>
-      </div>
-
-      {result.adjustmentPct > 0 && (
-        <p className="iv-result__adjustment">
-          Includes a +{(result.adjustmentPct * 100).toFixed(1)}% uplift for your property's bathrooms, balcony, garden, and parking.
-        </p>
-      )}
-
-      <div className="iv-report-status">
-        {reportStatus === 'sending' && (
-          <p className="iv-report-status__text iv-report-status__text--pending">
-            📧 Sending your full report to your email…
-          </p>
-        )}
-        {reportStatus === 'sent' && (
-          <p className="iv-report-status__text iv-report-status__text--success">
-            ✅ Your full PDF report has been emailed to you.
-          </p>
-        )}
-        {reportStatus === 'error' && (
-          <p className="iv-report-status__text iv-report-status__text--error">
-            We couldn't email your report just now — your estimate above is still accurate. Please try again shortly.
-          </p>
-        )}
-      </div>
-
-      <p className="iv-result__disclaimer">
-        This estimate is based on 2026 regional market data for the{' '}
-        <strong>{result.subArea}</strong> area. It is indicative only and not a
-        formal valuation. Actual values may vary based on property condition,
-        fixtures, and current market conditions.
-      </p>
-
-      <div className="iv-result__ctas">
-        <Link href="/landlords" className="iv-cta iv-cta--primary">
-          Book a Free Professional Valuation
-        </Link>
-        <button onClick={onReset} className="iv-cta iv-cta--outline">
-          Value Another Property
-        </button>
-      </div>
-    </div>
-  );
-}
-
-// ─── Progress bar ────────────────────────────────────────────────────────────
-const STEPS: Step[] = ['contact', 'type', 'postcode', 'property', 'bedrooms', 'features', 'outdoor', 'result'];
-
-function ProgressBar({ current }: { current: Step }) {
-  const idx = STEPS.indexOf(current);
-  const pct = (idx / (STEPS.length - 1)) * 100;
-  return (
-    <div className="iv-progress">
-      <div className="iv-progress__bar" style={{ width: `${pct}%` }} />
-    </div>
-  );
-}
-
-// ─── Main page component ─────────────────────────────────────────────────────
+// ─── Main component ───────────────────────────────────────────────────────────
 export default function InstantValuationPage() {
-  const [step,       setStep]      = useState<Step>('contact');
-  const [lead,       setLead]      = useState<LeadInfo>({ firstName: '', lastName: '', email: '', phone: '' });
-  const [leadErrors, setLeadErrors]= useState<Partial<LeadInfo>>({});
-  const [leadSubmitting, setLeadSubmitting] = useState(false);
-  const [valType,    setValType]   = useState<ValuationType>('rent');
-  const [postcode,   setPostcode]  = useState('');
+  // View state
+  const [view, setView] = useState<View>('questions');
+
+  // Question fields
+  const [valType,    setValType]    = useState<ValuationType | ''>('');
+  const [postcode,   setPostcode]   = useState('');
   const [postcodeErr,setPostcodeErr]= useState('');
-  const [propType,   setPropType]  = useState<PropertyType>('semi');
-  const [bedrooms,   setBedrooms]  = useState(3);
-  const [bathrooms,  setBathrooms] = useState(1);
-  const [balcony,    setBalcony]   = useState(false);
-  const [garden,     setGarden]    = useState<GardenType>('none');
-  const [parking,    setParking]   = useState<ParkingType>('none');
-  const [result,     setResult]    = useState<ValuationResult | null>(null);
-  const [reportStatus, setReportStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle');
+  const [propType,   setPropType]   = useState<PropertyType | ''>('');
+  const [bedrooms,   setBedrooms]   = useState<number | ''>('');
+  const [bathrooms,  setBathrooms]  = useState<number | ''>('');
+  const [balcony,    setBalcony]    = useState<boolean | ''>('');
+  const [garden,     setGarden]     = useState<GardenType | ''>('');
+  const [parking,    setParking]    = useState<ParkingType | ''>('');
 
-  const sendReportEmail = useCallback(async (
-    r: ValuationResult,
-    finalBedrooms: number, finalBathrooms: number, finalBalcony: boolean,
-    finalGarden: GardenType, finalParking: ParkingType,
-  ) => {
-    setReportStatus('sending');
-    try {
-      const res = await fetch('/api/instant-valuation', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          firstName: lead.firstName,
-          lastName: lead.lastName,
-          email: lead.email,
-          phone: lead.phone,
-          valuationType: valType,
-          postcode,
-          area: r.area,
-          subArea: r.subArea,
-          propertyType: propType,
-          bedrooms: finalBedrooms,
-          bathrooms: finalBathrooms,
-          balcony: finalBalcony,
-          garden: finalGarden,
-          parking: finalParking,
-          low: r.low,
-          mid: r.mid,
-          high: r.high,
-          adjustmentPct: r.adjustmentPct,
-          period: r.period,
-        }),
-      });
-      if (!res.ok) throw new Error('Report email failed');
-      setReportStatus('sent');
-    } catch (err) {
-      console.error('Failed to send instant valuation report email:', err);
-      setReportStatus('error');
+  // Contact fields
+  const [lead,       setLead]       = useState<LeadInfo>({ firstName: '', lastName: '', email: '', phone: '' });
+  const [leadErrors, setLeadErrors] = useState<Partial<LeadInfo>>({});
+  const [submitting, setSubmitting] = useState(false);
+
+  // Computed result (built when user hits Yes)
+  const [result, setResult] = useState<ValuationResult | null>(null);
+
+  // Are all questions answered?
+  const allAnswered = (
+    valType !== '' &&
+    postcode.trim() !== '' &&
+    propType !== '' &&
+    bedrooms !== '' &&
+    bathrooms !== '' &&
+    balcony !== '' &&
+    garden !== '' &&
+    parking !== ''
+  );
+
+  // Validate postcode on blur / when user stops typing
+  const validatePostcode = useCallback(() => {
+    const clean = postcode.trim();
+    if (!clean) { setPostcodeErr(''); return; }
+    if (!isOperatingArea(clean)) {
+      setPostcodeErr('We currently cover Leeds, Manchester, Bradford, and across Yorkshire.');
+    } else {
+      setPostcodeErr('');
     }
-  }, [lead, valType, postcode, propType]);
+  }, [postcode]);
 
-  const runCalculation = useCallback((overrides?: Partial<{
-    bedrooms: number; bathrooms: number; balcony: boolean; garden: GardenType; parking: ParkingType;
-  }>) => {
-    const finalBedrooms = overrides?.bedrooms ?? bedrooms;
-    const finalBathrooms = overrides?.bathrooms ?? bathrooms;
-    const finalBalcony = overrides?.balcony ?? balcony;
-    const finalGarden = overrides?.garden ?? garden;
-    const finalParking = overrides?.parking ?? parking;
-    const r = calculate(
-      postcode,
-      propType,
-      finalBedrooms,
-      valType,
-      finalBathrooms,
-      finalBalcony,
-      finalGarden,
-      finalParking,
-    );
-    if (r) {
-      setResult(r);
-      setStep('result');
-      sendReportEmail(r, finalBedrooms, finalBathrooms, finalBalcony, finalGarden, finalParking);
+  useEffect(() => {
+    if (postcode.trim().length >= 5) validatePostcode();
+  }, [postcode, validatePostcode]);
+
+  // Build result when user clicks Yes
+  const buildResult = useCallback((): ValuationResult | null => {
+    if (!allAnswered || postcodeErr) return null;
+    const shared = {
+      propType: propType as PropertyType,
+      bedrooms: bedrooms as number,
+      bathrooms: bathrooms as number,
+      balcony: balcony as boolean,
+      garden: garden as GardenType,
+      parking: parking as ParkingType,
+    };
+
+    if (valType === 'let') {
+      const r = calcForType(postcode, shared.propType, shared.bedrooms, 'rent',
+        shared.bathrooms, shared.balcony, shared.garden, shared.parking);
+      if (!r) return null;
+      return r;
     }
-  }, [postcode, propType, bedrooms, valType, bathrooms, balcony, garden, parking, sendReportEmail]);
 
-  const validateLead = (): boolean => {
+    if (valType === 'sale') {
+      const r = calcForType(postcode, shared.propType, shared.bedrooms, 'sale',
+        shared.bathrooms, shared.balcony, shared.garden, shared.parking);
+      if (!r) return null;
+      return r;
+    }
+
+    // both
+    const rent = calcForType(postcode, shared.propType, shared.bedrooms, 'rent',
+      shared.bathrooms, shared.balcony, shared.garden, shared.parking);
+    const sale = calcForType(postcode, shared.propType, shared.bedrooms, 'sale',
+      shared.bathrooms, shared.balcony, shared.garden, shared.parking);
+    if (!rent || !sale) return null;
+    return {
+      ...rent,
+      saleLow:  sale.low,
+      saleMid:  sale.mid,
+      saleHigh: sale.high,
+    };
+  }, [allAnswered, postcodeErr, valType, postcode, propType, bedrooms, bathrooms, balcony, garden, parking]);
+
+  const handleYes = () => {
+    // Final postcode validation
+    if (!isOperatingArea(postcode.trim())) {
+      setPostcodeErr('We currently cover Leeds, Manchester, Bradford, and across Yorkshire.');
+      return;
+    }
+    const r = buildResult();
+    if (!r) return;
+    setResult(r);
+    setView('contact');
+  };
+
+  const handleNo = () => {
+    setView('declined');
+  };
+
+  const validateContact = (): boolean => {
     const errors: Partial<LeadInfo> = {};
     if (!lead.firstName.trim()) errors.firstName = 'First name is required.';
     if (!lead.lastName.trim())  errors.lastName  = 'Last name is required.';
-    if (!lead.email.trim())          errors.email = 'Email address is required.';
+    if (!lead.email.trim())     errors.email = 'Email address is required.';
     else if (!isValidEmail(lead.email)) errors.email = 'Please enter a valid email address.';
-    if (!lead.phone.trim())          errors.phone = 'Phone number is required.';
+    if (!lead.phone.trim())     errors.phone = 'Phone number is required.';
     else if (!isValidUKPhone(lead.phone)) errors.phone = 'Please enter a valid UK phone number.';
     setLeadErrors(errors);
     return Object.keys(errors).length === 0;
   };
 
-  const handleNext = useCallback(async () => {
-    if (step === 'contact') {
-      if (!validateLead()) return;
-      setLeadSubmitting(true);
-      try {
-        await submitLead(lead);
-      } finally {
-        setLeadSubmitting(false);
-      }
-      setStep('type');
-      return;
+  const handleSubmitContact = async () => {
+    if (!validateContact() || !result) return;
+    setSubmitting(true);
+    try {
+      await fetch('/api/instant-valuation', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          firstName:     lead.firstName,
+          lastName:      lead.lastName,
+          email:         lead.email,
+          phone:         lead.phone,
+          valuationType: valType,
+          postcode:      postcode.trim().toUpperCase(),
+          area:          result.area,
+          subArea:       result.subArea,
+          propertyType:  propType,
+          bedrooms,
+          bathrooms,
+          balcony,
+          garden,
+          parking,
+          low:           result.low,
+          mid:           result.mid,
+          high:          result.high,
+          saleLow:       result.saleLow,
+          saleMid:       result.saleMid,
+          saleHigh:      result.saleHigh,
+          adjustmentPct: result.adjustmentPct,
+          period:        valType === 'sale' ? '' : '/month',
+        }),
+      });
+      setView('sent');
+    } catch {
+      // Still move to sent — don't block the user
+      setView('sent');
+    } finally {
+      setSubmitting(false);
     }
-    if (step === 'type')     { setStep('postcode');  return; }
-    if (step === 'postcode') {
-      const clean = postcode.trim();
-      if (!clean) { setPostcodeErr('Please enter a postcode.'); return; }
-      if (!isOperatingArea(clean)) {
-        setPostcodeErr(
-          'We currently cover Leeds, Manchester, Bradford, and across Yorkshire. ' +
-          'This postcode appears to be outside our area.'
-        );
-        return;
-      }
-      setPostcodeErr('');
-      setStep('property');
-      return;
-    }
-    if (step === 'property') { setStep('bedrooms'); return; }
-    if (step === 'bedrooms') { setStep('features'); return; }
-    if (step === 'features') { setStep('outdoor'); return; }
-    if (step === 'outdoor')  { runCalculation(); return; }
-  }, [step, postcode, runCalculation, lead]);
-
-  const handleBack = () => {
-    const prev: Partial<Record<Step, Step>> = {
-      type: 'contact', postcode: 'type', property: 'postcode', bedrooms: 'property',
-      features: 'bedrooms', outdoor: 'features', result: 'outdoor',
-    };
-    const p = prev[step];
-    if (p) setStep(p);
   };
 
   const handleReset = () => {
-    setStep('contact'); setLead({ firstName: '', lastName: '', email: '', phone: '' }); setLeadErrors({});
-    setPostcode(''); setPostcodeErr('');
-    setPropType('semi'); setBedrooms(3); setBathrooms(1);
-    setBalcony(false); setGarden('none'); setParking('none');
-    setResult(null); setReportStatus('idle');
+    setView('questions');
+    setValType(''); setPostcode(''); setPostcodeErr('');
+    setPropType(''); setBedrooms(''); setBathrooms('');
+    setBalcony(''); setGarden(''); setParking('');
+    setLead({ firstName: '', lastName: '', email: '', phone: '' });
+    setLeadErrors({});
+    setResult(null);
   };
 
-  // Auto-advance on card click for steps that don't need a "Next" button
-  const handleTypeChange = (v: ValuationType) => { setValType(v); setTimeout(() => setStep('postcode'), 150); };
-  const handlePropChange = (v: PropertyType) => { setPropType(v); setTimeout(() => setStep('bedrooms'), 150); };
-  const handleBedsChange = (v: number)        => { setBedrooms(v); setTimeout(() => setStep('features'), 150); };
+  const updateLead = (field: keyof LeadInfo, val: string) =>
+    setLead((prev) => ({ ...prev, [field]: val }));
 
   return (
     <>
       <style>{`
-        /* ── Layout ──────────────────────────────────────────────────── */
+        /* ── Base ─────────────────────────────────────────────────────── */
+        *, *::before, *::after { box-sizing: border-box; }
         .iv-page {
           min-height: 100vh;
           background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 60%, #0f172a 100%);
           display: flex;
           flex-direction: column;
           align-items: center;
-          padding: 0 1rem 4rem;
+          padding: 0 1rem 5rem;
           font-family: 'Inter', -apple-system, sans-serif;
         }
+        /* ── Header ───────────────────────────────────────────────────── */
         .iv-header {
           width: 100%;
-          max-width: 640px;
+          max-width: 720px;
           display: flex;
           align-items: center;
           justify-content: space-between;
           padding: 1.5rem 0;
         }
         .iv-back-link {
-          color: rgba(255,255,255,0.6);
+          color: rgba(255,255,255,0.55);
           text-decoration: none;
           font-size: 0.875rem;
           display: flex;
@@ -705,319 +300,329 @@ export default function InstantValuationPage() {
           color: #f0c040;
           letter-spacing: 0.02em;
         }
-        /* ── Progress ─────────────────────────────────────────────────── */
-        .iv-progress {
+        /* ── Page title ───────────────────────────────────────────────── */
+        .iv-page-title {
           width: 100%;
-          max-width: 640px;
-          height: 4px;
-          background: rgba(255,255,255,0.1);
-          border-radius: 2px;
-          margin-bottom: 2.5rem;
-          overflow: hidden;
+          max-width: 720px;
+          margin: 0 0 2rem;
         }
-        .iv-progress__bar {
-          height: 100%;
-          background: linear-gradient(90deg, #2563eb, #f0c040);
-          border-radius: 2px;
-          transition: width 0.4s ease;
-        }
-        /* ── Card ─────────────────────────────────────────────────────── */
-        .iv-card-wrap {
-          width: 100%;
-          max-width: 640px;
-          background: rgba(255,255,255,0.05);
-          backdrop-filter: blur(16px);
-          border: 1px solid rgba(255,255,255,0.1);
-          border-radius: 1.25rem;
-          padding: 2.5rem;
-        }
-        /* ── Step ─────────────────────────────────────────────────────── */
-        .iv-step__title {
-          font-size: 1.5rem;
-          font-weight: 700;
+        .iv-page-title h1 {
+          font-size: 2rem;
+          font-weight: 800;
           color: #fff;
           margin: 0 0 0.5rem;
-          line-height: 1.3;
+          line-height: 1.2;
         }
-        .iv-step__sub {
-          color: rgba(255,255,255,0.55);
-          font-size: 0.9375rem;
-          margin: 0 0 1.75rem;
+        .iv-page-title p {
+          color: rgba(255,255,255,0.5);
+          font-size: 1rem;
+          margin: 0;
         }
-        .iv-field-label {
-          color: rgba(255,255,255,0.8);
-          font-size: 0.9375rem;
-          font-weight: 600;
-          margin: 0 0 0.875rem;
+        /* ── Single page card ─────────────────────────────────────────── */
+        .iv-sheet {
+          width: 100%;
+          max-width: 720px;
+          background: rgba(255,255,255,0.04);
+          backdrop-filter: blur(16px);
+          border: 1px solid rgba(255,255,255,0.09);
+          border-radius: 1.5rem;
+          overflow: hidden;
         }
-        /* ── Contact form ─────────────────────────────────────────────── */
-        .iv-form-grid {
-          display: grid;
-          grid-template-columns: 1fr 1fr;
-          gap: 1.25rem;
+        /* ── Section within the sheet ─────────────────────────────────── */
+        .iv-section {
+          padding: 2rem 2.25rem;
+          border-bottom: 1px solid rgba(255,255,255,0.07);
         }
-        .iv-form-field {
-          display: flex;
-          flex-direction: column;
-        }
-        .iv-form-field .iv-field-label {
-          margin: 0 0 0.5rem;
-          font-size: 0.8125rem;
+        .iv-section:last-child { border-bottom: none; }
+        .iv-section__label {
+          font-size: 0.6875rem;
+          font-weight: 700;
+          letter-spacing: 0.1em;
           text-transform: uppercase;
-          letter-spacing: 0.04em;
-          color: rgba(255,255,255,0.55);
+          color: #f0c040;
+          margin: 0 0 0.75rem;
         }
-        .iv-privacy-note {
-          font-size: 0.8125rem;
-          color: rgba(255,255,255,0.4);
-          line-height: 1.6;
-          margin: 1.75rem 0 0;
+        .iv-section__title {
+          font-size: 1.0625rem;
+          font-weight: 600;
+          color: #fff;
+          margin: 0 0 1.25rem;
         }
-        @media (max-width: 480px) {
-          .iv-form-grid { grid-template-columns: 1fr; }
-        }
-        /* ── Selection cards ──────────────────────────────────────────── */
+        /* ── Card grid (valuation type, property type) ────────────────── */
         .iv-cards {
           display: grid;
-          grid-template-columns: 1fr 1fr;
-          gap: 1rem;
+          gap: 0.75rem;
         }
-        .iv-cards--four {
-          grid-template-columns: 1fr 1fr;
-        }
+        .iv-cards--2 { grid-template-columns: 1fr 1fr; }
+        .iv-cards--3 { grid-template-columns: 1fr 1fr 1fr; }
+        .iv-cards--4 { grid-template-columns: 1fr 1fr 1fr 1fr; }
         .iv-card {
           display: flex;
           flex-direction: column;
           align-items: flex-start;
-          gap: 0.4rem;
-          padding: 1.25rem;
-          background: rgba(255,255,255,0.06);
-          border: 1.5px solid rgba(255,255,255,0.1);
+          gap: 0.3rem;
+          padding: 1rem 1.125rem;
+          background: rgba(255,255,255,0.05);
+          border: 1.5px solid rgba(255,255,255,0.09);
           border-radius: 0.875rem;
           cursor: pointer;
           text-align: left;
-          transition: border-color 0.2s, background 0.2s, transform 0.15s;
+          transition: border-color 0.18s, background 0.18s, transform 0.14s;
           color: #fff;
-        }
-        .iv-card--compact {
-          padding: 0.9375rem;
+          width: 100%;
         }
         .iv-card:hover {
-          background: rgba(255,255,255,0.11);
-          border-color: rgba(255,255,255,0.25);
+          background: rgba(255,255,255,0.1);
+          border-color: rgba(255,255,255,0.22);
           transform: translateY(-2px);
         }
         .iv-card--active {
           border-color: #2563eb;
-          background: rgba(37,99,235,0.18);
+          background: rgba(37,99,235,0.16);
         }
-        .iv-card__icon  { font-size: 1.75rem; }
-        .iv-card__label { font-weight: 600; font-size: 1rem; }
-        .iv-card__desc  { font-size: 0.8125rem; color: rgba(255,255,255,0.55); }
-        /* ── Postcode input ───────────────────────────────────────────── */
-        .iv-input {
-          width: 100%;
-          padding: 0.875rem 1rem;
-          background: rgba(255,255,255,0.08);
-          border: 1.5px solid rgba(255,255,255,0.15);
-          border-radius: 0.75rem;
-          color: #fff;
-          font-size: 1.125rem;
-          letter-spacing: 0.05em;
-          font-weight: 600;
-          outline: none;
-          transition: border-color 0.2s;
-          box-sizing: border-box;
-        }
-        .iv-input::placeholder { color: rgba(255,255,255,0.3); font-weight: 400; }
-        .iv-input:focus { border-color: #2563eb; }
-        .iv-input--error { border-color: #ef4444; }
-        .iv-error {
-          color: #fca5a5;
-          font-size: 0.875rem;
-          margin: 0.5rem 0 0;
-        }
-        /* ── Bedroom / bathroom buttons ───────────────────────────────── */
-        .iv-beds {
+        .iv-card__icon  { font-size: 1.5rem; line-height: 1; }
+        .iv-card__label { font-size: 0.9375rem; font-weight: 600; }
+        .iv-card__desc  { font-size: 0.8rem; color: rgba(255,255,255,0.5); }
+        /* ── Pill buttons (bedrooms, bathrooms) ───────────────────────── */
+        .iv-pills {
           display: flex;
           flex-wrap: wrap;
-          gap: 0.75rem;
+          gap: 0.625rem;
         }
-        .iv-bed-btn {
-          padding: 0.75rem 1.25rem;
-          background: rgba(255,255,255,0.06);
-          border: 1.5px solid rgba(255,255,255,0.12);
-          border-radius: 0.625rem;
-          color: #fff;
-          font-size: 0.9375rem;
-          font-weight: 500;
-          cursor: pointer;
-          transition: border-color 0.2s, background 0.2s;
-        }
-        .iv-bed-btn:hover { background: rgba(255,255,255,0.12); border-color: rgba(255,255,255,0.3); }
-        .iv-bed-btn--active { border-color: #2563eb; background: rgba(37,99,235,0.2); }
-        /* ── Footer nav ───────────────────────────────────────────────── */
-        .iv-footer {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          margin-top: 2rem;
-          gap: 1rem;
-        }
-        .iv-btn-back {
-          background: transparent;
-          border: none;
-          color: rgba(255,255,255,0.55);
-          font-size: 0.9375rem;
-          cursor: pointer;
-          padding: 0.5rem 0;
-          transition: color 0.2s;
-        }
-        .iv-btn-back:hover { color: #fff; }
-        .iv-btn-next {
-          background: #2563eb;
-          color: #fff;
-          border: none;
-          border-radius: 0.625rem;
-          padding: 0.875rem 2rem;
-          font-size: 1rem;
-          font-weight: 600;
-          cursor: pointer;
-          transition: background 0.2s, transform 0.15s;
-          margin-left: auto;
-        }
-        .iv-btn-next:hover { background: #1d4ed8; transform: translateY(-1px); }
-        .iv-btn-next:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
-        /* ── Result ───────────────────────────────────────────────────── */
-        .iv-step--result { text-align: center; }
-        .iv-result-badge {
-          display: inline-block;
-          background: rgba(37,99,235,0.2);
-          border: 1px solid rgba(37,99,235,0.4);
-          color: #93c5fd;
-          border-radius: 2rem;
-          padding: 0.375rem 1rem;
-          font-size: 0.8125rem;
-          font-weight: 600;
-          margin-bottom: 1rem;
-          letter-spacing: 0.03em;
-        }
-        .iv-result__postcode {
-          font-size: 2rem;
-          font-weight: 800;
-          color: #fff;
-          margin: 0;
-          letter-spacing: 0.05em;
-        }
-        .iv-result__area {
-          color: rgba(255,255,255,0.55);
-          font-size: 0.9375rem;
-          margin: 0.25rem 0 1.75rem;
-        }
-        .iv-result__range {
-          display: flex;
-          gap: 1rem;
-          margin-bottom: 1.5rem;
-        }
-        .iv-range-item {
-          flex: 1;
-          display: flex;
-          flex-direction: column;
-          gap: 0.25rem;
-          padding: 1rem 0.75rem;
-          border-radius: 0.875rem;
+        .iv-pill {
+          padding: 0.6rem 1.125rem;
           background: rgba(255,255,255,0.05);
-          border: 1px solid rgba(255,255,255,0.08);
-        }
-        .iv-range-item--mid {
-          background: rgba(37,99,235,0.18);
-          border-color: rgba(37,99,235,0.35);
-        }
-        .iv-range-item__label {
-          font-size: 0.75rem;
-          color: rgba(255,255,255,0.45);
+          border: 1.5px solid rgba(255,255,255,0.1);
+          border-radius: 2rem;
+          color: #fff;
+          font-size: 0.9rem;
           font-weight: 500;
-          text-transform: uppercase;
-          letter-spacing: 0.06em;
+          cursor: pointer;
+          transition: border-color 0.18s, background 0.18s;
+          white-space: nowrap;
         }
-        .iv-range-item__value {
-          font-size: 1.25rem;
+        .iv-pill:hover { background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.28); }
+        .iv-pill--active { border-color: #2563eb; background: rgba(37,99,235,0.2); }
+        /* ── Postcode input ───────────────────────────────────────────── */
+        .iv-postcode-wrap { display: flex; gap: 0.75rem; align-items: flex-start; }
+        .iv-input {
+          flex: 1;
+          padding: 0.8125rem 1rem;
+          background: rgba(255,255,255,0.07);
+          border: 1.5px solid rgba(255,255,255,0.13);
+          border-radius: 0.75rem;
+          color: #fff;
+          font-size: 1.0625rem;
+          font-weight: 600;
+          letter-spacing: 0.06em;
+          outline: none;
+          transition: border-color 0.18s;
+          width: 100%;
+        }
+        .iv-input::placeholder { color: rgba(255,255,255,0.28); font-weight: 400; letter-spacing: 0; }
+        .iv-input:focus { border-color: #2563eb; }
+        .iv-input--error { border-color: #ef4444 !important; }
+        .iv-error {
+          color: #fca5a5;
+          font-size: 0.8125rem;
+          margin: 0.5rem 0 0;
+        }
+        /* ── Yes/No gate ──────────────────────────────────────────────── */
+        .iv-gate {
+          padding: 2rem 2.25rem;
+          background: rgba(240,192,64,0.06);
+          border-top: 1px solid rgba(240,192,64,0.18);
+        }
+        .iv-gate__title {
+          font-size: 1.125rem;
           font-weight: 700;
           color: #fff;
+          margin: 0 0 0.375rem;
         }
-        .iv-range-item--mid .iv-range-item__value {
-          font-size: 1.5rem;
-          color: #93c5fd;
-        }
-        .iv-result__adjustment {
-          font-size: 0.8125rem;
-          color: #93c5fd;
-          margin: 0 0 1rem;
-        }
-        .iv-report-status {
+        .iv-gate__sub {
+          font-size: 0.875rem;
+          color: rgba(255,255,255,0.5);
           margin: 0 0 1.25rem;
         }
-        .iv-report-status__text {
-          font-size: 0.8125rem;
-          line-height: 1.6;
-          margin: 0;
-          padding: 0.625rem 0.875rem;
-          border-radius: 0.625rem;
-        }
-        .iv-report-status__text--pending {
-          background: rgba(255,255,255,0.06);
-          color: rgba(255,255,255,0.6);
-        }
-        .iv-report-status__text--success {
-          background: rgba(34,197,94,0.12);
-          color: #86efac;
-          border: 1px solid rgba(34,197,94,0.25);
-        }
-        .iv-report-status__text--error {
-          background: rgba(239,68,68,0.1);
-          color: #fca5a5;
-          border: 1px solid rgba(239,68,68,0.25);
-        }
-        .iv-result__disclaimer {
-          font-size: 0.8125rem;
-          color: rgba(255,255,255,0.4);
-          line-height: 1.6;
-          margin-bottom: 2rem;
-        }
-        .iv-result__ctas {
+        .iv-gate__btns {
           display: flex;
-          flex-direction: column;
           gap: 0.875rem;
         }
-        .iv-cta {
-          display: block;
-          padding: 0.9375rem;
+        .iv-gate__btn {
+          padding: 0.875rem 2.25rem;
           border-radius: 0.75rem;
           font-size: 1rem;
-          font-weight: 600;
-          text-align: center;
-          text-decoration: none;
+          font-weight: 700;
           cursor: pointer;
-          transition: all 0.2s;
+          transition: all 0.18s;
+          border: none;
         }
-        .iv-cta--primary {
+        .iv-gate__btn--yes {
+          background: #2563eb;
+          color: #fff;
+        }
+        .iv-gate__btn--yes:hover { background: #1d4ed8; transform: translateY(-1px); }
+        .iv-gate__btn--no {
+          background: rgba(255,255,255,0.07);
+          color: rgba(255,255,255,0.6);
+          border: 1.5px solid rgba(255,255,255,0.15);
+        }
+        .iv-gate__btn--no:hover { background: rgba(255,255,255,0.12); color: #fff; }
+        .iv-gate--locked {
+          opacity: 0.4;
+          pointer-events: none;
+          user-select: none;
+        }
+        .iv-gate__locked-msg {
+          font-size: 0.875rem;
+          color: rgba(255,255,255,0.4);
+          font-style: italic;
+        }
+        /* ── Contact view ─────────────────────────────────────────────── */
+        .iv-contact-view {
+          width: 100%;
+          max-width: 720px;
+          background: rgba(255,255,255,0.04);
+          backdrop-filter: blur(16px);
+          border: 1px solid rgba(255,255,255,0.09);
+          border-radius: 1.5rem;
+          padding: 2.5rem 2.25rem;
+        }
+        .iv-contact-view__back {
+          background: none;
+          border: none;
+          color: rgba(255,255,255,0.5);
+          font-size: 0.875rem;
+          cursor: pointer;
+          padding: 0;
+          margin-bottom: 1.5rem;
+          transition: color 0.18s;
+          display: flex;
+          align-items: center;
+          gap: 0.35rem;
+        }
+        .iv-contact-view__back:hover { color: #fff; }
+        .iv-contact-view h2 {
+          font-size: 1.625rem;
+          font-weight: 800;
+          color: #fff;
+          margin: 0 0 0.5rem;
+        }
+        .iv-contact-view p.sub {
+          color: rgba(255,255,255,0.5);
+          font-size: 0.9375rem;
+          margin: 0 0 2rem;
+        }
+        .iv-form-grid {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 1.125rem;
+        }
+        .iv-form-field {
+          display: flex;
+          flex-direction: column;
+          gap: 0.4rem;
+        }
+        .iv-form-field label {
+          font-size: 0.75rem;
+          font-weight: 700;
+          letter-spacing: 0.07em;
+          text-transform: uppercase;
+          color: rgba(255,255,255,0.45);
+        }
+        .iv-form-field .iv-input {
+          font-size: 1rem;
+          font-weight: 500;
+          letter-spacing: 0;
+        }
+        .iv-submit-btn {
+          width: 100%;
+          margin-top: 1.75rem;
+          padding: 1rem;
+          background: #2563eb;
+          color: #fff;
+          border: none;
+          border-radius: 0.875rem;
+          font-size: 1.0625rem;
+          font-weight: 700;
+          cursor: pointer;
+          transition: background 0.18s, transform 0.14s;
+        }
+        .iv-submit-btn:hover:not(:disabled) { background: #1d4ed8; transform: translateY(-1px); }
+        .iv-submit-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+        .iv-privacy {
+          font-size: 0.8rem;
+          color: rgba(255,255,255,0.35);
+          line-height: 1.6;
+          margin: 1rem 0 0;
+          text-align: center;
+        }
+        /* ── Declined / Sent views ────────────────────────────────────── */
+        .iv-outcome {
+          width: 100%;
+          max-width: 720px;
+          background: rgba(255,255,255,0.04);
+          backdrop-filter: blur(16px);
+          border: 1px solid rgba(255,255,255,0.09);
+          border-radius: 1.5rem;
+          padding: 3.5rem 2.25rem;
+          text-align: center;
+        }
+        .iv-outcome__icon { font-size: 3rem; margin-bottom: 1rem; }
+        .iv-outcome h2 {
+          font-size: 1.625rem;
+          font-weight: 800;
+          color: #fff;
+          margin: 0 0 0.75rem;
+        }
+        .iv-outcome p {
+          color: rgba(255,255,255,0.55);
+          font-size: 0.9375rem;
+          line-height: 1.7;
+          margin: 0 0 2rem;
+          max-width: 460px;
+          margin-left: auto;
+          margin-right: auto;
+        }
+        .iv-outcome__links {
+          display: flex;
+          gap: 0.875rem;
+          justify-content: center;
+          flex-wrap: wrap;
+        }
+        .iv-outcome__btn {
+          padding: 0.875rem 1.75rem;
+          border-radius: 0.75rem;
+          font-size: 0.9375rem;
+          font-weight: 600;
+          cursor: pointer;
+          text-decoration: none;
+          transition: all 0.18s;
+        }
+        .iv-outcome__btn--primary {
           background: #2563eb;
           color: #fff;
           border: none;
         }
-        .iv-cta--primary:hover { background: #1d4ed8; }
-        .iv-cta--outline {
+        .iv-outcome__btn--primary:hover { background: #1d4ed8; }
+        .iv-outcome__btn--outline {
           background: transparent;
-          color: rgba(255,255,255,0.7);
+          color: rgba(255,255,255,0.65);
           border: 1.5px solid rgba(255,255,255,0.2);
         }
-        .iv-cta--outline:hover { border-color: rgba(255,255,255,0.5); color: #fff; }
+        .iv-outcome__btn--outline:hover { color: #fff; border-color: rgba(255,255,255,0.45); }
         /* ── Responsive ───────────────────────────────────────────────── */
-        @media (max-width: 480px) {
-          .iv-card-wrap { padding: 1.75rem 1.25rem; }
-          .iv-step__title { font-size: 1.25rem; }
-          .iv-result__range { flex-direction: column; }
-          .iv-cards { grid-template-columns: 1fr; }
+        @media (max-width: 600px) {
+          .iv-section { padding: 1.5rem 1.25rem; }
+          .iv-cards--3 { grid-template-columns: 1fr 1fr; }
+          .iv-cards--4 { grid-template-columns: 1fr 1fr; }
+          .iv-form-grid { grid-template-columns: 1fr; }
+          .iv-contact-view { padding: 2rem 1.25rem; }
+          .iv-gate { padding: 1.5rem 1.25rem; }
+          .iv-gate__btns { flex-direction: column; }
+          .iv-gate__btn { width: 100%; text-align: center; }
+          .iv-page-title h1 { font-size: 1.5rem; }
+          .iv-outcome { padding: 2.5rem 1.25rem; }
         }
       `}</style>
 
@@ -1027,71 +632,324 @@ export default function InstantValuationPage() {
           <span className="iv-logo-text">House of Lettings</span>
         </header>
 
-        <ProgressBar current={step} />
+        {/* ── QUESTIONS VIEW ── */}
+        {view === 'questions' && (
+          <>
+            <div className="iv-page-title">
+              <h1>Instant Property Valuation</h1>
+              <p>Answer the questions below and we'll send your personalised report straight to your inbox.</p>
+            </div>
 
-        <div className="iv-card-wrap">
-          {step === 'contact' && (
-            <>
-              <StepContact value={lead} onChange={setLead} errors={leadErrors} />
-              <div className="iv-footer">
-                <span />
-                <button className="iv-btn-next" onClick={handleNext} disabled={leadSubmitting}>
-                  {leadSubmitting ? 'Please wait…' : 'Continue →'}
-                </button>
+            <div className="iv-sheet">
+
+              {/* 1 — Valuation type */}
+              <div className="iv-section">
+                <p className="iv-section__label">Step 1</p>
+                <p className="iv-section__title">What type of valuation do you need?</p>
+                <div className="iv-cards iv-cards--3">
+                  {([
+                    { id: 'let',  label: 'Let',          icon: '🏠', desc: 'Monthly rental estimate' },
+                    { id: 'sale', label: 'Sale',          icon: '🏷️', desc: 'Property sale price estimate' },
+                    { id: 'both', label: 'Let & Sale',    icon: '📊', desc: 'Both rental and sale estimates' },
+                  ] as { id: ValuationType; label: string; icon: string; desc: string }[]).map(({ id, label, icon, desc }) => (
+                    <button
+                      key={id}
+                      onClick={() => setValType(id)}
+                      className={`iv-card ${valType === id ? 'iv-card--active' : ''}`}
+                    >
+                      <span className="iv-card__icon">{icon}</span>
+                      <span className="iv-card__label">{label}</span>
+                      <span className="iv-card__desc">{desc}</span>
+                    </button>
+                  ))}
+                </div>
               </div>
-            </>
-          )}
-          {step === 'type' && (
-            <StepValuationType value={valType} onChange={handleTypeChange} />
-          )}
-          {step === 'postcode' && (
-            <>
-              <StepPostcode value={postcode} onChange={setPostcode} error={postcodeErr} />
-              <div className="iv-footer">
-                <button className="iv-btn-back" onClick={handleBack}>← Back</button>
-                <button className="iv-btn-next" onClick={handleNext}>Continue →</button>
+
+              {/* 2 — Postcode */}
+              <div className="iv-section">
+                <p className="iv-section__label">Step 2</p>
+                <p className="iv-section__title">What's the property postcode?</p>
+                <input
+                  type="text"
+                  className={`iv-input ${postcodeErr ? 'iv-input--error' : ''}`}
+                  placeholder="e.g. LS6 1AA"
+                  value={postcode}
+                  onChange={(e) => setPostcode(e.target.value.toUpperCase())}
+                  onBlur={validatePostcode}
+                  maxLength={8}
+                />
+                {postcodeErr && <p className="iv-error">{postcodeErr}</p>}
               </div>
-            </>
-          )}
-          {step === 'property' && (
-            <StepPropertyType value={propType} onChange={handlePropChange} />
-          )}
-          {step === 'bedrooms' && (
-            <StepBedrooms value={bedrooms} onChange={handleBedsChange} />
-          )}
-          {step === 'features' && (
-            <>
-              <StepFeatures
-                bathrooms={bathrooms} onBathrooms={setBathrooms}
-                balcony={balcony} onBalcony={setBalcony}
-              />
-              <div className="iv-footer">
-                <button className="iv-btn-back" onClick={handleBack}>← Back</button>
-                <button className="iv-btn-next" onClick={handleNext}>Continue →</button>
+
+              {/* 3 — Property type */}
+              <div className="iv-section">
+                <p className="iv-section__label">Step 3</p>
+                <p className="iv-section__title">What type of property is it?</p>
+                <div className="iv-cards iv-cards--4">
+                  {([
+                    { id: 'flat',     label: 'Flat / Apartment', icon: '🏢' },
+                    { id: 'terraced', label: 'Terraced',          icon: '🏘️' },
+                    { id: 'semi',     label: 'Semi-Detached',     icon: '🏡' },
+                    { id: 'detached', label: 'Detached',           icon: '🏠' },
+                  ] as { id: PropertyType; label: string; icon: string }[]).map(({ id, label, icon }) => (
+                    <button
+                      key={id}
+                      onClick={() => setPropType(id)}
+                      className={`iv-card ${propType === id ? 'iv-card--active' : ''}`}
+                    >
+                      <span className="iv-card__icon">{icon}</span>
+                      <span className="iv-card__label">{label}</span>
+                    </button>
+                  ))}
+                </div>
               </div>
-            </>
-          )}
-          {step === 'outdoor' && (
-            <>
-              <StepOutdoor
-                garden={garden} onGarden={setGarden}
-                parking={parking} onParking={setParking}
-              />
-              <div className="iv-footer">
-                <button className="iv-btn-back" onClick={handleBack}>← Back</button>
-                <button className="iv-btn-next" onClick={handleNext}>Get my estimate →</button>
+
+              {/* 4 — Bedrooms */}
+              <div className="iv-section">
+                <p className="iv-section__label">Step 4</p>
+                <p className="iv-section__title">How many bedrooms?</p>
+                <div className="iv-pills">
+                  {[0, 1, 2, 3, 4, 5, 6].map((n) => (
+                    <button
+                      key={n}
+                      onClick={() => setBedrooms(n)}
+                      className={`iv-pill ${bedrooms === n ? 'iv-pill--active' : ''}`}
+                    >
+                      {n === 0 ? 'Studio' : `${n} bed${n > 1 ? 's' : ''}`}
+                    </button>
+                  ))}
+                </div>
               </div>
-            </>
-          )}
-          {step === 'result' && result && (
-            <>
-              <StepResult result={result} type={valType} postcode={postcode} onReset={handleReset} reportStatus={reportStatus} />
-              <div className="iv-footer">
-                <button className="iv-btn-back" onClick={handleBack}>← Adjust details</button>
+
+              {/* 5 — Bathrooms */}
+              <div className="iv-section">
+                <p className="iv-section__label">Step 5</p>
+                <p className="iv-section__title">How many bathrooms?</p>
+                <div className="iv-pills">
+                  {[1, 2, 3, 4].map((n) => (
+                    <button
+                      key={n}
+                      onClick={() => setBathrooms(n)}
+                      className={`iv-pill ${bathrooms === n ? 'iv-pill--active' : ''}`}
+                    >
+                      {n === 4 ? '4+' : n} bath{n > 1 ? 's' : ''}
+                    </button>
+                  ))}
+                </div>
               </div>
-            </>
-          )}
-        </div>
+
+              {/* 6 — Balcony */}
+              <div className="iv-section">
+                <p className="iv-section__label">Step 6</p>
+                <p className="iv-section__title">Does the property have a balcony?</p>
+                <div className="iv-cards iv-cards--2">
+                  {([
+                    { val: true,  label: 'Yes', icon: '🌇' },
+                    { val: false, label: 'No',  icon: '🚫' },
+                  ] as { val: boolean; label: string; icon: string }[]).map(({ val, label, icon }) => (
+                    <button
+                      key={String(val)}
+                      onClick={() => setBalcony(val)}
+                      className={`iv-card ${balcony === val ? 'iv-card--active' : ''}`}
+                    >
+                      <span className="iv-card__icon">{icon}</span>
+                      <span className="iv-card__label">{label}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* 7 — Garden */}
+              <div className="iv-section">
+                <p className="iv-section__label">Step 7</p>
+                <p className="iv-section__title">What type of garden does it have?</p>
+                <div className="iv-cards iv-cards--4">
+                  {([
+                    { id: 'private', label: 'Private',          icon: '🌳' },
+                    { id: 'shared',  label: 'Shared / Communal', icon: '🌿' },
+                    { id: 'patio',   label: 'Patio / Courtyard', icon: '🪴' },
+                    { id: 'none',    label: 'No Garden',          icon: '🚫' },
+                  ] as { id: GardenType; label: string; icon: string }[]).map(({ id, label, icon }) => (
+                    <button
+                      key={id}
+                      onClick={() => setGarden(id)}
+                      className={`iv-card ${garden === id ? 'iv-card--active' : ''}`}
+                    >
+                      <span className="iv-card__icon">{icon}</span>
+                      <span className="iv-card__label">{label}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* 8 — Parking */}
+              <div className="iv-section">
+                <p className="iv-section__label">Step 8</p>
+                <p className="iv-section__title">What type of parking is available?</p>
+                <div className="iv-cards iv-cards--3">
+                  {([
+                    { id: 'garage',    label: 'Garage',                  icon: '🚪' },
+                    { id: 'driveway',  label: 'Driveway (off-street)',    icon: '🛣️' },
+                    { id: 'allocated', label: 'Allocated Space',           icon: '🅿️' },
+                    { id: 'permit',    label: 'Permit Parking',            icon: '🎫' },
+                    { id: 'on_street', label: 'On-Street',                 icon: '🚗' },
+                    { id: 'none',      label: 'No Parking',               icon: '🚫' },
+                  ] as { id: ParkingType; label: string; icon: string }[]).map(({ id, label, icon }) => (
+                    <button
+                      key={id}
+                      onClick={() => setParking(id)}
+                      className={`iv-card ${parking === id ? 'iv-card--active' : ''}`}
+                    >
+                      <span className="iv-card__icon">{icon}</span>
+                      <span className="iv-card__label">{label}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* ── Yes / No gate ── */}
+              <div className={`iv-gate ${!allAnswered || postcodeErr ? 'iv-gate--locked' : ''}`}>
+                {!allAnswered ? (
+                  <p className="iv-gate__locked-msg">Complete all questions above to receive your valuation.</p>
+                ) : (
+                  <>
+                    <p className="iv-gate__title">Would you like to receive your instant valuation?</p>
+                    <p className="iv-gate__sub">Your personalised report will be emailed to you immediately.</p>
+                    <div className="iv-gate__btns">
+                      <button className="iv-gate__btn iv-gate__btn--yes" onClick={handleYes}>
+                        ✅ Yes, send my valuation
+                      </button>
+                      <button className="iv-gate__btn iv-gate__btn--no" onClick={handleNo}>
+                        No thanks
+                      </button>
+                    </div>
+                  </>
+                )}
+              </div>
+
+            </div>
+          </>
+        )}
+
+        {/* ── CONTACT VIEW ── */}
+        {view === 'contact' && (
+          <div className="iv-contact-view">
+            <button className="iv-contact-view__back" onClick={() => setView('questions')}>
+              ← Back to questions
+            </button>
+            <h2>Just a few details</h2>
+            <p className="sub">We'll email your valuation report straight away. No spam, no obligation.</p>
+
+            <div className="iv-form-grid">
+              <div className="iv-form-field">
+                <label htmlFor="iv-fn">First name</label>
+                <input
+                  id="iv-fn"
+                  type="text"
+                  className={`iv-input ${leadErrors.firstName ? 'iv-input--error' : ''}`}
+                  placeholder="Jane"
+                  value={lead.firstName}
+                  onChange={(e) => updateLead('firstName', e.target.value)}
+                  autoFocus
+                />
+                {leadErrors.firstName && <p className="iv-error">{leadErrors.firstName}</p>}
+              </div>
+
+              <div className="iv-form-field">
+                <label htmlFor="iv-ln">Last name</label>
+                <input
+                  id="iv-ln"
+                  type="text"
+                  className={`iv-input ${leadErrors.lastName ? 'iv-input--error' : ''}`}
+                  placeholder="Smith"
+                  value={lead.lastName}
+                  onChange={(e) => updateLead('lastName', e.target.value)}
+                />
+                {leadErrors.lastName && <p className="iv-error">{leadErrors.lastName}</p>}
+              </div>
+
+              <div className="iv-form-field">
+                <label htmlFor="iv-em">Email address</label>
+                <input
+                  id="iv-em"
+                  type="email"
+                  className={`iv-input ${leadErrors.email ? 'iv-input--error' : ''}`}
+                  placeholder="jane.smith@email.com"
+                  value={lead.email}
+                  onChange={(e) => updateLead('email', e.target.value)}
+                />
+                {leadErrors.email && <p className="iv-error">{leadErrors.email}</p>}
+              </div>
+
+              <div className="iv-form-field">
+                <label htmlFor="iv-ph">Phone number</label>
+                <input
+                  id="iv-ph"
+                  type="tel"
+                  className={`iv-input ${leadErrors.phone ? 'iv-input--error' : ''}`}
+                  placeholder="07123 456789"
+                  value={lead.phone}
+                  onChange={(e) => updateLead('phone', e.target.value)}
+                />
+                {leadErrors.phone && <p className="iv-error">{leadErrors.phone}</p>}
+              </div>
+            </div>
+
+            <button
+              className="iv-submit-btn"
+              onClick={handleSubmitContact}
+              disabled={submitting}
+            >
+              {submitting ? 'Sending your report…' : 'Send my valuation report →'}
+            </button>
+
+            <p className="iv-privacy">
+              We only use your details to send your valuation and follow up on your enquiry.
+              We never share your information with third parties.
+            </p>
+          </div>
+        )}
+
+        {/* ── DECLINED VIEW ── */}
+        {view === 'declined' && (
+          <div className="iv-outcome">
+            <div className="iv-outcome__icon">👋</div>
+            <h2>No problem at all</h2>
+            <p>
+              If you change your mind or have any questions about your property,
+              our team is always happy to help — no pressure, no obligation.
+            </p>
+            <div className="iv-outcome__links">
+              <Link href="/landlords" className="iv-outcome__btn iv-outcome__btn--primary">
+                Speak to our team
+              </Link>
+              <button className="iv-outcome__btn iv-outcome__btn--outline" onClick={handleReset}>
+                Start again
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* ── SENT VIEW ── */}
+        {view === 'sent' && (
+          <div className="iv-outcome">
+            <div className="iv-outcome__icon">📬</div>
+            <h2>Your report is on its way</h2>
+            <p>
+              We've emailed your personalised valuation report to <strong style={{ color: '#fff' }}>{lead.email}</strong>.
+              Check your inbox — it should arrive within a few minutes.
+            </p>
+            <div className="iv-outcome__links">
+              <Link href="/landlords" className="iv-outcome__btn iv-outcome__btn--primary">
+                Book a free professional valuation
+              </Link>
+              <button className="iv-outcome__btn iv-outcome__btn--outline" onClick={handleReset}>
+                Value another property
+              </button>
+            </div>
+          </div>
+        )}
+
       </div>
     </>
   );

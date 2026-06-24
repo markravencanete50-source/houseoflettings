@@ -68,7 +68,6 @@ function HeroCycler() {
 
 const ValuationModal = lazy(() => import('@/components/ValuationModal'));
 const TenantEnquiryModal = lazy(() => import('@/components/property/TenantEnquiryModal'));
-const InstantValuationModal = lazy(() => import('@/components/valuation/InstantValuationModal'));
 
 // ── INLINE VALUATION BUTTON ───────────────────────────────────────────────────
 function ValuationInlineButton() {
@@ -124,24 +123,6 @@ function BookViewingInlineButton() {
             propertyPrice={0}
           />
         )}
-      </Suspense>
-    </>
-  );
-}
-
-// ── INLINE INSTANT VALUATION BUTTON (HERO) ────────────────────────────────────
-function InstantValuationInlineButton() {
-  const [open, setOpen] = useState(false);
-  return (
-    <>
-      <button
-        onClick={() => setOpen(true)}
-        className="hero-btn hero-btn-outline"
-      >
-        Instant Valuation
-      </button>
-      <Suspense fallback={null}>
-        {open && <InstantValuationModal isOpen={open} onClose={() => setOpen(false)} />}
       </Suspense>
     </>
   );
@@ -653,7 +634,9 @@ export default function HomePage() {
             <Link href="/landlords" className="hero-btn">
               Book a Valuation
             </Link>
-            <InstantValuationInlineButton />
+            <Link href="/instant-valuation" className="hero-btn hero-btn-outline">
+              Instant Valuation
+            </Link>
           </div>
         </div>
       </section>

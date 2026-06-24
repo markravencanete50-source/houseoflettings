@@ -626,51 +626,6 @@ export default function HomePage() {
               Book a Valuation
             </Link>
           </div>
-
-          <style>{`
-            .hero-btns-secondary {
-              display: flex; gap: 12px; flex-wrap: wrap;
-              justify-content: center; margin-top: 16px;
-            }
-            .hero-btn-gold {
-              padding: 14px 28px;
-              min-width: 200px; text-align: center;
-              background: #b8924a; color: #fff; border: none;
-              border-radius: 6px; font-size: 13px; font-weight: 700;
-              letter-spacing: 0.5px; text-transform: uppercase;
-              text-decoration: none; font-family: 'Poppins', sans-serif;
-              white-space: nowrap; display: inline-block;
-              cursor: pointer; transition: background 0.2s;
-            }
-            .hero-btn-gold:hover { background: #a17f3e; }
-            .hero-btn-outline {
-              padding: 14px 28px;
-              min-width: 200px; text-align: center;
-              background: transparent; color: #fff;
-              border: 1px solid #fff;
-              border-radius: 6px; font-size: 13px; font-weight: 700;
-              letter-spacing: 0.5px; text-transform: uppercase;
-              text-decoration: none; font-family: 'Poppins', sans-serif;
-              white-space: nowrap; display: inline-block;
-              cursor: pointer; transition: background 0.2s;
-            }
-            .hero-btn-outline:hover { background: rgba(255,255,255,0.1); }
-            @media (max-width: 480px) {
-              .hero-btns-secondary { flex-direction: column; gap: 10px; align-items: stretch; }
-              .hero-btn-gold, .hero-btn-outline {
-                padding: 14px 18px; font-size: 12px;
-                text-align: center; width: 100%;
-              }
-            }
-          `}</style>
-          <div className="hero-btns-secondary">
-            <Link href="/instant-valuation" className="hero-btn-gold">
-              Instant Rent Valuation
-            </Link>
-            <Link href="/free-assessment" className="hero-btn-outline">
-              Get My Free Assessment
-            </Link>
-          </div>
         </div>
       </section>
 

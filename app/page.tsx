@@ -68,6 +68,7 @@ function HeroCycler() {
 
 const ValuationModal = lazy(() => import('@/components/ValuationModal'));
 const TenantEnquiryModal = lazy(() => import('@/components/property/TenantEnquiryModal'));
+const InstantValuationModal = lazy(() => import('@/components/valuation/InstantValuationModal'));
 
 // ── INLINE VALUATION BUTTON ───────────────────────────────────────────────────
 function ValuationInlineButton() {
@@ -123,6 +124,24 @@ function BookViewingInlineButton() {
             propertyPrice={0}
           />
         )}
+      </Suspense>
+    </>
+  );
+}
+
+// ── INLINE INSTANT VALUATION BUTTON (HERO) ────────────────────────────────────
+function InstantValuationInlineButton() {
+  const [open, setOpen] = useState(false);
+  return (
+    <>
+      <button
+        onClick={() => setOpen(true)}
+        className="hero-btn hero-btn-outline"
+      >
+        Instant Valuation
+      </button>
+      <Suspense fallback={null}>
+        {open && <InstantValuationModal isOpen={open} onClose={() => setOpen(false)} />}
       </Suspense>
     </>
   );
@@ -607,9 +626,18 @@ export default function HomePage() {
               letter-spacing: 0.5px; text-transform: uppercase;
               text-decoration: none; font-family: 'Poppins', sans-serif;
               white-space: nowrap; display: inline-block;
-              cursor: pointer; transition: background 0.2s;
+              cursor: pointer; transition: background 0.2s, border-color 0.2s, color 0.2s;
             }
             .hero-btn:hover { background: #1d4ed8; }
+            .hero-btn-outline {
+              background: transparent;
+              border: 1px solid rgba(255,255,255,0.55);
+              color: #fff;
+            }
+            .hero-btn-outline:hover {
+              background: rgba(255,255,255,0.1);
+              border-color: rgba(255,255,255,0.85);
+            }
             @media (max-width: 480px) {
               .hero-btns { flex-direction: column; gap: 10px; align-items: stretch; }
               .hero-btn {
@@ -625,6 +653,7 @@ export default function HomePage() {
             <Link href="/landlords" className="hero-btn">
               Book a Valuation
             </Link>
+            <InstantValuationInlineButton />
           </div>
         </div>
       </section>

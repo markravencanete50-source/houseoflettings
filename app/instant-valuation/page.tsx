@@ -1,0 +1,625 @@
+'use client';
+
+import { useState, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
+import Link from 'next/link';
+import { lookupPostcode, isOperatingArea, TIER_PRICING_2026 } from '@/lib/valuation/operatingAreaPostcodes';
+
+// ─── Types ──────────────────────────────────────────────────────────────────
+type ValuationType = 'rent' | 'sale';
+type PropertyType  = 'flat' | 'terraced' | 'semi' | 'detached';
+type Step          = 'type' | 'postcode' | 'property' | 'bedrooms' | 'result';
+
+interface ValuationResult {
+  low:  number;
+  mid:  number;
+  high: number;
+  area: string;
+  subArea: string;
+  currency: string;
+  period: string;
+}
+
+// ─── Bedroom multipliers ────────────────────────────────────────────────────
+const BEDROOM_MULT: Record<number, number> = {
+  0: 0.55, 1: 0.70, 2: 0.88, 3: 1.00, 4: 1.22, 5: 1.45, 6: 1.65,
+};
+
+// ─── Property type multipliers ──────────────────────────────────────────────
+const PROP_SALE_MULT: Record<PropertyType, number> = {
+  flat: 0.72, terraced: 0.88, semi: 1.00, detached: 1.32,
+};
+const PROP_RENT_MULT: Record<PropertyType, number> = {
+  flat: 0.82, terraced: 0.92, semi: 1.00, detached: 1.18,
+};
+
+function calculate(
+  postcode: string,
+  propType: PropertyType,
+  bedrooms: number,
+  valType: ValuationType,
+): ValuationResult | null {
+  const info = lookupPostcode(postcode);
+  if (!info) return null;
+
+  const base = valType === 'rent'
+    ? TIER_PRICING_2026[info.tier].avgRent
+    : TIER_PRICING_2026[info.tier].avgSale;
+
+  const propMult = valType === 'rent' ? PROP_RENT_MULT[propType] : PROP_SALE_MULT[propType];
+  const bedMult  = BEDROOM_MULT[Math.min(Math.max(bedrooms, 0), 6)] ?? 1.0;
+
+  const mid  = Math.round((base * propMult * bedMult) / 500) * 500;
+  const low  = Math.round(mid * 0.92 / 500) * 500;
+  const high = Math.round(mid * 1.08 / 500) * 500;
+
+  return {
+    low, mid, high,
+    area: info.area,
+    subArea: info.subArea,
+    currency: valType === 'rent' ? '£' : '£',
+    period: valType === 'rent' ? '/month' : '',
+  };
+}
+
+// ─── Formatting ─────────────────────────────────────────────────────────────
+function fmt(n: number) {
+  return n >= 1000 ? `£${(n / 1000).toFixed(0)}k` : `£${n}`;
+}
+function fmtFull(n: number) {
+  return `£${n.toLocaleString('en-GB')}`;
+}
+
+// ─── Step components ─────────────────────────────────────────────────────────
+
+function StepValuationType({
+  value, onChange,
+}: { value: ValuationType; onChange: (v: ValuationType) => void }) {
+  return (
+    <div className="iv-step">
+      <h2 className="iv-step__title">What would you like to value?</h2>
+      <p className="iv-step__sub">Select the type of valuation you need</p>
+      <div className="iv-cards">
+        {(['rent', 'sale'] as ValuationType[]).map((t) => (
+          <button
+            key={t}
+            onClick={() => onChange(t)}
+            className={`iv-card ${value === t ? 'iv-card--active' : ''}`}
+          >
+            <span className="iv-card__icon">{t === 'rent' ? '🏠' : '🏷️'}</span>
+            <span className="iv-card__label">{t === 'rent' ? 'Rental Valuation' : 'Sale Valuation'}</span>
+            <span className="iv-card__desc">
+              {t === 'rent' ? 'Find out your monthly rental value' : 'Estimate your property sale price'}
+            </span>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function StepPostcode({
+  value, onChange, error,
+}: { value: string; onChange: (v: string) => void; error: string }) {
+  return (
+    <div className="iv-step">
+      <h2 className="iv-step__title">What's the property postcode?</h2>
+      <p className="iv-step__sub">We cover Leeds, Manchester, Bradford, and across Yorkshire</p>
+      <input
+        type="text"
+        className={`iv-input ${error ? 'iv-input--error' : ''}`}
+        placeholder="e.g. LS6 1AA"
+        value={value}
+        onChange={(e) => onChange(e.target.value.toUpperCase())}
+        maxLength={8}
+        autoFocus
+      />
+      {error && <p className="iv-error">{error}</p>}
+    </div>
+  );
+}
+
+function StepPropertyType({
+  value, onChange,
+}: { value: PropertyType; onChange: (v: PropertyType) => void }) {
+  const types: { id: PropertyType; label: string; icon: string }[] = [
+    { id: 'flat',      label: 'Flat / Apartment', icon: '🏢' },
+    { id: 'terraced',  label: 'Terraced House',   icon: '🏘️' },
+    { id: 'semi',      label: 'Semi-Detached',    icon: '🏡' },
+    { id: 'detached',  label: 'Detached House',   icon: '🏠' },
+  ];
+  return (
+    <div className="iv-step">
+      <h2 className="iv-step__title">What type of property is it?</h2>
+      <p className="iv-step__sub">Select the option that best describes the property</p>
+      <div className="iv-cards iv-cards--four">
+        {types.map(({ id, label, icon }) => (
+          <button
+            key={id}
+            onClick={() => onChange(id)}
+            className={`iv-card ${value === id ? 'iv-card--active' : ''}`}
+          >
+            <span className="iv-card__icon">{icon}</span>
+            <span className="iv-card__label">{label}</span>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function StepBedrooms({
+  value, onChange,
+}: { value: number; onChange: (v: number) => void }) {
+  return (
+    <div className="iv-step">
+      <h2 className="iv-step__title">How many bedrooms?</h2>
+      <p className="iv-step__sub">Include all habitable rooms used as bedrooms</p>
+      <div className="iv-beds">
+        {[0, 1, 2, 3, 4, 5, 6].map((n) => (
+          <button
+            key={n}
+            onClick={() => onChange(n)}
+            className={`iv-bed-btn ${value === n ? 'iv-bed-btn--active' : ''}`}
+          >
+            {n === 0 ? 'Studio' : `${n} bed${n > 1 ? 's' : ''}`}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function StepResult({
+  result, type, postcode, onReset,
+}: {
+  result: ValuationResult;
+  type: ValuationType;
+  postcode: string;
+  onReset: () => void;
+}) {
+  return (
+    <div className="iv-step iv-step--result">
+      <div className="iv-result-badge">
+        {type === 'rent' ? '🏠 Rental Estimate' : '🏷️ Sale Estimate'}
+      </div>
+      <h2 className="iv-result__postcode">{postcode.toUpperCase()}</h2>
+      <p className="iv-result__area">{result.subArea}, {result.area}</p>
+
+      <div className="iv-result__range">
+        <div className="iv-range-item iv-range-item--low">
+          <span className="iv-range-item__label">Low</span>
+          <span className="iv-range-item__value">{fmtFull(result.low)}{result.period}</span>
+        </div>
+        <div className="iv-range-item iv-range-item--mid">
+          <span className="iv-range-item__label">Estimate</span>
+          <span className="iv-range-item__value">{fmtFull(result.mid)}{result.period}</span>
+        </div>
+        <div className="iv-range-item iv-range-item--high">
+          <span className="iv-range-item__label">High</span>
+          <span className="iv-range-item__value">{fmtFull(result.high)}{result.period}</span>
+        </div>
+      </div>
+
+      <p className="iv-result__disclaimer">
+        This estimate is based on 2026 regional market data for the{' '}
+        <strong>{result.subArea}</strong> area. It is indicative only and not a
+        formal valuation. Actual values may vary based on property condition,
+        fixtures, and current market conditions.
+      </p>
+
+      <div className="iv-result__ctas">
+        <Link href="/landlords" className="iv-cta iv-cta--primary">
+          Book a Free Professional Valuation
+        </Link>
+        <button onClick={onReset} className="iv-cta iv-cta--outline">
+          Value Another Property
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ─── Progress bar ────────────────────────────────────────────────────────────
+const STEPS: Step[] = ['type', 'postcode', 'property', 'bedrooms', 'result'];
+
+function ProgressBar({ current }: { current: Step }) {
+  const idx = STEPS.indexOf(current);
+  const pct = (idx / (STEPS.length - 1)) * 100;
+  return (
+    <div className="iv-progress">
+      <div className="iv-progress__bar" style={{ width: `${pct}%` }} />
+    </div>
+  );
+}
+
+// ─── Main page component ─────────────────────────────────────────────────────
+export default function InstantValuationPage() {
+  const [step,       setStep]      = useState<Step>('type');
+  const [valType,    setValType]   = useState<ValuationType>('rent');
+  const [postcode,   setPostcode]  = useState('');
+  const [postcodeErr,setPostcodeErr]= useState('');
+  const [propType,   setPropType]  = useState<PropertyType>('semi');
+  const [bedrooms,   setBedrooms]  = useState(3);
+  const [result,     setResult]    = useState<ValuationResult | null>(null);
+
+  const handleNext = useCallback(() => {
+    if (step === 'type')     { setStep('postcode');  return; }
+    if (step === 'postcode') {
+      const clean = postcode.trim();
+      if (!clean) { setPostcodeErr('Please enter a postcode.'); return; }
+      if (!isOperatingArea(clean)) {
+        setPostcodeErr(
+          'We currently cover Leeds, Manchester, Bradford, and across Yorkshire. ' +
+          'This postcode appears to be outside our area.'
+        );
+        return;
+      }
+      setPostcodeErr('');
+      setStep('property');
+      return;
+    }
+    if (step === 'property') { setStep('bedrooms'); return; }
+    if (step === 'bedrooms') {
+      const r = calculate(postcode, propType, bedrooms, valType);
+      if (r) { setResult(r); setStep('result'); }
+      return;
+    }
+  }, [step, postcode, propType, bedrooms, valType]);
+
+  const handleBack = () => {
+    const prev: Partial<Record<Step, Step>> = {
+      postcode: 'type', property: 'postcode', bedrooms: 'property', result: 'bedrooms',
+    };
+    const p = prev[step];
+    if (p) setStep(p);
+  };
+
+  const handleReset = () => {
+    setStep('type'); setPostcode(''); setPostcodeErr('');
+    setPropType('semi'); setBedrooms(3); setResult(null);
+  };
+
+  // Auto-advance on card click for steps that don't need a "Next" button
+  const handleTypeChange = (v: ValuationType) => { setValType(v); setTimeout(() => setStep('postcode'), 150); };
+  const handlePropChange = (v: PropertyType) => { setPropType(v); setTimeout(() => setStep('bedrooms'), 150); };
+  const handleBedsChange = (v: number)        => { setBedrooms(v); setTimeout(() => handleNextBeds(v), 150); };
+
+  const handleNextBeds = (beds: number) => {
+    const r = calculate(postcode, propType, beds, valType);
+    if (r) { setResult(r); setStep('result'); }
+  };
+
+  return (
+    <>
+      <style>{`
+        /* ── Layout ──────────────────────────────────────────────────── */
+        .iv-page {
+          min-height: 100vh;
+          background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 60%, #0f172a 100%);
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          padding: 0 1rem 4rem;
+          font-family: 'Inter', -apple-system, sans-serif;
+        }
+        .iv-header {
+          width: 100%;
+          max-width: 640px;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding: 1.5rem 0;
+        }
+        .iv-back-link {
+          color: rgba(255,255,255,0.6);
+          text-decoration: none;
+          font-size: 0.875rem;
+          display: flex;
+          align-items: center;
+          gap: 0.4rem;
+          transition: color 0.2s;
+        }
+        .iv-back-link:hover { color: #fff; }
+        .iv-logo-text {
+          font-size: 1rem;
+          font-weight: 700;
+          color: #f0c040;
+          letter-spacing: 0.02em;
+        }
+        /* ── Progress ─────────────────────────────────────────────────── */
+        .iv-progress {
+          width: 100%;
+          max-width: 640px;
+          height: 4px;
+          background: rgba(255,255,255,0.1);
+          border-radius: 2px;
+          margin-bottom: 2.5rem;
+          overflow: hidden;
+        }
+        .iv-progress__bar {
+          height: 100%;
+          background: linear-gradient(90deg, #2563eb, #f0c040);
+          border-radius: 2px;
+          transition: width 0.4s ease;
+        }
+        /* ── Card ─────────────────────────────────────────────────────── */
+        .iv-card-wrap {
+          width: 100%;
+          max-width: 640px;
+          background: rgba(255,255,255,0.05);
+          backdrop-filter: blur(16px);
+          border: 1px solid rgba(255,255,255,0.1);
+          border-radius: 1.25rem;
+          padding: 2.5rem;
+        }
+        /* ── Step ─────────────────────────────────────────────────────── */
+        .iv-step__title {
+          font-size: 1.5rem;
+          font-weight: 700;
+          color: #fff;
+          margin: 0 0 0.5rem;
+          line-height: 1.3;
+        }
+        .iv-step__sub {
+          color: rgba(255,255,255,0.55);
+          font-size: 0.9375rem;
+          margin: 0 0 1.75rem;
+        }
+        /* ── Selection cards ──────────────────────────────────────────── */
+        .iv-cards {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 1rem;
+        }
+        .iv-cards--four {
+          grid-template-columns: 1fr 1fr;
+        }
+        .iv-card {
+          display: flex;
+          flex-direction: column;
+          align-items: flex-start;
+          gap: 0.4rem;
+          padding: 1.25rem;
+          background: rgba(255,255,255,0.06);
+          border: 1.5px solid rgba(255,255,255,0.1);
+          border-radius: 0.875rem;
+          cursor: pointer;
+          text-align: left;
+          transition: border-color 0.2s, background 0.2s, transform 0.15s;
+          color: #fff;
+        }
+        .iv-card:hover {
+          background: rgba(255,255,255,0.11);
+          border-color: rgba(255,255,255,0.25);
+          transform: translateY(-2px);
+        }
+        .iv-card--active {
+          border-color: #2563eb;
+          background: rgba(37,99,235,0.18);
+        }
+        .iv-card__icon  { font-size: 1.75rem; }
+        .iv-card__label { font-weight: 600; font-size: 1rem; }
+        .iv-card__desc  { font-size: 0.8125rem; color: rgba(255,255,255,0.55); }
+        /* ── Postcode input ───────────────────────────────────────────── */
+        .iv-input {
+          width: 100%;
+          padding: 0.875rem 1rem;
+          background: rgba(255,255,255,0.08);
+          border: 1.5px solid rgba(255,255,255,0.15);
+          border-radius: 0.75rem;
+          color: #fff;
+          font-size: 1.125rem;
+          letter-spacing: 0.05em;
+          font-weight: 600;
+          outline: none;
+          transition: border-color 0.2s;
+          box-sizing: border-box;
+        }
+        .iv-input::placeholder { color: rgba(255,255,255,0.3); font-weight: 400; }
+        .iv-input:focus { border-color: #2563eb; }
+        .iv-input--error { border-color: #ef4444; }
+        .iv-error {
+          color: #fca5a5;
+          font-size: 0.875rem;
+          margin: 0.5rem 0 0;
+        }
+        /* ── Bedroom buttons ──────────────────────────────────────────── */
+        .iv-beds {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 0.75rem;
+        }
+        .iv-bed-btn {
+          padding: 0.75rem 1.25rem;
+          background: rgba(255,255,255,0.06);
+          border: 1.5px solid rgba(255,255,255,0.12);
+          border-radius: 0.625rem;
+          color: #fff;
+          font-size: 0.9375rem;
+          font-weight: 500;
+          cursor: pointer;
+          transition: border-color 0.2s, background 0.2s;
+        }
+        .iv-bed-btn:hover { background: rgba(255,255,255,0.12); border-color: rgba(255,255,255,0.3); }
+        .iv-bed-btn--active { border-color: #2563eb; background: rgba(37,99,235,0.2); }
+        /* ── Footer nav ───────────────────────────────────────────────── */
+        .iv-footer {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          margin-top: 2rem;
+          gap: 1rem;
+        }
+        .iv-btn-back {
+          background: transparent;
+          border: none;
+          color: rgba(255,255,255,0.55);
+          font-size: 0.9375rem;
+          cursor: pointer;
+          padding: 0.5rem 0;
+          transition: color 0.2s;
+        }
+        .iv-btn-back:hover { color: #fff; }
+        .iv-btn-next {
+          background: #2563eb;
+          color: #fff;
+          border: none;
+          border-radius: 0.625rem;
+          padding: 0.875rem 2rem;
+          font-size: 1rem;
+          font-weight: 600;
+          cursor: pointer;
+          transition: background 0.2s, transform 0.15s;
+          margin-left: auto;
+        }
+        .iv-btn-next:hover { background: #1d4ed8; transform: translateY(-1px); }
+        /* ── Result ───────────────────────────────────────────────────── */
+        .iv-step--result { text-align: center; }
+        .iv-result-badge {
+          display: inline-block;
+          background: rgba(37,99,235,0.2);
+          border: 1px solid rgba(37,99,235,0.4);
+          color: #93c5fd;
+          border-radius: 2rem;
+          padding: 0.375rem 1rem;
+          font-size: 0.8125rem;
+          font-weight: 600;
+          margin-bottom: 1rem;
+          letter-spacing: 0.03em;
+        }
+        .iv-result__postcode {
+          font-size: 2rem;
+          font-weight: 800;
+          color: #fff;
+          margin: 0;
+          letter-spacing: 0.05em;
+        }
+        .iv-result__area {
+          color: rgba(255,255,255,0.55);
+          font-size: 0.9375rem;
+          margin: 0.25rem 0 1.75rem;
+        }
+        .iv-result__range {
+          display: flex;
+          gap: 1rem;
+          margin-bottom: 1.5rem;
+        }
+        .iv-range-item {
+          flex: 1;
+          display: flex;
+          flex-direction: column;
+          gap: 0.25rem;
+          padding: 1rem 0.75rem;
+          border-radius: 0.875rem;
+          background: rgba(255,255,255,0.05);
+          border: 1px solid rgba(255,255,255,0.08);
+        }
+        .iv-range-item--mid {
+          background: rgba(37,99,235,0.18);
+          border-color: rgba(37,99,235,0.35);
+        }
+        .iv-range-item__label {
+          font-size: 0.75rem;
+          color: rgba(255,255,255,0.45);
+          font-weight: 500;
+          text-transform: uppercase;
+          letter-spacing: 0.06em;
+        }
+        .iv-range-item__value {
+          font-size: 1.25rem;
+          font-weight: 700;
+          color: #fff;
+        }
+        .iv-range-item--mid .iv-range-item__value {
+          font-size: 1.5rem;
+          color: #93c5fd;
+        }
+        .iv-result__disclaimer {
+          font-size: 0.8125rem;
+          color: rgba(255,255,255,0.4);
+          line-height: 1.6;
+          margin-bottom: 2rem;
+        }
+        .iv-result__ctas {
+          display: flex;
+          flex-direction: column;
+          gap: 0.875rem;
+        }
+        .iv-cta {
+          display: block;
+          padding: 0.9375rem;
+          border-radius: 0.75rem;
+          font-size: 1rem;
+          font-weight: 600;
+          text-align: center;
+          text-decoration: none;
+          cursor: pointer;
+          transition: all 0.2s;
+        }
+        .iv-cta--primary {
+          background: #2563eb;
+          color: #fff;
+          border: none;
+        }
+        .iv-cta--primary:hover { background: #1d4ed8; }
+        .iv-cta--outline {
+          background: transparent;
+          color: rgba(255,255,255,0.7);
+          border: 1.5px solid rgba(255,255,255,0.2);
+        }
+        .iv-cta--outline:hover { border-color: rgba(255,255,255,0.5); color: #fff; }
+        /* ── Responsive ───────────────────────────────────────────────── */
+        @media (max-width: 480px) {
+          .iv-card-wrap { padding: 1.75rem 1.25rem; }
+          .iv-step__title { font-size: 1.25rem; }
+          .iv-result__range { flex-direction: column; }
+          .iv-cards { grid-template-columns: 1fr; }
+        }
+      `}</style>
+
+      <div className="iv-page">
+        <header className="iv-header">
+          <Link href="/" className="iv-back-link">← Back to site</Link>
+          <span className="iv-logo-text">House of Lettings</span>
+        </header>
+
+        <ProgressBar current={step} />
+
+        <div className="iv-card-wrap">
+          {step === 'type' && (
+            <StepValuationType value={valType} onChange={handleTypeChange} />
+          )}
+          {step === 'postcode' && (
+            <>
+              <StepPostcode value={postcode} onChange={setPostcode} error={postcodeErr} />
+              <div className="iv-footer">
+                <button className="iv-btn-back" onClick={handleBack}>← Back</button>
+                <button className="iv-btn-next" onClick={handleNext}>Continue →</button>
+              </div>
+            </>
+          )}
+          {step === 'property' && (
+            <StepPropertyType value={propType} onChange={handlePropChange} />
+          )}
+          {step === 'bedrooms' && (
+            <>
+              <StepBedrooms value={bedrooms} onChange={handleBedsChange} />
+              <div className="iv-footer">
+                <button className="iv-btn-back" onClick={handleBack}>← Back</button>
+              </div>
+            </>
+          )}
+          {step === 'result' && result && (
+            <>
+              <StepResult result={result} type={valType} postcode={postcode} onReset={handleReset} />
+              <div className="iv-footer">
+                <button className="iv-btn-back" onClick={handleBack}>← Adjust details</button>
+              </div>
+            </>
+          )}
+        </div>
+      </div>
+    </>
+  );
+}

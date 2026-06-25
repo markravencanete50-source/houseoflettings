@@ -102,7 +102,6 @@ export default function Navbar() {
             )}
             <Link href="/book-valuation" className="nav-btn-primary">Book a Valuation</Link>
             <NavViewingButton />
-            <Link href="/tenant-application" className="nav-btn-outline">Tenant Application</Link>
             <Link href="/pricing" className="nav-btn-outline">Pricing</Link>
             <Link href="/terms" className="nav-btn-outline">Terms</Link>
             {!loading && (

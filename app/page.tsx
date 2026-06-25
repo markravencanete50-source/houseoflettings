@@ -931,7 +931,7 @@ export default function HomePage() {
           {[
             {
               title: 'For Landlords',
-              body: 'Renting your property should feel straightforward and cost-effective. Our service keeps the process clear with transparent pricing and flexible options, from free tools to low-cost packages including advertising, enquiry handling, and professional tenancy setup.',
+              body: 'Renting your property should feel straightforward and cost effective. Our service keeps the process clear with transparent pricing and flexible options, from free tools to low cost packages including advertising, enquiry handling, and professional tenancy setup.',
               href: '/landlords',
               icon: (
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="#2563eb" xmlns="http://www.w3.org/2000/svg">

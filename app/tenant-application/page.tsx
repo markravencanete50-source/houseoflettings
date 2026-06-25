@@ -48,7 +48,6 @@ const dividerStyle: React.CSSProperties = {
   margin: '36px 0',
 };
 
-// ── Parking enum → readable label ──────────────────────────────────────────
 const PARKING_LABELS: Record<string, string> = {
   none: 'No Parking',
   'double-garage': 'Double Garage',
@@ -83,7 +82,6 @@ function parkingLabel(p?: Property['parking']) {
   return PARKING_LABELS[p] || 'Not specified';
 }
 
-// Holding deposit = 1 week's rent, always rounded DOWN to the nearest £10
 function calcHoldingDeposit(monthlyRent: number) {
   const weeklyRent = (monthlyRent * 12) / 52;
   return Math.floor(weeklyRent / 10) * 10;
@@ -93,7 +91,6 @@ function formatGBP(n: number) {
   return `£${n.toLocaleString('en-GB')}`;
 }
 
-// ── PDF generation (mirrors the admin notification email layout) ──────────
 function generateApplicationPdf(data: Record<string, any>): string {
   const doc = new jsPDF({ unit: 'pt', format: 'a4' });
   const pageWidth = doc.internal.pageSize.getWidth();
@@ -106,7 +103,6 @@ function generateApplicationPdf(data: Record<string, any>): string {
   const dark = '#111827';
   const lineGray = '#eef0f5';
 
-  // Header band
   doc.setFillColor(navy);
   doc.rect(0, 0, pageWidth, 80, 'F');
   doc.setTextColor('#ffffff');
@@ -222,7 +218,6 @@ function generateApplicationPdf(data: Record<string, any>): string {
   row('Holding Deposit', data.holdingDeposit);
   row('Submission Date', data.submissionDate);
 
-  // Resend wants raw base64 — strip the data: URI prefix
   return doc.output('datauristring').split(',')[1];
 }
 
@@ -332,7 +327,6 @@ function FileUpload({
 
 const emptyUpload = (): UploadState => ({ files: [], uploading: false, urls: [], error: '' });
 
-// ── Reusable property summary card ──────────────────────────────────────────
 function PropertySummaryCard({ property, dark = false }: { property: Property; dark?: boolean }) {
   const holdingDeposit = calcHoldingDeposit(property.price);
   const items = [
@@ -380,7 +374,6 @@ export default function TenantApplicationPage() {
   const [submitted, setSubmitted] = useState(false);
   const [submitError, setSubmitError] = useState('');
 
-  // ── Property selection
   const [properties, setProperties] = useState<Property[]>([]);
   const [propertiesLoading, setPropertiesLoading] = useState(true);
   const [propertySearch, setPropertySearch] = useState('');
@@ -401,7 +394,6 @@ export default function TenantApplicationPage() {
     p.location.toLowerCase().includes(propertySearch.toLowerCase())
   );
 
-  // ── Personal Details
   const [fullName, setFullName] = useState('');
   const [dob, setDob] = useState('');
   const [nationality, setNationality] = useState('');
@@ -416,7 +408,6 @@ export default function TenantApplicationPage() {
   const [proofOfAddress, setProofOfAddress] = useState<UploadState>(emptyUpload());
   const [rightToRentDoc, setRightToRentDoc] = useState<UploadState>(emptyUpload());
 
-  // ── Employment & Finance
   const [employmentStatus, setEmploymentStatus] = useState('');
   const [employerPhone, setEmployerPhone] = useState('');
   const [employerEmail, setEmployerEmail] = useState('');
@@ -427,7 +418,6 @@ export default function TenantApplicationPage() {
   const [payslips, setPayslips] = useState<UploadState>(emptyUpload());
   const [bankStatements, setBankStatements] = useState<UploadState>(emptyUpload());
 
-  // ── Landlord / Tenancy
   const [landlordName, setLandlordName] = useState('');
   const [landlordEmail, setLandlordEmail] = useState('');
   const [landlordPhone, setLandlordPhone] = useState('');
@@ -441,7 +431,6 @@ export default function TenantApplicationPage() {
   const [pets, setPets] = useState('');
   const [guarantor, setGuarantor] = useState('');
 
-  // ── Consents
   const [consentContact, setConsentContact] = useState(false);
   const [consentDeclare, setConsentDeclare] = useState(false);
   const [submissionDate, setSubmissionDate] = useState('');
@@ -521,26 +510,21 @@ export default function TenantApplicationPage() {
     try {
       const holdingDeposit = calcHoldingDeposit(selectedProperty.price);
       const payload = {
-        // Personal
         fullName, dob, nationality, niNumber, email, phone, billingAddress,
         rightToRent: rightToRent === 'Other' ? rightToRentOther : rightToRent,
         shareCode,
         govIdUrls: govId.urls,
         proofOfAddressUrls: proofOfAddress.urls,
         rightToRentDocUrls: rightToRentDoc.urls,
-        // Employment
         employmentStatus, employerPhone, employerEmail, annualIncome, additionalIncome,
         hasCCJ, wasBankrupt,
         payslipUrls: payslips.urls,
         bankStatementUrls: bankStatements.urls,
-        // Landlord
         landlordName, landlordEmail, landlordPhone, currentAddress,
         tenancyStart, tenancyEnd, reasonLeaving,
         leaseTerm: leaseTerm === 'Other' ? leaseTermOther : leaseTerm,
         moveInDate, pets, guarantor,
-        // Consents
         consentContact, consentDeclare, submissionDate,
-        // Property info — snapshotted live from the selected listing at time of submission
         propertyId: selectedProperty.id,
         propertyAddress: selectedProperty.location,
         rent: formatGBP(selectedProperty.price),
@@ -549,8 +533,6 @@ export default function TenantApplicationPage() {
         carPark: parkingLabel(selectedProperty.parking),
       };
 
-      // Generate the PDF client-side and attach it as base64 so the API route
-      // can include it as an email attachment for both the applicant and admin.
       const pdfBase64 = generateApplicationPdf(payload);
 
       const res = await fetch('/api/tenant-application', {
@@ -581,7 +563,7 @@ export default function TenantApplicationPage() {
             </h2>
             <p style={{ color: '#6b7280', fontSize: 15, lineHeight: 1.7, marginBottom: 24 }}>
               Thank you, <strong>{fullName}</strong>. We've received your tenancy application for{' '}
-              <strong>{selectedProperty?.title}</strong>. Our team will review it and be in touch within 24–48 hours.
+              <strong>{selectedProperty?.location}</strong>. Our team will review it and be in touch within 24–48 hours.
             </p>
             <p style={{ color: '#9ca3af', fontSize: 13 }}>
               A confirmation email with a PDF copy of your application has been sent to <strong>{email}</strong>.
@@ -632,7 +614,6 @@ export default function TenantApplicationPage() {
 
       <Navbar />
 
-      {/* Hero */}
       <section style={{
         background: 'linear-gradient(135deg, #0a1628 0%, #0f2044 100%)',
         paddingTop: 'calc(72px + 60px)',
@@ -655,16 +636,13 @@ export default function TenantApplicationPage() {
             Please complete this form accurately and in full. All information is treated confidentially.
           </p>
 
-          {/* Property info bar — only shown once a property has been picked */}
           {selectedProperty && <PropertySummaryCard property={selectedProperty} dark />}
         </div>
       </section>
 
-      {/* Form */}
       <section style={{ padding: '48px 24px 80px' }}>
         <div style={{ maxWidth: 720, margin: '0 auto' }}>
 
-          {/* Progress bar */}
           <div style={{ marginBottom: 32 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 10 }}>
               {['Select Property', 'Personal Details', 'Employment & Finance', "Landlord's Details", 'Declaration'].map((label, i) => (
@@ -693,7 +671,6 @@ export default function TenantApplicationPage() {
             </div>
           </div>
 
-          {/* Error banner */}
           {stepError && (
             <div style={{ background: '#fef2f2', border: '1px solid #fca5a5', borderRadius: 8, padding: '12px 16px', marginBottom: 24, color: '#dc2626', fontSize: 14, fontWeight: 500 }}>
               ⚠️ {stepError}
@@ -702,7 +679,6 @@ export default function TenantApplicationPage() {
 
           <div style={{ background: '#fff', borderRadius: 16, boxShadow: '0 2px 16px rgba(0,0,0,0.07)', padding: '40px 48px' }}>
 
-            {/* ── STEP 1: Select Property ── */}
             {step === 1 && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
                 <div>
@@ -732,9 +708,9 @@ export default function TenantApplicationPage() {
                           onClick={() => setSelectedPropertyId(p.id || '')}
                         >
                           <div>
-                            <div style={{ fontWeight: 700, fontSize: 14, color: '#111827' }}>{p.title}</div>
+                            <div style={{ fontWeight: 700, fontSize: 14, color: '#111827' }}>{p.location}</div>
                             <div style={{ fontSize: 12, color: '#6b7280', marginTop: 2 }}>
-                              {p.location} · {formatGBP(p.price)} pcm · {p.bedrooms === 0 ? 'Studio' : `${p.bedrooms} bed`}
+                              {formatGBP(p.price)} pcm · {p.bedrooms === 0 ? 'Studio' : `${p.bedrooms} bed`}
                             </div>
                           </div>
                           {isSelected && (
@@ -752,7 +728,6 @@ export default function TenantApplicationPage() {
               </div>
             )}
 
-            {/* ── STEP 2: Personal Details ── */}
             {step === 2 && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
                 <div>
@@ -822,7 +797,6 @@ export default function TenantApplicationPage() {
               </div>
             )}
 
-            {/* ── STEP 3: Employment & Finance ── */}
             {step === 3 && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
                 <div>
@@ -896,7 +870,6 @@ export default function TenantApplicationPage() {
               </div>
             )}
 
-            {/* ── STEP 4: Landlord's Details ── */}
             {step === 4 && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
                 <div>
@@ -974,7 +947,6 @@ export default function TenantApplicationPage() {
               </div>
             )}
 
-            {/* ── STEP 5: Declaration ── */}
             {step === 5 && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
                 <div>
@@ -1037,7 +1009,6 @@ export default function TenantApplicationPage() {
               </div>
             )}
 
-            {/* Nav buttons */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 36, paddingTop: 24, borderTop: '1px solid #f1f5f9' }}>
               {step > 1 ? (
                 <button onClick={goPrev} style={{ padding: '12px 24px', background: '#f9fafb', border: '1.5px solid #e5e7eb', borderRadius: 8, fontSize: 14, fontWeight: 600, color: '#374151', cursor: 'pointer' }}>
@@ -1061,7 +1032,6 @@ export default function TenantApplicationPage() {
             </div>
           </div>
 
-          {/* Trust footer */}
           <div style={{ display: 'flex', justifyContent: 'center', gap: 28, marginTop: 24, flexWrap: 'wrap' }}>
             {['Information is kept confidential', 'Secure file uploads', 'Response within 24–48 hours'].map(t => (
               <span key={t} style={{ fontSize: 13, color: '#6b7280', display: 'flex', alignItems: 'center', gap: 6 }}>

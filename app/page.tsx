@@ -1088,7 +1088,7 @@ export default function HomePage() {
 
       {/* Valuation - centered, no photo */}
       <section className="split-section" style={{ background: '#f7f8fa' }}>
-  <div style={{ maxWidth: 760, margin: '0 auto', padding: 'clamp(56px, 7vw, 100px) clamp(28px, 5%, 5%)', textAlign: 'center' }}>
+  <div style={{ maxWidth: 900, margin: '0 auto', padding: 'clamp(56px, 7vw, 100px) clamp(48px, 8%, 120px)', textAlign: 'center' }}>
     <div className="reveal">
       <p className="split-eyebrow">For Landlords</p>
       <h2 className="split-title" style={{ fontSize: 'clamp(28px,4vw,42px)' }}>

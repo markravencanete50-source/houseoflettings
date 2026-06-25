@@ -1086,44 +1086,34 @@ export default function HomePage() {
         }
       `}</style>
 
-      {/* Valuation - text left, photo right */}
+      {/* Valuation - centered, no photo */}
       <section className="split-section" style={{ background: '#f7f8fa' }}>
-        <div className="split-grid">
-          <div className="split-text reveal" style={{ background: '#f7f8fa' }}>
-            <p className="split-eyebrow">For Landlords</p>
-            <h2 className="split-title">Why book a valuation with House of Lettings?</h2>
-            <p className="split-body">
-              Booking a valuation with House of Lettings will save you time, money, and stress. Our local experts give you an honest, data driven view of what your property is worth, so you can make informed decisions with confidence.
-            </p>
-            <ul className="split-list">
-              <li><span className="split-check" style={{color:"#2563eb",fontWeight:700}}>&#10003;</span>Free, no obligation valuation from a local expert</li>
-              <li><span className="split-check" style={{color:"#2563eb",fontWeight:700}}>&#10003;</span>Accurate rental and sales valuations backed by live market data</li>
-              <li><span className="split-check" style={{color:"#2563eb",fontWeight:700}}>&#10003;</span>Advice on how to maximise your property&apos;s return</li>
-              <li><span className="split-check" style={{color:"#2563eb",fontWeight:700}}>&#10003;</span>Better tenant quality. We find and secure reliable tenants</li>
-              <li><span className="split-check" style={{color:"#2563eb",fontWeight:700}}>&#10003;</span>Full compliance, legal, and rent protection support</li>
-              <li><span className="split-check" style={{color:"#2563eb",fontWeight:700}}>&#10003;</span>Day-to-day management handled by experts</li>
-            </ul>
-            <p style={{ fontFamily: "'Poppins', sans-serif", fontSize: 13, color: '#6b7280', lineHeight: 1.7, marginBottom: 28 }}>
-              Whether you own one property or a full portfolio, our team is here to protect your investment and maximise your returns, so you can enjoy the freedom of hands-off landlording.
-            </p>
-            <div className="inline-btn-wrap"><ValuationInlineButton /></div>
-          </div>
-          <div className="split-img-panel" style={{ overflow: 'hidden', minHeight: 860, display: 'flex', alignItems: 'stretch', position: 'relative' }}>
-            <img
-              src="/images/Landlord_pic.png"
-              alt="Book a Valuation"
-              style={{
-                width: '100%',
-                height: '100%',
-                minHeight: 860,
-                objectFit: 'cover',
-                objectPosition: 'center top',
-                display: 'block',
-              }}
-            />
-          </div>
-        </div>
-      </section>
+  <div style={{ maxWidth: 760, margin: '0 auto', padding: 'clamp(56px, 7vw, 100px) clamp(28px, 5%, 5%)', textAlign: 'center' }}>
+    <div className="reveal">
+      <p className="split-eyebrow">For Landlords</p>
+      <h2 className="split-title" style={{ fontSize: 'clamp(28px,4vw,42px)' }}>
+        Why book a valuation with House of Lettings?
+      </h2>
+      <p className="split-body" style={{ maxWidth: '100%', margin: '0 auto 24px' }}>
+        Booking a valuation with House of Lettings will save you time, money, and stress. Our local experts give you an honest, data driven view of what your property is worth, so you can make informed decisions with confidence.
+      </p>
+      <ul className="split-list" style={{ maxWidth: 520, margin: '0 auto 32px', textAlign: 'left' }}>
+        <li><span className="split-check" style={{color:"#2563eb",fontWeight:700}}>&#10003;</span>Free, no obligation valuation from a local expert</li>
+        <li><span className="split-check" style={{color:"#2563eb",fontWeight:700}}>&#10003;</span>Accurate rental and sales valuations backed by live market data</li>
+        <li><span className="split-check" style={{color:"#2563eb",fontWeight:700}}>&#10003;</span>Advice on how to maximise your property&apos;s return</li>
+        <li><span className="split-check" style={{color:"#2563eb",fontWeight:700}}>&#10003;</span>Better tenant quality. We find and secure reliable tenants</li>
+        <li><span className="split-check" style={{color:"#2563eb",fontWeight:700}}>&#10003;</span>Full compliance, legal, and rent protection support</li>
+        <li><span className="split-check" style={{color:"#2563eb",fontWeight:700}}>&#10003;</span>Day-to-day management handled by experts</li>
+      </ul>
+      <p style={{ fontFamily: "'Poppins', sans-serif", fontSize: 13, color: '#6b7280', lineHeight: 1.7, marginBottom: 36, maxWidth: 520, margin: '0 auto 36px' }}>
+        Whether you own one property or a full portfolio, our team is here to protect your investment and maximise your returns, so you can enjoy the freedom of hands-off landlording.
+      </p>
+      <div style={{ display: 'flex', justifyContent: 'center' }}>
+        <ValuationInlineButton />
+      </div>
+    </div>
+  </div>
+</section>
 
 
       {/* ── PRICING TEASER ────────────────────────────────────── */}

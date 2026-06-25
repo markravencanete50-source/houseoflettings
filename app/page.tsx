@@ -611,13 +611,13 @@ export default function HomePage() {
             }
             .hero-btn:hover { background: #1d4ed8; }
             .hero-btn-outline {
-              background: transparent;
-              border: 1px solid rgba(255,255,255,0.55);
+              background: #F59E0B;
+              border: 2px solid #F59E0B;
               color: #fff;
             }
             .hero-btn-outline:hover {
-              background: rgba(255,255,255,0.1);
-              border-color: rgba(255,255,255,0.85);
+              background: #D97706;
+              border-color: #D97706;
             }
             @media (max-width: 480px) {
               .hero-btns { flex-direction: column; gap: 10px; align-items: stretch; }

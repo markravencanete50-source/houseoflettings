@@ -21,7 +21,7 @@ import {
   updateDoc, addDoc, deleteDoc, serverTimestamp, Timestamp,
 } from 'firebase/firestore';
 
-type Tab = 'analytics' | 'users' | 'properties' | 'post' | 'edit' | 'valuations' | 'reviews';
+type Tab = 'analytics' | 'users' | 'properties' | 'post' | 'edit' | 'valuations' | 'reviews' | 'applications';
 
 interface Valuation {
   id: string;
@@ -45,6 +45,51 @@ interface GoogleReview {
   relative_time_description: string;
   profile_photo_url: string;
   location: 'leeds' | 'manchester';
+  createdAt: any;
+}
+
+interface TenantApplication {
+  id: string;
+  fullName: string;
+  email: string;
+  phone: string;
+  dob: string;
+  nationality: string;
+  niNumber: string;
+  billingAddress: string;
+  rightToRent: string;
+  shareCode?: string;
+  govIdUrls: string[];
+  proofOfAddressUrls: string[];
+  rightToRentDocUrls: string[];
+  employmentStatus: string;
+  employerPhone: string;
+  employerEmail: string;
+  annualIncome: string;
+  additionalIncome: string;
+  hasCCJ: string;
+  wasBankrupt: string;
+  payslipUrls: string[];
+  bankStatementUrls: string[];
+  landlordName: string;
+  landlordEmail: string;
+  landlordPhone: string;
+  currentAddress: string;
+  tenancyStart: string;
+  tenancyEnd: string;
+  reasonLeaving: string;
+  leaseTerm: string;
+  moveInDate: string;
+  pets: string;
+  guarantor: string;
+  consentContact: boolean;
+  consentDeclare: boolean;
+  submissionDate: string;
+  propertyAddress: string;
+  rent: string;
+  deposit: string;
+  holdingDeposit: string;
+  status: 'pending' | 'reviewing' | 'approved' | 'rejected';
   createdAt: any;
 }
 
@@ -75,6 +120,9 @@ export default function AdminDashboard() {
   const [searchUser, setSearchUser] = useState('');
   const [searchProp, setSearchProp] = useState('');
   const [editingProperty, setEditingProperty] = useState<Property | null>(null);
+  const [applications, setApplications] = useState<TenantApplication[]>([]);
+  const [appFilter, setAppFilter] = useState<'all' | 'pending' | 'reviewing' | 'approved' | 'rejected'>('all');
+  const [expandedApp, setExpandedApp] = useState<string | null>(null);
 
   useEffect(() => {
     if (!authLoading && (!profile || profile.role !== 'admin')) {
@@ -90,12 +138,14 @@ export default function AdminDashboard() {
       getAnalytics(),
       getDocs(query(collection(db, 'valuationRequests'), orderBy('createdAt', 'desc'))),
       getDocs(query(collection(db, 'google_reviews'), orderBy('createdAt', 'desc'))),
-    ]).then(([u, p, a, valSnap, revSnap]) => {
+      getDocs(query(collection(db, 'tenantApplications'), orderBy('createdAt', 'desc'))),
+    ]).then(([u, p, a, valSnap, revSnap, appSnap]) => {
       setUsers(u);
       setProperties(p);
       setAnalytics(a);
       setValuations(valSnap.docs.map(d => ({ id: d.id, ...d.data() } as Valuation)));
       setReviews(revSnap.docs.map(d => ({ id: d.id, ...d.data() } as GoogleReview)));
+      setApplications(appSnap.docs.map(d => ({ id: d.id, ...d.data() } as TenantApplication)));
       setLoading(false);
     }).catch(() => setLoading(false));
   }, [profile]);
@@ -181,6 +231,11 @@ export default function AdminDashboard() {
     setValuations(prev => prev.map(v => v.id === id ? { ...v, status } : v));
   };
 
+  const handleApplicationStatus = async (id: string, status: TenantApplication['status']) => {
+    await updateDoc(doc(db, 'tenantApplications', id), { status, updatedAt: serverTimestamp() });
+    setApplications(prev => prev.map(a => a.id === id ? { ...a, status } : a));
+  };
+
   const filteredUsers = users.filter(u =>
     u.name.toLowerCase().includes(searchUser.toLowerCase()) ||
     u.email.toLowerCase().includes(searchUser.toLowerCase())
@@ -207,6 +262,7 @@ export default function AdminDashboard() {
     { id: 'properties', icon: '🏠', label: `Properties (${properties.length})` },
     { id: 'valuations', icon: '📋', label: `Valuations (${valuations.length})` },
     { id: 'reviews',    icon: '⭐', label: `Reviews (${reviews.length})` },
+    { id: 'applications', icon: '📝', label: `Applications (${applications.length})` },
     { id: 'post',       icon: '➕', label: 'Post Property' },
     ...(editingProperty ? [{ id: 'edit' as Tab, icon: '✏️', label: 'Edit Property' }] : []),
   ];
@@ -279,6 +335,8 @@ export default function AdminDashboard() {
                   { label: 'Valuations',          value: valuations.length,          icon: '📅', color: '#1a3c5e' },
                   { label: 'Pending Valuations',  value: valuations.filter(v => v.status === 'pending').length, icon: '⏳', color: '#f57f17' },
                   { label: 'Google Reviews',      value: reviews.length,             icon: '⭐', color: '#F59E0B' },
+                  { label: 'Applications',         value: applications.length,                                    icon: '📝', color: '#0369a1' },
+                  { label: 'Pending Applications', value: applications.filter(a => a.status === 'pending').length, icon: '⏳', color: '#b45309' },
                 ].map(s => (
                   <div key={s.label} className="dash-card" style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
                     <div style={{
@@ -782,6 +840,251 @@ export default function AdminDashboard() {
                       </button>
                     </div>
                   ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* ── Applications ── */}
+          {tab === 'applications' && (
+            <div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                <h1 className="dash-section-title">Tenancy Applications</h1>
+              </div>
+              <p style={{ color: 'var(--gray-600)', marginBottom: 24, fontSize: 15 }}>
+                All tenancy applications submitted via the website.
+              </p>
+
+              {/* Filter tabs */}
+              <div style={{ display: 'flex', gap: 10, marginBottom: 24, flexWrap: 'wrap' }}>
+                {(['all', 'pending', 'reviewing', 'approved', 'rejected'] as const).map(f => {
+                  const count = f === 'all' ? applications.length : applications.filter(a => a.status === f).length;
+                  const colors: Record<string, { bg: string; color: string }> = {
+                    all:       { bg: '#f1f5f9', color: '#374151' },
+                    pending:   { bg: '#fff8e1', color: '#f57f17' },
+                    reviewing: { bg: '#e3f2fd', color: '#1565c0' },
+                    approved:  { bg: '#e8f5e9', color: '#2e7d32' },
+                    rejected:  { bg: '#fce4ec', color: '#c62828' },
+                  };
+                  const isActive = appFilter === f;
+                  return (
+                    <button
+                      key={f}
+                      onClick={() => setAppFilter(f)}
+                      style={{
+                        padding: '8px 18px', borderRadius: 6, fontSize: 13, fontWeight: 600,
+                        cursor: 'pointer', border: '1px solid',
+                        background: isActive ? colors[f].color : '#fff',
+                        color: isActive ? '#fff' : colors[f].color,
+                        borderColor: colors[f].color,
+                        textTransform: 'capitalize',
+                      }}
+                    >
+                      {f} ({count})
+                    </button>
+                  );
+                })}
+              </div>
+
+              {applications.filter(a => appFilter === 'all' || a.status === appFilter).length === 0 ? (
+                <div className="dash-card" style={{ textAlign: 'center', padding: 60 }}>
+                  <div style={{ fontSize: 52, marginBottom: 16 }}>📝</div>
+                  <h3 style={{ fontFamily: 'var(--font-serif)', fontSize: 24, marginBottom: 12 }}>No applications yet</h3>
+                  <p style={{ color: 'var(--gray-400)', fontSize: 15 }}>
+                    Tenancy applications will appear here when submitted via the website.
+                  </p>
+                </div>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                  {applications
+                    .filter(a => appFilter === 'all' || a.status === appFilter)
+                    .map(a => {
+                      const isExpanded = expandedApp === a.id;
+                      const statusColors: Record<string, { bg: string; color: string }> = {
+                        pending:   { bg: '#fff8e1', color: '#f57f17' },
+                        reviewing: { bg: '#e3f2fd', color: '#1565c0' },
+                        approved:  { bg: '#e8f5e9', color: '#2e7d32' },
+                        rejected:  { bg: '#fce4ec', color: '#c62828' },
+                      };
+                      const sc = statusColors[a.status] || statusColors.pending;
+
+                      return (
+                        <div key={a.id} className="dash-card" style={{ padding: 0, overflow: 'hidden' }}>
+                          {/* Header row */}
+                          <div
+                            style={{ display: 'flex', alignItems: 'center', gap: 16, padding: '20px 24px', cursor: 'pointer' }}
+                            onClick={() => setExpandedApp(isExpanded ? null : a.id)}
+                          >
+                            {/* Avatar */}
+                            <div style={{
+                              width: 44, height: 44, borderRadius: '50%', flexShrink: 0,
+                              background: 'linear-gradient(135deg, #0a1628, #2563eb)',
+                              display: 'flex', alignItems: 'center', justifyContent: 'center',
+                              color: '#fff', fontSize: 14, fontWeight: 700,
+                            }}>
+                              {a.fullName.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase()}
+                            </div>
+
+                            <div style={{ flex: 1, minWidth: 0 }}>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+                                <span style={{ fontWeight: 700, fontSize: 15 }}>{a.fullName}</span>
+                                <span style={{
+                                  padding: '3px 10px', borderRadius: 20, fontSize: 11, fontWeight: 700,
+                                  textTransform: 'uppercase', background: sc.bg, color: sc.color,
+                                }}>
+                                  {a.status}
+                                </span>
+                              </div>
+                              <div style={{ fontSize: 13, color: 'var(--gray-400)', marginTop: 2 }}>
+                                {a.email} · {a.phone} · Move-in: {a.moveInDate ? new Date(a.moveInDate).toLocaleDateString('en-GB') : '—'}
+                              </div>
+                            </div>
+
+                            {/* Status selector */}
+                            <select
+                              value={a.status}
+                              onClick={e => e.stopPropagation()}
+                              onChange={e => handleApplicationStatus(a.id, e.target.value as TenantApplication['status'])}
+                              style={{
+                                padding: '7px 10px', border: '1px solid var(--gray-200)',
+                                borderRadius: 6, fontSize: 12, cursor: 'pointer', outline: 'none',
+                                background: '#fff', flexShrink: 0,
+                              }}
+                            >
+                              <option value="pending">Pending</option>
+                              <option value="reviewing">Reviewing</option>
+                              <option value="approved">Approved</option>
+                              <option value="rejected">Rejected</option>
+                            </select>
+
+                            <span style={{ fontSize: 18, color: 'var(--gray-400)', flexShrink: 0 }}>
+                              {isExpanded ? '▲' : '▼'}
+                            </span>
+                          </div>
+
+                          {/* Expanded detail */}
+                          {isExpanded && (
+                            <div style={{ borderTop: '1px solid var(--gray-100)', padding: '24px', background: '#fafafa' }}>
+                              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 24 }}>
+
+                                {/* Personal */}
+                                <div>
+                                  <h4 style={{ fontSize: 12, fontWeight: 800, color: '#2563eb', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 12 }}>Personal Details</h4>
+                                  {[
+                                    ['Full Name', a.fullName],
+                                    ['Date of Birth', a.dob],
+                                    ['Nationality', a.nationality],
+                                    ['NI Number', a.niNumber],
+                                    ['Email', a.email],
+                                    ['Phone', a.phone],
+                                    ['Right to Rent', a.rightToRent],
+                                    ['Share Code', a.shareCode || '—'],
+                                  ].map(([label, value]) => (
+                                    <div key={label} style={{ display: 'flex', justifyContent: 'space-between', padding: '5px 0', borderBottom: '1px solid #f1f5f9', fontSize: 13 }}>
+                                      <span style={{ color: '#6b7280', fontWeight: 500 }}>{label}</span>
+                                      <span style={{ color: '#111827', fontWeight: 600, textAlign: 'right', maxWidth: '55%' }}>{value}</span>
+                                    </div>
+                                  ))}
+                                  <div style={{ marginTop: 10 }}>
+                                    <p style={{ fontSize: 12, fontWeight: 600, color: '#6b7280', marginBottom: 6 }}>Billing Address</p>
+                                    <p style={{ fontSize: 13, color: '#111827', lineHeight: 1.5 }}>{a.billingAddress}</p>
+                                  </div>
+                                </div>
+
+                                {/* Employment */}
+                                <div>
+                                  <h4 style={{ fontSize: 12, fontWeight: 800, color: '#2563eb', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 12 }}>Employment & Finance</h4>
+                                  {[
+                                    ['Employment Status', a.employmentStatus],
+                                    ['Employer Phone', a.employerPhone],
+                                    ['Employer Email', a.employerEmail],
+                                    ['Annual Income', a.annualIncome],
+                                    ['Additional Income', a.additionalIncome],
+                                    ['CCJs', a.hasCCJ],
+                                    ['Bankruptcy', a.wasBankrupt],
+                                  ].map(([label, value]) => (
+                                    <div key={label} style={{ display: 'flex', justifyContent: 'space-between', padding: '5px 0', borderBottom: '1px solid #f1f5f9', fontSize: 13 }}>
+                                      <span style={{ color: '#6b7280', fontWeight: 500 }}>{label}</span>
+                                      <span style={{ color: '#111827', fontWeight: 600, textAlign: 'right', maxWidth: '55%' }}>{value}</span>
+                                    </div>
+                                  ))}
+                                </div>
+
+                                {/* Landlord */}
+                                <div>
+                                  <h4 style={{ fontSize: 12, fontWeight: 800, color: '#2563eb', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 12 }}>Landlord & Tenancy</h4>
+                                  {[
+                                    ["Landlord's Name", a.landlordName],
+                                    ["Landlord's Email", a.landlordEmail],
+                                    ["Landlord's Phone", a.landlordPhone],
+                                    ['Current Address', a.currentAddress],
+                                    ['Tenancy Start', a.tenancyStart],
+                                    ['Tenancy End', a.tenancyEnd],
+                                    ['Lease Term', a.leaseTerm],
+                                    ['Move-In Date', a.moveInDate ? new Date(a.moveInDate).toLocaleDateString('en-GB') : '—'],
+                                    ['Pets', a.pets],
+                                    ['Guarantor', a.guarantor],
+                                  ].map(([label, value]) => (
+                                    <div key={label} style={{ display: 'flex', justifyContent: 'space-between', padding: '5px 0', borderBottom: '1px solid #f1f5f9', fontSize: 13 }}>
+                                      <span style={{ color: '#6b7280', fontWeight: 500 }}>{label}</span>
+                                      <span style={{ color: '#111827', fontWeight: 600, textAlign: 'right', maxWidth: '55%' }}>{value}</span>
+                                    </div>
+                                  ))}
+                                  <div style={{ marginTop: 10 }}>
+                                    <p style={{ fontSize: 12, fontWeight: 600, color: '#6b7280', marginBottom: 4 }}>Reason for Leaving</p>
+                                    <p style={{ fontSize: 13, color: '#111827', lineHeight: 1.5 }}>{a.reasonLeaving}</p>
+                                  </div>
+                                </div>
+
+                                {/* Documents */}
+                                <div>
+                                  <h4 style={{ fontSize: 12, fontWeight: 800, color: '#2563eb', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 12 }}>Uploaded Documents</h4>
+                                  {[
+                                    { label: 'Government ID / Passport', urls: a.govIdUrls },
+                                    { label: 'Proof of Address', urls: a.proofOfAddressUrls },
+                                    { label: 'Right to Rent Doc', urls: a.rightToRentDocUrls },
+                                    { label: 'Payslips', urls: a.payslipUrls },
+                                    { label: 'Bank Statements', urls: a.bankStatementUrls },
+                                  ].map(({ label, urls }) => (
+                                    <div key={label} style={{ marginBottom: 12 }}>
+                                      <p style={{ fontSize: 12, fontWeight: 600, color: '#6b7280', marginBottom: 4 }}>{label}</p>
+                                      {urls && urls.length > 0 ? (
+                                        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                                          {urls.map((url: string, i: number) => (
+                                            <a
+                                              key={i}
+                                              href={url}
+                                              target="_blank"
+                                              rel="noopener noreferrer"
+                                              style={{
+                                                padding: '4px 10px', background: '#eff6ff',
+                                                color: '#2563eb', borderRadius: 4, fontSize: 12,
+                                                fontWeight: 600, textDecoration: 'none',
+                                                border: '1px solid #bfdbfe',
+                                              }}
+                                            >
+                                              📄 File {i + 1}
+                                            </a>
+                                          ))}
+                                        </div>
+                                      ) : (
+                                        <span style={{ fontSize: 12, color: '#9ca3af' }}>No files</span>
+                                      )}
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+
+                              {/* Submission date */}
+                              <div style={{ marginTop: 16, paddingTop: 16, borderTop: '1px solid #e5e7eb', display: 'flex', justifyContent: 'space-between', fontSize: 12, color: '#9ca3af' }}>
+                                <span>Submitted: {a.submissionDate ? new Date(a.submissionDate).toLocaleDateString('en-GB') : '—'}</span>
+                                <span>Application ID: {a.id.slice(0, 8).toUpperCase()}</span>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
                 </div>
               )}
             </div>

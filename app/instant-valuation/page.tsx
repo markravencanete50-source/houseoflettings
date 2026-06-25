@@ -515,19 +515,19 @@ export default function InstantValuationPage() {
                   <div className="iv-section">
                     <p className="iv-section__q">What type of valuation do you need?</p>
                     <div className="iv-opts iv-opts--3">
-                      {([
-                        { id: 'let',  label: 'Let',       icon: '🏠', desc: 'Monthly rental estimate' },
-                        { id: 'sale', label: 'Sale',       icon: '🏷️', desc: 'Property sale price' },
-                        { id: 'both', label: 'Let & Sale', icon: '📊', desc: 'Both estimates' },
-                      ] as { id: ValuationType; label: string; icon: string; desc: string }[]).map(({ id, label, icon, desc }) => (
+                       {([
+                        { id: 'let',  label: 'Let',       desc: 'Monthly rental estimate' },
+                        { id: 'sale', label: 'Sale',       desc: 'Property sale price' },
+                        { id: 'both', label: 'Let & Sale', desc: 'Both estimates' },
+                      ] as { id: ValuationType; label: string; desc: string }[]).map(({ id, label, desc }) => (
                         <button key={id} onClick={() => setValType(id)}
                           className={`iv-opt ${valType === id ? 'iv-opt--active' : ''}`}>
-                          <span className="iv-opt__icon">{icon}</span>
                           <span className="iv-opt__label">{label}</span>
                           <span className="iv-opt__desc">{desc}</span>
                         </button>
                       ))}
                     </div>
+                    
                   </div>
 
                   <div className="iv-section">

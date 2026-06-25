@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
+import jsPDF from 'jspdf';
 import Navbar from '@/components/layout/Navbar';
 import { getAllProperties } from '@/services/admin';
 import { Property } from '@/lib/types';
@@ -90,6 +91,139 @@ function calcHoldingDeposit(monthlyRent: number) {
 
 function formatGBP(n: number) {
   return `£${n.toLocaleString('en-GB')}`;
+}
+
+// ── PDF generation (mirrors the admin notification email layout) ──────────
+function generateApplicationPdf(data: Record<string, any>): string {
+  const doc = new jsPDF({ unit: 'pt', format: 'a4' });
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const margin = 40;
+  let y = 0;
+
+  const navy = '#0a1628';
+  const blue = '#2563eb';
+  const gray = '#6b7280';
+  const dark = '#111827';
+  const lineGray = '#eef0f5';
+
+  // Header band
+  doc.setFillColor(navy);
+  doc.rect(0, 0, pageWidth, 80, 'F');
+  doc.setTextColor('#ffffff');
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(16);
+  doc.text('Tenancy Application', margin, 34);
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(10);
+  doc.setTextColor('#cbd5e1');
+  doc.text(`${data.propertyAddress || ''}`, margin, 52);
+  doc.text(`Submitted: ${new Date().toLocaleString('en-GB')}`, margin, 66);
+
+  y = 105;
+
+  const sectionTitle = (title: string) => {
+    if (y > 760) { doc.addPage(); y = 40; }
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(11);
+    doc.setTextColor(blue);
+    doc.text(title.toUpperCase(), margin, y);
+    y += 6;
+    doc.setDrawColor(blue);
+    doc.setLineWidth(1);
+    doc.line(margin, y, pageWidth - margin, y);
+    y += 16;
+  };
+
+  const row = (label: string, value?: string) => {
+    if (y > 770) { doc.addPage(); y = 40; }
+    const val = value && value.toString().trim() ? value.toString() : '—';
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(9.5);
+    doc.setTextColor(gray);
+    doc.text(label, margin, y);
+
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(dark);
+    const valLines = doc.splitTextToSize(val, pageWidth - margin * 2 - 160);
+    doc.text(valLines, margin + 170, y);
+
+    const lineH = Math.max(14, valLines.length * 12);
+    doc.setDrawColor(lineGray);
+    doc.setLineWidth(0.5);
+    doc.line(margin, y + lineH - 8, pageWidth - margin, y + lineH - 8);
+    y += lineH;
+  };
+
+  const fileLinks = (label: string, urls?: string[]) => {
+    if (!urls || urls.length === 0) { row(label, 'No files uploaded'); return; }
+    if (y > 770) { doc.addPage(); y = 40; }
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(9.5);
+    doc.setTextColor(gray);
+    doc.text(label, margin, y);
+
+    urls.forEach((url, i) => {
+      const text = `File ${i + 1}`;
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(blue);
+      doc.textWithLink(text, margin + 170 + i * 50, y, { url });
+    });
+    doc.setDrawColor(lineGray);
+    doc.setLineWidth(0.5);
+    doc.line(margin, y + 6, pageWidth - margin, y + 6);
+    y += 18;
+  };
+
+  sectionTitle('Personal Details');
+  row('Full Name', data.fullName);
+  row('Email', data.email);
+  row('Phone', data.phone);
+  row('Date of Birth', data.dob);
+  row('Nationality', data.nationality);
+  row('NI Number', data.niNumber);
+  row('Billing Address', data.billingAddress);
+  row('Right to Rent', data.rightToRent);
+  if (data.shareCode) row('Share Code', data.shareCode);
+  fileLinks('Government ID', data.govIdUrls);
+  fileLinks('Proof of Address', data.proofOfAddressUrls);
+  fileLinks('Right to Rent Doc', data.rightToRentDocUrls);
+
+  y += 10;
+  sectionTitle('Employment & Finance');
+  row('Employment Status', data.employmentStatus);
+  row('Employer Phone', data.employerPhone);
+  row('Employer Email', data.employerEmail);
+  row('Annual Income', data.annualIncome);
+  row('Additional Income', data.additionalIncome);
+  row('CCJs', data.hasCCJ);
+  row('Bankrupt', data.wasBankrupt);
+  fileLinks('Payslips', data.payslipUrls);
+  fileLinks('Bank Statements', data.bankStatementUrls);
+
+  y += 10;
+  sectionTitle("Landlord's Details");
+  row("Landlord's Name", data.landlordName);
+  row("Landlord's Email", data.landlordEmail);
+  row("Landlord's Phone", data.landlordPhone);
+  row('Current Address', data.currentAddress);
+  row('Tenancy Start', data.tenancyStart);
+  row('Tenancy End', data.tenancyEnd);
+  row('Reason for Leaving', data.reasonLeaving);
+  row('Desired Move-In', data.moveInDate ? new Date(data.moveInDate).toLocaleDateString('en-GB') : '—');
+  row('Lease Term', data.leaseTerm);
+  row('Pets', data.pets);
+  row('Guarantor', data.guarantor);
+
+  y += 10;
+  sectionTitle('Property');
+  row('Address', data.propertyAddress);
+  row('Rent', data.rent);
+  row('Deposit', data.deposit);
+  row('Holding Deposit', data.holdingDeposit);
+  row('Submission Date', data.submissionDate);
+
+  // Resend wants raw base64 — strip the data: URI prefix
+  return doc.output('datauristring').split(',')[1];
 }
 
 type UploadState = {
@@ -414,10 +548,15 @@ export default function TenantApplicationPage() {
         holdingDeposit: formatGBP(holdingDeposit),
         carPark: parkingLabel(selectedProperty.parking),
       };
+
+      // Generate the PDF client-side and attach it as base64 so the API route
+      // can include it as an email attachment for both the applicant and admin.
+      const pdfBase64 = generateApplicationPdf(payload);
+
       const res = await fetch('/api/tenant-application', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
+        body: JSON.stringify({ ...payload, pdfBase64 }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || 'Submission failed');
@@ -445,7 +584,7 @@ export default function TenantApplicationPage() {
               <strong>{selectedProperty?.title}</strong>. Our team will review it and be in touch within 24–48 hours.
             </p>
             <p style={{ color: '#9ca3af', fontSize: 13 }}>
-              A confirmation email has been sent to <strong>{email}</strong>.
+              A confirmation email with a PDF copy of your application has been sent to <strong>{email}</strong>.
             </p>
           </div>
         </div>

@@ -406,7 +406,7 @@ export default function HomePage() {
     getProperties()
       .then(props => {
         clearTimeout(timeout);
-        setFeatured(props.slice(0, 3));
+        setFeatured(props.slice(0, 6));
       })
       .catch(() => {
         clearTimeout(timeout);
@@ -1462,23 +1462,47 @@ export default function HomePage() {
         </div>
 
         {featured.length > 0 ? (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(300px,1fr))', gap: 24 }}>
-            {featured.map(p => <PropertyCard key={p.id} property={p} />)}
-          </div>
-        ) : (
-          <div style={{ textAlign: 'center', padding: '60px 0', color: '#9ca3af' }}>
-            <div style={{ fontSize: 48, marginBottom: 16 }}>🏠</div>
-            <p style={{ fontSize: 16, fontWeight: 500 }}>No properties listed yet.</p>
-            <p style={{ fontSize: 14, marginTop: 8 }}>Be the first to list a property!</p>
-            <Link href="/register" style={{
-              display: 'inline-block', marginTop: 20, padding: '12px 24px',
-              background: '#1e3a6e', color: '#ffffff', borderRadius: 4, fontSize: 14, fontWeight: 700,
-              textDecoration: 'none',
-            }}>
-              List Your Property &rarr;
-            </Link>
-          </div>
-        )}
+          <>
+    <style>{`
+      .listings-scroll-track {
+        display: flex;
+        gap: 24px;
+        overflow-x: auto;
+        padding-bottom: 16px;
+        scroll-snap-type: x mandatory;
+        -webkit-overflow-scrolling: touch;
+        cursor: grab;
+      }
+      .listings-scroll-track:active { cursor: grabbing; }
+      .listings-scroll-track::-webkit-scrollbar { height: 4px; }
+      .listings-scroll-track::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 2px; }
+      .listings-scroll-track::-webkit-scrollbar-thumb { background: #2563eb; border-radius: 2px; }
+      .listings-scroll-track > * {
+        flex: 0 0 300px;
+        scroll-snap-align: start;
+      }
+      @media (max-width: 480px) {
+        .listings-scroll-track > * { flex: 0 0 85vw; }
+      }
+    `}</style>
+    <div className="listings-scroll-track">
+      {featured.map(p => <PropertyCard key={p.id} property={p} />)}
+    </div>
+  </>
+) : (
+  <div style={{ textAlign: 'center', padding: '60px 0', color: '#9ca3af' }}>
+    <div style={{ fontSize: 48, marginBottom: 16 }}>🏠</div>
+    <p style={{ fontSize: 16, fontWeight: 500 }}>No properties listed yet.</p>
+    <p style={{ fontSize: 14, marginTop: 8 }}>Be the first to list a property!</p>
+    <Link href="/register" style={{
+      display: 'inline-block', marginTop: 20, padding: '12px 24px',
+      background: '#1e3a6e', color: '#ffffff', borderRadius: 4, fontSize: 14, fontWeight: 700,
+      textDecoration: 'none',
+    }}>
+      List Your Property &rarr;
+    </Link>
+  </div>
+)}
       </section>
 
 

@@ -16,9 +16,12 @@ import {
 import { AppUser, Property } from '@/lib/types';
 import { format } from 'date-fns';
 import { db } from '@/lib/firebase';
-import { collection, getDocs, orderBy, query, doc, updateDoc } from 'firebase/firestore';
+import {
+  collection, getDocs, orderBy, query, doc,
+  updateDoc, addDoc, deleteDoc, serverTimestamp, Timestamp,
+} from 'firebase/firestore';
 
-type Tab = 'analytics' | 'users' | 'properties' | 'post' | 'edit' | 'valuations';
+type Tab = 'analytics' | 'users' | 'properties' | 'post' | 'edit' | 'valuations' | 'reviews';
 
 interface Valuation {
   id: string;
@@ -34,6 +37,26 @@ interface Valuation {
   createdAt: any;
 }
 
+interface GoogleReview {
+  id: string;
+  author_name: string;
+  rating: number;
+  text: string;
+  relative_time_description: string;
+  profile_photo_url: string;
+  location: 'leeds' | 'manchester';
+  createdAt: any;
+}
+
+const EMPTY_REVIEW = {
+  author_name: '',
+  rating: 5,
+  text: '',
+  relative_time_description: '',
+  profile_photo_url: '',
+  location: 'leeds' as 'leeds' | 'manchester',
+};
+
 export default function AdminDashboard() {
   const router = useRouter();
   const { profile, loading: authLoading } = useAuth();
@@ -42,6 +65,12 @@ export default function AdminDashboard() {
   const [properties, setProperties] = useState<Property[]>([]);
   const [analytics, setAnalytics] = useState<any>(null);
   const [valuations, setValuations] = useState<Valuation[]>([]);
+  const [reviews, setReviews] = useState<GoogleReview[]>([]);
+  const [reviewForm, setReviewForm] = useState(EMPTY_REVIEW);
+  const [reviewSaving, setReviewSaving] = useState(false);
+  const [reviewError, setReviewError] = useState('');
+  const [reviewSuccess, setReviewSuccess] = useState('');
+  const [reviewFilter, setReviewFilter] = useState<'all' | 'leeds' | 'manchester'>('all');
   const [loading, setLoading] = useState(true);
   const [searchUser, setSearchUser] = useState('');
   const [searchProp, setSearchProp] = useState('');
@@ -60,15 +89,52 @@ export default function AdminDashboard() {
       getAllProperties(),
       getAnalytics(),
       getDocs(query(collection(db, 'valuationRequests'), orderBy('createdAt', 'desc'))),
-    ]).then(([u, p, a, valSnap]) => {
+      getDocs(query(collection(db, 'google_reviews'), orderBy('createdAt', 'desc'))),
+    ]).then(([u, p, a, valSnap, revSnap]) => {
       setUsers(u);
       setProperties(p);
       setAnalytics(a);
       setValuations(valSnap.docs.map(d => ({ id: d.id, ...d.data() } as Valuation)));
+      setReviews(revSnap.docs.map(d => ({ id: d.id, ...d.data() } as GoogleReview)));
       setLoading(false);
     }).catch(() => setLoading(false));
   }, [profile]);
 
+  // ── Review handlers ──────────────────────────────────────────────────────────
+  const handleReviewSubmit = async () => {
+    setReviewError('');
+    setReviewSuccess('');
+    if (!reviewForm.author_name.trim()) { setReviewError('Reviewer name is required.'); return; }
+    if (!reviewForm.text.trim()) { setReviewError('Review text is required.'); return; }
+    if (reviewForm.rating < 4) { setReviewError('Only 4★ and 5★ reviews can be added.'); return; }
+    setReviewSaving(true);
+    try {
+      const docRef = await addDoc(collection(db, 'google_reviews'), {
+        ...reviewForm,
+        createdAt: serverTimestamp(),
+      });
+      const newReview: GoogleReview = {
+        id: docRef.id,
+        ...reviewForm,
+        createdAt: new Date(),
+      };
+      setReviews(prev => [newReview, ...prev]);
+      setReviewForm(EMPTY_REVIEW);
+      setReviewSuccess('Review added successfully!');
+      setTimeout(() => setReviewSuccess(''), 3000);
+    } catch {
+      setReviewError('Failed to save review. Please try again.');
+    }
+    setReviewSaving(false);
+  };
+
+  const handleDeleteReview = async (id: string) => {
+    if (!confirm('Delete this review?')) return;
+    await deleteDoc(doc(db, 'google_reviews', id));
+    setReviews(prev => prev.filter(r => r.id !== id));
+  };
+
+  // ── Property handlers ────────────────────────────────────────────────────────
   const handleDeleteUser = async (uid: string, name: string) => {
     if (!confirm(`Delete user "${name}"? This removes their Firestore record.`)) return;
     await deleteUserRecord(uid);
@@ -125,19 +191,23 @@ export default function AdminDashboard() {
     p.location.toLowerCase().includes(searchProp.toLowerCase())
   );
 
+  const filteredReviews = reviews.filter(r =>
+    reviewFilter === 'all' ? true : r.location === reviewFilter
+  );
+
   if (authLoading || loading) return (
     <div style={{ display: 'flex', justifyContent: 'center', padding: '120px 0' }}>
       <div className="spinner" />
     </div>
   );
 
-  // Only show 'edit' in nav when actively editing
   const navItems: Array<{ id: Tab; icon: string; label: string }> = [
-    { id: 'analytics',   icon: '📊', label: 'Analytics' },
-    { id: 'users',       icon: '👥', label: `Users (${users.length})` },
-    { id: 'properties',  icon: '🏠', label: `Properties (${properties.length})` },
-    { id: 'valuations',  icon: '📋', label: `Valuations (${valuations.length})` },
-    { id: 'post',        icon: '➕', label: 'Post Property' },
+    { id: 'analytics',  icon: '📊', label: 'Analytics' },
+    { id: 'users',      icon: '👥', label: `Users (${users.length})` },
+    { id: 'properties', icon: '🏠', label: `Properties (${properties.length})` },
+    { id: 'valuations', icon: '📋', label: `Valuations (${valuations.length})` },
+    { id: 'reviews',    icon: '⭐', label: `Reviews (${reviews.length})` },
+    { id: 'post',       icon: '➕', label: 'Post Property' },
     ...(editingProperty ? [{ id: 'edit' as Tab, icon: '✏️', label: 'Edit Property' }] : []),
   ];
 
@@ -194,21 +264,21 @@ export default function AdminDashboard() {
               <p style={{ color: 'var(--gray-600)', marginBottom: 32, fontSize: 15 }}>
                 Overview of all platform activity.
               </p>
-
               <div style={{
                 display: 'grid',
                 gridTemplateColumns: 'repeat(auto-fill,minmax(200px,1fr))',
                 gap: 20, marginBottom: 36,
               }}>
                 {[
-                  { label: 'Total Users',      value: analytics.totalUsers,       icon: '👥', color: '#1565C0' },
-                  { label: 'Landlords',        value: analytics.landlords,        icon: '🏠', color: '#2E7D32' },
-                  { label: 'Tenants',          value: analytics.tenants,          icon: '🔑', color: '#E65100' },
-                  { label: 'Total Listings',   value: analytics.totalProperties,  icon: '📋', color: '#6A1B9A' },
-                  { label: 'Active Listings',  value: analytics.activeProperties, icon: '✅', color: '#00695C' },
-                  { label: 'Total Chats',      value: analytics.totalChats,       icon: '💬', color: '#AD1457' },
-                  { label: 'Valuations',       value: valuations.length,          icon: '📅', color: '#1a3c5e' },
-                  { label: 'Pending Valuations', value: valuations.filter(v => v.status === 'pending').length, icon: '⏳', color: '#f57f17' },
+                  { label: 'Total Users',        value: analytics.totalUsers,       icon: '👥', color: '#1565C0' },
+                  { label: 'Landlords',           value: analytics.landlords,        icon: '🏠', color: '#2E7D32' },
+                  { label: 'Tenants',             value: analytics.tenants,          icon: '🔑', color: '#E65100' },
+                  { label: 'Total Listings',      value: analytics.totalProperties,  icon: '📋', color: '#6A1B9A' },
+                  { label: 'Active Listings',     value: analytics.activeProperties, icon: '✅', color: '#00695C' },
+                  { label: 'Total Chats',         value: analytics.totalChats,       icon: '💬', color: '#AD1457' },
+                  { label: 'Valuations',          value: valuations.length,          icon: '📅', color: '#1a3c5e' },
+                  { label: 'Pending Valuations',  value: valuations.filter(v => v.status === 'pending').length, icon: '⏳', color: '#f57f17' },
+                  { label: 'Google Reviews',      value: reviews.length,             icon: '⭐', color: '#F59E0B' },
                 ].map(s => (
                   <div key={s.label} className="dash-card" style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
                     <div style={{
@@ -290,7 +360,6 @@ export default function AdminDashboard() {
                   onChange={e => setSearchUser(e.target.value)}
                 />
               </div>
-
               <div className="dash-card" style={{ padding: 0, overflow: 'hidden' }}>
                 <table className="data-table">
                   <thead>
@@ -356,7 +425,6 @@ export default function AdminDashboard() {
                   </button>
                 </div>
               </div>
-
               <div className="dash-card" style={{ padding: 0, overflow: 'hidden' }}>
                 <table className="data-table">
                   <thead>
@@ -405,8 +473,7 @@ export default function AdminDashboard() {
                               onClick={() => handleEditProperty(p)}
                               style={{
                                 padding: '5px 10px', background: 'transparent',
-                                border: '1px solid #1565c0',
-                                color: '#1565c0',
+                                border: '1px solid #1565c0', color: '#1565c0',
                                 borderRadius: 4, fontSize: 11, cursor: 'pointer',
                               }}
                             >
@@ -448,7 +515,6 @@ export default function AdminDashboard() {
               <p style={{ color: 'var(--gray-600)', marginBottom: 24, fontSize: 15 }}>
                 All property valuation bookings from the website.
               </p>
-
               {valuations.length === 0 ? (
                 <div className="dash-card" style={{ textAlign: 'center', padding: 60 }}>
                   <div style={{ fontSize: 52, marginBottom: 16 }}>📋</div>
@@ -462,12 +528,8 @@ export default function AdminDashboard() {
                   <table className="data-table">
                     <thead>
                       <tr>
-                        <th>Customer</th>
-                        <th>Property</th>
-                        <th>Type / Beds</th>
-                        <th>Preferred Date</th>
-                        <th>Status</th>
-                        <th>Actions</th>
+                        <th>Customer</th><th>Property</th><th>Type / Beds</th>
+                        <th>Preferred Date</th><th>Status</th><th>Actions</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -522,6 +584,209 @@ export default function AdminDashboard() {
             </div>
           )}
 
+          {/* ── Reviews ── */}
+          {tab === 'reviews' && (
+            <div>
+              <h1 className="dash-section-title">Google Reviews</h1>
+              <p style={{ color: 'var(--gray-600)', marginBottom: 32, fontSize: 15 }}>
+                Add and manage reviews shown on the website. Only 4★ and 5★ reviews are displayed publicly.
+              </p>
+
+              {/* Add Review Form */}
+              <div className="dash-card" style={{ marginBottom: 32 }}>
+                <h3 style={{ fontSize: 16, fontWeight: 700, marginBottom: 20, color: 'var(--gray-800)' }}>
+                  ➕ Add New Review
+                </h3>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 16 }}>
+                  <div>
+                    <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--gray-600)', marginBottom: 6, textTransform: 'uppercase', letterSpacing: 1 }}>
+                      Reviewer Name *
+                    </label>
+                    <input
+                      className="form-input"
+                      placeholder="e.g. James Thornton"
+                      value={reviewForm.author_name}
+                      onChange={e => setReviewForm(f => ({ ...f, author_name: e.target.value }))}
+                    />
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--gray-600)', marginBottom: 6, textTransform: 'uppercase', letterSpacing: 1 }}>
+                      Location *
+                    </label>
+                    <select
+                      className="form-input"
+                      value={reviewForm.location}
+                      onChange={e => setReviewForm(f => ({ ...f, location: e.target.value as 'leeds' | 'manchester' }))}
+                    >
+                      <option value="leeds">📍 Leeds</option>
+                      <option value="manchester">📍 Manchester</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 16 }}>
+                  <div>
+                    <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--gray-600)', marginBottom: 6, textTransform: 'uppercase', letterSpacing: 1 }}>
+                      Star Rating *
+                    </label>
+                    <select
+                      className="form-input"
+                      value={reviewForm.rating}
+                      onChange={e => setReviewForm(f => ({ ...f, rating: Number(e.target.value) }))}
+                    >
+                      <option value={5}>⭐⭐⭐⭐⭐ 5 Stars</option>
+                      <option value={4}>⭐⭐⭐⭐ 4 Stars</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--gray-600)', marginBottom: 6, textTransform: 'uppercase', letterSpacing: 1 }}>
+                      Time Label
+                    </label>
+                    <input
+                      className="form-input"
+                      placeholder="e.g. 2 weeks ago"
+                      value={reviewForm.relative_time_description}
+                      onChange={e => setReviewForm(f => ({ ...f, relative_time_description: e.target.value }))}
+                    />
+                  </div>
+                </div>
+
+                <div style={{ marginBottom: 16 }}>
+                  <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--gray-600)', marginBottom: 6, textTransform: 'uppercase', letterSpacing: 1 }}>
+                    Review Text *
+                  </label>
+                  <textarea
+                    className="form-input"
+                    rows={4}
+                    placeholder="Paste the review text from Google…"
+                    value={reviewForm.text}
+                    onChange={e => setReviewForm(f => ({ ...f, text: e.target.value }))}
+                    style={{ resize: 'vertical' }}
+                  />
+                </div>
+
+                <div style={{ marginBottom: 20 }}>
+                  <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--gray-600)', marginBottom: 6, textTransform: 'uppercase', letterSpacing: 1 }}>
+                    Profile Photo URL <span style={{ fontWeight: 400, textTransform: 'none', letterSpacing: 0 }}>(optional — falls back to initials)</span>
+                  </label>
+                  <input
+                    className="form-input"
+                    placeholder="https://…"
+                    value={reviewForm.profile_photo_url}
+                    onChange={e => setReviewForm(f => ({ ...f, profile_photo_url: e.target.value }))}
+                  />
+                </div>
+
+                {reviewError && (
+                  <div style={{ background: '#fce4ec', color: '#c62828', padding: '10px 14px', borderRadius: 6, fontSize: 13, marginBottom: 14 }}>
+                    {reviewError}
+                  </div>
+                )}
+                {reviewSuccess && (
+                  <div style={{ background: '#e8f5e9', color: '#2e7d32', padding: '10px 14px', borderRadius: 6, fontSize: 13, marginBottom: 14 }}>
+                    {reviewSuccess}
+                  </div>
+                )}
+
+                <button
+                  onClick={handleReviewSubmit}
+                  disabled={reviewSaving}
+                  style={{
+                    padding: '12px 28px', background: '#2563eb', color: '#fff',
+                    border: 'none', borderRadius: 6, fontSize: 14, fontWeight: 700,
+                    cursor: reviewSaving ? 'not-allowed' : 'pointer',
+                    opacity: reviewSaving ? 0.7 : 1,
+                    fontFamily: "'Poppins', sans-serif",
+                  }}
+                >
+                  {reviewSaving ? 'Saving…' : '✓ Add Review'}
+                </button>
+              </div>
+
+              {/* Filter tabs */}
+              <div style={{ display: 'flex', gap: 10, marginBottom: 20 }}>
+                {(['all', 'leeds', 'manchester'] as const).map(f => (
+                  <button
+                    key={f}
+                    onClick={() => setReviewFilter(f)}
+                    style={{
+                      padding: '8px 18px', borderRadius: 6, fontSize: 13, fontWeight: 600,
+                      cursor: 'pointer', border: '1px solid',
+                      background: reviewFilter === f ? '#2563eb' : '#fff',
+                      color: reviewFilter === f ? '#fff' : '#374151',
+                      borderColor: reviewFilter === f ? '#2563eb' : '#e5e7eb',
+                      textTransform: 'capitalize',
+                    }}
+                  >
+                    {f === 'all' ? `All (${reviews.length})` : f === 'leeds' ? `📍 Leeds (${reviews.filter(r => r.location === 'leeds').length})` : `📍 Manchester (${reviews.filter(r => r.location === 'manchester').length})`}
+                  </button>
+                ))}
+              </div>
+
+              {/* Reviews list */}
+              {filteredReviews.length === 0 ? (
+                <div className="dash-card" style={{ textAlign: 'center', padding: 48 }}>
+                  <div style={{ fontSize: 40, marginBottom: 12 }}>⭐</div>
+                  <p style={{ color: 'var(--gray-400)', fontSize: 15 }}>No reviews yet. Add one above.</p>
+                </div>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                  {filteredReviews.map(r => (
+                    <div key={r.id} className="dash-card" style={{ display: 'flex', gap: 16, alignItems: 'flex-start' }}>
+                      {/* Avatar */}
+                      <div style={{
+                        width: 44, height: 44, borderRadius: '50%', flexShrink: 0,
+                        background: r.profile_photo_url ? 'transparent' : 'linear-gradient(135deg, #2563eb, #4a90d9)',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        color: '#fff', fontSize: 14, fontWeight: 700, overflow: 'hidden',
+                      }}>
+                        {r.profile_photo_url
+                          ? <img src={r.profile_photo_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                          : r.author_name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()
+                        }
+                      </div>
+
+                      {/* Content */}
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4, flexWrap: 'wrap' }}>
+                          <span style={{ fontWeight: 700, fontSize: 14 }}>{r.author_name}</span>
+                          <span style={{
+                            padding: '2px 8px', borderRadius: 20, fontSize: 11, fontWeight: 700,
+                            background: r.location === 'leeds' ? '#eff6ff' : '#f0fdf4',
+                            color: r.location === 'leeds' ? '#1d4ed8' : '#15803d',
+                          }}>
+                            📍 {r.location === 'leeds' ? 'Leeds' : 'Manchester'}
+                          </span>
+                          <div style={{ display: 'flex', gap: 2 }}>
+                            {[1,2,3,4,5].map(i => (
+                              <svg key={i} width="13" height="13" viewBox="0 0 24 24" fill={i <= r.rating ? '#F59E0B' : '#e5e7eb'}>
+                                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                              </svg>
+                            ))}
+                          </div>
+                          {r.relative_time_description && (
+                            <span style={{ fontSize: 12, color: 'var(--gray-400)' }}>{r.relative_time_description}</span>
+                          )}
+                        </div>
+                        <p style={{ fontSize: 13, color: 'var(--gray-600)', lineHeight: 1.6, margin: 0 }}>{r.text}</p>
+                      </div>
+
+                      {/* Delete */}
+                      <button
+                        className="btn-danger"
+                        onClick={() => handleDeleteReview(r.id)}
+                        style={{ flexShrink: 0 }}
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
           {/* ── Post Property ── */}
           {tab === 'post' && profile && (
             <div>
@@ -530,7 +795,6 @@ export default function AdminDashboard() {
                 Post a listing as admin. It will appear publicly and automatically marked as{' '}
                 <strong style={{ color: 'var(--red)' }}>Featured</strong>.
               </p>
-
               <div style={{
                 display: 'flex', alignItems: 'center', gap: 10,
                 background: 'rgba(192,57,43,0.08)',
@@ -543,7 +807,6 @@ export default function AdminDashboard() {
                   <strong>Featured</strong> at the top of search results.
                 </p>
               </div>
-
               <div className="dash-card">
                 <PropertyForm
                   landlordId={profile.uid}
@@ -571,12 +834,10 @@ export default function AdminDashboard() {
                   ← Back to Properties
                 </button>
               </div>
-
               <h1 className="dash-section-title">Edit Property</h1>
               <p style={{ color: 'var(--gray-600)', marginBottom: 8, fontSize: 15 }}>
                 Editing: <strong>{editingProperty.title}</strong>
               </p>
-
               <div style={{
                 display: 'flex', alignItems: 'center', gap: 10,
                 background: 'rgba(21,101,192,0.08)',
@@ -588,7 +849,6 @@ export default function AdminDashboard() {
                   Changes will update the live listing immediately after saving.
                 </p>
               </div>
-
               <div className="dash-card">
                 <PropertyForm
                   landlordId={editingProperty.landlordId || profile.uid}

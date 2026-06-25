@@ -1086,32 +1086,83 @@ export default function HomePage() {
         }
       `}</style>
 
-      {/* Valuation - centered, no photo */}
-      <section className="split-section" style={{ background: '#f7f8fa' }}>
-  <div style={{ maxWidth: 900, margin: '0 auto', padding: 'clamp(56px, 7vw, 100px) clamp(48px, 8%, 120px)', textAlign: 'center' }}>
-    <div className="reveal">
-      <p className="split-eyebrow">For Landlords</p>
-      <h2 className="split-title" style={{ fontSize: 'clamp(28px,4vw,42px)' }}>
+     {/* Valuation - professional two-col, no photo */}
+<section className="split-section" style={{ background: '#f7f8fa' }}>
+  <style>{`
+    .val-section-inner {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: clamp(72px, 9vw, 110px) clamp(24px, 5%, 80px);
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 80px;
+      align-items: start;
+    }
+    @media (max-width: 768px) {
+      .val-section-inner {
+        grid-template-columns: 1fr;
+        gap: 40px;
+        padding: 56px 24px;
+      }
+    }
+  `}</style>
+  <div className="val-section-inner reveal">
+
+    {/* LEFT — heading + body */}
+    <div>
+      <p className="split-eyebrow" style={{ textAlign: 'left' }}>For Landlords</p>
+      <h2 className="split-title" style={{ textAlign: 'left', fontSize: 'clamp(28px,3.5vw,40px)', marginBottom: 20 }}>
         Why book a valuation with House of Lettings?
       </h2>
-      <p className="split-body" style={{ maxWidth: '100%', margin: '0 auto 24px' }}>
+      <p className="split-body" style={{ textAlign: 'left', maxWidth: '100%', marginBottom: 28 }}>
         Booking a valuation with House of Lettings will save you time, money, and stress. Our local experts give you an honest, data driven view of what your property is worth, so you can make informed decisions with confidence.
       </p>
-      <ul className="split-list" style={{ maxWidth: 520, margin: '0 auto 32px', textAlign: 'left' }}>
-        <li><span className="split-check" style={{color:"#2563eb",fontWeight:700}}>&#10003;</span>Free, no obligation valuation from a local expert</li>
-        <li><span className="split-check" style={{color:"#2563eb",fontWeight:700}}>&#10003;</span>Accurate rental and sales valuations backed by live market data</li>
-        <li><span className="split-check" style={{color:"#2563eb",fontWeight:700}}>&#10003;</span>Advice on how to maximise your property&apos;s return</li>
-        <li><span className="split-check" style={{color:"#2563eb",fontWeight:700}}>&#10003;</span>Better tenant quality. We find and secure reliable tenants</li>
-        <li><span className="split-check" style={{color:"#2563eb",fontWeight:700}}>&#10003;</span>Full compliance, legal, and rent protection support</li>
-        <li><span className="split-check" style={{color:"#2563eb",fontWeight:700}}>&#10003;</span>Day-to-day management handled by experts</li>
-      </ul>
-      <p style={{ fontFamily: "'Poppins', sans-serif", fontSize: 13, color: '#6b7280', lineHeight: 1.7, marginBottom: 36, maxWidth: 520, margin: '0 auto 36px' }}>
-        Whether you own one property or a full portfolio, our team is here to protect your investment and maximise your returns, so you can enjoy the freedom of hands-off landlording.
+      <p style={{ fontFamily: "'Poppins', sans-serif", fontSize: 13, color: '#6b7280', lineHeight: 1.7, marginBottom: 36 }}>
+        Whether you own one property or a full portfolio, our team is here to protect your investment and maximise your returns — so you can enjoy the freedom of hands-off landlording.
       </p>
-      <div style={{ display: 'flex', justifyContent: 'center' }}>
-        <ValuationInlineButton />
-      </div>
+      <ValuationInlineButton />
     </div>
+
+    {/* RIGHT — checklist */}
+    <div style={{
+      background: '#fff',
+      borderRadius: 12,
+      padding: '36px 32px',
+      boxShadow: '0 4px 32px rgba(0,0,0,0.07)',
+      border: '1px solid #e5e7eb',
+    }}>
+      <p style={{
+        fontFamily: "'Poppins', sans-serif",
+        fontSize: 11, fontWeight: 700, letterSpacing: 3,
+        textTransform: 'uppercase', color: '#2563eb', marginBottom: 20,
+      }}>
+        What you get
+      </p>
+      <ul className="split-list" style={{ margin: 0, gap: 16 }}>
+        {[
+          'Free, no obligation valuation from a local expert',
+          'Accurate rental and sales valuations backed by live market data',
+          'Advice on how to maximise your property\'s return',
+          'Better tenant quality. We find and secure reliable tenants',
+          'Full compliance, legal, and rent protection support',
+          'Day-to-day management handled by experts',
+        ].map((item, i) => (
+          <li key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 12, paddingBottom: 16, borderBottom: i < 5 ? '1px solid #f3f4f6' : 'none' }}>
+            <span style={{
+              width: 22, height: 22, borderRadius: '50%',
+              background: '#eff6ff', display: 'flex', alignItems: 'center',
+              justifyContent: 'center', flexShrink: 0, marginTop: 1,
+            }}>
+              <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                <path d="M2 6l3 3 5-5" stroke="#2563eb" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </span>
+            <span style={{ fontFamily: "'Poppins', sans-serif", fontSize: 14, color: '#374151', lineHeight: 1.6 }}>{item}</span>
+          </li>
+        ))}
+      </ul>
+    </div>
+
   </div>
 </section>
 

@@ -14,7 +14,19 @@ function getFirestoreClient() {
   return getFirestore();
 }
 
-async function sendEmail({ to, subject, html }: { to: string; subject: string; html: string }) {
+type Attachment = { filename: string; content: string };
+
+async function sendEmail({
+  to,
+  subject,
+  html,
+  attachments,
+}: {
+  to: string;
+  subject: string;
+  html: string;
+  attachments?: Attachment[];
+}) {
   const res = await fetch('https://api.resend.com/emails', {
     method: 'POST',
     headers: {
@@ -24,6 +36,7 @@ async function sendEmail({ to, subject, html }: { to: string; subject: string; h
     body: JSON.stringify({
       from: process.env.FROM_EMAIL || 'onboarding@resend.dev',
       to, subject, html,
+      ...(attachments && attachments.length > 0 ? { attachments } : {}),
     }),
   });
   if (!res.ok) console.error('Email failed:', await res.json().catch(() => ({})));
@@ -52,7 +65,7 @@ function confirmationHtml(d: any) {
     </div>
     <div class="body">
       <p>Dear <strong>${d.fullName}</strong>,</p>
-      <p>Thank you for submitting your tenancy application. Our team will review it and be in touch within <strong>24–48 hours</strong>.</p>
+      <p>Thank you for submitting your tenancy application. Our team will review it and be in touch within <strong>24–48 hours</strong>. A PDF copy of your full application is attached to this email for your records.</p>
       <div class="detail-box">
         <div class="detail-row"><span class="detail-label">Property</span><span class="detail-value">${d.propertyAddress}</span></div>
         <div class="detail-row"><span class="detail-label">Rent</span><span class="detail-value">${d.rent} pcm</span></div>
@@ -147,7 +160,8 @@ function adminNotificationHtml(d: any) {
 
 export async function POST(request: Request) {
   try {
-    const data = await request.json();
+    const body = await request.json();
+    const { pdfBase64, ...data } = body;
 
     const required = ['fullName', 'email', 'phone', 'dob', 'nationality', 'niNumber', 'billingAddress', 'rightToRent', 'employmentStatus', 'annualIncome', 'moveInDate'];
     for (const field of required) {
@@ -165,16 +179,24 @@ export async function POST(request: Request) {
       updatedAt: FieldValue.serverTimestamp(),
     });
 
+    // Build a safe filename from the applicant's name, e.g. "Tenancy-Application-John-Smith.pdf"
+    const safeName = (data.fullName || 'Applicant').toString().trim().replace(/[^a-zA-Z0-9 ]/g, '').replace(/\s+/g, '-');
+    const pdfAttachment: Attachment[] | undefined = pdfBase64
+      ? [{ filename: `Tenancy-Application-${safeName}.pdf`, content: pdfBase64 }]
+      : undefined;
+
     Promise.allSettled([
       sendEmail({
         to: data.email,
         subject: '✅ Your Tenancy Application — House of Lettings',
         html: confirmationHtml(data),
+        attachments: pdfAttachment,
       }),
       sendEmail({
         to: process.env.ADMIN_EMAIL || 'admin@houseoflettings.co.uk',
         subject: `📋 New Tenancy Application — ${data.fullName}`,
         html: adminNotificationHtml(data),
+        attachments: pdfAttachment,
       }),
     ]);
 

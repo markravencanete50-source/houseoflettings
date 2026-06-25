@@ -318,5 +318,7 @@ export default function GoogleReviews() {
           ))}
         </div>
       )}
+
+    </section>
   );
 }

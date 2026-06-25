@@ -336,7 +336,7 @@ const emptyUpload = (): UploadState => ({ files: [], uploading: false, urls: [],
 function PropertySummaryCard({ property, dark = false }: { property: Property; dark?: boolean }) {
   const holdingDeposit = calcHoldingDeposit(property.price);
   const items = [
-    { label: 'Property', value: property.title },
+    { label: 'Property', value: property.location },
     { label: 'Rent', value: `${formatGBP(property.price)} pcm` },
     { label: 'Deposit', value: formatGBP(property.depositAmount || 0) },
     { label: 'Holding Deposit', value: formatGBP(holdingDeposit) },
@@ -542,7 +542,7 @@ export default function TenantApplicationPage() {
         consentContact, consentDeclare, submissionDate,
         // Property info — snapshotted live from the selected listing at time of submission
         propertyId: selectedProperty.id,
-        propertyAddress: selectedProperty.title,
+        propertyAddress: selectedProperty.location,
         rent: formatGBP(selectedProperty.price),
         deposit: formatGBP(selectedProperty.depositAmount || 0),
         holdingDeposit: formatGBP(holdingDeposit),

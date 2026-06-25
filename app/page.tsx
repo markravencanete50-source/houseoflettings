@@ -635,7 +635,7 @@ export default function HomePage() {
             <Link href="/landlords" className="hero-btn">
               Book a Valuation
             </Link>
-            <Link href="/instant-valuation" className="hero-btn hero-btn-outline">
+            <Link href="/instant-valuation" className="hero-btn">
               Instant Valuation
             </Link>
           </div>

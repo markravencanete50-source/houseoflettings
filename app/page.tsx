@@ -7,6 +7,7 @@ import Navbar from '@/components/layout/Navbar';
 import PropertyCard from '@/components/property/PropertyCard';
 import { getProperties } from '@/services/property';
 import { Property } from '@/lib/types';
+import GoogleReviews from '@/components/GoogleReviews';
 
 // ── SCROLL REVEAL HOOK ────────────────────────────────────────────────────────
 function useScrollReveal() {
@@ -1504,7 +1505,7 @@ export default function HomePage() {
   </div>
 )}
       </section>
-
+      <GoogleReviews />
 
       {/* ── HOW IT WORKS ─────────────────────────────────────── */}
       <style>{`

@@ -1,7 +1,9 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import Navbar from '@/components/layout/Navbar';
+import { getAllProperties } from '@/services/admin';
+import { Property } from '@/lib/types';
 
 const inputStyle: React.CSSProperties = {
   width: '100%',
@@ -44,6 +46,51 @@ const dividerStyle: React.CSSProperties = {
   borderTop: '1.5px solid #e5e7eb',
   margin: '36px 0',
 };
+
+// ── Parking enum → readable label ──────────────────────────────────────────
+const PARKING_LABELS: Record<string, string> = {
+  none: 'No Parking',
+  'double-garage': 'Double Garage',
+  'off-street': 'Off Street',
+  residents: "Residents' Parking",
+  'single-garage': 'Single Garage',
+  underground: 'Underground',
+  'communal-no-allocated': 'Communal (No Allocated Space)',
+  'disabled-available': 'Disabled Parking Available',
+  'disabled-not-available': 'No Disabled Parking',
+  'driveway-private': 'Private Driveway',
+  'driveway-shared': 'Shared Driveway',
+  'ev-private': 'Private EV Charging',
+  'ev-shared': 'Shared EV Charging',
+  garage: 'Garage',
+  'garage-en-bloc': 'Garage (En Bloc)',
+  'garage-carport': 'Carport',
+  'garage-detached': 'Detached Garage',
+  'garage-integral': 'Integral Garage',
+  gated: 'Gated Parking',
+  rear: 'Rear Parking',
+  'street-no-permit': 'On Street (No Permit)',
+  'street-permit': 'On Street (Permit Required)',
+  undercroft: 'Undercroft Parking',
+  'underground-allocated': 'Underground (Allocated)',
+  'underground-no-allocated': 'Underground (No Allocated Space)',
+  other: 'Other',
+};
+
+function parkingLabel(p?: Property['parking']) {
+  if (!p) return 'Not specified';
+  return PARKING_LABELS[p] || 'Not specified';
+}
+
+// Holding deposit = 1 week's rent, always rounded DOWN to the nearest £10
+function calcHoldingDeposit(monthlyRent: number) {
+  const weeklyRent = (monthlyRent * 12) / 52;
+  return Math.floor(weeklyRent / 10) * 10;
+}
+
+function formatGBP(n: number) {
+  return `£${n.toLocaleString('en-GB')}`;
+}
 
 type UploadState = {
   files: File[];
@@ -151,11 +198,74 @@ function FileUpload({
 
 const emptyUpload = (): UploadState => ({ files: [], uploading: false, urls: [], error: '' });
 
+// ── Reusable property summary card ──────────────────────────────────────────
+function PropertySummaryCard({ property, dark = false }: { property: Property; dark?: boolean }) {
+  const holdingDeposit = calcHoldingDeposit(property.price);
+  const items = [
+    { label: 'Property', value: property.title },
+    { label: 'Rent', value: `${formatGBP(property.price)} pcm` },
+    { label: 'Deposit', value: formatGBP(property.depositAmount || 0) },
+    { label: 'Holding Deposit', value: formatGBP(holdingDeposit) },
+    { label: 'Parking', value: parkingLabel(property.parking) },
+  ];
+
+  if (dark) {
+    return (
+      <div style={{
+        display: 'flex', gap: 24, justifyContent: 'center', flexWrap: 'wrap',
+        marginTop: 32, padding: '20px 28px',
+        background: 'rgba(255,255,255,0.06)', borderRadius: 12,
+        border: '1px solid rgba(255,255,255,0.1)',
+      }}>
+        {items.map(item => (
+          <div key={item.label} style={{ textAlign: 'center' }}>
+            <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.45)', fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 4 }}>{item.label}</div>
+            <div style={{ fontSize: 14, color: '#fff', fontWeight: 700 }}>{item.value}</div>
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  return (
+    <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 10, padding: '20px 24px' }}>
+      <h3 style={{ fontSize: 14, fontWeight: 700, color: '#374151', marginBottom: 8 }}>Property You're Applying For</h3>
+      {items.map(item => (
+        <div key={item.label} style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px solid #f1f5f9', fontSize: 13 }}>
+          <span style={{ color: '#6b7280', fontWeight: 500 }}>{item.label}</span>
+          <span style={{ color: '#111827', fontWeight: 600 }}>{item.value}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 export default function TenantApplicationPage() {
   const [step, setStep] = useState(1);
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [submitError, setSubmitError] = useState('');
+
+  // ── Property selection
+  const [properties, setProperties] = useState<Property[]>([]);
+  const [propertiesLoading, setPropertiesLoading] = useState(true);
+  const [propertySearch, setPropertySearch] = useState('');
+  const [selectedPropertyId, setSelectedPropertyId] = useState('');
+
+  useEffect(() => {
+    getAllProperties()
+      .then(all => setProperties(all.filter(p => p.status === 'active')))
+      .catch(() => setProperties([]))
+      .finally(() => setPropertiesLoading(false));
+  }, []);
+
+  const selectedProperty = properties.find(p => p.id === selectedPropertyId) || null;
+
+  const filteredProperties = properties.filter(p =>
+    !propertySearch.trim() ||
+    p.title.toLowerCase().includes(propertySearch.toLowerCase()) ||
+    p.location.toLowerCase().includes(propertySearch.toLowerCase())
+  );
 
   // ── Personal Details
   const [fullName, setFullName] = useState('');
@@ -202,10 +312,13 @@ export default function TenantApplicationPage() {
   const [consentDeclare, setConsentDeclare] = useState(false);
   const [submissionDate, setSubmissionDate] = useState('');
 
-  const totalSteps = 4;
+  const totalSteps = 5;
 
   const validateStep = (s: number) => {
     if (s === 1) {
+      if (!selectedPropertyId) return 'Please select the property you are applying for.';
+    }
+    if (s === 2) {
       if (!fullName.trim()) return 'Full name is required.';
       if (!dob) return 'Date of birth is required.';
       if (!nationality.trim()) return 'Nationality is required.';
@@ -217,7 +330,7 @@ export default function TenantApplicationPage() {
       if (proofOfAddress.urls.length === 0) return 'Proof of address upload is required.';
       if (!rightToRent) return 'Please answer the Right to Rent question.';
     }
-    if (s === 2) {
+    if (s === 3) {
       if (!employmentStatus.trim()) return 'Employment status is required.';
       if (!employerPhone.trim()) return 'Employer/institution contact number is required.';
       if (!employerEmail.trim()) return 'Employer/institution email is required.';
@@ -228,7 +341,7 @@ export default function TenantApplicationPage() {
       if (!hasCCJ) return 'Please answer the CCJ question.';
       if (!wasBankrupt) return 'Please answer the bankruptcy question.';
     }
-    if (s === 3) {
+    if (s === 4) {
       if (!landlordName.trim()) return "Landlord's full name is required.";
       if (!landlordEmail.trim()) return "Landlord's email is required.";
       if (!landlordPhone.trim()) return "Landlord's contact number is required.";
@@ -241,7 +354,7 @@ export default function TenantApplicationPage() {
       if (!pets.trim()) return 'Please answer the pets question.';
       if (!guarantor) return 'Please answer the guarantor question.';
     }
-    if (s === 4) {
+    if (s === 5) {
       if (!consentContact) return 'You must consent to contact for verification.';
       if (!consentDeclare) return 'You must declare that all information is accurate.';
       if (!submissionDate) return 'Submission date is required.';
@@ -266,11 +379,13 @@ export default function TenantApplicationPage() {
   };
 
   const handleSubmit = async () => {
-    const err = validateStep(4);
+    const err = validateStep(5);
     if (err) { setStepError(err); return; }
+    if (!selectedProperty) { setStepError('Please select a property before submitting.'); return; }
     setSubmitting(true);
     setSubmitError('');
     try {
+      const holdingDeposit = calcHoldingDeposit(selectedProperty.price);
       const payload = {
         // Personal
         fullName, dob, nationality, niNumber, email, phone, billingAddress,
@@ -291,12 +406,13 @@ export default function TenantApplicationPage() {
         moveInDate, pets, guarantor,
         // Consents
         consentContact, consentDeclare, submissionDate,
-        // Property info
-        propertyAddress: '7 Marlborough Grange',
-        rent: '£1,150',
-        deposit: '£1,250',
-        holdingDeposit: '£250',
-        carPark: 'Off Street',
+        // Property info — snapshotted live from the selected listing at time of submission
+        propertyId: selectedProperty.id,
+        propertyAddress: selectedProperty.title,
+        rent: formatGBP(selectedProperty.price),
+        deposit: formatGBP(selectedProperty.depositAmount || 0),
+        holdingDeposit: formatGBP(holdingDeposit),
+        carPark: parkingLabel(selectedProperty.parking),
       };
       const res = await fetch('/api/tenant-application', {
         method: 'POST',
@@ -326,7 +442,7 @@ export default function TenantApplicationPage() {
             </h2>
             <p style={{ color: '#6b7280', fontSize: 15, lineHeight: 1.7, marginBottom: 24 }}>
               Thank you, <strong>{fullName}</strong>. We've received your tenancy application for{' '}
-              <strong>7 Marlborough Grange</strong>. Our team will review it and be in touch within 24–48 hours.
+              <strong>{selectedProperty?.title}</strong>. Our team will review it and be in touch within 24–48 hours.
             </p>
             <p style={{ color: '#9ca3af', fontSize: 13 }}>
               A confirmation email has been sent to <strong>{email}</strong>.
@@ -363,6 +479,16 @@ export default function TenantApplicationPage() {
           cursor: pointer; font-size: 14px; color: #374151; line-height: 1.6;
         }
         .ta-checkbox-label input { accent-color: #2563eb; margin-top: 3px; flex-shrink: 0; }
+        .ta-property-option {
+          display: flex; align-items: center; justify-content: space-between;
+          border: 1.5px solid #d1d5db; border-radius: 10px;
+          padding: 16px 18px; cursor: pointer; transition: all 0.2s;
+          background: #fff;
+        }
+        .ta-property-option.selected {
+          border-color: #2563eb; background: #eff6ff;
+        }
+        .ta-property-option:hover { border-color: #93c5fd; }
       `}</style>
 
       <Navbar />
@@ -390,26 +516,8 @@ export default function TenantApplicationPage() {
             Please complete this form accurately and in full. All information is treated confidentially.
           </p>
 
-          {/* Property info bar */}
-          <div style={{
-            display: 'flex', gap: 24, justifyContent: 'center', flexWrap: 'wrap',
-            marginTop: 32, padding: '20px 28px',
-            background: 'rgba(255,255,255,0.06)', borderRadius: 12,
-            border: '1px solid rgba(255,255,255,0.1)',
-          }}>
-            {[
-              { label: 'Property', value: '7 Marlborough Grange' },
-              { label: 'Rent', value: '£1,150 pcm' },
-              { label: 'Deposit', value: '£1,250' },
-              { label: 'Holding Deposit', value: '£250' },
-              { label: 'Car Park', value: 'Off Street' },
-            ].map(item => (
-              <div key={item.label} style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.45)', fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 4 }}>{item.label}</div>
-                <div style={{ fontSize: 14, color: '#fff', fontWeight: 700 }}>{item.value}</div>
-              </div>
-            ))}
-          </div>
+          {/* Property info bar — only shown once a property has been picked */}
+          {selectedProperty && <PropertySummaryCard property={selectedProperty} dark />}
         </div>
       </section>
 
@@ -420,7 +528,7 @@ export default function TenantApplicationPage() {
           {/* Progress bar */}
           <div style={{ marginBottom: 32 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 10 }}>
-              {['Personal Details', 'Employment & Finance', "Landlord's Details", 'Declaration'].map((label, i) => (
+              {['Select Property', 'Personal Details', 'Employment & Finance', "Landlord's Details", 'Declaration'].map((label, i) => (
                 <div key={label} style={{ textAlign: 'center', flex: 1 }}>
                   <div style={{
                     width: 28, height: 28, borderRadius: '50%', margin: '0 auto 6px',
@@ -431,9 +539,6 @@ export default function TenantApplicationPage() {
                   }}>
                     {step > i + 1 ? '✓' : i + 1}
                   </div>
-                  <div style={{ fontSize: 11, color: step === i + 1 ? '#2563eb' : '#9ca3af', fontWeight: step === i + 1 ? 700 : 400, display: 'none' }}>
-                    {label}
-                  </div>
                 </div>
               ))}
             </div>
@@ -441,7 +546,7 @@ export default function TenantApplicationPage() {
               <div style={{ height: '100%', width: `${progressPct}%`, background: '#2563eb', borderRadius: 99, transition: 'width 0.4s ease' }} />
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 8 }}>
-              {['Personal Details', 'Employment & Finance', "Landlord's Details", 'Declaration'].map((label, i) => (
+              {['Select Property', 'Personal Details', 'Employment & Finance', "Landlord's Details", 'Declaration'].map((label, i) => (
                 <div key={label} style={{ fontSize: 11, color: step === i + 1 ? '#2563eb' : '#9ca3af', fontWeight: step === i + 1 ? 700 : 400, flex: 1, textAlign: 'center' }}>
                   {label}
                 </div>
@@ -458,8 +563,58 @@ export default function TenantApplicationPage() {
 
           <div style={{ background: '#fff', borderRadius: 16, boxShadow: '0 2px 16px rgba(0,0,0,0.07)', padding: '40px 48px' }}>
 
-            {/* ── STEP 1: Personal Details ── */}
+            {/* ── STEP 1: Select Property ── */}
             {step === 1 && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+                <div>
+                  <h2 style={sectionHeadingStyle}>Select Property</h2>
+                  <p style={sectionSubStyle}>Choose the property you'd like to apply for. Rent, deposit and holding deposit will be filled in automatically.</p>
+                </div>
+
+                <input
+                  style={inputStyle}
+                  placeholder="Search by address or area…"
+                  value={propertySearch}
+                  onChange={e => setPropertySearch(e.target.value)}
+                />
+
+                {propertiesLoading ? (
+                  <p style={{ color: '#6b7280', fontSize: 14 }}>Loading available properties…</p>
+                ) : filteredProperties.length === 0 ? (
+                  <p style={{ color: '#6b7280', fontSize: 14 }}>No matching properties found.</p>
+                ) : (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 10, maxHeight: 380, overflowY: 'auto' }}>
+                    {filteredProperties.map(p => {
+                      const isSelected = selectedPropertyId === p.id;
+                      return (
+                        <div
+                          key={p.id}
+                          className={`ta-property-option ${isSelected ? 'selected' : ''}`}
+                          onClick={() => setSelectedPropertyId(p.id || '')}
+                        >
+                          <div>
+                            <div style={{ fontWeight: 700, fontSize: 14, color: '#111827' }}>{p.title}</div>
+                            <div style={{ fontSize: 12, color: '#6b7280', marginTop: 2 }}>
+                              {p.location} · {formatGBP(p.price)} pcm · {p.bedrooms === 0 ? 'Studio' : `${p.bedrooms} bed`}
+                            </div>
+                          </div>
+                          {isSelected && (
+                            <span style={{ color: '#2563eb', fontSize: 18 }}>✓</span>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+
+                {selectedProperty && (
+                  <PropertySummaryCard property={selectedProperty} />
+                )}
+              </div>
+            )}
+
+            {/* ── STEP 2: Personal Details ── */}
+            {step === 2 && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
                 <div>
                   <h2 style={sectionHeadingStyle}>Personal Details</h2>
@@ -528,8 +683,8 @@ export default function TenantApplicationPage() {
               </div>
             )}
 
-            {/* ── STEP 2: Employment & Finance ── */}
-            {step === 2 && (
+            {/* ── STEP 3: Employment & Finance ── */}
+            {step === 3 && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
                 <div>
                   <h2 style={sectionHeadingStyle}>Employment & Finance</h2>
@@ -602,8 +757,8 @@ export default function TenantApplicationPage() {
               </div>
             )}
 
-            {/* ── STEP 3: Landlord's Details ── */}
-            {step === 3 && (
+            {/* ── STEP 4: Landlord's Details ── */}
+            {step === 4 && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
                 <div>
                   <h2 style={sectionHeadingStyle}>Current Landlord's Details</h2>
@@ -680,29 +835,34 @@ export default function TenantApplicationPage() {
               </div>
             )}
 
-            {/* ── STEP 4: Declaration ── */}
-            {step === 4 && (
+            {/* ── STEP 5: Declaration ── */}
+            {step === 5 && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
                 <div>
                   <h2 style={sectionHeadingStyle}>Declaration & Consent</h2>
-                  <p style={sectionSubStyle}>Please read and confirm the declarations below before submitting.</p>
+                  <p style={sectionSubStyle}>Please review your application and confirm the declarations below before submitting.</p>
                 </div>
 
+                {selectedProperty && <PropertySummaryCard property={selectedProperty} />}
+
                 <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 10, padding: '20px 24px' }}>
-                  <h3 style={{ fontSize: 14, fontWeight: 700, color: '#374151', marginBottom: 8 }}>Summary of Application</h3>
+                  <h3 style={{ fontSize: 14, fontWeight: 700, color: '#374151', marginBottom: 8 }}>Your Answers</h3>
                   {[
-                    ['Property', '7 Marlborough Grange'],
                     ['Applicant', fullName],
                     ['Email', email],
                     ['Phone', phone],
+                    ['Nationality', nationality],
+                    ['Right to Rent', rightToRent === 'Other' ? rightToRentOther : rightToRent],
+                    ['Employment Status', employmentStatus],
+                    ['Annual Income', annualIncome],
                     ['Move-In Date', moveInDate ? new Date(moveInDate).toLocaleDateString('en-GB') : '—'],
                     ['Lease Term', leaseTerm === 'Other' ? leaseTermOther : leaseTerm],
-                    ['Annual Income', annualIncome],
+                    ['Pets', pets],
                     ['Guarantor', guarantor],
                   ].map(([label, value]) => (
                     <div key={label} style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px solid #f1f5f9', fontSize: 13 }}>
                       <span style={{ color: '#6b7280', fontWeight: 500 }}>{label}</span>
-                      <span style={{ color: '#111827', fontWeight: 600 }}>{value || '—'}</span>
+                      <span style={{ color: '#111827', fontWeight: 600, textAlign: 'right', maxWidth: '60%' }}>{value || '—'}</span>
                     </div>
                   ))}
                 </div>

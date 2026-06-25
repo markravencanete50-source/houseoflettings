@@ -197,8 +197,7 @@ function generateApplicationPdf(data: Record<string, any>): string {
   fileLinks('Bank Statements', data.bankStatementUrls);
 
   y += 10;
-  sectionTitle("Landlord's Details");
-  row("Landlord's Name", data.landlordName);
+  sectionTitle("Landlord's Details");  row("Landlord's Name", data.landlordName);
   row("Landlord's Email", data.landlordEmail);
   row("Landlord's Phone", data.landlordPhone);
   row('Current Address', data.currentAddress);
@@ -209,6 +208,7 @@ function generateApplicationPdf(data: Record<string, any>): string {
   row('Lease Term', data.leaseTerm);
   row('Pets', data.pets);
   row('Guarantor', data.guarantor);
+  fileLinks('Holding Deposit Receipt', data.holdingDepositReceiptUrls);
 
   y += 10;
   sectionTitle('Property');
@@ -430,6 +430,8 @@ export default function TenantApplicationPage() {
   const [moveInDate, setMoveInDate] = useState('');
   const [pets, setPets] = useState('');
   const [guarantor, setGuarantor] = useState('');
+  const [holdingDepositReceipt, setHoldingDepositReceipt] = useState<UploadState>(emptyUpload());
+  const [paymentReference, setPaymentReference] = useState('');
 
   const [consentContact, setConsentContact] = useState(false);
   const [consentDeclare, setConsentDeclare] = useState(false);
@@ -476,6 +478,10 @@ export default function TenantApplicationPage() {
       if (!moveInDate) return 'Desired move-in date is required.';
       if (!pets.trim()) return 'Please answer the pets question.';
       if (!guarantor) return 'Please answer the guarantor question.';
+      if (holdingDepositReceipt.urls.length === 0) return 'Please upload your holding deposit payment receipt.';
+      if (!holdingDepositReceipt.files[0]?.name.toLowerCase().includes('receipt')) {
+        return 'The uploaded file must be named with "receipt" (e.g. receipt.pdf). Please rename your file and re-upload.';
+      }
     }
     if (s === 5) {
       if (!consentContact) return 'You must consent to contact for verification.';
@@ -524,6 +530,7 @@ export default function TenantApplicationPage() {
         tenancyStart, tenancyEnd, reasonLeaving,
         leaseTerm: leaseTerm === 'Other' ? leaseTermOther : leaseTerm,
         moveInDate, pets, guarantor,
+        holdingDepositReceiptUrls: holdingDepositReceipt.urls,
         consentContact, consentDeclare, submissionDate,
         propertyId: selectedProperty.id,
         propertyAddress: selectedProperty.location,
@@ -943,6 +950,81 @@ export default function TenantApplicationPage() {
                       </label>
                     ))}
                   </div>
+                </div>
+
+                <hr style={dividerStyle} />
+
+                {/* Holding Deposit Payment */}
+                <div>
+                  <h3 style={{ fontSize: 16, fontWeight: 800, color: '#0f172a', marginBottom: 4 }}>
+                    Holding Deposit Payment
+                  </h3>
+                  <p style={{ fontSize: 13, color: '#6b7280', marginBottom: 16 }}>
+                    To secure this property, please transfer the holding deposit to the account below and upload your payment receipt.
+                  </p>
+
+                  {/* Bank Details */}
+                  <div style={{ background: 'linear-gradient(135deg, #0a1628 0%, #0f2044 100%)', borderRadius: 12, padding: '24px 28px', marginBottom: 20, color: '#fff' }}>
+                    <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 16 }}>
+                      Amount Due
+                    </div>
+                    {selectedProperty && (
+                      <>
+                        <div style={{ fontSize: 36, fontWeight: 800, color: '#fff', marginBottom: 4 }}>
+                          {formatGBP(calcHoldingDeposit(selectedProperty.price))}
+                        </div>
+                        <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', marginBottom: 24 }}>
+                          Holding deposit for {selectedProperty.location}
+                        </div>
+                      </>
+                    )}
+
+                    <div style={{ borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: 20, display: 'flex', flexDirection: 'column', gap: 14 }}>
+                      {[
+                        { label: 'Account Name', value: 'House of Lettings Limited' },
+                        { label: 'Sort Code', value: '60-83-65' },
+                        { label: 'Account Number', value: '67205541' },
+                      ].map(item => (
+                        <div key={item.label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid rgba(255,255,255,0.08)', paddingBottom: 12 }}>
+                          <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.45)', fontWeight: 600, letterSpacing: '0.06em', textTransform: 'uppercase' }}>{item.label}</div>
+                          <div style={{ fontSize: 15, fontWeight: 700, fontFamily: item.label !== 'Account Name' ? 'monospace' : 'inherit', letterSpacing: item.label !== 'Account Name' ? '0.1em' : 'normal' }}>{item.value}</div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Payment Reference */}
+                  <div style={{ marginBottom: 20 }}>
+                    <label style={labelStyle}>Payment Reference <span style={{ color: '#ef4444' }}>*</span></label>
+                    <p style={{ fontSize: 12, color: '#6b7280', marginBottom: 8, marginTop: 0 }}>
+                      Use your property address as the payment reference when making the transfer.
+                    </p>
+                    <input
+                      style={inputStyle}
+                      value={paymentReference}
+                      onChange={e => setPaymentReference(e.target.value)}
+                      placeholder={selectedProperty ? selectedProperty.location : 'e.g. 7 Marlborough Grange, Leeds, LS1 4PF'}
+                    />
+                  </div>
+
+                  <div style={{ background: '#fffbeb', border: '1px solid #fde68a', borderRadius: 10, padding: '14px 18px', fontSize: 13, color: '#92400e', lineHeight: 1.6, marginBottom: 20 }}>
+                    ⚠️ <strong>Important:</strong> Your receipt file <strong>must be named with "receipt"</strong> (e.g. <em>receipt.pdf</em>, <em>bank-receipt.png</em>). Files without "receipt" in the filename will not be accepted.
+                  </div>
+
+                  <FileUpload
+                    label="Holding Deposit Receipt"
+                    required
+                    maxFiles={1}
+                    accept="image/*,.pdf"
+                    state={holdingDepositReceipt}
+                    onChange={(s) => {
+                      if (s.urls.length > 0 && s.files[0] && !s.files[0].name.toLowerCase().includes('receipt')) {
+                        setHoldingDepositReceipt({ ...s, urls: [], error: 'File must include "receipt" in the filename. Please rename and re-upload.' });
+                      } else {
+                        setHoldingDepositReceipt(s);
+                      }
+                    }}
+                  />
                 </div>
               </div>
             )}

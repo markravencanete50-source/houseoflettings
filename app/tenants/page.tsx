@@ -267,6 +267,22 @@ export default function TenantsPage() {
             >
               Browse Properties
             </a>
+            <a
+              href="/tenant-application"
+              style={{
+                border: "2px solid #d4af37",
+                color: "#d4af37",
+                background: "rgba(212,175,55,0.08)",
+                padding: "14px 32px",
+                borderRadius: 8,
+                fontWeight: 700,
+                fontSize: 15,
+                textDecoration: "none",
+                letterSpacing: "0.02em",
+              }}
+            >
+              Tenant Application
+            </a>
           </div>
         </div>
       </section>

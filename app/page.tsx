@@ -1114,7 +1114,7 @@ export default function HomePage() {
         Booking a valuation with House of Lettings will save you time, money, and stress. Our local experts give you an honest, data driven view of what your property is worth, so you can make informed decisions with confidence.
       </p>
       <p style={{ fontFamily: "'Poppins', sans-serif", fontSize: 13, color: '#6b7280', lineHeight: 1.7, marginBottom: 36 }}>
-        Whether you own one property or a full portfolio, our team is here to protect your investment and maximise your returns — so you can enjoy the freedom of hands-off landlording.
+        Whether you own one property or a full portfolio, our team is here to protect your investment and maximise your returns so you can enjoy the freedom of hands-off landlording.
       </p>
       <ValuationInlineButton />
     </div>
@@ -1141,7 +1141,7 @@ export default function HomePage() {
           'Advice on how to maximise your property\'s return',
           'Better tenant quality. We find and secure reliable tenants',
           'Full compliance, legal, and rent protection support',
-          'Day-to-day management handled by experts',
+          'Day to day management handled by experts',
         ].map((item, i) => (
           <li key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 12, paddingBottom: 16, borderBottom: i < 5 ? '1px solid #f3f4f6' : 'none' }}>
             <span style={{

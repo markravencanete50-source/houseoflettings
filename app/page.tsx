@@ -157,11 +157,6 @@ const GALLERY_ITEMS = [
     label: 'Stay Fully Compliant',
     sub: 'We track the rules so you don\'t have to.',
   },
-  {
-    img: '/images/tenant-pressure.jpeg',
-    label: 'Tenant Pressure? We Handle It.',
-    sub: 'Smart landlords choose professional management.',
-  },
 ];
 
 // ── GALLERY COMPONENT ─────────────────────────────────────────────────────────

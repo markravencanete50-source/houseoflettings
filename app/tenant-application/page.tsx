@@ -316,7 +316,7 @@ function PropertySummaryCard({ property }: { property: Property }) {
           padding: '10px 0',
           borderBottom: i < items.length - 1 ? '1px solid #e5e7eb' : 'none',
         }}>
-          <span style={{ fontSize: 11, fontWeight: 600, color: '#9ca3af', letterSpacing: '0.06em', textTransform: 'uppercase' }}>{item.label}</span>
+          <span style={{ fontSize: 11, fontWeight: 700, color: '#2563eb', letterSpacing: '0.06em', textTransform: 'uppercase' }}>{item.label}</span>
           <span style={{ fontSize: 15, color: '#111827', fontWeight: 700 }}>{item.value}</span>
         </div>
       ))}

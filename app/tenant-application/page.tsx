@@ -295,7 +295,7 @@ function FileUpload({
 
 const emptyUpload = (): UploadState => ({ files: [], uploading: false, urls: [], error: '' });
 
-function PropertySummaryCard({ property, dark = false }: { property: Property; dark?: boolean }) {
+function PropertySummaryCard({ property }: { property: Property }) {
   const holdingDeposit = calcHoldingDeposit(property.price);
   const items = [
     { label: 'Property', value: property.location },
@@ -305,25 +305,6 @@ function PropertySummaryCard({ property, dark = false }: { property: Property; d
     { label: 'Parking', value: parkingLabel(property.parking) },
   ];
 
-  if (dark) {
-    return (
-      <div style={{
-        display: 'flex', gap: 24, justifyContent: 'center', flexWrap: 'wrap',
-        marginTop: 32, padding: '20px 28px',
-        background: 'rgba(255,255,255,0.06)', borderRadius: 12,
-        border: '1px solid rgba(255,255,255,0.1)',
-      }}>
-        {items.map(item => (
-          <div key={item.label} style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.45)', fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 4 }}>{item.label}</div>
-            <div style={{ fontSize: 14, color: '#fff', fontWeight: 700 }}>{item.value}</div>
-          </div>
-        ))}
-      </div>
-    );
-  }
-
-  // Light version: stacked rows on gray background
   return (
     <div style={{ background: '#f3f4f6', border: '1px solid #e5e7eb', borderRadius: 12, padding: '20px 24px' }}>
       <div style={{ fontSize: 12, fontWeight: 700, color: '#2563eb', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 16 }}>
@@ -586,6 +567,7 @@ export default function TenantApplicationPage() {
 
       <Navbar />
 
+      {/* ── HERO ── */}
       <section style={{
         background: 'linear-gradient(135deg, #0a1628 0%, #0f2044 100%)',
         paddingTop: 'calc(72px + 60px)',
@@ -607,13 +589,13 @@ export default function TenantApplicationPage() {
           <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: 15, lineHeight: 1.7, maxWidth: 520, margin: '0 auto' }}>
             Please complete this form accurately and in full. All information is treated confidentially.
           </p>
-          {selectedProperty && <PropertySummaryCard property={selectedProperty} dark />}
         </div>
       </section>
 
       <section style={{ padding: '48px 24px 80px' }}>
         <div style={{ maxWidth: 720, margin: '0 auto' }}>
 
+          {/* ── STEP INDICATOR ── */}
           <div style={{ marginBottom: 32 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 10 }}>
               {['Select Property', 'Personal Details', 'Employment & Finance', "Landlord's Details", 'Declaration'].map((label, i) => (

@@ -404,14 +404,6 @@ export default function TenantApplicationPage() {
   const [mobileSubStep, setMobileSubStep] = useState(0);
   // Track which trust badges have been revealed on mobile
   const [revealedBadges, setRevealedBadges] = useState(0);
-  const [isMobile, setIsMobile] = useState(false);
-
-  useEffect(() => {
-    const check = () => setIsMobile(window.innerWidth <= 640);
-    check();
-    window.addEventListener('resize', check);
-    return () => window.removeEventListener('resize', check);
-  }, []);
 
   const [properties, setProperties] = useState<Property[]>([]);
   const [propertiesLoading, setPropertiesLoading] = useState(true);
@@ -427,7 +419,8 @@ export default function TenantApplicationPage() {
 
   // Reveal trust badges sequentially on mobile after page load
   useEffect(() => {
-    const badges = ['Information is kept confidential', 'Secure file uploads', 'Response within 24–48 hours'];
+    const badges = ['Information is kept confidential', 'Response within 24–48 hours', 'Secure file uploads'];
+
     badges.forEach((_, i) => {
       setTimeout(() => setRevealedBadges(i + 1), 400 + i * 500);
     });
@@ -1009,7 +1002,7 @@ export default function TenantApplicationPage() {
     );
   }
 
-  const trustBadges = ['Information is kept confidential', 'Secure file uploads', 'Response within 24–48 hours'];
+  const trustBadges = ['Information is kept confidential', 'Response within 24–48 hours', 'Secure file uploads'];
 
   return (
     <main style={{ background: '#f3f4f6', minHeight: '100vh', fontFamily: "'Poppins', sans-serif" }}>
@@ -1057,13 +1050,6 @@ export default function TenantApplicationPage() {
 
           /* Card padding smaller on mobile */
           .ta-card { padding: 28px 20px !important; }
-
-          /* Trust badges: stack vertically, one per row, centred */
-          .trust-badges-desktop {
-            flex-direction: column !important;
-            align-items: center !important;
-            gap: 14px !important;
-          }
 
           /* Trust badges sequential fade-in */
           .trust-badge {
@@ -1120,13 +1106,6 @@ export default function TenantApplicationPage() {
 
       <section style={{ padding: '48px 24px 80px' }}>
         <div style={{ maxWidth: 720, margin: '0 auto' }}>
-
-          {/* ── PROPERTY SUMMARY ABOVE STEPPER (steps 2–5) ── */}
-          {selectedProperty && step > 1 && (
-            <div style={{ marginBottom: 24 }}>
-              <PropertySummaryCard property={selectedProperty} />
-            </div>
-          )}
 
           {/* ── STEP INDICATOR ── */}
           <div style={{ marginBottom: 32 }}>
@@ -1269,16 +1248,6 @@ export default function TenantApplicationPage() {
 
                 {/* MOBILE — one field at a time */}
                 <div className="mobile-only">
-                  <h2 style={{ ...sectionHeadingStyle, marginBottom: 4 }}>Personal Details</h2>
-                  <p style={{ ...sectionSubStyle, marginBottom: 20 }}>
-                    {mobileSubStep + 1} of {totalMobileSubSteps}
-                  </p>
-                  {/* Progress dots */}
-                  <div className="mobile-dots">
-                    {step2MobileFields.map((_, i) => (
-                      <div key={i} className={`mobile-dot ${i < mobileSubStep ? 'done' : i === mobileSubStep ? 'active' : ''}`} />
-                    ))}
-                  </div>
                   {step2MobileFields[mobileSubStep]?.render()}
                 </div>
               </>
@@ -1353,15 +1322,6 @@ export default function TenantApplicationPage() {
 
                 {/* MOBILE */}
                 <div className="mobile-only">
-                  <h2 style={{ ...sectionHeadingStyle, marginBottom: 4 }}>Employment & Finance</h2>
-                  <p style={{ ...sectionSubStyle, marginBottom: 20 }}>
-                    {mobileSubStep + 1} of {totalMobileSubSteps}
-                  </p>
-                  <div className="mobile-dots">
-                    {step3MobileFields.map((_, i) => (
-                      <div key={i} className={`mobile-dot ${i < mobileSubStep ? 'done' : i === mobileSubStep ? 'active' : ''}`} />
-                    ))}
-                  </div>
                   {step3MobileFields[mobileSubStep]?.render()}
                 </div>
               </>
@@ -1472,15 +1432,6 @@ export default function TenantApplicationPage() {
 
                 {/* MOBILE */}
                 <div className="mobile-only">
-                  <h2 style={{ ...sectionHeadingStyle, marginBottom: 4 }}>Landlord's Details</h2>
-                  <p style={{ ...sectionSubStyle, marginBottom: 20 }}>
-                    {mobileSubStep + 1} of {totalMobileSubSteps}
-                  </p>
-                  <div className="mobile-dots">
-                    {step4MobileFields.map((_, i) => (
-                      <div key={i} className={`mobile-dot ${i < mobileSubStep ? 'done' : i === mobileSubStep ? 'active' : ''}`} />
-                    ))}
-                  </div>
                   {step4MobileFields[mobileSubStep]?.render()}
                 </div>
               </>
@@ -1536,10 +1487,12 @@ export default function TenantApplicationPage() {
             {/* ── NAV BUTTONS ── */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 36, paddingTop: 24, borderTop: '1px solid #f1f5f9' }}>
               {/* Back button */}
-              {(step > 1 || (isMobile && isMobileWizardStep && mobileSubStep > 0)) ? (
+              {(step > 1 || (isMobileWizardStep && mobileSubStep > 0)) ? (
                 <button
                   onClick={() => {
-                    if (isMobile && isMobileWizardStep && mobileSubStep > 0) {
+                    // Mobile wizard: go back a sub-step or main step
+                    const isMobileView = typeof window !== 'undefined' && window.innerWidth <= 640;
+                    if (isMobileView && isMobileWizardStep && mobileSubStep > 0) {
                       goMobilePrev();
                     } else {
                       goPrev();
@@ -1554,7 +1507,8 @@ export default function TenantApplicationPage() {
               {step < totalSteps ? (
                 <button
                   onClick={() => {
-                    if (isMobile && isMobileWizardStep) {
+                    const isMobileView = typeof window !== 'undefined' && window.innerWidth <= 640;
+                    if (isMobileView && isMobileWizardStep) {
                       goMobileNext();
                     } else {
                       goNext();
@@ -1572,8 +1526,7 @@ export default function TenantApplicationPage() {
           </div>
 
           {/* ── TRUST BADGES — sequential on mobile ── */}
-          {/* Desktop: single row. Mobile: stacked one per line, sequential reveal */}
-          <div className="trust-badges-desktop" style={{ display: 'flex', justifyContent: 'center', gap: 28, marginTop: 24, flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', justifyContent: 'center', gap: 28, marginTop: 24, flexWrap: 'wrap' }}>
             {trustBadges.map((t, i) => (
               <span
                 key={t}

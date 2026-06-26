@@ -137,12 +137,10 @@ function generateApplicationPdf(data: Record<string, any>): string {
     doc.setFontSize(9.5);
     doc.setTextColor(gray);
     doc.text(label, margin, y);
-
     doc.setFont('helvetica', 'normal');
     doc.setTextColor(dark);
     const valLines = doc.splitTextToSize(val, pageWidth - margin * 2 - 160);
     doc.text(valLines, margin + 170, y);
-
     const lineH = Math.max(14, valLines.length * 12);
     doc.setDrawColor(lineGray);
     doc.setLineWidth(0.5);
@@ -157,7 +155,6 @@ function generateApplicationPdf(data: Record<string, any>): string {
     doc.setFontSize(9.5);
     doc.setTextColor(gray);
     doc.text(label, margin, y);
-
     urls.forEach((url, i) => {
       const text = `File ${i + 1}`;
       doc.setFont('helvetica', 'normal');
@@ -197,7 +194,8 @@ function generateApplicationPdf(data: Record<string, any>): string {
   fileLinks('Bank Statements', data.bankStatementUrls);
 
   y += 10;
-  sectionTitle("Landlord's Details");  row("Landlord's Name", data.landlordName);
+  sectionTitle("Landlord's Details");
+  row("Landlord's Name", data.landlordName);
   row("Landlord's Email", data.landlordEmail);
   row("Landlord's Phone", data.landlordPhone);
   row('Current Address', data.currentAddress);
@@ -229,19 +227,10 @@ type UploadState = {
 };
 
 function FileUpload({
-  label,
-  required,
-  maxFiles = 5,
-  accept,
-  state,
-  onChange,
+  label, required, maxFiles = 5, accept, state, onChange,
 }: {
-  label: string;
-  required?: boolean;
-  maxFiles?: number;
-  accept?: string;
-  state: UploadState;
-  onChange: (s: UploadState) => void;
+  label: string; required?: boolean; maxFiles?: number; accept?: string;
+  state: UploadState; onChange: (s: UploadState) => void;
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -249,7 +238,6 @@ function FileUpload({
     if (!files || files.length === 0) return;
     const arr = Array.from(files).slice(0, maxFiles);
     onChange({ ...state, files: arr, uploading: true, error: '' });
-
     const urls: string[] = [];
     for (const file of arr) {
       const formData = new FormData();
@@ -277,50 +265,30 @@ function FileUpload({
         onDragOver={e => e.preventDefault()}
         onDrop={e => { e.preventDefault(); handleFiles(e.dataTransfer.files); }}
         style={{
-          border: '2px dashed #d1d5db',
-          borderRadius: 10,
-          padding: '20px 16px',
-          textAlign: 'center',
-          cursor: 'pointer',
+          border: '2px dashed #d1d5db', borderRadius: 10, padding: '20px 16px',
+          textAlign: 'center', cursor: 'pointer',
           background: state.urls.length > 0 ? '#f0fdf4' : '#f9fafb',
           borderColor: state.urls.length > 0 ? '#86efac' : state.error ? '#fca5a5' : '#d1d5db',
           transition: 'all 0.2s',
         }}
       >
-        <input
-          ref={inputRef}
-          type="file"
-          multiple={maxFiles > 1}
-          accept={accept}
-          style={{ display: 'none' }}
-          onChange={e => handleFiles(e.target.files)}
-        />
+        <input ref={inputRef} type="file" multiple={maxFiles > 1} accept={accept} style={{ display: 'none' }} onChange={e => handleFiles(e.target.files)} />
         {state.uploading ? (
           <p style={{ color: '#6b7280', fontSize: 14, margin: 0 }}>⏳ Uploading…</p>
         ) : state.urls.length > 0 ? (
           <div>
-            <p style={{ color: '#16a34a', fontWeight: 600, fontSize: 14, margin: '0 0 6px' }}>
-              ✅ {state.files.length} file{state.files.length > 1 ? 's' : ''} uploaded
-            </p>
-            {state.files.map((f, i) => (
-              <p key={i} style={{ color: '#6b7280', fontSize: 12, margin: '2px 0' }}>{f.name}</p>
-            ))}
+            <p style={{ color: '#16a34a', fontWeight: 600, fontSize: 14, margin: '0 0 6px' }}>✅ {state.files.length} file{state.files.length > 1 ? 's' : ''} uploaded</p>
+            {state.files.map((f, i) => (<p key={i} style={{ color: '#6b7280', fontSize: 12, margin: '2px 0' }}>{f.name}</p>))}
           </div>
         ) : (
           <div>
             <div style={{ fontSize: 24, marginBottom: 8 }}>📎</div>
-            <p style={{ color: '#374151', fontWeight: 600, fontSize: 14, margin: '0 0 4px' }}>
-              Click to upload or drag & drop
-            </p>
-            <p style={{ color: '#9ca3af', fontSize: 12, margin: 0 }}>
-              Up to {maxFiles} file{maxFiles > 1 ? 's' : ''} · Max 100MB each
-            </p>
+            <p style={{ color: '#374151', fontWeight: 600, fontSize: 14, margin: '0 0 4px' }}>Click to upload or drag & drop</p>
+            <p style={{ color: '#9ca3af', fontSize: 12, margin: 0 }}>Up to {maxFiles} file{maxFiles > 1 ? 's' : ''} · Max 100MB each</p>
           </div>
         )}
       </div>
-      {state.error && (
-        <p style={{ color: '#ef4444', fontSize: 12, marginTop: 4 }}>{state.error}</p>
-      )}
+      {state.error && <p style={{ color: '#ef4444', fontSize: 12, marginTop: 4 }}>{state.error}</p>}
     </div>
   );
 }
@@ -355,13 +323,20 @@ function PropertySummaryCard({ property, dark = false }: { property: Property; d
     );
   }
 
+  // Light version: stacked rows on gray background
   return (
-    <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 10, padding: '20px 24px' }}>
-      <h3 style={{ fontSize: 14, fontWeight: 700, color: '#374151', marginBottom: 8 }}>Property You're Applying For</h3>
-      {items.map(item => (
-        <div key={item.label} style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px solid #f1f5f9', fontSize: 13 }}>
-          <span style={{ color: '#6b7280', fontWeight: 500 }}>{item.label}</span>
-          <span style={{ color: '#111827', fontWeight: 600 }}>{item.value}</span>
+    <div style={{ background: '#f3f4f6', border: '1px solid #e5e7eb', borderRadius: 12, padding: '20px 24px' }}>
+      <div style={{ fontSize: 12, fontWeight: 700, color: '#2563eb', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 16 }}>
+        Property You're Applying For
+      </div>
+      {items.map((item, i) => (
+        <div key={item.label} style={{
+          display: 'flex', flexDirection: 'column', gap: 2,
+          padding: '10px 0',
+          borderBottom: i < items.length - 1 ? '1px solid #e5e7eb' : 'none',
+        }}>
+          <span style={{ fontSize: 11, fontWeight: 600, color: '#9ca3af', letterSpacing: '0.06em', textTransform: 'uppercase' }}>{item.label}</span>
+          <span style={{ fontSize: 15, color: '#111827', fontWeight: 700 }}>{item.value}</span>
         </div>
       ))}
     </div>
@@ -387,7 +362,6 @@ export default function TenantApplicationPage() {
   }, []);
 
   const selectedProperty = properties.find(p => p.id === selectedPropertyId) || null;
-
   const filteredProperties = properties.filter(p =>
     !propertySearch.trim() ||
     p.title.toLowerCase().includes(propertySearch.toLowerCase()) ||
@@ -539,9 +513,7 @@ export default function TenantApplicationPage() {
         holdingDeposit: formatGBP(holdingDeposit),
         carPark: parkingLabel(selectedProperty.parking),
       };
-
       const pdfBase64 = generateApplicationPdf(payload);
-
       const res = await fetch('/api/tenant-application', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -565,9 +537,7 @@ export default function TenantApplicationPage() {
         <div style={{ maxWidth: 640, margin: '0 auto', padding: 'calc(72px + 60px) 24px 80px', textAlign: 'center' }}>
           <div style={{ background: '#fff', borderRadius: 16, padding: '60px 40px', boxShadow: '0 2px 16px rgba(0,0,0,0.07)' }}>
             <div style={{ fontSize: 56, marginBottom: 20 }}>✅</div>
-            <h2 style={{ fontSize: '1.8rem', fontWeight: 800, color: '#111827', marginBottom: 12 }}>
-              Application Submitted
-            </h2>
+            <h2 style={{ fontSize: '1.8rem', fontWeight: 800, color: '#111827', marginBottom: 12 }}>Application Submitted</h2>
             <p style={{ color: '#6b7280', fontSize: 15, lineHeight: 1.7, marginBottom: 24 }}>
               Thank you, <strong>{fullName}</strong>. We've received your tenancy application for{' '}
               <strong>{selectedProperty?.location}</strong>. Our team will review it and be in touch within 24–48 hours.
@@ -598,9 +568,7 @@ export default function TenantApplicationPage() {
           font-weight: 500; color: #374151; background: #fff;
           transition: all 0.2s;
         }
-        .ta-radio-label:has(input:checked) {
-          border-color: #2563eb; background: #eff6ff; color: #1d4ed8;
-        }
+        .ta-radio-label:has(input:checked) { border-color: #2563eb; background: #eff6ff; color: #1d4ed8; }
         .ta-radio-label input { accent-color: #2563eb; }
         .ta-checkbox-label {
           display: flex; align-items: flex-start; gap: 12px;
@@ -610,12 +578,9 @@ export default function TenantApplicationPage() {
         .ta-property-option {
           display: flex; align-items: center; justify-content: space-between;
           border: 1.5px solid #d1d5db; border-radius: 10px;
-          padding: 16px 18px; cursor: pointer; transition: all 0.2s;
-          background: #fff;
+          padding: 16px 18px; cursor: pointer; transition: all 0.2s; background: #fff;
         }
-        .ta-property-option.selected {
-          border-color: #2563eb; background: #eff6ff;
-        }
+        .ta-property-option.selected { border-color: #2563eb; background: #eff6ff; }
         .ta-property-option:hover { border-color: #93c5fd; }
       `}</style>
 
@@ -642,7 +607,6 @@ export default function TenantApplicationPage() {
           <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: 15, lineHeight: 1.7, maxWidth: 520, margin: '0 auto' }}>
             Please complete this form accurately and in full. All information is treated confidentially.
           </p>
-
           {selectedProperty && <PropertySummaryCard property={selectedProperty} dark />}
         </div>
       </section>
@@ -686,10 +650,11 @@ export default function TenantApplicationPage() {
 
           <div style={{ background: '#fff', borderRadius: 16, boxShadow: '0 2px 16px rgba(0,0,0,0.07)', padding: '40px 48px' }}>
 
+            {/* ── STEP 1 ── */}
             {step === 1 && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
                 <div>
-                  <h2 style={sectionHeadingStyle}>Select Property</h2>
+                  <h2 style={{ ...sectionHeadingStyle, color: '#2563eb' }}>Select Property</h2>
                   <p style={sectionSubStyle}>Choose the property you'd like to apply for. Rent, deposit and holding deposit will be filled in automatically.</p>
                 </div>
 
@@ -720,28 +685,24 @@ export default function TenantApplicationPage() {
                               {formatGBP(p.price)} pcm · {p.bedrooms === 0 ? 'Studio' : `${p.bedrooms} bed`}
                             </div>
                           </div>
-                          {isSelected && (
-                            <span style={{ color: '#2563eb', fontSize: 18 }}>✓</span>
-                          )}
+                          {isSelected && <span style={{ color: '#2563eb', fontSize: 18 }}>✓</span>}
                         </div>
                       );
                     })}
                   </div>
                 )}
 
-                {selectedProperty && (
-                  <PropertySummaryCard property={selectedProperty} />
-                )}
+                {selectedProperty && <PropertySummaryCard property={selectedProperty} />}
               </div>
             )}
 
+            {/* ── STEP 2 ── */}
             {step === 2 && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
                 <div>
                   <h2 style={sectionHeadingStyle}>Personal Details</h2>
                   <p style={sectionSubStyle}>Please provide your personal information as it appears on your official documents.</p>
                 </div>
-
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
                   <div style={{ gridColumn: '1 / -1' }}>
                     <label style={labelStyle}>Full Name <span style={{ color: '#ef4444' }}>*</span></label>
@@ -772,14 +733,10 @@ export default function TenantApplicationPage() {
                     <textarea style={{ ...inputStyle, resize: 'vertical' } as React.CSSProperties} rows={3} value={billingAddress} onChange={e => setBillingAddress(e.target.value)} placeholder="Include all addresses for the past 3 years" />
                   </div>
                 </div>
-
                 <hr style={dividerStyle} />
-
                 <FileUpload label="Government ID / Passport" required state={govId} onChange={setGovId} />
                 <FileUpload label="Proof of Address (utility bill, bank statement, council tax bill)" required state={proofOfAddress} onChange={setProofOfAddress} />
-
                 <hr style={dividerStyle} />
-
                 <div>
                   <label style={labelStyle}>Do you have the legal Right to Rent in the UK? <span style={{ color: '#ef4444' }}>*</span></label>
                   <div className="ta-radio-group">
@@ -794,23 +751,21 @@ export default function TenantApplicationPage() {
                     <input style={{ ...inputStyle, marginTop: 12 }} value={rightToRentOther} onChange={e => setRightToRentOther(e.target.value)} placeholder="Please specify…" />
                   )}
                 </div>
-
                 <div>
                   <label style={labelStyle}>Right to Rent Share Code <span style={{ color: '#9ca3af', fontWeight: 400 }}>(if not a British citizen)</span></label>
                   <input style={inputStyle} value={shareCode} onChange={e => setShareCode(e.target.value)} placeholder="e.g. W1A-B2C-D3E" />
                 </div>
-
                 <FileUpload label="Right to Rent Document Upload" state={rightToRentDoc} onChange={setRightToRentDoc} maxFiles={5} />
               </div>
             )}
 
+            {/* ── STEP 3 ── */}
             {step === 3 && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
                 <div>
                   <h2 style={sectionHeadingStyle}>Employment & Finance</h2>
                   <p style={sectionSubStyle}>We use this to assess affordability. All information is handled confidentially.</p>
                 </div>
-
                 <div>
                   <label style={labelStyle}>Employment Status <span style={{ color: '#ef4444' }}>*</span></label>
                   <select style={{ ...inputStyle, cursor: 'pointer' } as React.CSSProperties} value={employmentStatus} onChange={e => setEmploymentStatus(e.target.value)}>
@@ -824,7 +779,6 @@ export default function TenantApplicationPage() {
                     <option>Other</option>
                   </select>
                 </div>
-
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
                   <div>
                     <label style={labelStyle}>Employer/Institution Contact Number <span style={{ color: '#ef4444' }}>*</span></label>
@@ -843,14 +797,10 @@ export default function TenantApplicationPage() {
                     <input style={inputStyle} value={additionalIncome} onChange={e => setAdditionalIncome(e.target.value)} placeholder="e.g. benefits, pension — or None" />
                   </div>
                 </div>
-
                 <hr style={dividerStyle} />
-
                 <FileUpload label="Last 3 Payslips or Proof of Income" required state={payslips} onChange={setPayslips} />
                 <FileUpload label="Last 3 Months Bank Statements" required state={bankStatements} onChange={setBankStatements} />
-
                 <hr style={dividerStyle} />
-
                 <div>
                   <label style={labelStyle}>Do you have any County Court Judgements (CCJs)? <span style={{ color: '#ef4444' }}>*</span></label>
                   <div className="ta-radio-group">
@@ -862,7 +812,6 @@ export default function TenantApplicationPage() {
                     ))}
                   </div>
                 </div>
-
                 <div>
                   <label style={labelStyle}>Have you ever been declared bankrupt? <span style={{ color: '#ef4444' }}>*</span></label>
                   <div className="ta-radio-group">
@@ -877,13 +826,13 @@ export default function TenantApplicationPage() {
               </div>
             )}
 
+            {/* ── STEP 4 ── */}
             {step === 4 && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
                 <div>
                   <h2 style={sectionHeadingStyle}>Current Landlord's Details</h2>
                   <p style={sectionSubStyle}>Details of your current or most recent landlord/tenancy.</p>
                 </div>
-
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
                   <div style={{ gridColumn: '1 / -1' }}>
                     <label style={labelStyle}>Landlord's Full Name <span style={{ color: '#ef4444' }}>*</span></label>
@@ -914,7 +863,6 @@ export default function TenantApplicationPage() {
                     <textarea style={{ ...inputStyle, resize: 'vertical' } as React.CSSProperties} rows={3} value={reasonLeaving} onChange={e => setReasonLeaving(e.target.value)} placeholder="Please explain your reason for leaving" />
                   </div>
                 </div>
-
                 <div>
                   <label style={labelStyle}>Initial Lease Term <span style={{ color: '#ef4444' }}>*</span></label>
                   <div className="ta-radio-group">
@@ -929,17 +877,14 @@ export default function TenantApplicationPage() {
                     <input style={{ ...inputStyle, marginTop: 12 }} value={leaseTermOther} onChange={e => setLeaseTermOther(e.target.value)} placeholder="Please specify lease term" />
                   )}
                 </div>
-
                 <div>
                   <label style={labelStyle}>Desired Move-In Date <span style={{ color: '#ef4444' }}>*</span></label>
                   <input type="date" style={inputStyle} value={moveInDate} onChange={e => setMoveInDate(e.target.value)} />
                 </div>
-
                 <div>
                   <label style={labelStyle}>Do you have pets? If yes, please provide breed and size. <span style={{ color: '#ef4444' }}>*</span></label>
                   <input style={inputStyle} value={pets} onChange={e => setPets(e.target.value)} placeholder='e.g. "No" or "1 x Labrador, medium size"' />
                 </div>
-
                 <div>
                   <label style={labelStyle}>Do you currently have a guarantor available if required? <span style={{ color: '#ef4444' }}>*</span></label>
                   <div className="ta-radio-group">
@@ -951,34 +896,20 @@ export default function TenantApplicationPage() {
                     ))}
                   </div>
                 </div>
-
                 <hr style={dividerStyle} />
-
-                {/* Holding Deposit Payment */}
                 <div>
-                  <h3 style={{ fontSize: 16, fontWeight: 800, color: '#0f172a', marginBottom: 4 }}>
-                    Holding Deposit Payment
-                  </h3>
+                  <h3 style={{ fontSize: 16, fontWeight: 800, color: '#0f172a', marginBottom: 4 }}>Holding Deposit Payment</h3>
                   <p style={{ fontSize: 13, color: '#6b7280', marginBottom: 16 }}>
                     To secure this property, please transfer the holding deposit to the account below and upload your payment receipt.
                   </p>
-
-                  {/* Bank Details */}
                   <div style={{ background: 'linear-gradient(135deg, #0a1628 0%, #0f2044 100%)', borderRadius: 12, padding: '24px 28px', marginBottom: 20, color: '#fff' }}>
-                    <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 16 }}>
-                      Amount Due
-                    </div>
+                    <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 16 }}>Amount Due</div>
                     {selectedProperty && (
                       <>
-                        <div style={{ fontSize: 36, fontWeight: 800, color: '#fff', marginBottom: 4 }}>
-                          {formatGBP(calcHoldingDeposit(selectedProperty.price))}
-                        </div>
-                        <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', marginBottom: 24 }}>
-                          Holding deposit for {selectedProperty.location}
-                        </div>
+                        <div style={{ fontSize: 36, fontWeight: 800, color: '#fff', marginBottom: 4 }}>{formatGBP(calcHoldingDeposit(selectedProperty.price))}</div>
+                        <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', marginBottom: 24 }}>Holding deposit for {selectedProperty.location}</div>
                       </>
                     )}
-
                     <div style={{ borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: 20, display: 'flex', flexDirection: 'column', gap: 14 }}>
                       {[
                         { label: 'Account Name', value: 'House of Lettings Limited' },
@@ -992,25 +923,14 @@ export default function TenantApplicationPage() {
                       ))}
                     </div>
                   </div>
-
-                  {/* Payment Reference */}
                   <div style={{ marginBottom: 20 }}>
                     <label style={labelStyle}>Payment Reference <span style={{ color: '#ef4444' }}>*</span></label>
-                    <p style={{ fontSize: 12, color: '#6b7280', marginBottom: 8, marginTop: 0 }}>
-                      Use your property address as the payment reference when making the transfer.
-                    </p>
-                    <input
-                      style={inputStyle}
-                      value={paymentReference}
-                      onChange={e => setPaymentReference(e.target.value)}
-                      placeholder={selectedProperty ? selectedProperty.location : 'e.g. 7 Marlborough Grange, Leeds, LS1 4PF'}
-                    />
+                    <p style={{ fontSize: 12, color: '#6b7280', marginBottom: 8, marginTop: 0 }}>Use your property address as the payment reference when making the transfer.</p>
+                    <input style={inputStyle} value={paymentReference} onChange={e => setPaymentReference(e.target.value)} placeholder={selectedProperty ? selectedProperty.location : 'e.g. 7 Marlborough Grange, Leeds, LS1 4PF'} />
                   </div>
-
                   <div style={{ background: '#fffbeb', border: '1px solid #fde68a', borderRadius: 10, padding: '14px 18px', fontSize: 13, color: '#92400e', lineHeight: 1.6, marginBottom: 20 }}>
                     ⚠️ <strong>Important:</strong> Your receipt file <strong>must be named with "receipt"</strong> (e.g. <em>receipt.pdf</em>, <em>bank-receipt.png</em>). Files without "receipt" in the filename will not be accepted.
                   </div>
-
                   <FileUpload
                     label="Holding Deposit Receipt"
                     required
@@ -1029,29 +949,24 @@ export default function TenantApplicationPage() {
               </div>
             )}
 
+            {/* ── STEP 5 ── */}
             {step === 5 && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
                 <div>
                   <h2 style={sectionHeadingStyle}>Declaration & Consent</h2>
                   <p style={sectionSubStyle}>Please review your application and confirm the declarations below before submitting.</p>
                 </div>
-
                 {selectedProperty && <PropertySummaryCard property={selectedProperty} />}
-
                 <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 10, padding: '20px 24px' }}>
                   <h3 style={{ fontSize: 14, fontWeight: 700, color: '#374151', marginBottom: 8 }}>Your Answers</h3>
                   {[
-                    ['Applicant', fullName],
-                    ['Email', email],
-                    ['Phone', phone],
+                    ['Applicant', fullName], ['Email', email], ['Phone', phone],
                     ['Nationality', nationality],
                     ['Right to Rent', rightToRent === 'Other' ? rightToRentOther : rightToRent],
-                    ['Employment Status', employmentStatus],
-                    ['Annual Income', annualIncome],
+                    ['Employment Status', employmentStatus], ['Annual Income', annualIncome],
                     ['Move-In Date', moveInDate ? new Date(moveInDate).toLocaleDateString('en-GB') : '—'],
                     ['Lease Term', leaseTerm === 'Other' ? leaseTermOther : leaseTerm],
-                    ['Pets', pets],
-                    ['Guarantor', guarantor],
+                    ['Pets', pets], ['Guarantor', guarantor],
                   ].map(([label, value]) => (
                     <div key={label} style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px solid #f1f5f9', fontSize: 13 }}>
                       <span style={{ color: '#6b7280', fontWeight: 500 }}>{label}</span>
@@ -1059,30 +974,21 @@ export default function TenantApplicationPage() {
                     </div>
                   ))}
                 </div>
-
                 <div style={{ background: '#fffbeb', border: '1px solid #fde68a', borderRadius: 10, padding: '16px 20px', fontSize: 13, color: '#92400e', lineHeight: 1.6 }}>
                   ⚠️ <strong>Important:</strong> Any falsified, misleading, incomplete, or unverifiable information or documents may result in the application being declined and any holding deposit becoming non-refundable where permitted by law.
                 </div>
-
                 <label className="ta-checkbox-label">
                   <input type="checkbox" checked={consentContact} onChange={e => setConsentContact(e.target.checked)} />
-                  <span>
-                    <strong>I consent</strong> to House of Lettings contacting employers, landlords, references, guarantors and credit reference agencies to verify information provided in this application. <span style={{ color: '#ef4444' }}>*</span>
-                  </span>
+                  <span><strong>I consent</strong> to House of Lettings contacting employers, landlords, references, guarantors and credit reference agencies to verify information provided in this application. <span style={{ color: '#ef4444' }}>*</span></span>
                 </label>
-
                 <label className="ta-checkbox-label">
                   <input type="checkbox" checked={consentDeclare} onChange={e => setConsentDeclare(e.target.checked)} />
-                  <span>
-                    <strong>I declare and agree</strong> that all information provided is accurate and complete. I understand House of Lettings may conduct Right to Rent, affordability, employment, landlord and credit checks. False information may result in rejection of my application. <span style={{ color: '#ef4444' }}>*</span>
-                  </span>
+                  <span><strong>I declare and agree</strong> that all information provided is accurate and complete. I understand House of Lettings may conduct Right to Rent, affordability, employment, landlord and credit checks. False information may result in rejection of my application. <span style={{ color: '#ef4444' }}>*</span></span>
                 </label>
-
                 <div>
                   <label style={labelStyle}>Submission Date <span style={{ color: '#ef4444' }}>*</span></label>
                   <input type="date" style={inputStyle} value={submissionDate} onChange={e => setSubmissionDate(e.target.value)} />
                 </div>
-
                 {submitError && (
                   <div style={{ background: '#fef2f2', border: '1px solid #fca5a5', borderRadius: 8, padding: '12px 16px', color: '#dc2626', fontSize: 14 }}>
                     ❌ {submitError}
@@ -1097,17 +1003,12 @@ export default function TenantApplicationPage() {
                   ← Back
                 </button>
               ) : <div />}
-
               {step < totalSteps ? (
                 <button onClick={goNext} style={{ padding: '12px 28px', background: '#2563eb', border: 'none', borderRadius: 8, fontSize: 14, fontWeight: 700, color: '#fff', cursor: 'pointer' }}>
                   Continue →
                 </button>
               ) : (
-                <button
-                  onClick={handleSubmit}
-                  disabled={submitting}
-                  style={{ padding: '12px 28px', background: submitting ? '#93c5fd' : '#16a34a', border: 'none', borderRadius: 8, fontSize: 14, fontWeight: 700, color: '#fff', cursor: submitting ? 'not-allowed' : 'pointer' }}
-                >
+                <button onClick={handleSubmit} disabled={submitting} style={{ padding: '12px 28px', background: submitting ? '#93c5fd' : '#16a34a', border: 'none', borderRadius: 8, fontSize: 14, fontWeight: 700, color: '#fff', cursor: submitting ? 'not-allowed' : 'pointer' }}>
                   {submitting ? 'Submitting…' : '✓ Submit Application'}
                 </button>
               )}

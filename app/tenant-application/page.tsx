@@ -91,6 +91,65 @@ function formatGBP(n: number) {
   return `£${n.toLocaleString('en-GB')}`;
 }
 
+/**
+ * Converts a full address to a truncated bank-reference style format.
+ * e.g. "Flat 2, 7 Francis Street, Stockport, SK1 3AA"
+ *      => "F 2 7 FRANCIS ST STO"
+ * Rules:
+ *  - "Flat" => "F", "Apartment"/"Apt" => "APT", "House" => "HSE"
+ *  - Street suffixes: Road=>RD, Street=>ST, Avenue=>AVE, Lane=>LN, Drive=>DR, Close=>CL, Court=>CT, Way=>WY, Place=>PL, Gardens=>GDNS, Grove=>GR, Terrace=>TER, Crescent=>CRES
+ *  - Town/city: first 3 uppercase characters
+ *  - Postcode and county omitted
+ *  - Max 18 chars total
+ */
+function toPaymentReference(address: string): string {
+  if (!address) return '';
+
+  const streetSuffixes: Record<string, string> = {
+    road: 'RD', street: 'ST', avenue: 'AVE', lane: 'LN', drive: 'DR',
+    close: 'CL', court: 'CT', way: 'WY', place: 'PL', gardens: 'GDNS',
+    grove: 'GR', terrace: 'TER', crescent: 'CRES', mews: 'MWS',
+  };
+
+  const unitAbbr: Record<string, string> = {
+    flat: 'F', apartment: 'APT', apt: 'APT', house: 'HSE', unit: 'UNIT',
+  };
+
+  // Split by comma
+  const parts = address.split(',').map(p => p.trim());
+
+  let unit = '';
+  let streetPart = '';
+  let townPart = '';
+
+  // Try to detect flat/unit prefix
+  const firstWords = parts[0].toLowerCase().split(/\s+/);
+  if (unitAbbr[firstWords[0]]) {
+    unit = unitAbbr[firstWords[0]] + ' ' + firstWords.slice(1).join(' ').toUpperCase();
+    streetPart = parts[1] || '';
+    townPart = parts[2] || '';
+  } else {
+    streetPart = parts[0];
+    townPart = parts[1] || '';
+  }
+
+  // Process street
+  const streetWords = streetPart.trim().toUpperCase().split(/\s+/);
+  const processedStreet = streetWords.map(w => {
+    const lower = w.toLowerCase();
+    return streetSuffixes[lower] ? streetSuffixes[lower] : w;
+  }).join(' ');
+
+  // Town: first 3 chars uppercase, strip postcode-like tokens
+  const townWords = townPart.trim().toUpperCase().split(/\s+/).filter(w => !/^[A-Z]{1,2}\d/.test(w));
+  const townAbbr = townWords[0] ? townWords[0].substring(0, 3) : '';
+
+  const ref = [unit, processedStreet, townAbbr].filter(Boolean).join(' ');
+
+  // Trim to 18 chars max (bank reference limit)
+  return ref.substring(0, 18).trim();
+}
+
 function generateApplicationPdf(data: Record<string, any>): string {
   const doc = new jsPDF({ unit: 'pt', format: 'a4' });
   const pageWidth = doc.internal.pageSize.getWidth();
@@ -227,9 +286,9 @@ type UploadState = {
 };
 
 function FileUpload({
-  label, required, maxFiles = 5, accept, state, onChange,
+  label, required, maxFiles = 5, state, onChange,
 }: {
-  label: string; required?: boolean; maxFiles?: number; accept?: string;
+  label: string; required?: boolean; maxFiles?: number;
   state: UploadState; onChange: (s: UploadState) => void;
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
@@ -272,7 +331,8 @@ function FileUpload({
           transition: 'all 0.2s',
         }}
       >
-        <input ref={inputRef} type="file" multiple={maxFiles > 1} accept={accept} style={{ display: 'none' }} onChange={e => handleFiles(e.target.files)} />
+        {/* Accept any file type — no accept attribute */}
+        <input ref={inputRef} type="file" multiple={maxFiles > 1} style={{ display: 'none' }} onChange={e => handleFiles(e.target.files)} />
         {state.uploading ? (
           <p style={{ color: '#6b7280', fontSize: 14, margin: 0 }}>⏳ Uploading…</p>
         ) : state.urls.length > 0 ? (
@@ -324,11 +384,26 @@ function PropertySummaryCard({ property }: { property: Property }) {
   );
 }
 
+// ── Mobile wizard: one question at a time ──────────────────────────────────
+// Each "field" is a discrete sub-step shown only on mobile.
+// On desktop the full section renders as before.
+
+type MobileField = {
+  id: string;
+  label: string;
+  render: () => React.ReactNode;
+  isRequired?: boolean;
+};
+
 export default function TenantApplicationPage() {
   const [step, setStep] = useState(1);
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [submitError, setSubmitError] = useState('');
+  // Mobile sub-step within a main step
+  const [mobileSubStep, setMobileSubStep] = useState(0);
+  // Track which trust badges have been revealed on mobile
+  const [revealedBadges, setRevealedBadges] = useState(0);
 
   const [properties, setProperties] = useState<Property[]>([]);
   const [propertiesLoading, setPropertiesLoading] = useState(true);
@@ -341,6 +416,19 @@ export default function TenantApplicationPage() {
       .catch(() => setProperties([]))
       .finally(() => setPropertiesLoading(false));
   }, []);
+
+  // Reveal trust badges sequentially on mobile after page load
+  useEffect(() => {
+    const badges = ['Information is kept confidential', 'Secure file uploads', 'Response within 24–48 hours'];
+    badges.forEach((_, i) => {
+      setTimeout(() => setRevealedBadges(i + 1), 400 + i * 500);
+    });
+  }, []);
+
+  // Reset mobile sub-step when main step changes
+  useEffect(() => {
+    setMobileSubStep(0);
+  }, [step]);
 
   const selectedProperty = properties.find(p => p.id === selectedPropertyId) || null;
   const filteredProperties = properties.filter(p =>
@@ -386,7 +474,8 @@ export default function TenantApplicationPage() {
   const [pets, setPets] = useState('');
   const [guarantor, setGuarantor] = useState('');
   const [holdingDepositReceipt, setHoldingDepositReceipt] = useState<UploadState>(emptyUpload());
-  const [paymentReference, setPaymentReference] = useState('');
+  // Payment reference auto-derived from selected property address
+  const paymentReference = selectedProperty ? toPaymentReference(selectedProperty.location) : '';
 
   const [consentContact, setConsentContact] = useState(false);
   const [consentDeclare, setConsentDeclare] = useState(false);
@@ -434,9 +523,6 @@ export default function TenantApplicationPage() {
       if (!pets.trim()) return 'Please answer the pets question.';
       if (!guarantor) return 'Please answer the guarantor question.';
       if (holdingDepositReceipt.urls.length === 0) return 'Please upload your holding deposit payment receipt.';
-      if (!holdingDepositReceipt.files[0]?.name.toLowerCase().includes('receipt')) {
-        return 'The uploaded file must be named with "receipt" (e.g. receipt.pdf). Please rename your file and re-upload.';
-      }
     }
     if (s === 5) {
       if (!consentContact) return 'You must consent to contact for verification.';
@@ -486,6 +572,7 @@ export default function TenantApplicationPage() {
         leaseTerm: leaseTerm === 'Other' ? leaseTermOther : leaseTerm,
         moveInDate, pets, guarantor,
         holdingDepositReceiptUrls: holdingDepositReceipt.urls,
+        paymentReference,
         consentContact, consentDeclare, submissionDate,
         propertyId: selectedProperty.id,
         propertyAddress: selectedProperty.location,
@@ -511,6 +598,388 @@ export default function TenantApplicationPage() {
 
   const progressPct = (step / totalSteps) * 100;
 
+  // ── Mobile field definitions per step ────────────────────────────────────
+  // Step 2 mobile fields
+  const step2MobileFields: MobileField[] = [
+    {
+      id: 'fullName', label: 'Full Name', isRequired: true,
+      render: () => (
+        <div>
+          <label style={labelStyle}>Full Name <span style={{ color: '#ef4444' }}>*</span></label>
+          <input style={inputStyle} value={fullName} onChange={e => setFullName(e.target.value)} placeholder="As it appears on your ID" autoFocus />
+        </div>
+      ),
+    },
+    {
+      id: 'dob', label: 'Date of Birth', isRequired: true,
+      render: () => (
+        <div>
+          <label style={labelStyle}>Date of Birth <span style={{ color: '#ef4444' }}>*</span></label>
+          <input type="date" style={inputStyle} value={dob} onChange={e => setDob(e.target.value)} />
+        </div>
+      ),
+    },
+    {
+      id: 'nationality', label: 'Nationality', isRequired: true,
+      render: () => (
+        <div>
+          <label style={labelStyle}>Nationality <span style={{ color: '#ef4444' }}>*</span></label>
+          <input style={inputStyle} value={nationality} onChange={e => setNationality(e.target.value)} placeholder="e.g. British" autoFocus />
+        </div>
+      ),
+    },
+    {
+      id: 'niNumber', label: 'National Insurance Number', isRequired: true,
+      render: () => (
+        <div>
+          <label style={labelStyle}>National Insurance Number <span style={{ color: '#ef4444' }}>*</span></label>
+          <input style={inputStyle} value={niNumber} onChange={e => setNiNumber(e.target.value)} placeholder="e.g. AB 12 34 56 C" autoFocus />
+        </div>
+      ),
+    },
+    {
+      id: 'email', label: 'Email Address', isRequired: true,
+      render: () => (
+        <div>
+          <label style={labelStyle}>Email Address <span style={{ color: '#ef4444' }}>*</span></label>
+          <input type="email" style={inputStyle} value={email} onChange={e => setEmail(e.target.value)} placeholder="your@email.co.uk" autoFocus />
+        </div>
+      ),
+    },
+    {
+      id: 'phone', label: 'UK Mobile Number', isRequired: true,
+      render: () => (
+        <div>
+          <label style={labelStyle}>UK Mobile Number <span style={{ color: '#ef4444' }}>*</span></label>
+          <input type="tel" style={inputStyle} value={phone} onChange={e => setPhone(e.target.value)} placeholder="07700 900123" autoFocus />
+        </div>
+      ),
+    },
+    {
+      id: 'billingAddress', label: 'Billing Address', isRequired: true,
+      render: () => (
+        <div>
+          <label style={labelStyle}>Billing Address (Minimum 3 years required) <span style={{ color: '#ef4444' }}>*</span></label>
+          <textarea style={{ ...inputStyle, resize: 'vertical' } as React.CSSProperties} rows={4} value={billingAddress} onChange={e => setBillingAddress(e.target.value)} placeholder="Include all addresses for the past 3 years" />
+        </div>
+      ),
+    },
+    {
+      id: 'govId', label: 'Government ID / Passport', isRequired: true,
+      render: () => <FileUpload label="Government ID / Passport" required state={govId} onChange={setGovId} />,
+    },
+    {
+      id: 'proofOfAddress', label: 'Proof of Address', isRequired: true,
+      render: () => <FileUpload label="Proof of Address (utility bill, bank statement, council tax bill)" required state={proofOfAddress} onChange={setProofOfAddress} />,
+    },
+    {
+      id: 'rightToRent', label: 'Right to Rent', isRequired: true,
+      render: () => (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+          <div>
+            <label style={labelStyle}>Do you have the legal Right to Rent in the UK? <span style={{ color: '#ef4444' }}>*</span></label>
+            <div className="ta-radio-group">
+              {['Yes', 'No', 'Other'].map(opt => (
+                <label key={opt} className="ta-radio-label">
+                  <input type="radio" name="rightToRent" value={opt} checked={rightToRent === opt} onChange={() => setRightToRent(opt)} />
+                  {opt}
+                </label>
+              ))}
+            </div>
+            {rightToRent === 'Other' && (
+              <input style={{ ...inputStyle, marginTop: 12 }} value={rightToRentOther} onChange={e => setRightToRentOther(e.target.value)} placeholder="Please specify…" />
+            )}
+          </div>
+          <div>
+            <label style={labelStyle}>Right to Rent Share Code <span style={{ color: '#9ca3af', fontWeight: 400 }}>(if not a British citizen)</span></label>
+            <input style={inputStyle} value={shareCode} onChange={e => setShareCode(e.target.value)} placeholder="e.g. W1A-B2C-D3E" />
+          </div>
+          <FileUpload label="Right to Rent Document Upload" state={rightToRentDoc} onChange={setRightToRentDoc} maxFiles={5} />
+        </div>
+      ),
+    },
+  ];
+
+  // Step 3 mobile fields
+  const step3MobileFields: MobileField[] = [
+    {
+      id: 'employmentStatus', label: 'Employment Status', isRequired: true,
+      render: () => (
+        <div>
+          <label style={labelStyle}>Employment Status <span style={{ color: '#ef4444' }}>*</span></label>
+          <select style={{ ...inputStyle, cursor: 'pointer' } as React.CSSProperties} value={employmentStatus} onChange={e => setEmploymentStatus(e.target.value)}>
+            <option value="">Select…</option>
+            <option>Full-time employed</option>
+            <option>Part-time employed</option>
+            <option>Self-employed</option>
+            <option>Student</option>
+            <option>Retired</option>
+            <option>Unemployed</option>
+            <option>Other</option>
+          </select>
+        </div>
+      ),
+    },
+    {
+      id: 'employerPhone', label: 'Employer Contact Number', isRequired: true,
+      render: () => (
+        <div>
+          <label style={labelStyle}>Employer/Institution Contact Number <span style={{ color: '#ef4444' }}>*</span></label>
+          <input type="tel" style={inputStyle} value={employerPhone} onChange={e => setEmployerPhone(e.target.value)} placeholder="01234 567890" autoFocus />
+        </div>
+      ),
+    },
+    {
+      id: 'employerEmail', label: 'Employer Email', isRequired: true,
+      render: () => (
+        <div>
+          <label style={labelStyle}>Employer/Institution Email Address <span style={{ color: '#ef4444' }}>*</span></label>
+          <input type="email" style={inputStyle} value={employerEmail} onChange={e => setEmployerEmail(e.target.value)} placeholder="hr@company.co.uk" autoFocus />
+        </div>
+      ),
+    },
+    {
+      id: 'annualIncome', label: 'Total Annual Income', isRequired: true,
+      render: () => (
+        <div>
+          <label style={labelStyle}>Total Annual Income <span style={{ color: '#ef4444' }}>*</span></label>
+          <input style={inputStyle} value={annualIncome} onChange={e => setAnnualIncome(e.target.value)} placeholder="e.g. £32,000" autoFocus />
+        </div>
+      ),
+    },
+    {
+      id: 'additionalIncome', label: 'Additional Income Sources', isRequired: true,
+      render: () => (
+        <div>
+          <label style={labelStyle}>Additional Income Sources <span style={{ color: '#ef4444' }}>*</span></label>
+          <input style={inputStyle} value={additionalIncome} onChange={e => setAdditionalIncome(e.target.value)} placeholder="e.g. benefits, pension — or None" autoFocus />
+        </div>
+      ),
+    },
+    {
+      id: 'payslips', label: 'Last 3 Payslips', isRequired: true,
+      render: () => <FileUpload label="Last 3 Payslips or Proof of Income" required state={payslips} onChange={setPayslips} />,
+    },
+    {
+      id: 'bankStatements', label: 'Bank Statements', isRequired: true,
+      render: () => <FileUpload label="Last 3 Months Bank Statements" required state={bankStatements} onChange={setBankStatements} />,
+    },
+    {
+      id: 'ccj', label: 'County Court Judgements', isRequired: true,
+      render: () => (
+        <div>
+          <label style={labelStyle}>Do you have any County Court Judgements (CCJs)? <span style={{ color: '#ef4444' }}>*</span></label>
+          <div className="ta-radio-group">
+            {['Yes', 'No'].map(opt => (
+              <label key={opt} className="ta-radio-label">
+                <input type="radio" name="ccj" value={opt} checked={hasCCJ === opt} onChange={() => setHasCCJ(opt)} />
+                {opt}
+              </label>
+            ))}
+          </div>
+        </div>
+      ),
+    },
+    {
+      id: 'bankrupt', label: 'Bankruptcy', isRequired: true,
+      render: () => (
+        <div>
+          <label style={labelStyle}>Have you ever been declared bankrupt? <span style={{ color: '#ef4444' }}>*</span></label>
+          <div className="ta-radio-group">
+            {['Yes', 'No'].map(opt => (
+              <label key={opt} className="ta-radio-label">
+                <input type="radio" name="bankrupt" value={opt} checked={wasBankrupt === opt} onChange={() => setWasBankrupt(opt)} />
+                {opt}
+              </label>
+            ))}
+          </div>
+        </div>
+      ),
+    },
+  ];
+
+  // Step 4 mobile fields
+  const step4MobileFields: MobileField[] = [
+    {
+      id: 'landlordName', label: "Landlord's Full Name", isRequired: true,
+      render: () => (
+        <div>
+          <label style={labelStyle}>Landlord's Full Name <span style={{ color: '#ef4444' }}>*</span></label>
+          <input style={inputStyle} value={landlordName} onChange={e => setLandlordName(e.target.value)} placeholder="Full name" autoFocus />
+        </div>
+      ),
+    },
+    {
+      id: 'landlordEmail', label: "Landlord's Email", isRequired: true,
+      render: () => (
+        <div>
+          <label style={labelStyle}>Landlord's Email Address <span style={{ color: '#ef4444' }}>*</span></label>
+          <input type="email" style={inputStyle} value={landlordEmail} onChange={e => setLandlordEmail(e.target.value)} placeholder="landlord@email.co.uk" autoFocus />
+        </div>
+      ),
+    },
+    {
+      id: 'landlordPhone', label: "Landlord's Phone", isRequired: true,
+      render: () => (
+        <div>
+          <label style={labelStyle}>Landlord's Contact Number <span style={{ color: '#ef4444' }}>*</span></label>
+          <input type="tel" style={inputStyle} value={landlordPhone} onChange={e => setLandlordPhone(e.target.value)} placeholder="07700 000000" autoFocus />
+        </div>
+      ),
+    },
+    {
+      id: 'currentAddress', label: 'Current Property Address', isRequired: true,
+      render: () => (
+        <div>
+          <label style={labelStyle}>Current Property Address <span style={{ color: '#ef4444' }}>*</span></label>
+          <input style={inputStyle} value={currentAddress} onChange={e => setCurrentAddress(e.target.value)} placeholder="Full address including postcode" autoFocus />
+        </div>
+      ),
+    },
+    {
+      id: 'tenancyDates', label: 'Tenancy Dates', isRequired: true,
+      render: () => (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+          <div>
+            <label style={labelStyle}>Tenancy Start Date <span style={{ color: '#ef4444' }}>*</span></label>
+            <input type="date" style={inputStyle} value={tenancyStart} onChange={e => setTenancyStart(e.target.value)} />
+          </div>
+          <div>
+            <label style={labelStyle}>Tenancy End Date <span style={{ color: '#ef4444' }}>*</span></label>
+            <input type="date" style={inputStyle} value={tenancyEnd} onChange={e => setTenancyEnd(e.target.value)} />
+          </div>
+        </div>
+      ),
+    },
+    {
+      id: 'reasonLeaving', label: 'Reason for Leaving', isRequired: true,
+      render: () => (
+        <div>
+          <label style={labelStyle}>Reason for Leaving <span style={{ color: '#ef4444' }}>*</span></label>
+          <textarea style={{ ...inputStyle, resize: 'vertical' } as React.CSSProperties} rows={4} value={reasonLeaving} onChange={e => setReasonLeaving(e.target.value)} placeholder="Please explain your reason for leaving" />
+        </div>
+      ),
+    },
+    {
+      id: 'leaseTerm', label: 'Initial Lease Term', isRequired: true,
+      render: () => (
+        <div>
+          <label style={labelStyle}>Initial Lease Term <span style={{ color: '#ef4444' }}>*</span></label>
+          <div className="ta-radio-group">
+            {['6 months', '12 months', 'Other'].map(opt => (
+              <label key={opt} className="ta-radio-label">
+                <input type="radio" name="leaseTerm" value={opt} checked={leaseTerm === opt} onChange={() => setLeaseTerm(opt)} />
+                {opt}
+              </label>
+            ))}
+          </div>
+          {leaseTerm === 'Other' && (
+            <input style={{ ...inputStyle, marginTop: 12 }} value={leaseTermOther} onChange={e => setLeaseTermOther(e.target.value)} placeholder="Please specify lease term" />
+          )}
+        </div>
+      ),
+    },
+    {
+      id: 'moveInDate', label: 'Desired Move-In Date', isRequired: true,
+      render: () => (
+        <div>
+          <label style={labelStyle}>Desired Move-In Date <span style={{ color: '#ef4444' }}>*</span></label>
+          <input type="date" style={inputStyle} value={moveInDate} onChange={e => setMoveInDate(e.target.value)} />
+        </div>
+      ),
+    },
+    {
+      id: 'pets', label: 'Pets', isRequired: true,
+      render: () => (
+        <div>
+          <label style={labelStyle}>Do you have pets? If yes, please provide breed and size. <span style={{ color: '#ef4444' }}>*</span></label>
+          <input style={inputStyle} value={pets} onChange={e => setPets(e.target.value)} placeholder='e.g. "No" or "1 x Labrador, medium size"' autoFocus />
+        </div>
+      ),
+    },
+    {
+      id: 'guarantor', label: 'Guarantor', isRequired: true,
+      render: () => (
+        <div>
+          <label style={labelStyle}>Do you currently have a guarantor available if required? <span style={{ color: '#ef4444' }}>*</span></label>
+          <div className="ta-radio-group">
+            {['Yes', 'No'].map(opt => (
+              <label key={opt} className="ta-radio-label">
+                <input type="radio" name="guarantor" value={opt} checked={guarantor === opt} onChange={() => setGuarantor(opt)} />
+                {opt}
+              </label>
+            ))}
+          </div>
+        </div>
+      ),
+    },
+    {
+      id: 'holdingDeposit', label: 'Holding Deposit Receipt', isRequired: true,
+      render: () => (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+          <div>
+            <h3 style={{ fontSize: 16, fontWeight: 800, color: '#0f172a', marginBottom: 4 }}>Holding Deposit Payment</h3>
+            <p style={{ fontSize: 13, color: '#6b7280', marginBottom: 0 }}>
+              Transfer the holding deposit to the account below, then upload your receipt.
+            </p>
+          </div>
+          <div style={{ background: 'linear-gradient(135deg, #0a1628 0%, #0f2044 100%)', borderRadius: 12, padding: '20px 20px', color: '#fff' }}>
+            <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 12 }}>Amount Due</div>
+            {selectedProperty && (
+              <>
+                <div style={{ fontSize: 32, fontWeight: 800, color: '#fff', marginBottom: 4 }}>{formatGBP(calcHoldingDeposit(selectedProperty.price))}</div>
+                <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', marginBottom: 20 }}>Holding deposit for {selectedProperty.location}</div>
+              </>
+            )}
+            <div style={{ borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: 16, display: 'flex', flexDirection: 'column', gap: 12 }}>
+              {[
+                { label: 'Account Name', value: 'House of Lettings Limited' },
+                { label: 'Sort Code', value: '60-83-65' },
+                { label: 'Account Number', value: '67205541' },
+                { label: 'Payment Reference', value: paymentReference },
+              ].map(item => (
+                <div key={item.label} style={{ display: 'flex', flexDirection: 'column', gap: 2, borderBottom: '1px solid rgba(255,255,255,0.08)', paddingBottom: 10 }}>
+                  <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.45)', fontWeight: 600, letterSpacing: '0.06em', textTransform: 'uppercase' }}>{item.label}</div>
+                  <div style={{ fontSize: 15, fontWeight: 700, fontFamily: (item.label === 'Sort Code' || item.label === 'Account Number' || item.label === 'Payment Reference') ? 'monospace' : 'inherit', letterSpacing: item.label !== 'Account Name' ? '0.1em' : 'normal' }}>{item.value}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+          <FileUpload label="Holding Deposit Receipt" required maxFiles={1} state={holdingDepositReceipt} onChange={setHoldingDepositReceipt} />
+        </div>
+      ),
+    },
+  ];
+
+  // Map step → mobile fields
+  const mobileFieldsMap: Record<number, MobileField[]> = {
+    2: step2MobileFields,
+    3: step3MobileFields,
+    4: step4MobileFields,
+  };
+
+  const currentMobileFields = mobileFieldsMap[step] || [];
+  const isMobileWizardStep = currentMobileFields.length > 0;
+  const totalMobileSubSteps = currentMobileFields.length;
+
+  const goMobileNext = () => {
+    if (mobileSubStep < totalMobileSubSteps - 1) {
+      setMobileSubStep(s => s + 1);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } else {
+      goNext();
+    }
+  };
+
+  const goMobilePrev = () => {
+    if (mobileSubStep > 0) {
+      setMobileSubStep(s => s - 1);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } else {
+      goPrev();
+    }
+  };
+
   if (submitted) {
     return (
       <main style={{ background: '#f3f4f6', minHeight: '100vh', fontFamily: "'Poppins', sans-serif" }}>
@@ -531,6 +1000,8 @@ export default function TenantApplicationPage() {
       </main>
     );
   }
+
+  const trustBadges = ['Information is kept confidential', 'Secure file uploads', 'Response within 24–48 hours'];
 
   return (
     <main style={{ background: '#f3f4f6', minHeight: '100vh', fontFamily: "'Poppins', sans-serif" }}>
@@ -563,6 +1034,46 @@ export default function TenantApplicationPage() {
         }
         .ta-property-option.selected { border-color: #2563eb; background: #eff6ff; }
         .ta-property-option:hover { border-color: #93c5fd; }
+
+        /* ── Mobile: one-at-a-time wizard ── */
+        .mobile-only { display: none; }
+        .desktop-only { display: block; }
+
+        @media (max-width: 640px) {
+          .mobile-only { display: block; }
+          .desktop-only { display: none; }
+
+          /* All answers left-aligned on mobile */
+          .ta-answers-grid { text-align: left !important; }
+          .ta-answers-grid span { text-align: left !important; }
+
+          /* Card padding smaller on mobile */
+          .ta-card { padding: 28px 20px !important; }
+
+          /* Trust badges sequential fade-in */
+          .trust-badge {
+            opacity: 0;
+            transform: translateY(6px);
+            transition: opacity 0.4s ease, transform 0.4s ease;
+          }
+          .trust-badge.revealed {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+
+        @media (min-width: 641px) {
+          .trust-badge { opacity: 1 !important; transform: none !important; }
+        }
+
+        /* Mobile sub-step progress dots */
+        .mobile-dots { display: flex; gap: 6px; justify-content: center; margin-bottom: 20px; }
+        .mobile-dot {
+          width: 8px; height: 8px; border-radius: 50%;
+          background: #e5e7eb; transition: background 0.3s;
+        }
+        .mobile-dot.active { background: #2563eb; }
+        .mobile-dot.done { background: #16a34a; }
       `}</style>
 
       <Navbar />
@@ -637,23 +1148,18 @@ export default function TenantApplicationPage() {
             </div>
           )}
 
-          <div style={{ background: '#fff', borderRadius: 16, boxShadow: '0 2px 16px rgba(0,0,0,0.07)', padding: '40px 48px' }}>
+          <div className="ta-card" style={{ background: '#fff', borderRadius: 16, boxShadow: '0 2px 16px rgba(0,0,0,0.07)', padding: '40px 48px' }}>
 
-            {/* ── STEP 1 ── */}
+            {/* ══════════════════════════════════════════
+                STEP 1 — same on mobile & desktop
+            ══════════════════════════════════════════ */}
             {step === 1 && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
                 <div>
                   <h2 style={{ ...sectionHeadingStyle, color: '#2563eb' }}>Select Property</h2>
                   <p style={sectionSubStyle}>Choose the property you'd like to apply for. Rent, deposit and holding deposit will be filled in automatically.</p>
                 </div>
-
-                <input
-                  style={inputStyle}
-                  placeholder="Search by address or area…"
-                  value={propertySearch}
-                  onChange={e => setPropertySearch(e.target.value)}
-                />
-
+                <input style={inputStyle} placeholder="Search by address or area…" value={propertySearch} onChange={e => setPropertySearch(e.target.value)} />
                 {propertiesLoading ? (
                   <p style={{ color: '#6b7280', fontSize: 14 }}>Loading available properties…</p>
                 ) : filteredProperties.length === 0 ? (
@@ -663,16 +1169,10 @@ export default function TenantApplicationPage() {
                     {filteredProperties.map(p => {
                       const isSelected = selectedPropertyId === p.id;
                       return (
-                        <div
-                          key={p.id}
-                          className={`ta-property-option ${isSelected ? 'selected' : ''}`}
-                          onClick={() => setSelectedPropertyId(p.id || '')}
-                        >
+                        <div key={p.id} className={`ta-property-option ${isSelected ? 'selected' : ''}`} onClick={() => setSelectedPropertyId(p.id || '')}>
                           <div>
                             <div style={{ fontWeight: 700, fontSize: 14, color: '#111827' }}>{p.location}</div>
-                            <div style={{ fontSize: 12, color: '#6b7280', marginTop: 2 }}>
-                              {formatGBP(p.price)} pcm · {p.bedrooms === 0 ? 'Studio' : `${p.bedrooms} bed`}
-                            </div>
+                            <div style={{ fontSize: 12, color: '#6b7280', marginTop: 2 }}>{formatGBP(p.price)} pcm · {p.bedrooms === 0 ? 'Studio' : `${p.bedrooms} bed`}</div>
                           </div>
                           {isSelected && <span style={{ color: '#2563eb', fontSize: 18 }}>✓</span>}
                         </div>
@@ -680,274 +1180,305 @@ export default function TenantApplicationPage() {
                     })}
                   </div>
                 )}
-
-                {/* Property summary shown below list on Step 1 only */}
                 {selectedProperty && <PropertySummaryCard property={selectedProperty} />}
               </div>
             )}
 
-            {/* ── STEP 2 ── */}
+            {/* ══════════════════════════════════════════
+                STEPS 2–4: DESKTOP (full layout)
+            ══════════════════════════════════════════ */}
+
+            {/* ── STEP 2 desktop ── */}
             {step === 2 && (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
-                <div>
-                  <h2 style={sectionHeadingStyle}>Personal Details</h2>
-                  <p style={sectionSubStyle}>Please provide your personal information as it appears on your official documents.</p>
-                </div>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-                  <div style={{ gridColumn: '1 / -1' }}>
-                    <label style={labelStyle}>Full Name <span style={{ color: '#ef4444' }}>*</span></label>
-                    <input style={inputStyle} value={fullName} onChange={e => setFullName(e.target.value)} placeholder="As it appears on your ID" />
-                  </div>
+              <>
+                {/* DESKTOP */}
+                <div className="desktop-only" style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
                   <div>
-                    <label style={labelStyle}>Date of Birth <span style={{ color: '#ef4444' }}>*</span></label>
-                    <input type="date" style={inputStyle} value={dob} onChange={e => setDob(e.target.value)} />
+                    <h2 style={sectionHeadingStyle}>Personal Details</h2>
+                    <p style={sectionSubStyle}>Please provide your personal information as it appears on your official documents.</p>
                   </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+                    <div style={{ gridColumn: '1 / -1' }}>
+                      <label style={labelStyle}>Full Name <span style={{ color: '#ef4444' }}>*</span></label>
+                      <input style={inputStyle} value={fullName} onChange={e => setFullName(e.target.value)} placeholder="As it appears on your ID" />
+                    </div>
+                    <div>
+                      <label style={labelStyle}>Date of Birth <span style={{ color: '#ef4444' }}>*</span></label>
+                      <input type="date" style={inputStyle} value={dob} onChange={e => setDob(e.target.value)} />
+                    </div>
+                    <div>
+                      <label style={labelStyle}>Nationality <span style={{ color: '#ef4444' }}>*</span></label>
+                      <input style={inputStyle} value={nationality} onChange={e => setNationality(e.target.value)} placeholder="e.g. British" />
+                    </div>
+                    <div>
+                      <label style={labelStyle}>National Insurance Number <span style={{ color: '#ef4444' }}>*</span></label>
+                      <input style={inputStyle} value={niNumber} onChange={e => setNiNumber(e.target.value)} placeholder="e.g. AB 12 34 56 C" />
+                    </div>
+                    <div>
+                      <label style={labelStyle}>Email Address <span style={{ color: '#ef4444' }}>*</span></label>
+                      <input type="email" style={inputStyle} value={email} onChange={e => setEmail(e.target.value)} placeholder="your@email.co.uk" />
+                    </div>
+                    <div>
+                      <label style={labelStyle}>UK Mobile Number <span style={{ color: '#ef4444' }}>*</span></label>
+                      <input type="tel" style={inputStyle} value={phone} onChange={e => setPhone(e.target.value)} placeholder="07700 900123" />
+                    </div>
+                    <div style={{ gridColumn: '1 / -1' }}>
+                      <label style={labelStyle}>Billing Address (Minimum 3 years required) <span style={{ color: '#ef4444' }}>*</span></label>
+                      <textarea style={{ ...inputStyle, resize: 'vertical' } as React.CSSProperties} rows={3} value={billingAddress} onChange={e => setBillingAddress(e.target.value)} placeholder="Include all addresses for the past 3 years" />
+                    </div>
+                  </div>
+                  <hr style={dividerStyle} />
+                  <FileUpload label="Government ID / Passport" required state={govId} onChange={setGovId} />
+                  <FileUpload label="Proof of Address (utility bill, bank statement, council tax bill)" required state={proofOfAddress} onChange={setProofOfAddress} />
+                  <hr style={dividerStyle} />
                   <div>
-                    <label style={labelStyle}>Nationality <span style={{ color: '#ef4444' }}>*</span></label>
-                    <input style={inputStyle} value={nationality} onChange={e => setNationality(e.target.value)} placeholder="e.g. British" />
-                  </div>
-                  <div>
-                    <label style={labelStyle}>National Insurance Number <span style={{ color: '#ef4444' }}>*</span></label>
-                    <input style={inputStyle} value={niNumber} onChange={e => setNiNumber(e.target.value)} placeholder="e.g. AB 12 34 56 C" />
-                  </div>
-                  <div>
-                    <label style={labelStyle}>Email Address <span style={{ color: '#ef4444' }}>*</span></label>
-                    <input type="email" style={inputStyle} value={email} onChange={e => setEmail(e.target.value)} placeholder="your@email.co.uk" />
-                  </div>
-                  <div>
-                    <label style={labelStyle}>UK Mobile Number <span style={{ color: '#ef4444' }}>*</span></label>
-                    <input type="tel" style={inputStyle} value={phone} onChange={e => setPhone(e.target.value)} placeholder="07700 900123" />
-                  </div>
-                  <div style={{ gridColumn: '1 / -1' }}>
-                    <label style={labelStyle}>Billing Address (Minimum 3 years required) <span style={{ color: '#ef4444' }}>*</span></label>
-                    <textarea style={{ ...inputStyle, resize: 'vertical' } as React.CSSProperties} rows={3} value={billingAddress} onChange={e => setBillingAddress(e.target.value)} placeholder="Include all addresses for the past 3 years" />
-                  </div>
-                </div>
-                <hr style={dividerStyle} />
-                <FileUpload label="Government ID / Passport" required state={govId} onChange={setGovId} />
-                <FileUpload label="Proof of Address (utility bill, bank statement, council tax bill)" required state={proofOfAddress} onChange={setProofOfAddress} />
-                <hr style={dividerStyle} />
-                <div>
-                  <label style={labelStyle}>Do you have the legal Right to Rent in the UK? <span style={{ color: '#ef4444' }}>*</span></label>
-                  <div className="ta-radio-group">
-                    {['Yes', 'No', 'Other'].map(opt => (
-                      <label key={opt} className="ta-radio-label">
-                        <input type="radio" name="rightToRent" value={opt} checked={rightToRent === opt} onChange={() => setRightToRent(opt)} />
-                        {opt}
-                      </label>
-                    ))}
-                  </div>
-                  {rightToRent === 'Other' && (
-                    <input style={{ ...inputStyle, marginTop: 12 }} value={rightToRentOther} onChange={e => setRightToRentOther(e.target.value)} placeholder="Please specify…" />
-                  )}
-                </div>
-                <div>
-                  <label style={labelStyle}>Right to Rent Share Code <span style={{ color: '#9ca3af', fontWeight: 400 }}>(if not a British citizen)</span></label>
-                  <input style={inputStyle} value={shareCode} onChange={e => setShareCode(e.target.value)} placeholder="e.g. W1A-B2C-D3E" />
-                </div>
-                <FileUpload label="Right to Rent Document Upload" state={rightToRentDoc} onChange={setRightToRentDoc} maxFiles={5} />
-              </div>
-            )}
-
-            {/* ── STEP 3 ── */}
-            {step === 3 && (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
-                <div>
-                  <h2 style={sectionHeadingStyle}>Employment & Finance</h2>
-                  <p style={sectionSubStyle}>We use this to assess affordability. All information is handled confidentially.</p>
-                </div>
-                <div>
-                  <label style={labelStyle}>Employment Status <span style={{ color: '#ef4444' }}>*</span></label>
-                  <select style={{ ...inputStyle, cursor: 'pointer' } as React.CSSProperties} value={employmentStatus} onChange={e => setEmploymentStatus(e.target.value)}>
-                    <option value="">Select…</option>
-                    <option>Full-time employed</option>
-                    <option>Part-time employed</option>
-                    <option>Self-employed</option>
-                    <option>Student</option>
-                    <option>Retired</option>
-                    <option>Unemployed</option>
-                    <option>Other</option>
-                  </select>
-                </div>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-                  <div>
-                    <label style={labelStyle}>Employer/Institution Contact Number <span style={{ color: '#ef4444' }}>*</span></label>
-                    <input type="tel" style={inputStyle} value={employerPhone} onChange={e => setEmployerPhone(e.target.value)} placeholder="01234 567890" />
-                  </div>
-                  <div>
-                    <label style={labelStyle}>Employer/Institution Email Address <span style={{ color: '#ef4444' }}>*</span></label>
-                    <input type="email" style={inputStyle} value={employerEmail} onChange={e => setEmployerEmail(e.target.value)} placeholder="hr@company.co.uk" />
-                  </div>
-                  <div>
-                    <label style={labelStyle}>Total Annual Income <span style={{ color: '#ef4444' }}>*</span></label>
-                    <input style={inputStyle} value={annualIncome} onChange={e => setAnnualIncome(e.target.value)} placeholder="e.g. £32,000" />
-                  </div>
-                  <div>
-                    <label style={labelStyle}>Additional Income Sources <span style={{ color: '#ef4444' }}>*</span></label>
-                    <input style={inputStyle} value={additionalIncome} onChange={e => setAdditionalIncome(e.target.value)} placeholder="e.g. benefits, pension — or None" />
-                  </div>
-                </div>
-                <hr style={dividerStyle} />
-                <FileUpload label="Last 3 Payslips or Proof of Income" required state={payslips} onChange={setPayslips} />
-                <FileUpload label="Last 3 Months Bank Statements" required state={bankStatements} onChange={setBankStatements} />
-                <hr style={dividerStyle} />
-                <div>
-                  <label style={labelStyle}>Do you have any County Court Judgements (CCJs)? <span style={{ color: '#ef4444' }}>*</span></label>
-                  <div className="ta-radio-group">
-                    {['Yes', 'No'].map(opt => (
-                      <label key={opt} className="ta-radio-label">
-                        <input type="radio" name="ccj" value={opt} checked={hasCCJ === opt} onChange={() => setHasCCJ(opt)} />
-                        {opt}
-                      </label>
-                    ))}
-                  </div>
-                </div>
-                <div>
-                  <label style={labelStyle}>Have you ever been declared bankrupt? <span style={{ color: '#ef4444' }}>*</span></label>
-                  <div className="ta-radio-group">
-                    {['Yes', 'No'].map(opt => (
-                      <label key={opt} className="ta-radio-label">
-                        <input type="radio" name="bankrupt" value={opt} checked={wasBankrupt === opt} onChange={() => setWasBankrupt(opt)} />
-                        {opt}
-                      </label>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* ── STEP 4 ── */}
-            {step === 4 && (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
-                <div>
-                  <h2 style={sectionHeadingStyle}>Current Landlord's Details</h2>
-                  <p style={sectionSubStyle}>Details of your current or most recent landlord/tenancy.</p>
-                </div>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-                  <div style={{ gridColumn: '1 / -1' }}>
-                    <label style={labelStyle}>Landlord's Full Name <span style={{ color: '#ef4444' }}>*</span></label>
-                    <input style={inputStyle} value={landlordName} onChange={e => setLandlordName(e.target.value)} placeholder="Full name" />
-                  </div>
-                  <div>
-                    <label style={labelStyle}>Landlord's Email Address <span style={{ color: '#ef4444' }}>*</span></label>
-                    <input type="email" style={inputStyle} value={landlordEmail} onChange={e => setLandlordEmail(e.target.value)} placeholder="landlord@email.co.uk" />
-                  </div>
-                  <div>
-                    <label style={labelStyle}>Landlord's Contact Number <span style={{ color: '#ef4444' }}>*</span></label>
-                    <input type="tel" style={inputStyle} value={landlordPhone} onChange={e => setLandlordPhone(e.target.value)} placeholder="07700 000000" />
-                  </div>
-                  <div style={{ gridColumn: '1 / -1' }}>
-                    <label style={labelStyle}>Current Property Address <span style={{ color: '#ef4444' }}>*</span></label>
-                    <input style={inputStyle} value={currentAddress} onChange={e => setCurrentAddress(e.target.value)} placeholder="Full address including postcode" />
-                  </div>
-                  <div>
-                    <label style={labelStyle}>Tenancy Start Date <span style={{ color: '#ef4444' }}>*</span></label>
-                    <input type="date" style={inputStyle} value={tenancyStart} onChange={e => setTenancyStart(e.target.value)} />
-                  </div>
-                  <div>
-                    <label style={labelStyle}>Tenancy End Date <span style={{ color: '#ef4444' }}>*</span></label>
-                    <input type="date" style={inputStyle} value={tenancyEnd} onChange={e => setTenancyEnd(e.target.value)} />
-                  </div>
-                  <div style={{ gridColumn: '1 / -1' }}>
-                    <label style={labelStyle}>Reason for Leaving <span style={{ color: '#ef4444' }}>*</span></label>
-                    <textarea style={{ ...inputStyle, resize: 'vertical' } as React.CSSProperties} rows={3} value={reasonLeaving} onChange={e => setReasonLeaving(e.target.value)} placeholder="Please explain your reason for leaving" />
-                  </div>
-                </div>
-                <div>
-                  <label style={labelStyle}>Initial Lease Term <span style={{ color: '#ef4444' }}>*</span></label>
-                  <div className="ta-radio-group">
-                    {['6 months', '12 months', 'Other'].map(opt => (
-                      <label key={opt} className="ta-radio-label">
-                        <input type="radio" name="leaseTerm" value={opt} checked={leaseTerm === opt} onChange={() => setLeaseTerm(opt)} />
-                        {opt}
-                      </label>
-                    ))}
-                  </div>
-                  {leaseTerm === 'Other' && (
-                    <input style={{ ...inputStyle, marginTop: 12 }} value={leaseTermOther} onChange={e => setLeaseTermOther(e.target.value)} placeholder="Please specify lease term" />
-                  )}
-                </div>
-                <div>
-                  <label style={labelStyle}>Desired Move-In Date <span style={{ color: '#ef4444' }}>*</span></label>
-                  <input type="date" style={inputStyle} value={moveInDate} onChange={e => setMoveInDate(e.target.value)} />
-                </div>
-                <div>
-                  <label style={labelStyle}>Do you have pets? If yes, please provide breed and size. <span style={{ color: '#ef4444' }}>*</span></label>
-                  <input style={inputStyle} value={pets} onChange={e => setPets(e.target.value)} placeholder='e.g. "No" or "1 x Labrador, medium size"' />
-                </div>
-                <div>
-                  <label style={labelStyle}>Do you currently have a guarantor available if required? <span style={{ color: '#ef4444' }}>*</span></label>
-                  <div className="ta-radio-group">
-                    {['Yes', 'No'].map(opt => (
-                      <label key={opt} className="ta-radio-label">
-                        <input type="radio" name="guarantor" value={opt} checked={guarantor === opt} onChange={() => setGuarantor(opt)} />
-                        {opt}
-                      </label>
-                    ))}
-                  </div>
-                </div>
-                <hr style={dividerStyle} />
-                <div>
-                  <h3 style={{ fontSize: 16, fontWeight: 800, color: '#0f172a', marginBottom: 4 }}>Holding Deposit Payment</h3>
-                  <p style={{ fontSize: 13, color: '#6b7280', marginBottom: 16 }}>
-                    To secure this property, please transfer the holding deposit to the account below and upload your payment receipt.
-                  </p>
-                  <div style={{ background: 'linear-gradient(135deg, #0a1628 0%, #0f2044 100%)', borderRadius: 12, padding: '24px 28px', marginBottom: 20, color: '#fff' }}>
-                    <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 16 }}>Amount Due</div>
-                    {selectedProperty && (
-                      <>
-                        <div style={{ fontSize: 36, fontWeight: 800, color: '#fff', marginBottom: 4 }}>{formatGBP(calcHoldingDeposit(selectedProperty.price))}</div>
-                        <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', marginBottom: 24 }}>Holding deposit for {selectedProperty.location}</div>
-                      </>
+                    <label style={labelStyle}>Do you have the legal Right to Rent in the UK? <span style={{ color: '#ef4444' }}>*</span></label>
+                    <div className="ta-radio-group">
+                      {['Yes', 'No', 'Other'].map(opt => (
+                        <label key={opt} className="ta-radio-label">
+                          <input type="radio" name="rightToRent" value={opt} checked={rightToRent === opt} onChange={() => setRightToRent(opt)} />
+                          {opt}
+                        </label>
+                      ))}
+                    </div>
+                    {rightToRent === 'Other' && (
+                      <input style={{ ...inputStyle, marginTop: 12 }} value={rightToRentOther} onChange={e => setRightToRentOther(e.target.value)} placeholder="Please specify…" />
                     )}
-                    <div style={{ borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: 20, display: 'flex', flexDirection: 'column', gap: 14 }}>
-                      {[
-                        { label: 'Account Name', value: 'House of Lettings Limited' },
-                        { label: 'Sort Code', value: '60-83-65' },
-                        { label: 'Account Number', value: '67205541' },
-                      ].map(item => (
-                        <div key={item.label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid rgba(255,255,255,0.08)', paddingBottom: 12 }}>
-                          <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.45)', fontWeight: 600, letterSpacing: '0.06em', textTransform: 'uppercase' }}>{item.label}</div>
-                          <div style={{ fontSize: 15, fontWeight: 700, fontFamily: item.label !== 'Account Name' ? 'monospace' : 'inherit', letterSpacing: item.label !== 'Account Name' ? '0.1em' : 'normal' }}>{item.value}</div>
-                        </div>
+                  </div>
+                  <div>
+                    <label style={labelStyle}>Right to Rent Share Code <span style={{ color: '#9ca3af', fontWeight: 400 }}>(if not a British citizen)</span></label>
+                    <input style={inputStyle} value={shareCode} onChange={e => setShareCode(e.target.value)} placeholder="e.g. W1A-B2C-D3E" />
+                  </div>
+                  <FileUpload label="Right to Rent Document Upload" state={rightToRentDoc} onChange={setRightToRentDoc} maxFiles={5} />
+                </div>
+
+                {/* MOBILE — one field at a time */}
+                <div className="mobile-only">
+                  <h2 style={{ ...sectionHeadingStyle, marginBottom: 4 }}>Personal Details</h2>
+                  <p style={{ ...sectionSubStyle, marginBottom: 20 }}>
+                    {mobileSubStep + 1} of {totalMobileSubSteps}
+                  </p>
+                  {/* Progress dots */}
+                  <div className="mobile-dots">
+                    {step2MobileFields.map((_, i) => (
+                      <div key={i} className={`mobile-dot ${i < mobileSubStep ? 'done' : i === mobileSubStep ? 'active' : ''}`} />
+                    ))}
+                  </div>
+                  {step2MobileFields[mobileSubStep]?.render()}
+                </div>
+              </>
+            )}
+
+            {/* ── STEP 3 desktop ── */}
+            {step === 3 && (
+              <>
+                <div className="desktop-only" style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+                  <div>
+                    <h2 style={sectionHeadingStyle}>Employment & Finance</h2>
+                    <p style={sectionSubStyle}>We use this to assess affordability. All information is handled confidentially.</p>
+                  </div>
+                  <div>
+                    <label style={labelStyle}>Employment Status <span style={{ color: '#ef4444' }}>*</span></label>
+                    <select style={{ ...inputStyle, cursor: 'pointer' } as React.CSSProperties} value={employmentStatus} onChange={e => setEmploymentStatus(e.target.value)}>
+                      <option value="">Select…</option>
+                      <option>Full-time employed</option>
+                      <option>Part-time employed</option>
+                      <option>Self-employed</option>
+                      <option>Student</option>
+                      <option>Retired</option>
+                      <option>Unemployed</option>
+                      <option>Other</option>
+                    </select>
+                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+                    <div>
+                      <label style={labelStyle}>Employer/Institution Contact Number <span style={{ color: '#ef4444' }}>*</span></label>
+                      <input type="tel" style={inputStyle} value={employerPhone} onChange={e => setEmployerPhone(e.target.value)} placeholder="01234 567890" />
+                    </div>
+                    <div>
+                      <label style={labelStyle}>Employer/Institution Email Address <span style={{ color: '#ef4444' }}>*</span></label>
+                      <input type="email" style={inputStyle} value={employerEmail} onChange={e => setEmployerEmail(e.target.value)} placeholder="hr@company.co.uk" />
+                    </div>
+                    <div>
+                      <label style={labelStyle}>Total Annual Income <span style={{ color: '#ef4444' }}>*</span></label>
+                      <input style={inputStyle} value={annualIncome} onChange={e => setAnnualIncome(e.target.value)} placeholder="e.g. £32,000" />
+                    </div>
+                    <div>
+                      <label style={labelStyle}>Additional Income Sources <span style={{ color: '#ef4444' }}>*</span></label>
+                      <input style={inputStyle} value={additionalIncome} onChange={e => setAdditionalIncome(e.target.value)} placeholder="e.g. benefits, pension — or None" />
+                    </div>
+                  </div>
+                  <hr style={dividerStyle} />
+                  <FileUpload label="Last 3 Payslips or Proof of Income" required state={payslips} onChange={setPayslips} />
+                  <FileUpload label="Last 3 Months Bank Statements" required state={bankStatements} onChange={setBankStatements} />
+                  <hr style={dividerStyle} />
+                  <div>
+                    <label style={labelStyle}>Do you have any County Court Judgements (CCJs)? <span style={{ color: '#ef4444' }}>*</span></label>
+                    <div className="ta-radio-group">
+                      {['Yes', 'No'].map(opt => (
+                        <label key={opt} className="ta-radio-label">
+                          <input type="radio" name="ccj" value={opt} checked={hasCCJ === opt} onChange={() => setHasCCJ(opt)} />
+                          {opt}
+                        </label>
                       ))}
                     </div>
                   </div>
-                  <div style={{ marginBottom: 20 }}>
-                    <label style={labelStyle}>Payment Reference <span style={{ color: '#ef4444' }}>*</span></label>
-                    <p style={{ fontSize: 12, color: '#6b7280', marginBottom: 8, marginTop: 0 }}>Use your property address as the payment reference when making the transfer.</p>
-                    <input style={inputStyle} value={paymentReference} onChange={e => setPaymentReference(e.target.value)} placeholder={selectedProperty ? selectedProperty.location : 'e.g. 7 Marlborough Grange, Leeds, LS1 4PF'} />
+                  <div>
+                    <label style={labelStyle}>Have you ever been declared bankrupt? <span style={{ color: '#ef4444' }}>*</span></label>
+                    <div className="ta-radio-group">
+                      {['Yes', 'No'].map(opt => (
+                        <label key={opt} className="ta-radio-label">
+                          <input type="radio" name="bankrupt" value={opt} checked={wasBankrupt === opt} onChange={() => setWasBankrupt(opt)} />
+                          {opt}
+                        </label>
+                      ))}
+                    </div>
                   </div>
-                  <div style={{ background: '#fffbeb', border: '1px solid #fde68a', borderRadius: 10, padding: '14px 18px', fontSize: 13, color: '#92400e', lineHeight: 1.6, marginBottom: 20 }}>
-                    ⚠️ <strong>Important:</strong> Your receipt file <strong>must be named with "receipt"</strong> (e.g. <em>receipt.pdf</em>, <em>bank-receipt.png</em>). Files without "receipt" in the filename will not be accepted.
-                  </div>
-                  <FileUpload
-                    label="Holding Deposit Receipt"
-                    required
-                    maxFiles={1}
-                    accept="image/*,.pdf"
-                    state={holdingDepositReceipt}
-                    onChange={(s) => {
-                      if (s.urls.length > 0 && s.files[0] && !s.files[0].name.toLowerCase().includes('receipt')) {
-                        setHoldingDepositReceipt({ ...s, urls: [], error: 'File must include "receipt" in the filename. Please rename and re-upload.' });
-                      } else {
-                        setHoldingDepositReceipt(s);
-                      }
-                    }}
-                  />
                 </div>
-              </div>
+
+                {/* MOBILE */}
+                <div className="mobile-only">
+                  <h2 style={{ ...sectionHeadingStyle, marginBottom: 4 }}>Employment & Finance</h2>
+                  <p style={{ ...sectionSubStyle, marginBottom: 20 }}>
+                    {mobileSubStep + 1} of {totalMobileSubSteps}
+                  </p>
+                  <div className="mobile-dots">
+                    {step3MobileFields.map((_, i) => (
+                      <div key={i} className={`mobile-dot ${i < mobileSubStep ? 'done' : i === mobileSubStep ? 'active' : ''}`} />
+                    ))}
+                  </div>
+                  {step3MobileFields[mobileSubStep]?.render()}
+                </div>
+              </>
             )}
 
-            {/* ── STEP 5 ── */}
+            {/* ── STEP 4 desktop ── */}
+            {step === 4 && (
+              <>
+                <div className="desktop-only" style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+                  <div>
+                    <h2 style={sectionHeadingStyle}>Current Landlord's Details</h2>
+                    <p style={sectionSubStyle}>Details of your current or most recent landlord/tenancy.</p>
+                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+                    <div style={{ gridColumn: '1 / -1' }}>
+                      <label style={labelStyle}>Landlord's Full Name <span style={{ color: '#ef4444' }}>*</span></label>
+                      <input style={inputStyle} value={landlordName} onChange={e => setLandlordName(e.target.value)} placeholder="Full name" />
+                    </div>
+                    <div>
+                      <label style={labelStyle}>Landlord's Email Address <span style={{ color: '#ef4444' }}>*</span></label>
+                      <input type="email" style={inputStyle} value={landlordEmail} onChange={e => setLandlordEmail(e.target.value)} placeholder="landlord@email.co.uk" />
+                    </div>
+                    <div>
+                      <label style={labelStyle}>Landlord's Contact Number <span style={{ color: '#ef4444' }}>*</span></label>
+                      <input type="tel" style={inputStyle} value={landlordPhone} onChange={e => setLandlordPhone(e.target.value)} placeholder="07700 000000" />
+                    </div>
+                    <div style={{ gridColumn: '1 / -1' }}>
+                      <label style={labelStyle}>Current Property Address <span style={{ color: '#ef4444' }}>*</span></label>
+                      <input style={inputStyle} value={currentAddress} onChange={e => setCurrentAddress(e.target.value)} placeholder="Full address including postcode" />
+                    </div>
+                    <div>
+                      <label style={labelStyle}>Tenancy Start Date <span style={{ color: '#ef4444' }}>*</span></label>
+                      <input type="date" style={inputStyle} value={tenancyStart} onChange={e => setTenancyStart(e.target.value)} />
+                    </div>
+                    <div>
+                      <label style={labelStyle}>Tenancy End Date <span style={{ color: '#ef4444' }}>*</span></label>
+                      <input type="date" style={inputStyle} value={tenancyEnd} onChange={e => setTenancyEnd(e.target.value)} />
+                    </div>
+                    <div style={{ gridColumn: '1 / -1' }}>
+                      <label style={labelStyle}>Reason for Leaving <span style={{ color: '#ef4444' }}>*</span></label>
+                      <textarea style={{ ...inputStyle, resize: 'vertical' } as React.CSSProperties} rows={3} value={reasonLeaving} onChange={e => setReasonLeaving(e.target.value)} placeholder="Please explain your reason for leaving" />
+                    </div>
+                  </div>
+                  <div>
+                    <label style={labelStyle}>Initial Lease Term <span style={{ color: '#ef4444' }}>*</span></label>
+                    <div className="ta-radio-group">
+                      {['6 months', '12 months', 'Other'].map(opt => (
+                        <label key={opt} className="ta-radio-label">
+                          <input type="radio" name="leaseTerm" value={opt} checked={leaseTerm === opt} onChange={() => setLeaseTerm(opt)} />
+                          {opt}
+                        </label>
+                      ))}
+                    </div>
+                    {leaseTerm === 'Other' && (
+                      <input style={{ ...inputStyle, marginTop: 12 }} value={leaseTermOther} onChange={e => setLeaseTermOther(e.target.value)} placeholder="Please specify lease term" />
+                    )}
+                  </div>
+                  <div>
+                    <label style={labelStyle}>Desired Move-In Date <span style={{ color: '#ef4444' }}>*</span></label>
+                    <input type="date" style={inputStyle} value={moveInDate} onChange={e => setMoveInDate(e.target.value)} />
+                  </div>
+                  <div>
+                    <label style={labelStyle}>Do you have pets? If yes, please provide breed and size. <span style={{ color: '#ef4444' }}>*</span></label>
+                    <input style={inputStyle} value={pets} onChange={e => setPets(e.target.value)} placeholder='e.g. "No" or "1 x Labrador, medium size"' />
+                  </div>
+                  <div>
+                    <label style={labelStyle}>Do you currently have a guarantor available if required? <span style={{ color: '#ef4444' }}>*</span></label>
+                    <div className="ta-radio-group">
+                      {['Yes', 'No'].map(opt => (
+                        <label key={opt} className="ta-radio-label">
+                          <input type="radio" name="guarantor" value={opt} checked={guarantor === opt} onChange={() => setGuarantor(opt)} />
+                          {opt}
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                  <hr style={dividerStyle} />
+                  <div>
+                    <h3 style={{ fontSize: 16, fontWeight: 800, color: '#0f172a', marginBottom: 4 }}>Holding Deposit Payment</h3>
+                    <p style={{ fontSize: 13, color: '#6b7280', marginBottom: 16 }}>
+                      To secure this property, please transfer the holding deposit to the account below and upload your payment receipt.
+                    </p>
+                    <div style={{ background: 'linear-gradient(135deg, #0a1628 0%, #0f2044 100%)', borderRadius: 12, padding: '24px 28px', marginBottom: 20, color: '#fff' }}>
+                      <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 16 }}>Amount Due</div>
+                      {selectedProperty && (
+                        <>
+                          <div style={{ fontSize: 36, fontWeight: 800, color: '#fff', marginBottom: 4 }}>{formatGBP(calcHoldingDeposit(selectedProperty.price))}</div>
+                          <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', marginBottom: 24 }}>Holding deposit for {selectedProperty.location}</div>
+                        </>
+                      )}
+                      <div style={{ borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: 20, display: 'flex', flexDirection: 'column', gap: 14 }}>
+                        {[
+                          { label: 'Account Name', value: 'House of Lettings Limited' },
+                          { label: 'Sort Code', value: '60-83-65' },
+                          { label: 'Account Number', value: '67205541' },
+                          { label: 'Payment Reference', value: paymentReference },
+                        ].map(item => (
+                          <div key={item.label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid rgba(255,255,255,0.08)', paddingBottom: 12 }}>
+                            <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.45)', fontWeight: 600, letterSpacing: '0.06em', textTransform: 'uppercase' }}>{item.label}</div>
+                            <div style={{ fontSize: 15, fontWeight: 700, fontFamily: item.label !== 'Account Name' ? 'monospace' : 'inherit', letterSpacing: item.label !== 'Account Name' ? '0.1em' : 'normal' }}>{item.value}</div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                    <FileUpload label="Holding Deposit Receipt" required maxFiles={1} state={holdingDepositReceipt} onChange={setHoldingDepositReceipt} />
+                  </div>
+                </div>
+
+                {/* MOBILE */}
+                <div className="mobile-only">
+                  <h2 style={{ ...sectionHeadingStyle, marginBottom: 4 }}>Landlord's Details</h2>
+                  <p style={{ ...sectionSubStyle, marginBottom: 20 }}>
+                    {mobileSubStep + 1} of {totalMobileSubSteps}
+                  </p>
+                  <div className="mobile-dots">
+                    {step4MobileFields.map((_, i) => (
+                      <div key={i} className={`mobile-dot ${i < mobileSubStep ? 'done' : i === mobileSubStep ? 'active' : ''}`} />
+                    ))}
+                  </div>
+                  {step4MobileFields[mobileSubStep]?.render()}
+                </div>
+              </>
+            )}
+
+            {/* ── STEP 5 ── same on mobile & desktop ── */}
             {step === 5 && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
                 <div>
                   <h2 style={sectionHeadingStyle}>Declaration & Consent</h2>
                   <p style={sectionSubStyle}>Please review your application and confirm the declarations below before submitting.</p>
                 </div>
-                {/* PropertySummaryCard removed here — now shown above the stepper */}
-                <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 10, padding: '20px 24px' }}>
+                <div className="ta-answers-grid" style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 10, padding: '20px 24px' }}>
                   <h3 style={{ fontSize: 14, fontWeight: 700, color: '#374151', marginBottom: 8 }}>Your Answers</h3>
                   {[
                     ['Applicant', fullName], ['Email', email], ['Phone', phone],
@@ -959,8 +1490,8 @@ export default function TenantApplicationPage() {
                     ['Pets', pets], ['Guarantor', guarantor],
                   ].map(([label, value]) => (
                     <div key={label} style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px solid #f1f5f9', fontSize: 13 }}>
-                      <span style={{ color: '#6b7280', fontWeight: 500 }}>{label}</span>
-                      <span style={{ color: '#111827', fontWeight: 600, textAlign: 'right', maxWidth: '60%' }}>{value || '—'}</span>
+                      <span style={{ color: '#6b7280', fontWeight: 500, textAlign: 'left' }}>{label}</span>
+                      <span style={{ color: '#111827', fontWeight: 600, textAlign: 'left', maxWidth: '60%' }}>{value || '—'}</span>
                     </div>
                   ))}
                 </div>
@@ -987,14 +1518,37 @@ export default function TenantApplicationPage() {
               </div>
             )}
 
+            {/* ── NAV BUTTONS ── */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 36, paddingTop: 24, borderTop: '1px solid #f1f5f9' }}>
-              {step > 1 ? (
-                <button onClick={goPrev} style={{ padding: '12px 24px', background: '#f9fafb', border: '1.5px solid #e5e7eb', borderRadius: 8, fontSize: 14, fontWeight: 600, color: '#374151', cursor: 'pointer' }}>
+              {/* Back button */}
+              {(step > 1 || (isMobileWizardStep && mobileSubStep > 0)) ? (
+                <button
+                  onClick={() => {
+                    // Mobile wizard: go back a sub-step or main step
+                    const isMobileView = typeof window !== 'undefined' && window.innerWidth <= 640;
+                    if (isMobileView && isMobileWizardStep && mobileSubStep > 0) {
+                      goMobilePrev();
+                    } else {
+                      goPrev();
+                    }
+                  }}
+                  style={{ padding: '12px 24px', background: '#f9fafb', border: '1.5px solid #e5e7eb', borderRadius: 8, fontSize: 14, fontWeight: 600, color: '#374151', cursor: 'pointer' }}>
                   ← Back
                 </button>
               ) : <div />}
+
+              {/* Forward button */}
               {step < totalSteps ? (
-                <button onClick={goNext} style={{ padding: '12px 28px', background: '#2563eb', border: 'none', borderRadius: 8, fontSize: 14, fontWeight: 700, color: '#fff', cursor: 'pointer' }}>
+                <button
+                  onClick={() => {
+                    const isMobileView = typeof window !== 'undefined' && window.innerWidth <= 640;
+                    if (isMobileView && isMobileWizardStep) {
+                      goMobileNext();
+                    } else {
+                      goNext();
+                    }
+                  }}
+                  style={{ padding: '12px 28px', background: '#2563eb', border: 'none', borderRadius: 8, fontSize: 14, fontWeight: 700, color: '#fff', cursor: 'pointer' }}>
                   Continue →
                 </button>
               ) : (
@@ -1005,9 +1559,14 @@ export default function TenantApplicationPage() {
             </div>
           </div>
 
+          {/* ── TRUST BADGES — sequential on mobile ── */}
           <div style={{ display: 'flex', justifyContent: 'center', gap: 28, marginTop: 24, flexWrap: 'wrap' }}>
-            {['Information is kept confidential', 'Secure file uploads', 'Response within 24–48 hours'].map(t => (
-              <span key={t} style={{ fontSize: 13, color: '#6b7280', display: 'flex', alignItems: 'center', gap: 6 }}>
+            {trustBadges.map((t, i) => (
+              <span
+                key={t}
+                className={`trust-badge ${revealedBadges > i ? 'revealed' : ''}`}
+                style={{ fontSize: 13, color: '#6b7280', display: 'flex', alignItems: 'center', gap: 6 }}
+              >
                 <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
                   <path d="M3 8l3.5 3.5L13 5" stroke="#2563eb" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>

@@ -595,6 +595,13 @@ export default function TenantApplicationPage() {
       <section style={{ padding: '48px 24px 80px' }}>
         <div style={{ maxWidth: 720, margin: '0 auto' }}>
 
+          {/* ── PROPERTY SUMMARY ABOVE STEPPER (steps 2–5) ── */}
+          {selectedProperty && step > 1 && (
+            <div style={{ marginBottom: 24 }}>
+              <PropertySummaryCard property={selectedProperty} />
+            </div>
+          )}
+
           {/* ── STEP INDICATOR ── */}
           <div style={{ marginBottom: 32 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 10 }}>
@@ -674,6 +681,7 @@ export default function TenantApplicationPage() {
                   </div>
                 )}
 
+                {/* Property summary shown below list on Step 1 only */}
                 {selectedProperty && <PropertySummaryCard property={selectedProperty} />}
               </div>
             )}
@@ -938,7 +946,7 @@ export default function TenantApplicationPage() {
                   <h2 style={sectionHeadingStyle}>Declaration & Consent</h2>
                   <p style={sectionSubStyle}>Please review your application and confirm the declarations below before submitting.</p>
                 </div>
-                {selectedProperty && <PropertySummaryCard property={selectedProperty} />}
+                {/* PropertySummaryCard removed here — now shown above the stepper */}
                 <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 10, padding: '20px 24px' }}>
                   <h3 style={{ fontSize: 14, fontWeight: 700, color: '#374151', marginBottom: 8 }}>Your Answers</h3>
                   {[

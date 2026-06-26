@@ -212,6 +212,11 @@ function generateApplicationPdf(data: Record<string, any>): string {
   row('Lease Term', data.leaseTerm);
   row('Pets', data.pets);
   row('Guarantor', data.guarantor);
+  if (data.guarantor === 'Yes') {
+    row('Guarantor Name', data.guarantorName || '—');
+    row('Guarantor Phone', data.guarantorPhone || '—');
+    row('Guarantor Email', data.guarantorEmail || '—');
+  }
   fileLinks('Holding Deposit Receipt', data.holdingDepositReceiptUrls);
 
   y += 10;
@@ -332,7 +337,6 @@ function PropertySummaryCard({ property }: { property: Property }) {
   );
 }
 
-// Step label abbreviations for mobile
 const STEP_LABELS_FULL = ['Select Property', 'Personal Details', 'Employment & Finance', "Landlord's Details", 'Declaration'];
 const STEP_LABELS_SHORT = ['Property', 'Personal', 'Finance', 'Landlord', 'Declare'];
 
@@ -405,6 +409,9 @@ export default function TenantApplicationPage() {
   const [moveInDate, setMoveInDate] = useState('');
   const [pets, setPets] = useState('');
   const [guarantor, setGuarantor] = useState('');
+  const [guarantorName, setGuarantorName] = useState('');
+  const [guarantorPhone, setGuarantorPhone] = useState('');
+  const [guarantorEmail, setGuarantorEmail] = useState('');
   const [holdingDepositReceipt, setHoldingDepositReceipt] = useState<UploadState>(emptyUpload());
   const paymentReference = selectedProperty ? toPaymentReference(selectedProperty.location) : '';
 
@@ -502,6 +509,9 @@ export default function TenantApplicationPage() {
         tenancyStart, tenancyEnd, reasonLeaving,
         leaseTerm: leaseTerm === 'Other' ? leaseTermOther : leaseTerm,
         moveInDate, pets, guarantor,
+        guarantorName: guarantor === 'Yes' ? guarantorName : '',
+        guarantorPhone: guarantor === 'Yes' ? guarantorPhone : '',
+        guarantorEmail: guarantor === 'Yes' ? guarantorEmail : '',
         holdingDepositReceiptUrls: holdingDepositReceipt.urls,
         paymentReference,
         consentContact, consentDeclare, submissionDate,
@@ -561,7 +571,6 @@ export default function TenantApplicationPage() {
           box-shadow: 0 0 0 3px rgba(37,99,235,0.08);
         }
 
-        /* Radio buttons — wrap naturally, full-width on mobile */
         .ta-radio-group {
           display: flex;
           gap: 10px;
@@ -587,7 +596,6 @@ export default function TenantApplicationPage() {
         .ta-radio-label:has(input:checked) { border-color: #2563eb; background: #eff6ff; color: #1d4ed8; }
         .ta-radio-label input { accent-color: #2563eb; }
 
-        /* Checkbox */
         .ta-checkbox-label {
           display: flex;
           align-items: flex-start;
@@ -599,7 +607,6 @@ export default function TenantApplicationPage() {
         }
         .ta-checkbox-label input { accent-color: #2563eb; margin-top: 3px; flex-shrink: 0; }
 
-        /* Property list option */
         .ta-property-option {
           display: flex;
           align-items: center;
@@ -614,24 +621,20 @@ export default function TenantApplicationPage() {
         .ta-property-option.selected { border-color: #2563eb; background: #eff6ff; }
         .ta-property-option:hover { border-color: #93c5fd; }
 
-        /* Step indicator dots — hide labels on very small screens */
         @media (max-width: 380px) {
           .step-label { display: none !important; }
         }
 
-        /* 2-col grid collapses to 1 col on mobile */
         @media (max-width: 600px) {
           .ta-grid-2 { grid-template-columns: 1fr !important; }
           .ta-grid-2 > div[style*="grid-column"] { grid-column: unset !important; }
         }
 
-        /* Nav buttons stack on very narrow screens */
         @media (max-width: 400px) {
           .ta-nav-buttons { flex-direction: column-reverse !important; gap: 10px !important; }
           .ta-nav-buttons button { width: 100% !important; }
         }
 
-        /* Bank card — wrap values on small screens */
         .bank-detail-row {
           display: flex;
           justify-content: space-between;
@@ -642,7 +645,6 @@ export default function TenantApplicationPage() {
           flex-wrap: wrap;
         }
 
-        /* Review answers grid */
         .ta-answer-row {
           display: flex;
           justify-content: space-between;
@@ -654,7 +656,6 @@ export default function TenantApplicationPage() {
           flex-wrap: wrap;
         }
 
-        /* Trust badges */
         .trust-badges {
           display: flex;
           justify-content: center;
@@ -670,6 +671,20 @@ export default function TenantApplicationPage() {
           align-items: center;
           gap: 5px;
           white-space: nowrap;
+        }
+
+        .guarantor-subform {
+          background: #f8fafc;
+          border: 1px solid #e2e8f0;
+          border-radius: 10px;
+          padding: 20px;
+          margin-top: 16px;
+        }
+        .guarantor-subform-note {
+          font-size: 12px;
+          color: #6b7280;
+          margin-bottom: 16px;
+          font-style: italic;
         }
       `}</style>
 
@@ -719,7 +734,6 @@ export default function TenantApplicationPage() {
 
           {/* ── STEP INDICATOR ── */}
           <div style={{ marginBottom: 28 }}>
-            {/* Dots row */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
               {stepLabels.map((label, i) => (
                 <div key={label} style={{ textAlign: 'center', flex: 1 }}>
@@ -743,7 +757,6 @@ export default function TenantApplicationPage() {
               ))}
             </div>
 
-            {/* Progress bar */}
             <div style={{ height: 4, background: '#e5e7eb', borderRadius: 99 }}>
               <div style={{
                 height: '100%',
@@ -754,7 +767,6 @@ export default function TenantApplicationPage() {
               }} />
             </div>
 
-            {/* Labels row */}
             <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 8 }}>
               {stepLabels.map((label, i) => (
                 <div
@@ -1042,6 +1054,8 @@ export default function TenantApplicationPage() {
                   <label style={labelStyle}>Do you have pets? If yes, please provide breed and size. <span style={{ color: '#ef4444' }}>*</span></label>
                   <input style={inputStyle} value={pets} onChange={e => setPets(e.target.value)} placeholder='e.g. "No" or "1 x Labrador, medium size"' />
                 </div>
+
+                {/* ── GUARANTOR ── */}
                 <div>
                   <label style={labelStyle}>Do you have a guarantor available if required? <span style={{ color: '#ef4444' }}>*</span></label>
                   <div className="ta-radio-group">
@@ -1052,7 +1066,45 @@ export default function TenantApplicationPage() {
                       </label>
                     ))}
                   </div>
+
+                  {guarantor === 'Yes' && (
+                    <div className="guarantor-subform">
+                      <p className="guarantor-subform-note">All fields below are optional — provide as much detail as you have.</p>
+                      <div className="ta-grid-2" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+                        <div style={{ gridColumn: '1 / -1' }}>
+                          <label style={labelStyle}>Guarantor Full Name</label>
+                          <input
+                            style={inputStyle}
+                            value={guarantorName}
+                            onChange={e => setGuarantorName(e.target.value)}
+                            placeholder="Full name"
+                          />
+                        </div>
+                        <div>
+                          <label style={labelStyle}>Guarantor Telephone Number</label>
+                          <input
+                            type="tel"
+                            style={inputStyle}
+                            value={guarantorPhone}
+                            onChange={e => setGuarantorPhone(e.target.value)}
+                            placeholder="07700 000000"
+                          />
+                        </div>
+                        <div>
+                          <label style={labelStyle}>Guarantor Email Address</label>
+                          <input
+                            type="email"
+                            style={inputStyle}
+                            value={guarantorEmail}
+                            onChange={e => setGuarantorEmail(e.target.value)}
+                            placeholder="guarantor@email.co.uk"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
+
                 <hr style={dividerStyle} />
 
                 {/* Holding deposit card */}
@@ -1117,13 +1169,22 @@ export default function TenantApplicationPage() {
                 <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 10, padding: '16px 20px' }}>
                   <h3 style={{ fontSize: 14, fontWeight: 700, color: '#374151', marginBottom: 10 }}>Your Answers</h3>
                   {[
-                    ['Applicant', fullName], ['Email', email], ['Phone', phone],
+                    ['Applicant', fullName],
+                    ['Email', email],
+                    ['Phone', phone],
                     ['Nationality', nationality],
                     ['Right to Rent', rightToRent === 'Other' ? rightToRentOther : rightToRent],
-                    ['Employment Status', employmentStatus], ['Annual Income', annualIncome],
+                    ['Employment Status', employmentStatus],
+                    ['Annual Income', annualIncome],
                     ['Move-In Date', moveInDate ? new Date(moveInDate).toLocaleDateString('en-GB') : '—'],
                     ['Lease Term', leaseTerm === 'Other' ? leaseTermOther : leaseTerm],
-                    ['Pets', pets], ['Guarantor', guarantor],
+                    ['Pets', pets],
+                    ['Guarantor', guarantor],
+                    ...(guarantor === 'Yes' ? [
+                      ['Guarantor Name', guarantorName || '—'],
+                      ['Guarantor Phone', guarantorPhone || '—'],
+                      ['Guarantor Email', guarantorEmail || '—'],
+                    ] : []),
                   ].map(([label, value]) => (
                     <div key={label} className="ta-answer-row">
                       <span style={{ color: '#6b7280', fontWeight: 500, flexShrink: 0 }}>{label}</span>

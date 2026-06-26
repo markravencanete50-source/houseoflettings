@@ -404,6 +404,14 @@ export default function TenantApplicationPage() {
   const [mobileSubStep, setMobileSubStep] = useState(0);
   // Track which trust badges have been revealed on mobile
   const [revealedBadges, setRevealedBadges] = useState(0);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth <= 640);
+    check();
+    window.addEventListener('resize', check);
+    return () => window.removeEventListener('resize', check);
+  }, []);
 
   const [properties, setProperties] = useState<Property[]>([]);
   const [propertiesLoading, setPropertiesLoading] = useState(true);
@@ -1050,6 +1058,13 @@ export default function TenantApplicationPage() {
           /* Card padding smaller on mobile */
           .ta-card { padding: 28px 20px !important; }
 
+          /* Trust badges: stack vertically, one per row, centred */
+          .trust-badges-desktop {
+            flex-direction: column !important;
+            align-items: center !important;
+            gap: 14px !important;
+          }
+
           /* Trust badges sequential fade-in */
           .trust-badge {
             opacity: 0;
@@ -1521,12 +1536,10 @@ export default function TenantApplicationPage() {
             {/* ── NAV BUTTONS ── */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 36, paddingTop: 24, borderTop: '1px solid #f1f5f9' }}>
               {/* Back button */}
-              {(step > 1 || (isMobileWizardStep && mobileSubStep > 0)) ? (
+              {(step > 1 || (isMobile && isMobileWizardStep && mobileSubStep > 0)) ? (
                 <button
                   onClick={() => {
-                    // Mobile wizard: go back a sub-step or main step
-                    const isMobileView = typeof window !== 'undefined' && window.innerWidth <= 640;
-                    if (isMobileView && isMobileWizardStep && mobileSubStep > 0) {
+                    if (isMobile && isMobileWizardStep && mobileSubStep > 0) {
                       goMobilePrev();
                     } else {
                       goPrev();
@@ -1541,8 +1554,7 @@ export default function TenantApplicationPage() {
               {step < totalSteps ? (
                 <button
                   onClick={() => {
-                    const isMobileView = typeof window !== 'undefined' && window.innerWidth <= 640;
-                    if (isMobileView && isMobileWizardStep) {
+                    if (isMobile && isMobileWizardStep) {
                       goMobileNext();
                     } else {
                       goNext();
@@ -1560,7 +1572,8 @@ export default function TenantApplicationPage() {
           </div>
 
           {/* ── TRUST BADGES — sequential on mobile ── */}
-          <div style={{ display: 'flex', justifyContent: 'center', gap: 28, marginTop: 24, flexWrap: 'wrap' }}>
+          {/* Desktop: single row. Mobile: stacked one per line, sequential reveal */}
+          <div className="trust-badges-desktop" style={{ display: 'flex', justifyContent: 'center', gap: 28, marginTop: 24, flexWrap: 'wrap' }}>
             {trustBadges.map((t, i) => (
               <span
                 key={t}

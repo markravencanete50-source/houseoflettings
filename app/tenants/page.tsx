@@ -215,11 +215,7 @@ export default function TenantsPage() {
             }}
           >
             Looking for Your Next Home?{" "}
-            <span
-              style={{
-                color: "#ffffff",
-              }}
-            >
+            <span style={{ color: "#ffffff" }}>
               House of Lettings Holds the Key.
             </span>
           </h1>
@@ -243,6 +239,7 @@ export default function TenantsPage() {
               style={{
                 background: "#2563eb",
                 color: "#fff",
+                border: "2px solid #2563eb",
                 padding: "14px 32px",
                 borderRadius: 8,
                 fontWeight: 700,
@@ -256,42 +253,46 @@ export default function TenantsPage() {
             <a
               href="/properties"
               style={{
-                border: "2px solid #2563eb",
+                background: "#2563eb",
                 color: "#fff",
+                border: "2px solid #2563eb",
                 padding: "14px 32px",
                 borderRadius: 8,
-                fontWeight: 600,
+                fontWeight: 700,
                 fontSize: 15,
                 textDecoration: "none",
               }}
             >
               Browse Properties
+            </a>
+            <a
+              href="/tenant-application"
               style={{
-  background: "#2563eb",
-  color: "#fff",
-  border: "2px solid #2563eb",
-  padding: "14px 32px",
-  borderRadius: 8,
-  fontWeight: 700,
-  fontSize: 15,
-  textDecoration: "none",
-}}
+                background: "#2563eb",
+                color: "#fff",
+                border: "2px solid #2563eb",
+                padding: "14px 32px",
+                borderRadius: 8,
+                fontWeight: 700,
+                fontSize: 15,
+                textDecoration: "none",
+                letterSpacing: "0.02em",
               }}
             >
               Tenant Application
-            style={{
-  background: "#2563eb",
-  color: "#fff",
-  border: "2px solid #2563eb",
-  padding: "14px 32px",
-  borderRadius: 8,
-  fontWeight: 700,
-  fontSize: 15,
-  textDecoration: "none",
-  letterSpacing: "0.02em",
-}}
-      >
+            </a>
+          </div>
+        </div>
+      </section>
 
+      {/* ── HOW IT WORKS ── */}
+      <section
+        style={{
+          position: "relative",
+          overflow: "hidden",
+          background: "#f3f4f6",
+        }}
+      >
         <div style={{ position: "relative", zIndex: 1, maxWidth: 1100, margin: "0 auto", padding: "60px 24px 80px" }}>
           <h2 style={{ fontSize: "clamp(1.6rem, 4vw, 2.4rem)", fontWeight: 700, marginBottom: 48, letterSpacing: "-0.02em", color: "#111827", fontFamily: "'Barlow Condensed', sans-serif" }}>
             From enquiry to keys, eight steps.
@@ -348,7 +349,6 @@ export default function TenantsPage() {
       <section style={{ position: "relative", overflow: "hidden", background: "#0a162f" }}>
         {/* Animated background */}
         <div style={{ position: "absolute", inset: 0, pointerEvents: "none", zIndex: 0 }}>
-          {/* Pulsing rings */}
           {[0, 1, 2].map(i => (
             <div key={i} style={{
               position: "absolute",
@@ -361,7 +361,6 @@ export default function TenantsPage() {
               animation: `t-pulse-ring ${6 + i * 2}s ease-in-out ${i * 1.5}s infinite`,
             }} />
           ))}
-          {/* Moving orbs */}
           <div style={{
             position: "absolute", width: 500, height: 500, borderRadius: "50%",
             background: "radial-gradient(circle, rgba(37,99,235,0.08) 0%, transparent 65%)",
@@ -374,7 +373,6 @@ export default function TenantsPage() {
             bottom: "-80px", left: "-100px",
             animation: "t-orb-move 12s ease-in-out infinite reverse",
           }} />
-          {/* Floating £ and key symbols */}
           {[
             { top: "15%", left: "4%", delay: "0s" },
             { top: "65%", left: "7%", delay: "2.5s" },
@@ -390,7 +388,6 @@ export default function TenantsPage() {
               {i % 2 === 0 ? "£" : "🔑"}
             </div>
           ))}
-          {/* Diagonal shimmer lines */}
           <div style={{
             position: "absolute", inset: 0,
             background: "repeating-linear-gradient(135deg, transparent 0px, transparent 60px, rgba(37,99,235,0.025) 60px, rgba(37,99,235,0.025) 61px)",
@@ -481,7 +478,6 @@ export default function TenantsPage() {
             animation: "t-cta-pulse 5s ease-in-out infinite",
           }}
         >
-          {/* Inner animated orbs */}
           <div style={{ position: "absolute", inset: 0, pointerEvents: "none" }}>
             <div style={{
               position: "absolute", width: 400, height: 400, borderRadius: "50%",
@@ -495,7 +491,6 @@ export default function TenantsPage() {
               bottom: "-100px", right: "-80px",
               animation: "t-orb-move 14s ease-in-out infinite reverse",
             }} />
-            {/* Floating dots */}
             {[
               { top: "20%", left: "8%" }, { top: "70%", left: "12%" },
               { top: "30%", right: "10%" }, { top: "65%", right: "15%" },
@@ -508,7 +503,6 @@ export default function TenantsPage() {
                 animation: `t-float-slow ${5 + i}s ease-in-out ${i * 0.7}s infinite`,
               }} />
             ))}
-            {/* Shimmer lines */}
             <div style={{
               position: "absolute", left: "50%", top: 0, bottom: 0, width: 1,
               background: "linear-gradient(180deg, transparent, rgba(37,99,235,0.15), transparent)",

@@ -93,24 +93,8 @@ function formatGBP(n: number) {
 
 function toPaymentReference(address: string): string {
   if (!address) return '';
-
-  const parts = address.split(',').map(p => p.trim());
-  const firstPart = parts[0];
-  const words = firstPart.split(/\s+/);
-
-  const isFlat = words[0].toLowerCase() === 'flat';
-
-  if (isFlat) {
-    // "Flat 12 Baldovan..." → F 12 Baldovan
-    const flatNumber = words[1] || '';
-    const streetFirstWord = words[2] || '';
-    return `F ${flatNumber} ${streetFirstWord}`.trim();
-  } else {
-    // "7 Marlborough Grange..." → 7 Marlborough
-    const houseNumber = words[0] || '';
-    const streetFirstWord = words[1] || '';
-    return `${houseNumber} ${streetFirstWord}`.trim();
-  }
+  const parts = address.split(',');
+  return parts.slice(0, 2).map(p => p.trim()).join(', ');
 }
 
 function generateApplicationPdf(data: Record<string, any>): string {

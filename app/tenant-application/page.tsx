@@ -94,42 +94,23 @@ function formatGBP(n: number) {
 function toPaymentReference(address: string): string {
   if (!address) return '';
 
-  const streetSuffixes: Record<string, string> = {
-    road: 'RD', street: 'ST', avenue: 'AVE', lane: 'LN', drive: 'DR',
-    close: 'CL', court: 'CT', way: 'WY', place: 'PL', gardens: 'GDNS',
-    grove: 'GR', terrace: 'TER', crescent: 'CRES', mews: 'MWS',
-  };
-
-  const unitAbbr: Record<string, string> = {
-    flat: 'F', apartment: 'APT', apt: 'APT', house: 'HSE', unit: 'UNIT',
-  };
-
   const parts = address.split(',').map(p => p.trim());
-  let unit = '';
-  let streetPart = '';
-  let townPart = '';
+  const firstPart = parts[0];
+  const words = firstPart.split(/\s+/);
 
-  const firstWords = parts[0].toLowerCase().split(/\s+/);
-  if (unitAbbr[firstWords[0]]) {
-    unit = unitAbbr[firstWords[0]] + ' ' + firstWords.slice(1).join(' ').toUpperCase();
-    streetPart = parts[1] || '';
-    townPart = parts[2] || '';
+  const isFlat = words[0].toLowerCase() === 'flat';
+
+  if (isFlat) {
+    // "Flat 12 Baldovan..." → F 12 Baldovan
+    const flatNumber = words[1] || '';
+    const streetFirstWord = words[2] || '';
+    return `F ${flatNumber} ${streetFirstWord}`.trim();
   } else {
-    streetPart = parts[0];
-    townPart = parts[1] || '';
+    // "7 Marlborough Grange..." → 7 Marlborough
+    const houseNumber = words[0] || '';
+    const streetFirstWord = words[1] || '';
+    return `${houseNumber} ${streetFirstWord}`.trim();
   }
-
-  const streetWords = streetPart.trim().toUpperCase().split(/\s+/);
-  const processedStreet = streetWords.map(w => {
-    const lower = w.toLowerCase();
-    return streetSuffixes[lower] ? streetSuffixes[lower] : w;
-  }).join(' ');
-
-  const townWords = townPart.trim().toUpperCase().split(/\s+/).filter(w => !/^[A-Z]{1,2}\d/.test(w));
-  const townAbbr = townWords[0] ? townWords[0].substring(0, 3) : '';
-
-  const ref = [unit, processedStreet, townAbbr].filter(Boolean).join(' ');
-  return ref.substring(0, 18).trim();
 }
 
 function generateApplicationPdf(data: Record<string, any>): string {

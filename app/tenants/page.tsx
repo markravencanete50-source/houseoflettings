@@ -266,34 +266,30 @@ export default function TenantsPage() {
               }}
             >
               Browse Properties
-            </a>
-            <a
-              href="/tenant-application"
               style={{
-                border: "2px solid #d4af37",
-                color: "#d4af37",
-                background: "rgba(212,175,55,0.08)",
-                padding: "14px 32px",
-                borderRadius: 8,
-                fontWeight: 700,
-                fontSize: 15,
-                textDecoration: "none",
-                letterSpacing: "0.02em",
+  background: "#2563eb",
+  color: "#fff",
+  border: "2px solid #2563eb",
+  padding: "14px 32px",
+  borderRadius: 8,
+  fontWeight: 700,
+  fontSize: 15,
+  textDecoration: "none",
+}}
               }}
             >
               Tenant Application
-            </a>
-          </div>
-        </div>
-      </section>
-
-      {/* ── HOW IT WORKS ── */}
-      <section
-        style={{
-          position: "relative",
-          overflow: "hidden",
-          background: "#f3f4f6",
-        }}
+            style={{
+  background: "#2563eb",
+  color: "#fff",
+  border: "2px solid #2563eb",
+  padding: "14px 32px",
+  borderRadius: 8,
+  fontWeight: 700,
+  fontSize: 15,
+  textDecoration: "none",
+  letterSpacing: "0.02em",
+}}
       >
 
         <div style={{ position: "relative", zIndex: 1, maxWidth: 1100, margin: "0 auto", padding: "60px 24px 80px" }}>

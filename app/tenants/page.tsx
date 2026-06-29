@@ -281,6 +281,22 @@ export default function TenantsPage() {
             >
               Tenant Application
             </a>
+            <a
+              href="/guarantor"
+              style={{
+                background: "#2563eb",
+                color: "#fff",
+                border: "2px solid #2563eb",
+                padding: "14px 32px",
+                borderRadius: 8,
+                fontWeight: 700,
+                fontSize: 15,
+                textDecoration: "none",
+                letterSpacing: "0.02em",
+              }}
+            >
+              Guarantor Form
+            </a>
           </div>
         </div>
       </section>

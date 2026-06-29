@@ -414,6 +414,27 @@ export default function TenantsPage() {
                 <span style={{ color: "#fff", fontWeight: 600 }}>deducted from your first month's rent</span>{" "}
                 , so you're not paying it on top of anything. It's just paying your rent a little early.
               </p>
+
+              {/* ── MAINTENANCE CTA ── */}
+              <div style={{ border: "1px solid rgba(37,99,235,0.4)", borderRadius: 14, padding: "20px 24px", background: "rgba(37,99,235,0.08)", display: "flex", flexDirection: "column", gap: 12 }}>
+                <div>
+                  <div style={{ color: "#fff", fontWeight: 700, fontSize: 16, marginBottom: 4 }}>Already renting with us? Something broken?</div>
+                  <p style={{ color: "rgba(255,255,255,0.6)", fontSize: 14, lineHeight: 1.6, margin: 0 }}>
+                    If you have a maintenance issue or fault in your property, report it here with a few photos and we&apos;ll get it sorted.
+                  </p>
+                </div>
+                <a
+                  href="/maintenance"
+                  style={{
+                    display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 8,
+                    alignSelf: "flex-start", background: "#2563eb", color: "#fff", fontWeight: 700,
+                    fontSize: 14, padding: "12px 22px", borderRadius: 8, textDecoration: "none",
+                    letterSpacing: "0.01em",
+                  }}
+                >
+                  🔧 Report a maintenance issue →
+                </a>
+              </div>
             </div>
 
             <div style={{ border: "1px solid rgba(245,245,240,0.22)", borderRadius: 16, padding: "36px 32px", background: "rgba(10,24,56,0.85)", backdropFilter: "blur(12px)", animation: "t-cta-pulse 6s ease-in-out infinite" }}>

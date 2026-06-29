@@ -16,10 +16,12 @@ type AddressResult = {
  * The landlord types a UK postcode, picks a suggestion, and the first
  * line of the address (street) is filled in automatically.
  */
-function usePostcodeAutocomplete(onSelect: (data: AddressResult) => void) {
+function usePostcodeAutocomplete(onSelect: (data: AddressResult) => void, active: boolean) {
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
+    // The input only exists once the modal is open, so (re)bind when active.
+    if (!active) return;
     let ac: any = null;
     let listener: any = null;
 
@@ -72,7 +74,7 @@ function usePostcodeAutocomplete(onSelect: (data: AddressResult) => void) {
     return () => {
       if (listener) (window as any).google?.maps?.event.removeListener(listener);
     };
-  }, [onSelect]);
+  }, [onSelect, active]);
 
   return inputRef;
 }
@@ -228,7 +230,7 @@ export default function PricingPage() {
     setError('');
   }, []);
 
-  const postcodeInputRef = usePostcodeAutocomplete(handleAddressSelect);
+  const postcodeInputRef = usePostcodeAutocomplete(handleAddressSelect, showModal);
 
   const handleSubmit = async () => {
     setError('');

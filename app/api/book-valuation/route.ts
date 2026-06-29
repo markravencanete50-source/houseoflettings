@@ -54,7 +54,7 @@ export async function POST(request: Request) {
       createdAt: FieldValue.serverTimestamp(),
       updatedAt: FieldValue.serverTimestamp(),
     });
-    Promise.allSettled([
+    await Promise.allSettled([
       sendEmail({
         to: data.email,
         subject: "✅ Your Valuation Request — House of Lettings",

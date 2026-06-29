@@ -185,7 +185,7 @@ export async function POST(request: Request) {
       ? [{ filename: `Tenancy-Application-${safeName}.pdf`, content: pdfBase64 }]
       : undefined;
 
-    Promise.allSettled([
+    await Promise.allSettled([
       sendEmail({
         to: data.email,
         subject: '✅ Your Tenancy Application — House of Lettings',

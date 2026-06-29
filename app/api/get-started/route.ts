@@ -115,7 +115,7 @@ export async function POST(request: Request) {
       updatedAt: FieldValue.serverTimestamp(),
     });
 
-    Promise.allSettled([
+    await Promise.allSettled([
       sendEmail({
         to: data.email,
         subject: "🎉 Registration Received — House of Lettings",

@@ -1,8 +1,81 @@
 'use client';
 // app/pricing/page.tsx
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import Link from 'next/link';
 import Navbar from '@/components/layout/Navbar';
+
+type AddressResult = {
+  street: string;
+  city: string;
+  county: string;
+  postcode: string;
+};
+
+/**
+ * Bind Google Places autocomplete to the postcode input.
+ * The landlord types a UK postcode, picks a suggestion, and the first
+ * line of the address (street) is filled in automatically.
+ */
+function usePostcodeAutocomplete(onSelect: (data: AddressResult) => void) {
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    let ac: any = null;
+    let listener: any = null;
+
+    function initAutocomplete() {
+      if (!inputRef.current || !(window as any).google?.maps?.places) return;
+
+      ac = new (window as any).google.maps.places.Autocomplete(inputRef.current, {
+        // 'geocode' (not 'address') so postcode-only predictions show up.
+        types: ['geocode'],
+        componentRestrictions: { country: 'gb' },
+        fields: ['address_components'],
+      });
+
+      listener = ac.addListener('place_changed', () => {
+        const place = ac.getPlace();
+        if (!place?.address_components) return;
+
+        let postcode = '', city = '', county = '';
+        let streetNumber = '', route = '';
+
+        place.address_components.forEach((comp: any) => {
+          if (comp.types.includes('street_number')) streetNumber = comp.long_name;
+          if (comp.types.includes('route')) route = comp.long_name;
+          if (comp.types.includes('postal_code')) postcode = comp.long_name;
+          if (comp.types.includes('postal_town') || comp.types.includes('locality')) city = comp.long_name;
+          if (comp.types.includes('administrative_area_level_2')) county = comp.long_name;
+        });
+
+        onSelect({
+          street: [streetNumber, route].filter(Boolean).join(' '),
+          city,
+          county,
+          postcode,
+        });
+      });
+    }
+
+    if ((window as any).google?.maps?.places) {
+      initAutocomplete();
+    } else {
+      const interval = setInterval(() => {
+        if ((window as any).google?.maps?.places) {
+          clearInterval(interval);
+          initAutocomplete();
+        }
+      }, 300);
+      return () => clearInterval(interval);
+    }
+
+    return () => {
+      if (listener) (window as any).google?.maps?.event.removeListener(listener);
+    };
+  }, [onSelect]);
+
+  return inputRef;
+}
 
 const PACKAGES = [
   {
@@ -119,7 +192,7 @@ export default function PricingPage() {
   const [showModal, setShowModal] = useState(false);
   const [formData, setFormData] = useState({
     firstName: '', lastName: '', email: '', phone: '',
-    propertyAddress: '', numberOfProperties: '', startDate: '',
+    postcode: '', addressLine1: '', propertyAddress: '', numberOfProperties: '', startDate: '',
   });
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
@@ -133,21 +206,48 @@ export default function PricingPage() {
     return () => { document.body.style.overflow = ''; };
   }, [showModal]);
 
+  // Load the Google Maps Places script once, for postcode autocomplete.
+  useEffect(() => {
+    const apiKey = process.env.NEXT_PUBLIC_GOOGLE_PLACES_API_KEY;
+    if (!apiKey) return;
+    if ((window as any).google?.maps?.places) return;
+    if (document.querySelector('script[data-hol-gmaps]')) return;
+    const script = document.createElement('script');
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places`;
+    script.async = true; script.defer = true;
+    (script as any).dataset.holGmaps = '1';
+    document.head.appendChild(script);
+  }, []);
+
+  const handleAddressSelect = useCallback((data: AddressResult) => {
+    setFormData(p => ({
+      ...p,
+      postcode: data.postcode || p.postcode,
+      addressLine1: data.street || p.addressLine1,
+    }));
+    setError('');
+  }, []);
+
+  const postcodeInputRef = usePostcodeAutocomplete(handleAddressSelect);
+
   const handleSubmit = async () => {
     setError('');
-    const required = ['firstName','lastName','email','phone','propertyAddress','numberOfProperties','startDate'];
+    const required = ['firstName','lastName','email','phone','postcode','addressLine1','numberOfProperties','startDate'];
     for (const f of required) {
       if (!formData[f as keyof typeof formData].trim()) {
         setError('Please fill in all fields.');
         return;
       }
     }
+    // Compose the full property address from the postcode + first line so the
+    // backend and confirmation emails keep working unchanged.
+    const propertyAddress = [formData.addressLine1, formData.postcode].filter(Boolean).join(', ');
     setSubmitting(true);
     try {
       const res = await fetch('/api/get-started', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...formData, selectedPackage: pkg.label }),
+        body: JSON.stringify({ ...formData, propertyAddress, selectedPackage: pkg.label }),
       });
       const json = await res.json();
       if (!res.ok) throw new Error(json.message || 'Something went wrong');
@@ -163,7 +263,7 @@ export default function PricingPage() {
     setShowModal(false);
     setSubmitted(false);
     setError('');
-    setFormData({ firstName: '', lastName: '', email: '', phone: '', propertyAddress: '', numberOfProperties: '', startDate: '' });
+    setFormData({ firstName: '', lastName: '', email: '', phone: '', postcode: '', addressLine1: '', propertyAddress: '', numberOfProperties: '', startDate: '' });
   };
 
   const inputStyle: React.CSSProperties = {
@@ -633,6 +733,8 @@ export default function PricingPage() {
             .gs-input:focus { border-color: #2563eb !important; }
             .gs-input::placeholder { color: #9ca3af; }
             .gs-input option { background: #fff; color: #111; }
+            /* Google Places dropdown must sit above the modal (z-index 9999) */
+            .pac-container { z-index: 100000 !important; }
           `}</style>
 
           <div style={{
@@ -787,15 +889,29 @@ export default function PricingPage() {
                     />
                   </div>
 
-                  {/* Property address */}
+                  {/* Property — postcode first (Google autocomplete), then first line of address */}
                   <div>
-                    <label style={labelStyle}>What Property Do You Own?</label>
+                    <label style={labelStyle}>What Property Do You Own? Enter Postcode</label>
+                    <input
+                      ref={postcodeInputRef}
+                      className="gs-input"
+                      style={inputStyle}
+                      placeholder="Start typing a postcode, e.g. LS1 1AA"
+                      value={formData.postcode}
+                      autoComplete="off"
+                      onChange={e => setFormData(p => ({ ...p, postcode: e.target.value }))}
+                    />
+                  </div>
+
+                  {/* First line of address (auto-filled from the postcode, editable) */}
+                  <div>
+                    <label style={labelStyle}>First Line of Address</label>
                     <input
                       className="gs-input"
                       style={inputStyle}
-                      placeholder="e.g. 12 Oak Street, Leeds, LS1 1AA"
-                      value={formData.propertyAddress}
-                      onChange={e => setFormData(p => ({ ...p, propertyAddress: e.target.value }))}
+                      placeholder="e.g. 12 Oak Street"
+                      value={formData.addressLine1}
+                      onChange={e => setFormData(p => ({ ...p, addressLine1: e.target.value }))}
                     />
                   </div>
 

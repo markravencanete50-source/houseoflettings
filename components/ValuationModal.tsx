@@ -27,10 +27,12 @@ const EMPTY_FORM = {
   propertyType: "", bedrooms: "", notes: "", preferredDateTime: "",
 };
 
-function usePlacesAutocomplete(onSelect: (data: { address: string; postcode: string; city: string; street: string }) => void) {
+function usePlacesAutocomplete(onSelect: (data: { address: string; postcode: string; city: string; street: string }) => void, active: boolean) {
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
+    // The address input only exists once the modal is open, so (re)bind when active.
+    if (!active) return;
     let ac: any = null;
     let listener: any = null;
 
@@ -69,7 +71,7 @@ function usePlacesAutocomplete(onSelect: (data: { address: string; postcode: str
     return () => {
       if (listener) (window as any).google?.maps?.event.removeListener(listener);
     };
-  }, [onSelect]);
+  }, [onSelect, active]);
 
   return inputRef;
 }
@@ -113,7 +115,7 @@ export default function ValuationModal({ isOpen, onClose }: ValuationModalProps)
     setErrors(e => ({ ...e, address: "" }));
   }, []);
 
-  const addressInputRef = usePlacesAutocomplete(handlePlaceSelect);
+  const addressInputRef = usePlacesAutocomplete(handlePlaceSelect, isOpen);
 
   const set = (key: string) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     setForm(f => ({ ...f, [key]: e.target.value }));

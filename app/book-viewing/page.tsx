@@ -1,7 +1,53 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import Navbar from "@/components/layout/Navbar";
+
+/** Postcode autocomplete (Google Places), bound to the postcode input. */
+function usePostcodeAutocomplete(onSelect: (postcode: string) => void) {
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    let ac: any = null;
+    let listener: any = null;
+
+    function initAutocomplete() {
+      if (!inputRef.current || !(window as any).google?.maps?.places) return;
+      ac = new (window as any).google.maps.places.Autocomplete(inputRef.current, {
+        types: ["geocode"],
+        componentRestrictions: { country: "gb" },
+        fields: ["address_components"],
+      });
+      listener = ac.addListener("place_changed", () => {
+        const place = ac.getPlace();
+        if (!place?.address_components) return;
+        let postcode = "";
+        place.address_components.forEach((comp: any) => {
+          if (comp.types.includes("postal_code")) postcode = comp.long_name;
+        });
+        if (postcode) onSelect(postcode);
+      });
+    }
+
+    if ((window as any).google?.maps?.places) {
+      initAutocomplete();
+    } else {
+      const interval = setInterval(() => {
+        if ((window as any).google?.maps?.places) {
+          clearInterval(interval);
+          initAutocomplete();
+        }
+      }, 300);
+      return () => clearInterval(interval);
+    }
+
+    return () => {
+      if (listener) (window as any).google?.maps?.event.removeListener(listener);
+    };
+  }, [onSelect]);
+
+  return inputRef;
+}
 
 export default function BookViewingPage() {
   const [formData, setFormData] = useState({
@@ -15,6 +61,24 @@ export default function BookViewingPage() {
   });
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
+
+  // Load Google Places once for postcode autocomplete.
+  useEffect(() => {
+    const apiKey = process.env.NEXT_PUBLIC_GOOGLE_PLACES_API_KEY;
+    if (!apiKey) return;
+    if ((window as any).google?.maps?.places) return;
+    if (document.querySelector("script[data-hol-gmaps]")) return;
+    const script = document.createElement("script");
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places`;
+    script.async = true; script.defer = true;
+    (script as any).dataset.holGmaps = "1";
+    document.head.appendChild(script);
+  }, []);
+
+  const handlePostcodeSelect = useCallback((postcode: string) => {
+    setFormData((prev) => ({ ...prev, postcode }));
+  }, []);
+  const postcodeInputRef = usePostcodeAutocomplete(handlePostcodeSelect);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
@@ -203,7 +267,7 @@ export default function BookViewingPage() {
                   {/* Postcode */}
                   <div>
                     <label style={labelStyle}>Property Postcode</label>
-                    <input name="postcode" value={formData.postcode} onChange={handleChange} placeholder="e.g. M1 1AE or LS1 1BA" style={inputStyle} />
+                    <input ref={postcodeInputRef} name="postcode" value={formData.postcode} onChange={handleChange} placeholder="Start typing a postcode, e.g. M1 1AE" style={inputStyle} autoComplete="off" />
                   </div>
 
                   {/* Move-in */}

@@ -1134,8 +1134,8 @@ export default function TenantApplicationPage() {
                     <div style={{ borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: 16, display: 'flex', flexDirection: 'column', gap: 12 }}>
                       {[
                         { label: 'Account Name', value: 'House of Lettings Limited' },
-                        { label: 'Sort Code', value: '60-83-65' },
-                        { label: 'Account Number', value: '67205541' },
+                        { label: 'Sort Code', value: '20-55-41' },
+                        { label: 'Account Number', value: '60836567' },
                         { label: 'Payment Reference', value: paymentReference },
                       ].map(item => (
                         <div key={item.label} className="bank-detail-row">

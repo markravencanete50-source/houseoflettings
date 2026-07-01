@@ -4,116 +4,9 @@ import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import Navbar from '@/components/layout/Navbar';
 import PostcodeLookup, { type AddressResult } from '@/components/PostcodeLookup';
+import { BUNDLES } from '@/lib/bundles';
 
-const PACKAGES = [
-  {
-    id: 'virtual',
-    label: 'Virtual Tenant Find',
-    price: '£499',
-    priceType: 'One-time fee',
-    color: '#2563eb',
-    bg: 'radial-gradient(ellipse at 20% 60%, rgba(37,99,235,0.18) 0%, transparent 55%), radial-gradient(ellipse at 80% 20%, rgba(15,31,61,0.4) 0%, transparent 60%)',
-    badge: null,
-    badgeColor: undefined,
-    inherits: null,
-    features: [
-      'Collection of holding deposit',
-      'Right to Rent checks',
-      'Tenant application processing',
-      'Credit and affordability checks',
-      'Employment and landlord references',
-      'Guarantor referencing (where applicable)',
-      'Preparation of tenancy agreement',
-      "Collection of first month's rent and tenancy deposit",
-      'Deposit registration and prescribed information',
-      'Utility and council tax notifications',
-      'Landlord tenancy documentation pack',
-      'Transfer of funds to the landlord',
-    ],
-  },
-  {
-    id: 'expert',
-    label: 'Expert Tenant Find',
-    price: '£799',
-    priceType: 'One-time fee',
-    color: '#2563eb',
-    bg: 'radial-gradient(ellipse at 70% 30%, rgba(37,99,235,0.22) 0%, transparent 55%), radial-gradient(ellipse at 20% 80%, rgba(37,99,235,0.12) 0%, transparent 50%)',
-    badge: null,
-    inherits: 'Everything in Virtual, plus:',
-    features: [
-      'Professional property photography',
-      'Advertising on major property portals',
-      'Enquiry management and applicant screening',
-      'Agent-led property viewings',
-      'Viewing feedback and negotiation',
-      'Tenant handover and key management',
-    ],
-  },
-  {
-    id: 'rent',
-    label: 'Rent Collection',
-    price: '6%',
-    priceType: 'Monthly percentage',
-    color: '#2563eb',
-    bg: 'radial-gradient(ellipse at 50% 80%, rgba(0,184,160,0.15) 0%, transparent 55%), radial-gradient(ellipse at 90% 10%, rgba(37,99,235,0.1) 0%, transparent 50%)',
-    badge: null,
-    inherits: 'Everything in Expert Tenant Find, plus:',
-    features: [
-      'Monthly rent collection',
-      'Rent payment monitoring',
-      'Arrears chasing and reminders',
-      'Monthly landlord statements',
-      'Annual rental income summary',
-      'Tenancy continuation management',
-      'Rent review guidance',
-      'Utility and compliance reminders',
-    ],
-  },
-  {
-    id: 'full',
-    label: 'Full Management',
-    price: '8%',
-    priceType: 'Monthly percentage',
-    color: '#2563eb',
-    bg: 'radial-gradient(ellipse at 10% 40%, rgba(99,37,235,0.16) 0%, transparent 55%), radial-gradient(ellipse at 85% 70%, rgba(37,99,235,0.14) 0%, transparent 50%)',
-    badge: 'Most Popular',
-    badgeColor: '#2563eb',
-    inherits: 'Everything in Rent Collection, plus:',
-    features: [
-      'Dedicated property management team',
-      'Day-to-day tenant communication',
-      'Maintenance reporting and contractor coordination',
-      'Repair quotation management',
-      'Emergency maintenance support',
-      'Key holding service',
-      'Compliance monitoring (Gas Safety, EICR, EPC)',
-      'Tenancy continuation and re-marketing management',
-      'End-of-tenancy administration',
-      'Deposit negotiation assistance',
-    ],
-  },
-  {
-    id: 'comprehensive',
-    label: 'Comprehensive',
-    price: '10%',
-    priceType: 'Monthly percentage',
-    color: '#2563eb',
-    bg: 'radial-gradient(ellipse at 60% 20%, rgba(37,99,235,0.25) 0%, transparent 55%), radial-gradient(ellipse at 15% 85%, rgba(37,99,235,0.15) 0%, transparent 50%)',
-    badge: 'Most Complete',
-    badgeColor: '#2563eb',
-    inherits: 'Everything in Full Management, plus:',
-    features: [
-      'Professional check-in inventory',
-      'Professional check-out inventory',
-      'Inventory comparison report',
-      'Deposit deduction assessment and evidence preparation',
-      'Contractor attendance coordination',
-      'Property compliance monitoring and reporting',
-      'End-of-tenancy dispute preparation (if required)',
-      'Priority management support',
-    ],
-  },
-];
+const PACKAGES = BUNDLES;
 
 export default function PricingPage() {
   const [active, setActive] = useState(1);
@@ -332,7 +225,7 @@ export default function PricingPage() {
         {/* Dynamic accent layer — shifts per package */}
         <div style={{
           position: 'absolute', inset: 0,
-          background: pkg.bg,
+          background: pkg.accent,
           transition: 'background 0.6s ease',
           pointerEvents: 'none',
         }} />
@@ -352,11 +245,11 @@ export default function PricingPage() {
                   onClick={() => setActive(i)}
                 >
                   {p.badge && (
-                    <span className="tab-badge" style={{ background: p.badgeColor, color: '#fff' }}>
+                    <span className="tab-badge" style={{ background: '#2563eb', color: '#fff' }}>
                       {p.badge}
                     </span>
                   )}
-                  {p.label}
+                  {p.short}
                 </button>
               ))}
             </div>
@@ -387,7 +280,7 @@ export default function PricingPage() {
               {pkg.badge && (
                 <div style={{
                   display: 'inline-block',
-                  background: pkg.badgeColor,
+                  background: '#2563eb',
                   color: '#fff', fontSize: 10, fontWeight: 800,
                   letterSpacing: 2, textTransform: 'uppercase',
                   padding: '5px 16px', borderRadius: 20,
@@ -397,41 +290,35 @@ export default function PricingPage() {
                 </div>
               )}
               <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: 1.5, marginBottom: 8, fontFamily: "'Poppins', sans-serif" }}>
-                {pkg.priceType}
+                One-time tenant find
               </div>
               <div className="price-display" style={{
                 fontFamily: "'Poppins', sans-serif",
                 fontSize: 'clamp(52px, 7vw, 80px)',
-                fontWeight: 700, color: pkg.color,
+                fontWeight: 700, color: '#2563eb',
                 lineHeight: 1, marginBottom: 8,
               }}>
-                {pkg.price}
+                {pkg.setupFee}
               </div>
               <div style={{
                 fontFamily: "'Poppins', sans-serif",
-                fontSize: 22, fontWeight: 800, color: '#fff',
+                fontSize: 16, fontWeight: 600, color: 'rgba(255,255,255,0.7)',
+                marginBottom: 16,
+              }}>
+                + <span style={{ color: '#4a90d9', fontWeight: 800 }}>{pkg.mgmtFee}</span> per month management
+              </div>
+              <div style={{
+                fontFamily: "'Poppins', sans-serif",
+                fontSize: 19, fontWeight: 800, color: '#fff',
                 marginBottom: 24, paddingBottom: 24,
                 borderBottom: '1px solid rgba(255,255,255,0.1)',
+                lineHeight: 1.3,
               }}>
                 {pkg.label}
               </div>
 
-              {pkg.inherits && (
-                <div style={{
-                  fontSize: 13, color: 'rgba(255,255,255,0.45)',
-                  fontStyle: 'italic', marginBottom: 20,
-                  fontFamily: "'Poppins', sans-serif",
-                }}>
-                  ↳ {pkg.inherits}
-                </div>
-              )}
-
               <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', lineHeight: 1.7, marginBottom: 32, fontFamily: "'Poppins', sans-serif" }}>
-                {active === 0 && "Perfect for landlords who want to manage the tenancy themselves after move-in."}
-                {active === 1 && "Our agent handles everything from photography to tenant handover."}
-                {active === 2 && "Hands-off rent collection with full financial reporting every month."}
-                {active === 3 && "Complete day-to-day management so you never have to worry."}
-                {active === 4 && "Our most comprehensive package — total peace of mind from day one."}
+                {pkg.blurb}
               </div>
 
               <button
@@ -478,35 +365,50 @@ export default function PricingPage() {
             }}>
               <div style={{
                 fontSize: 11, fontWeight: 700, letterSpacing: 3,
-                textTransform: 'uppercase', color: '#4a90d9', marginBottom: 24,
+                textTransform: 'uppercase', color: '#4a90d9', marginBottom: 8,
                 fontFamily: "'Poppins', sans-serif",
               }}>
                 What&apos;s included
               </div>
-              <div>
-                {pkg.features.map((f, i) => (
-                  <div
-                    key={f}
-                    className="feature-row"
-                    style={{ animationDelay: `${i * 0.04}s` }}
-                  >
-                    <div style={{
-                      width: 22, height: 22, borderRadius: '50%',
-                      background: 'rgba(37,99,235,0.2)',
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      flexShrink: 0, marginTop: 1,
-                    }}>
-                      <span style={{ color: pkg.color, fontSize: 12, fontWeight: 900 }}>✓</span>
-                    </div>
-                    <span style={{
-                      fontSize: 15, color: 'rgba(255,255,255,0.82)',
-                      lineHeight: 1.55, fontFamily: "'Poppins', sans-serif",
-                    }}>
-                      {f}
-                    </span>
+              <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.45)', margin: '0 0 20px', fontFamily: "'Poppins', sans-serif", lineHeight: 1.6 }}>
+                This bundle combines everything from both services below.
+              </p>
+              {pkg.groups.map((group, gi) => (
+                <div key={group.heading} style={{ marginBottom: gi < pkg.groups.length - 1 ? 28 : 0 }}>
+                  <div style={{
+                    fontSize: 13, fontWeight: 700, color: '#fff',
+                    marginBottom: 6, fontFamily: "'Poppins', sans-serif",
+                    display: 'flex', alignItems: 'center', gap: 8,
+                  }}>
+                    <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#4a90d9', display: 'inline-block', flexShrink: 0 }} />
+                    {group.heading}
                   </div>
-                ))}
-              </div>
+                  <div style={{ paddingLeft: 14, borderLeft: '1px solid rgba(74,144,217,0.25)', marginLeft: 2 }}>
+                    {group.items.map((f, i) => (
+                      <div
+                        key={f}
+                        className="feature-row"
+                        style={{ animationDelay: `${i * 0.03}s` }}
+                      >
+                        <div style={{
+                          width: 20, height: 20, borderRadius: '50%',
+                          background: 'rgba(37,99,235,0.2)',
+                          display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          flexShrink: 0, marginTop: 1,
+                        }}>
+                          <span style={{ color: '#2563eb', fontSize: 11, fontWeight: 900 }}>✓</span>
+                        </div>
+                        <span style={{
+                          fontSize: 14.5, color: 'rgba(255,255,255,0.82)',
+                          lineHeight: 1.55, fontFamily: "'Poppins', sans-serif",
+                        }}>
+                          {f}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
 
               {/* Prev / Next navigation */}
               <div style={{

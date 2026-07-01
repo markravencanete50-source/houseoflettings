@@ -4,14 +4,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import Navbar from '@/components/layout/Navbar';
-
-const PACKAGES = [
-  { id: 'Virtual Tenant Find', price: '£499', type: 'One-time fee', blurb: 'Advertise, reference and place a tenant — managed online.' },
-  { id: 'Expert Tenant Find', price: '£799', type: 'One-time fee', blurb: 'Everything in Virtual, plus agent viewings and full tenancy setup.' },
-  { id: 'Rent Collection', price: '6%', type: 'Monthly', blurb: 'Rent collection, arrears chasing and monthly statements.' },
-  { id: 'Full Management', price: '8%', type: 'Monthly', blurb: 'Complete day-to-day management, maintenance and compliance.' },
-  { id: 'Comprehensive', price: '10%', type: 'Monthly', blurb: 'Our most complete package with inventories and dispute support.' },
-];
+import { BUNDLES } from '@/lib/bundles';
 
 const REGISTRATION_FAQS = [
   {
@@ -112,25 +105,27 @@ export default function LandlordRegistrationPage() {
           <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(ellipse at 80% 20%, rgba(37,99,235,0.14) 0%, transparent 60%)', pointerEvents: 'none' }} />
           <div style={{ position: 'relative', zIndex: 1, maxWidth: 1080, margin: '0 auto' }}>
             <div style={{ textAlign: 'center', marginBottom: 48 }}>
-              <div className="hol-eyebrow" style={{ color: '#4a90d9' }}>Our Packages</div>
+              <div className="hol-eyebrow" style={{ color: '#4a90d9' }}>Our Bundles</div>
               <h2 className="hol-h2" style={{ color: '#fff' }}>Services you can request</h2>
-              <p style={{ fontSize: 15, color: 'rgba(255,255,255,0.5)', maxWidth: 560, margin: '14px auto 0', lineHeight: 1.7 }}>
-                Choose the package that fits your portfolio when you register — each one builds on the last.
+              <p style={{ fontSize: 15, color: 'rgba(255,255,255,0.5)', maxWidth: 580, margin: '14px auto 0', lineHeight: 1.7 }}>
+                Each bundle pairs a one-time tenant-find fee with an ongoing monthly management fee — pick the one that fits your portfolio when you register.
               </p>
             </div>
-            <div className="hol-pkg-grid">
-              {PACKAGES.map(p => (
-                <div key={p.id} className="hol-pkg-card">
-                  <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8 }}>{p.type}</div>
-                  <div style={{ fontSize: 'clamp(26px,3vw,34px)', fontWeight: 800, color: '#4a90d9', lineHeight: 1, marginBottom: 8 }}>{p.price}</div>
-                  <div style={{ fontSize: 15, fontWeight: 700, color: '#fff', marginBottom: 10 }}>{p.id}</div>
-                  <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.55)', lineHeight: 1.65, margin: 0 }}>{p.blurb}</p>
+            <div className="hol-pkg-grid hol-pkg-grid--2">
+              {BUNDLES.map(b => (
+                <div key={b.id} className="hol-pkg-card">
+                  {b.badge && <div style={{ display: 'inline-block', fontSize: 10, fontWeight: 800, letterSpacing: 1, textTransform: 'uppercase', color: '#0f1f3d', background: '#4a90d9', padding: '3px 10px', borderRadius: 20, marginBottom: 12 }}>{b.badge}</div>}
+                  <div style={{ fontSize: 'clamp(24px,3vw,32px)', fontWeight: 800, color: '#4a90d9', lineHeight: 1, marginBottom: 6 }}>
+                    {b.setupFee} <span style={{ fontSize: 15, fontWeight: 600, color: 'rgba(255,255,255,0.55)' }}>+ {b.mgmtFee}/mo</span>
+                  </div>
+                  <div style={{ fontSize: 15, fontWeight: 700, color: '#fff', marginBottom: 8 }}>{b.label}</div>
+                  <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.55)', lineHeight: 1.65, margin: 0 }}>{b.blurb}</p>
                 </div>
               ))}
             </div>
             <div style={{ textAlign: 'center', marginTop: 40 }}>
               <Link href="/pricing" style={{ display: 'inline-block', padding: '13px 32px', background: 'transparent', color: '#fff', border: '1.5px solid rgba(255,255,255,0.4)', borderRadius: 6, fontSize: 13, fontWeight: 700, letterSpacing: '0.5px', textTransform: 'uppercase', textDecoration: 'none' }}>
-                Compare All Packages
+                Compare All Bundles
               </Link>
             </div>
           </div>
@@ -237,8 +232,9 @@ const PAGE_CSS = `
   .hol-why-card:hover { transform:translateY(-4px); box-shadow:0 12px 28px rgba(15,31,61,.08); }
 
   .hol-pkg-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:20px; }
+  .hol-pkg-grid--2 { grid-template-columns:repeat(2,1fr); max-width:760px; margin:0 auto; }
   @media(max-width:860px){ .hol-pkg-grid{grid-template-columns:1fr 1fr;} }
-  @media(max-width:560px){ .hol-pkg-grid{grid-template-columns:1fr;} }
+  @media(max-width:560px){ .hol-pkg-grid, .hol-pkg-grid--2{grid-template-columns:1fr;} }
   .hol-pkg-card { background:#162849; border:1px solid rgba(74,144,217,.28); border-radius:12px; padding:24px 22px; transition:transform .2s,border-color .2s; }
   .hol-pkg-card:hover { transform:translateY(-4px); border-color:rgba(74,144,217,.6); }
 

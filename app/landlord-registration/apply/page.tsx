@@ -5,18 +5,10 @@ import { useState, useCallback, useRef } from 'react';
 import Link from 'next/link';
 import Navbar from '@/components/layout/Navbar';
 import PostcodeLookup, { type AddressResult } from '@/components/PostcodeLookup';
+import { BUNDLES } from '@/lib/bundles';
 
 const UK_PHONE_REGEX = /^(\+44|0)[\s-]?[1-9][\d\s-]{8,11}$/;
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-// Pricing packages we offer — the landlord picks the one they want.
-const PACKAGES = [
-  { id: 'Virtual Tenant Find', price: '£499', type: 'One-time fee', blurb: 'Advertise, reference and place a tenant — managed online.' },
-  { id: 'Expert Tenant Find', price: '£799', type: 'One-time fee', blurb: 'Everything in Virtual, plus agent viewings and full tenancy setup.' },
-  { id: 'Rent Collection', price: '6%', type: 'Monthly', blurb: 'Rent collection, arrears chasing and monthly statements.' },
-  { id: 'Full Management', price: '8%', type: 'Monthly', blurb: 'Complete day-to-day management, maintenance and compliance.' },
-  { id: 'Comprehensive', price: '10%', type: 'Monthly', blurb: 'Our most complete package with inventories and dispute support.' },
-];
 
 // The compliance documents we ask about. Each has a set of answer options;
 // the gas certificate has an extra "no gas supply" option.
@@ -323,23 +315,23 @@ export default function LandlordRegistrationApplyPage() {
                   </div>
                 )}
 
-                {/* STEP 3 — SERVICE / PACKAGE */}
+                {/* STEP 3 — SERVICE / BUNDLE */}
                 {step === 2 && (
                   <div>
-                    <p style={{ fontSize: 13, color: '#6b7280', margin: '0 0 16px' }}>Which service would you like? You can discuss and change this with your agent later.</p>
+                    <p style={{ fontSize: 13, color: '#6b7280', margin: '0 0 16px' }}>Choose a management bundle. Each pairs a one-time tenant-find fee with an ongoing monthly management fee — you can discuss and change this with your agent later.</p>
                     <div className="hol-pkg-list">
-                      {PACKAGES.map(p => {
-                        const on = form.selectedPackage === p.id;
+                      {BUNDLES.map(b => {
+                        const on = form.selectedPackage === b.label;
                         return (
-                          <label key={p.id} className={`hol-pkg${on ? ' hol-pkg--on' : ''}`}>
-                            <input type="radio" name="package" checked={on} onChange={() => { setForm(f => ({ ...f, selectedPackage: p.id })); setErrors(er => ({ ...er, selectedPackage: '' })); }} />
+                          <label key={b.id} className={`hol-pkg${on ? ' hol-pkg--on' : ''}`}>
+                            <input type="radio" name="package" checked={on} onChange={() => { setForm(f => ({ ...f, selectedPackage: b.label })); setErrors(er => ({ ...er, selectedPackage: '' })); }} />
                             <span className="hol-radio" aria-hidden>{on && <span className="hol-radio-dot" />}</span>
                             <span style={{ flex: 1 }}>
                               <span style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 12 }}>
-                                <span style={{ fontWeight: 700, fontSize: 15, color: '#0f1f3d' }}>{p.id}</span>
-                                <span style={{ fontWeight: 800, fontSize: 15, color: '#2563eb', whiteSpace: 'nowrap' }}>{p.price} <span style={{ fontSize: 11, fontWeight: 500, color: '#9ca3af' }}>{p.type}</span></span>
+                                <span style={{ fontWeight: 700, fontSize: 14.5, color: '#0f1f3d' }}>{b.label}{b.badge && <span className="hol-pkg-badge">{b.badge}</span>}</span>
+                                <span style={{ fontWeight: 800, fontSize: 14, color: '#2563eb', whiteSpace: 'nowrap' }}>{b.setupFee} <span style={{ fontSize: 11, fontWeight: 500, color: '#9ca3af' }}>+ {b.mgmtFee}/mo</span></span>
                               </span>
-                              <span style={{ display: 'block', fontSize: 12.5, color: '#6b7280', marginTop: 3, lineHeight: 1.55 }}>{p.blurb}</span>
+                              <span style={{ display: 'block', fontSize: 12.5, color: '#6b7280', marginTop: 3, lineHeight: 1.55 }}>{b.blurb}</span>
                             </span>
                           </label>
                         );
@@ -708,6 +700,7 @@ const PAGE_CSS = `
   .hol-radio{flex-shrink:0;width:20px;height:20px;border-radius:50%;border:1.5px solid #cbd5e1;display:flex;align-items:center;justify-content:center;margin-top:2px;background:#fff;transition:all .15s;}
   .hol-pkg--on .hol-radio{border-color:#2563a8;}
   .hol-radio-dot{width:10px;height:10px;border-radius:50%;background:#2563a8;}
+  .hol-pkg-badge{display:inline-block;margin-left:8px;font-size:9px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#2563a8;background:#e8f0ff;padding:2px 7px;border-radius:20px;vertical-align:middle;}
 
   .hol-doc{border:1.5px solid #e5e7eb;border-radius:12px;padding:16px 18px;background:#fff;}
   .hol-doc--error{border-color:#f7b6b6;}

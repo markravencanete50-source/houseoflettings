@@ -1,7 +1,7 @@
 'use client';
 // app/landlord-registration/apply/page.tsx
 // Step-by-step landlord registration wizard.
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import Link from 'next/link';
 import Navbar from '@/components/layout/Navbar';
 import PostcodeLookup, { type AddressResult } from '@/components/PostcodeLookup';
@@ -28,6 +28,10 @@ const DOCS = [
 type DocState = { has: '' | 'yes' | 'no'; url: string; uploading: boolean; fileName: string; error: string };
 const EMPTY_DOC: DocState = { has: '', url: '', uploading: false, fileName: '', error: '' };
 
+type Property = { id: string; postcode: string; street: string; city: string; county: string };
+const newProperty = (id: string): Property => ({ id, postcode: '', street: '', city: '', county: '' });
+const formatAddress = (p: Property) => [p.street, p.city, p.county, p.postcode].filter(Boolean).join(', ');
+
 const STEPS = ['About You', 'Your Property', 'Service', 'Documents', 'Confirm'];
 
 // Direct-to-Cloudinary upload (bypasses Vercel's ~4.5MB request-body limit).
@@ -53,13 +57,14 @@ async function uploadToCloudinary(file: File): Promise<string> {
 
 const EMPTY_FORM = {
   fullName: '', email: '', phone: '', propertyCount: '',
-  postcode: '', street: '', city: '', county: '',
   selectedPackage: '', notes: '',
 };
 
 export default function LandlordRegistrationApplyPage() {
   const [step, setStep] = useState(0);
   const [form, setForm] = useState(EMPTY_FORM);
+  const [properties, setProperties] = useState<Property[]>([newProperty('p0')]);
+  const nextPropId = useRef(1);
   const [docs, setDocs] = useState<Record<string, DocState>>({ epc: { ...EMPTY_DOC }, gasElec: { ...EMPTY_DOC }, landReg: { ...EMPTY_DOC } });
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -71,15 +76,18 @@ export default function LandlordRegistrationApplyPage() {
     setErrors(er => ({ ...er, [key]: '' }));
   };
 
-  const handleAddressSelect = useCallback((data: AddressResult) => {
-    setForm(f => ({
-      ...f,
-      street: data.street || f.street,
-      city: data.city || f.city,
-      county: data.county || f.county,
-      postcode: data.postcode || f.postcode,
-    }));
-    setErrors(e => ({ ...e, street: '', postcode: '' }));
+  // Update one property by id, clearing any errors for the fields we touched.
+  const updateProperty = useCallback((id: string, patch: Partial<Property>) => {
+    setProperties(ps => ps.map(p => (p.id === id ? { ...p, ...patch } : p)));
+    setErrors(e => {
+      const next = { ...e };
+      Object.keys(patch).forEach(f => { delete next[`prop_${id}_${f}`]; });
+      return next;
+    });
+  }, []);
+  const addProperty = () => setProperties(ps => [...ps, newProperty(`p${nextPropId.current++}`)]);
+  const removeProperty = useCallback((id: string) => {
+    setProperties(ps => (ps.length > 1 ? ps.filter(p => p.id !== id) : ps));
   }, []);
 
   const setDoc = (key: string, patch: Partial<DocState>) => setDocs(d => ({ ...d, [key]: { ...d[key], ...patch } }));
@@ -106,8 +114,10 @@ export default function LandlordRegistrationApplyPage() {
       else if (!UK_PHONE_REGEX.test(form.phone.replace(/\s/g, ''))) e.phone = 'Enter a valid UK phone number';
       if (!form.propertyCount) e.propertyCount = 'Please tell us how many properties you own';
     } else if (s === 1) {
-      if (!form.postcode.trim()) e.postcode = 'Postcode is required';
-      if (!form.street.trim()) e.street = '1st line of address is required';
+      properties.forEach(p => {
+        if (!p.postcode.trim()) e[`prop_${p.id}_postcode`] = 'Postcode is required';
+        if (!p.street.trim()) e[`prop_${p.id}_street`] = '1st line of address is required';
+      });
     } else if (s === 2) {
       if (!form.selectedPackage) e.selectedPackage = 'Please choose a service';
     } else if (s === 3) {
@@ -138,7 +148,9 @@ export default function LandlordRegistrationApplyPage() {
             gasElec: { has: docs.gasElec.has === 'yes', url: docs.gasElec.url },
             landReg: { has: docs.landReg.has === 'yes', url: docs.landReg.url },
           },
-          address: [form.street, form.city, form.county, form.postcode].filter(Boolean).join(', '),
+          properties: properties.map(({ street, city, county, postcode }) => ({ street, city, county, postcode })),
+          postcode: properties[0]?.postcode || '',
+          address: properties.map(formatAddress).join(' | '),
         }),
       });
       const data = await res.json();
@@ -168,7 +180,8 @@ export default function LandlordRegistrationApplyPage() {
               </div>
               <h2 style={{ fontSize: 26, fontWeight: 700, color: '#0f1f3d', marginBottom: 12 }}>Registration Received!</h2>
               <p style={{ fontSize: 15, color: '#374151', maxWidth: 440, margin: '0 auto 8px', lineHeight: 1.6 }}>
-                Thank you, {form.fullName.split(' ')[0]}. We&rsquo;ve received your registration for <strong>{form.street}{form.city ? `, ${form.city}` : ''}</strong>.
+                Thank you, {form.fullName.split(' ')[0]}. We&rsquo;ve received your registration for <strong>{properties[0].street || 'your property'}{properties[0].city ? `, ${properties[0].city}` : ''}</strong>
+                {properties.length > 1 ? ` and ${properties.length - 1} other propert${properties.length - 1 === 1 ? 'y' : 'ies'}` : ''}.
               </p>
               <p style={{ fontSize: 13, color: '#9ca3af', marginBottom: 28 }}>Our lettings team will be in touch within 24–48 hours with your tailored proposal.</p>
               <Link href="/" style={{ display: 'inline-block', padding: '13px 28px', background: 'linear-gradient(135deg,#1a3c5e 0%,#2563a8 100%)', color: '#fff', borderRadius: 10, fontSize: 14, fontWeight: 600, textDecoration: 'none' }}>Back to Home</Link>
@@ -231,34 +244,30 @@ export default function LandlordRegistrationApplyPage() {
                   </div>
                 )}
 
-                {/* STEP 2 — YOUR PROPERTY */}
+                {/* STEP 2 — YOUR PROPERTY (one or more) */}
                 {step === 1 && (
-                  <div className="hol-form-grid">
-                    <div className="hol-field hol-field--full">
-                      <label className="hol-label">Postcode<span className="hol-req">*</span></label>
-                      <PostcodeLookup
-                        postcode={form.postcode}
-                        onPostcodeChange={(v) => { setForm(f => ({ ...f, postcode: v })); setErrors(er => ({ ...er, postcode: '' })); }}
-                        onSelect={handleAddressSelect}
-                        inputClassName={`hol-input${errors.postcode ? ' hol-input--error' : ''}`}
-                        placeholder="e.g. M1 1AE"
-                      />
-                      {errors.postcode && <p className="hol-err">{errors.postcode}</p>}
-                      <p style={{ fontSize: 12, color: '#9ca3af', margin: '2px 0 0' }}>Search your postcode, then select your address to auto-fill the fields below.</p>
+                  <div>
+                    <p style={{ fontSize: 13, color: '#6b7280', margin: '0 0 18px' }}>
+                      Add each property you&rsquo;d like us to manage. Managing more than one? Use <strong>Add another property</strong> below.
+                    </p>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                      {properties.map((p, i) => (
+                        <PropertyRow
+                          key={p.id}
+                          property={p}
+                          index={i}
+                          total={properties.length}
+                          onUpdate={updateProperty}
+                          onRemove={removeProperty}
+                          postcodeError={errors[`prop_${p.id}_postcode`]}
+                          streetError={errors[`prop_${p.id}_street`]}
+                        />
+                      ))}
                     </div>
-                    <div className="hol-field hol-field--full">
-                      <label className="hol-label">1st Line of Address<span className="hol-req">*</span></label>
-                      <input type="text" className={`hol-input${errors.street ? ' hol-input--error' : ''}`} placeholder="e.g. 12 Whitfield Street" value={form.street} onChange={set('street')} autoComplete="off" />
-                      {errors.street && <p className="hol-err">{errors.street}</p>}
-                    </div>
-                    <div className="hol-field">
-                      <label className="hol-label">City <span style={{ color: '#9ca3af', fontWeight: 400 }}>(optional)</span></label>
-                      <input type="text" className="hol-input" placeholder="e.g. Manchester" value={form.city} onChange={set('city')} autoComplete="off" />
-                    </div>
-                    <div className="hol-field">
-                      <label className="hol-label">County <span style={{ color: '#9ca3af', fontWeight: 400 }}>(optional)</span></label>
-                      <input type="text" className="hol-input" placeholder="e.g. Greater Manchester" value={form.county} onChange={set('county')} autoComplete="off" />
-                    </div>
+                    <button type="button" className="hol-add-property" onClick={addProperty}>
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 5v14M5 12h14" /></svg>
+                      Add another property
+                    </button>
                   </div>
                 )}
 
@@ -349,7 +358,9 @@ export default function LandlordRegistrationApplyPage() {
                       <SummaryRow label="Email" value={form.email} />
                       <SummaryRow label="Phone" value={form.phone} />
                       <SummaryRow label="Properties owned" value={form.propertyCount} />
-                      <SummaryRow label="Property" value={[form.street, form.city, form.county, form.postcode].filter(Boolean).join(', ')} />
+                      {properties.map((p, i) => (
+                        <SummaryRow key={p.id} label={properties.length > 1 ? `Property ${i + 1}` : 'Property'} value={formatAddress(p)} />
+                      ))}
                       <SummaryRow label="Service" value={form.selectedPackage} />
                       <SummaryRow label="EPC" value={docs.epc.has === 'yes' ? (docs.epc.url ? 'Yes — uploaded' : 'Yes') : docs.epc.has === 'no' ? 'To arrange' : '—'} />
                       <SummaryRow label="Electrical & Gas" value={docs.gasElec.has === 'yes' ? (docs.gasElec.url ? 'Yes — uploaded' : 'Yes') : docs.gasElec.has === 'no' ? 'To arrange' : '—'} />
@@ -415,6 +426,69 @@ function SummaryRow({ label, value }: { label: string; value: string }) {
   );
 }
 
+// One property block in the step-2 list. Kept as its own component so the
+// PostcodeLookup callbacks stay stable per-property (id-bound) and the Google
+// autocomplete doesn't re-bind on every keystroke.
+function PropertyRow({
+  property, index, total, onUpdate, onRemove, postcodeError, streetError,
+}: {
+  property: Property;
+  index: number;
+  total: number;
+  onUpdate: (id: string, patch: Partial<Property>) => void;
+  onRemove: (id: string) => void;
+  postcodeError?: string;
+  streetError?: string;
+}) {
+  const handleSelect = useCallback((addr: AddressResult) => {
+    const patch: Partial<Property> = {};
+    if (addr.street) patch.street = addr.street;
+    if (addr.city) patch.city = addr.city;
+    if (addr.county) patch.county = addr.county;
+    if (addr.postcode) patch.postcode = addr.postcode;
+    onUpdate(property.id, patch);
+  }, [property.id, onUpdate]);
+  const handlePostcode = useCallback((v: string) => onUpdate(property.id, { postcode: v }), [property.id, onUpdate]);
+
+  return (
+    <div className="hol-prop-card">
+      {total > 1 && (
+        <div className="hol-prop-head">
+          <span className="hol-prop-badge">Property {index + 1}</span>
+          <button type="button" className="hol-prop-remove" onClick={() => onRemove(property.id)}>Remove</button>
+        </div>
+      )}
+      <div className="hol-form-grid">
+        <div className="hol-field hol-field--full">
+          <label className="hol-label">Postcode<span className="hol-req">*</span></label>
+          <PostcodeLookup
+            postcode={property.postcode}
+            onPostcodeChange={handlePostcode}
+            onSelect={handleSelect}
+            inputClassName={`hol-input${postcodeError ? ' hol-input--error' : ''}`}
+            placeholder="e.g. M1 1AE"
+          />
+          {postcodeError && <p className="hol-err">{postcodeError}</p>}
+          <p style={{ fontSize: 12, color: '#9ca3af', margin: '2px 0 0' }}>Search your postcode, then select your address to auto-fill the fields below.</p>
+        </div>
+        <div className="hol-field hol-field--full">
+          <label className="hol-label">1st Line of Address<span className="hol-req">*</span></label>
+          <input type="text" className={`hol-input${streetError ? ' hol-input--error' : ''}`} placeholder="e.g. 12 Whitfield Street" value={property.street} onChange={(e) => onUpdate(property.id, { street: e.target.value })} autoComplete="off" />
+          {streetError && <p className="hol-err">{streetError}</p>}
+        </div>
+        <div className="hol-field">
+          <label className="hol-label">City <span style={{ color: '#9ca3af', fontWeight: 400 }}>(optional)</span></label>
+          <input type="text" className="hol-input" placeholder="e.g. Manchester" value={property.city} onChange={(e) => onUpdate(property.id, { city: e.target.value })} autoComplete="off" />
+        </div>
+        <div className="hol-field">
+          <label className="hol-label">County <span style={{ color: '#9ca3af', fontWeight: 400 }}>(optional)</span></label>
+          <input type="text" className="hol-input" placeholder="e.g. Greater Manchester" value={property.county} onChange={(e) => onUpdate(property.id, { county: e.target.value })} autoComplete="off" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
 const PAGE_CSS = `
   @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap');
 
@@ -448,6 +522,14 @@ const PAGE_CSS = `
   .hol-textarea{resize:vertical;min-height:80px;}
   .hol-err{font-size:12px;color:#e53e3e;margin:0;font-family:'Poppins',sans-serif;}
   .hol-err-banner{display:flex;align-items:center;gap:8px;background:#fef2f2;border:1px solid #fecaca;border-radius:10px;padding:12px 14px;font-size:13px;color:#dc2626;margin:20px 0 0;font-family:'Poppins',sans-serif;}
+
+  .hol-prop-card{border:1.5px solid #e5e7eb;border-radius:12px;padding:18px;background:#fdfdff;}
+  .hol-prop-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
+  .hol-prop-badge{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#2563a8;background:#eef4ff;padding:4px 10px;border-radius:20px;}
+  .hol-prop-remove{background:none;border:none;color:#dc2626;font-size:12px;font-weight:600;cursor:pointer;padding:0;}
+  .hol-prop-remove:hover{text-decoration:underline;}
+  .hol-add-property{display:inline-flex;align-items:center;gap:8px;margin-top:14px;padding:11px 18px;border:1.5px dashed #b9c9e6;border-radius:10px;background:#f5f9ff;color:#2563a8;font-family:'Poppins',sans-serif;font-size:13px;font-weight:600;cursor:pointer;transition:all .15s;}
+  .hol-add-property:hover{border-color:#2563a8;background:#eaf2ff;}
 
   .hol-pkg-list{display:flex;flex-direction:column;gap:10px;}
   .hol-pkg{display:flex;align-items:flex-start;gap:12px;border:1.5px solid #e5e7eb;border-radius:12px;padding:14px 16px;cursor:pointer;transition:border-color .15s,background .15s;background:#fff;}

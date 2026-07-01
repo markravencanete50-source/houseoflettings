@@ -37,16 +37,20 @@ const initDocs = (): Record<string, DocState> => Object.fromEntries(DOC_KEYS.map
 const PROPERTY_TYPES = ['Detached house', 'Semi-detached house', 'Terraced house', 'Flat / Apartment', 'Bungalow', 'Maisonette', 'Studio', 'HMO / House share', 'Other'];
 const FURNISHING = ['Furnished', 'Unfurnished', 'Part-furnished'];
 const PARKING = ['None', 'On-street', 'Driveway', 'Garage', 'Allocated space', 'Other'];
+const CONDITIONS = ['Newly built / refurbished', 'Excellent', 'Good', 'Fair', 'Needs some work', 'Needs full refurbishment'];
+const OCCUPANCY = ['Vacant', 'Occupied'];
 
 type Property = {
   id: string; postcode: string; street: string; city: string; county: string;
   propertyType: string; receptions: string; bedrooms: string; bathrooms: string;
   furnishing: string; parking: string; flatNumber: string; availableFrom: string; securityNote: string;
+  condition: string; occupancy: string; currentRent: string; tenancyStart: string; tenancyEnd: string;
 };
 const newProperty = (id: string): Property => ({
   id, postcode: '', street: '', city: '', county: '',
   propertyType: '', receptions: '', bedrooms: '', bathrooms: '',
   furnishing: '', parking: '', flatNumber: '', availableFrom: '', securityNote: '',
+  condition: '', occupancy: '', currentRent: '', tenancyStart: '', tenancyEnd: '',
 });
 const formatAddress = (p: Property) => [p.street, p.city, p.county, p.postcode].filter(Boolean).join(', ');
 const propertyDetails = (p: Property) => [
@@ -56,6 +60,10 @@ const propertyDetails = (p: Property) => [
   p.receptions && `${p.receptions} recep`,
   p.furnishing,
   p.parking && p.parking !== 'None' && `Parking: ${p.parking}`,
+  p.condition && `Condition: ${p.condition}`,
+  p.occupancy,
+  p.occupancy === 'Occupied' && p.currentRent && `Rent £${p.currentRent}/mo`,
+  p.occupancy === 'Occupied' && p.tenancyStart && `Tenancy ${p.tenancyStart}${p.tenancyEnd ? ` – ${p.tenancyEnd}` : ''}`,
   p.availableFrom && `Available ${p.availableFrom}`,
 ].filter(Boolean).join(' · ');
 
@@ -155,6 +163,7 @@ export default function LandlordRegistrationApplyPage() {
         if (!p.street.trim()) e[`prop_${p.id}_street`] = '1st line of address is required';
         if (!p.propertyType) e[`prop_${p.id}_propertyType`] = 'Please select a property type';
         if (!p.bedrooms) e[`prop_${p.id}_bedrooms`] = 'Please select the number of bedrooms';
+        if (!p.occupancy) e[`prop_${p.id}_occupancy`] = 'Please tell us if the property is occupied or vacant';
       });
     } else if (s === 2) {
       if (!form.selectedPackage) e.selectedPackage = 'Please choose a service';
@@ -303,6 +312,7 @@ export default function LandlordRegistrationApplyPage() {
                           streetError={errors[`prop_${p.id}_street`]}
                           propertyTypeError={errors[`prop_${p.id}_propertyType`]}
                           bedroomsError={errors[`prop_${p.id}_bedrooms`]}
+                          occupancyError={errors[`prop_${p.id}_occupancy`]}
                         />
                       ))}
                     </div>
@@ -489,7 +499,7 @@ function SummaryRow({ label, value }: { label: string; value: string }) {
 // PostcodeLookup callbacks stay stable per-property (id-bound) and the Google
 // autocomplete doesn't re-bind on every keystroke.
 function PropertyRow({
-  property, index, total, onUpdate, onRemove, postcodeError, streetError, propertyTypeError, bedroomsError,
+  property, index, total, onUpdate, onRemove, postcodeError, streetError, propertyTypeError, bedroomsError, occupancyError,
 }: {
   property: Property;
   index: number;
@@ -500,6 +510,7 @@ function PropertyRow({
   streetError?: string;
   propertyTypeError?: string;
   bedroomsError?: string;
+  occupancyError?: string;
 }) {
   const upd = (field: keyof Property) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => onUpdate(property.id, { [field]: e.target.value });
   const handleSelect = useCallback((addr: AddressResult) => {
@@ -596,6 +607,43 @@ function PropertyRow({
           </select>
         </div>
         <div className="hol-field">
+          <label className="hol-label">Property Condition <span style={{ color: '#9ca3af', fontWeight: 400 }}>(optional)</span></label>
+          <select className="hol-input hol-select" value={property.condition} onChange={upd('condition')}>
+            <option value="">Select...</option>
+            {CONDITIONS.map(c => <option key={c}>{c}</option>)}
+          </select>
+        </div>
+        <div className="hol-field">
+          <label className="hol-label">Occupancy<span className="hol-req">*</span></label>
+          <select className={`hol-input hol-select${occupancyError ? ' hol-input--error' : ''}`} value={property.occupancy} onChange={upd('occupancy')}>
+            <option value="">Select...</option>
+            {OCCUPANCY.map(o => <option key={o}>{o}</option>)}
+          </select>
+          {occupancyError && <p className="hol-err">{occupancyError}</p>}
+        </div>
+
+        {property.occupancy === 'Occupied' && (
+          <div className="hol-field--full hol-occupied">
+            <div className="hol-occupied-head">Current tenancy details</div>
+            <div className="hol-form-grid">
+              <div className="hol-field">
+                <label className="hol-label">Current Monthly Rent (£) <span style={{ color: '#9ca3af', fontWeight: 400 }}>(optional)</span></label>
+                <input type="text" inputMode="numeric" className="hol-input" placeholder="e.g. 950" value={property.currentRent} onChange={upd('currentRent')} autoComplete="off" />
+              </div>
+              <div className="hol-field" />
+              <div className="hol-field">
+                <label className="hol-label">Tenancy Start Date <span style={{ color: '#9ca3af', fontWeight: 400 }}>(optional)</span></label>
+                <input type="date" className="hol-input" style={{ colorScheme: 'light' }} value={property.tenancyStart} onChange={upd('tenancyStart')} />
+              </div>
+              <div className="hol-field">
+                <label className="hol-label">Tenancy End Date <span style={{ color: '#9ca3af', fontWeight: 400 }}>(optional)</span></label>
+                <input type="date" className="hol-input" style={{ colorScheme: 'light' }} value={property.tenancyEnd} onChange={upd('tenancyEnd')} />
+              </div>
+            </div>
+          </div>
+        )}
+
+        <div className="hol-field">
           <label className="hol-label">Available From <span style={{ color: '#9ca3af', fontWeight: 400 }}>(optional)</span></label>
           <input type="date" className="hol-input" style={{ colorScheme: 'light' }} value={property.availableFrom} onChange={upd('availableFrom')} />
         </div>
@@ -649,6 +697,8 @@ const PAGE_CSS = `
   .hol-prop-remove:hover{text-decoration:underline;}
   .hol-add-property{display:inline-flex;align-items:center;gap:8px;margin-top:14px;padding:11px 18px;border:1.5px dashed #b9c9e6;border-radius:10px;background:#f5f9ff;color:#2563a8;font-family:'Poppins',sans-serif;font-size:13px;font-weight:600;cursor:pointer;transition:all .15s;}
   .hol-add-property:hover{border-color:#2563a8;background:#eaf2ff;}
+  .hol-occupied{border:1px solid #dbe6fb;background:#f5f9ff;border-radius:10px;padding:14px 16px;}
+  .hol-occupied-head{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#2563a8;margin-bottom:12px;}
 
   .hol-pkg-list{display:flex;flex-direction:column;gap:10px;}
   .hol-pkg{display:flex;align-items:flex-start;gap:12px;border:1.5px solid #e5e7eb;border-radius:12px;padding:14px 16px;cursor:pointer;transition:border-color .15s,background .15s;background:#fff;}

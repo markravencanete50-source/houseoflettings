@@ -42,6 +42,10 @@ function propertyRows(data: any) {
         p.receptions && `${p.receptions} recep`,
         p.furnishing,
         p.parking && p.parking !== "None" && `Parking: ${p.parking}`,
+        p.condition && `Condition: ${p.condition}`,
+        p.occupancy,
+        p.occupancy === "Occupied" && p.currentRent && `Rent: £${p.currentRent}/mo`,
+        p.occupancy === "Occupied" && p.tenancyStart && `Tenancy: ${p.tenancyStart}${p.tenancyEnd ? ` – ${p.tenancyEnd}` : ""}`,
         p.availableFrom && `Available ${p.availableFrom}`,
         p.securityNote && `Access: ${p.securityNote}`,
       ].filter(Boolean).join(" · ");

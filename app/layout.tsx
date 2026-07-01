@@ -25,7 +25,7 @@ export const metadata: Metadata = {
     siteName: 'House of Lettings',
     images: [
       {
-        url: '/images/brand-desk.jpeg',
+        url: '/images/heropage.png',
         width: 1200,
         height: 630,
         alt: 'House of Lettings – Letting Agents in Leeds & Manchester',
@@ -38,7 +38,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'House of Lettings | Letting Agents in Leeds & Manchester',
     description: 'Transparent pricing. No hidden fees. Free valuation from local experts.',
-    images: ['/images/brand-desk.jpeg'],
+    images: ['/images/heropage.png'],
   },
   icons: {
     icon: [

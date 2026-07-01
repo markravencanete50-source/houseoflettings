@@ -328,7 +328,7 @@ export default function GuarantorPage() {
     setSubmitting(true); setError('');
     try {
       const propertyAddress = selectedProperty
-        ? [selectedProperty.title, selectedProperty.location].filter(Boolean).join(' — ')
+        ? selectedProperty.location || ''
         : '';
       const guarantorAddress = [form.guarantorAddressLine, form.guarantorPostcode].filter(Boolean).join(', ');
       const payload = {
@@ -521,7 +521,7 @@ export default function GuarantorPage() {
                 {selectedProperty && (
                   <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 12, padding: '18px 22px' }}>
                     {([
-                      ['Property', [selectedProperty.title, selectedProperty.location].filter(Boolean).join(' — ')],
+                      ['Property', selectedProperty.location || selectedProperty.title],
                       ['Rent', `${formatGBP(selectedProperty.price)} pcm`],
                       ['Deposit', selectedProperty.depositAmount ? formatGBP(selectedProperty.depositAmount) : '—'],
                     ] as [string, string][]).map(([label, value], i, arr) => (

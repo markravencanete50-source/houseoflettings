@@ -32,7 +32,12 @@ async function sendEmail({
       ...(attachments && attachments.length > 0 ? { attachments } : {}),
     }),
   });
-  if (!res.ok) console.error('Email failed:', await res.json().catch(() => ({})));
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    console.error(`Guarantor email to ${to} failed:`, err);
+    // Throw so the caller's Promise.allSettled records which recipient failed.
+    throw new Error(`Resend send to ${to} failed`);
+  }
 }
 
 function confirmationHtml(d: any) {
@@ -182,7 +187,7 @@ export async function POST(request: Request) {
       : undefined;
 
     // Await the sends so Vercel can't freeze the function before Resend is called.
-    await Promise.allSettled([
+    const [guarantorSend, adminSend] = await Promise.allSettled([
       sendEmail({
         to: data.guarantorEmail,
         subject: '✅ Your Guarantor Form — House of Lettings',
@@ -197,7 +202,17 @@ export async function POST(request: Request) {
       }),
     ]);
 
-    return Response.json({ success: true, id: docRef.id }, { status: 201 });
+    if (guarantorSend.status === 'rejected')
+      console.error('Guarantor confirmation email NOT delivered:', guarantorSend.reason);
+    if (adminSend.status === 'rejected')
+      console.error('Admin notification email NOT delivered:', adminSend.reason);
+
+    return Response.json({
+      success: true,
+      id: docRef.id,
+      guarantorEmailed: guarantorSend.status === 'fulfilled',
+      adminEmailed: adminSend.status === 'fulfilled',
+    }, { status: 201 });
   } catch (error) {
     console.error('guarantor error:', error);
     return Response.json({ message: 'Internal server error. Please try again.' }, { status: 500 });

@@ -1,36 +1,45 @@
 'use client';
 // components/layout/Navbar.tsx
-import { useState, useEffect, lazy, Suspense } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
 import { signOut } from '@/services/auth';
 
-const TenantEnquiryModal = lazy(() => import('@/components/property/TenantEnquiryModal'));
+type NavItem = { href: string; label: string };
 
-function NavViewingButton() {
-  const [open, setOpen] = useState(false);
+// Desktop: hover reveals the menu. Mobile (inside the open burger menu):
+// the menu renders inline as an always-expanded grouped list.
+function NavDropdown({ label, items }: { label: string; items: NavItem[] }) {
   return (
-    <>
-      <button
-        onClick={() => setOpen(true)}
-        className="nav-btn-outline"
-      >
-        Book a Viewing
+    <div className="hol-nav__dd">
+      <button type="button" className="hol-nav__dd-trigger" aria-haspopup="true">
+        {label}
+        <span className="hol-nav__dd-caret" aria-hidden>▾</span>
       </button>
-      <Suspense fallback={null}>
-        {open && (
-          <TenantEnquiryModal
-            isOpen={open}
-            onClose={() => setOpen(false)}
-            propertyTitle="House of Lettings"
-            propertyPrice={0}
-          />
-        )}
-      </Suspense>
-    </>
+      <div className="hol-nav__dd-menu">
+        {items.map((it) => (
+          <Link key={it.href} href={it.href} className="hol-nav__dd-item">
+            {it.label}
+          </Link>
+        ))}
+      </div>
+    </div>
   );
 }
+
+const LANDLORD_ITEMS: NavItem[] = [
+  { href: '/pricing', label: 'Pricing' },
+  { href: '/book-valuation', label: 'Book Valuation' },
+  { href: '/instant-valuation', label: 'Instant Valuation' },
+];
+
+const TENANT_ITEMS: NavItem[] = [
+  { href: '/listings', label: 'Browse Properties' },
+  { href: '/tenant-application', label: 'Tenant Application' },
+  { href: '/guarantor', label: 'Guarantor Form' },
+  { href: '/maintenance', label: 'Maintenance' },
+];
 
 export default function Navbar() {
   const { profile, loading } = useAuth();
@@ -96,14 +105,12 @@ export default function Navbar() {
 
           {/* Links + CTAs — always visible on desktop, collapses into a dropdown on mobile */}
           <div className={`hol-nav__links ${mobileMenuOpen ? 'hol-nav__links--open' : ''}`}>
-            <Link href="/listings" className="hol-nav__link">Browse</Link>
+            <NavDropdown label="Landlord" items={LANDLORD_ITEMS} />
+            <NavDropdown label="Tenant" items={TENANT_ITEMS} />
             {!loading && profile && (
               <Link href={dashLink} className="hol-nav__link">Dashboard</Link>
             )}
-            <Link href="/book-valuation" className="nav-btn-primary">Book a Valuation</Link>
-            <NavViewingButton />
-            <Link href="/pricing" className="nav-btn-outline">Pricing</Link>
-            <Link href="/terms" className="nav-btn-outline">Terms</Link>
+            <Link href="/terms" className="hol-nav__link">Terms</Link>
             {!loading && (
               profile ? (
                 <button onClick={handleSignOut} className="nav-btn-outline">Sign Out</button>
@@ -195,6 +202,64 @@ export default function Navbar() {
             white-space: nowrap;
           }
           .hol-nav__link:hover { opacity: 0.75; }
+          .hol-nav__dd {
+            position: relative;
+            display: inline-block;
+          }
+          .hol-nav__dd-trigger {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            font-family: 'Poppins', sans-serif;
+            color: #fff;
+            font-size: 13px;
+            font-weight: 500;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            padding: 4px 0;
+            white-space: nowrap;
+          }
+          .hol-nav__dd-trigger:hover { opacity: 0.75; }
+          .hol-nav__dd-caret { font-size: 10px; opacity: 0.7; }
+          .hol-nav__dd-menu {
+            position: absolute;
+            top: calc(100% + 8px);
+            left: 0;
+            min-width: 210px;
+            background: rgba(10,22,47,0.99);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 10px;
+            padding: 8px;
+            display: none;
+            flex-direction: column;
+            gap: 2px;
+            box-shadow: 0 16px 32px rgba(0,0,0,0.4);
+          }
+          /* transparent bridge so the menu doesn't close in the gap on hover */
+          .hol-nav__dd-menu::before {
+            content: '';
+            position: absolute;
+            top: -10px;
+            left: 0;
+            right: 0;
+            height: 10px;
+          }
+          .hol-nav__dd:hover .hol-nav__dd-menu,
+          .hol-nav__dd:focus-within .hol-nav__dd-menu { display: flex; }
+          .hol-nav__dd-item {
+            color: #fff;
+            text-decoration: none;
+            font-family: 'Poppins', sans-serif;
+            font-size: 13px;
+            font-weight: 500;
+            padding: 10px 12px;
+            border-radius: 6px;
+            white-space: nowrap;
+          }
+          .hol-nav__dd-item:hover { background: rgba(37,99,235,0.28); }
           .nav-btn-primary {
             padding: 8px 14px;
             background: #2563eb;
@@ -273,6 +338,30 @@ export default function Navbar() {
               border: none;
               border-top: 1px solid rgba(255,255,255,0.08);
               border-radius: 0;
+            }
+            /* Dropdowns expand inline inside the mobile menu */
+            .hol-nav__links--open .hol-nav__dd { width: 100%; }
+            .hol-nav__links--open .hol-nav__dd-trigger {
+              width: 100%;
+              justify-content: space-between;
+              padding: 12px 4px;
+              border-top: 1px solid rgba(255,255,255,0.08);
+            }
+            .hol-nav__links--open .hol-nav__dd-menu {
+              display: flex;
+              position: static;
+              min-width: 0;
+              margin: 0;
+              padding: 0 0 8px 12px;
+              background: transparent;
+              border: none;
+              border-radius: 0;
+              box-shadow: none;
+            }
+            .hol-nav__links--open .hol-nav__dd-menu::before { display: none; }
+            .hol-nav__links--open .hol-nav__dd-item {
+              padding: 10px 4px;
+              width: 100%;
             }
           }
         `}</style>

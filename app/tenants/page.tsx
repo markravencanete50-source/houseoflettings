@@ -440,7 +440,7 @@ export default function TenantsPage() {
                   </p>
                 </div>
                 <a
-                  href="/maintenance"
+                  href="/maintenance/report"
                   style={{
                     display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 8,
                     alignSelf: "flex-start", background: "#2563eb", color: "#fff", fontWeight: 700,

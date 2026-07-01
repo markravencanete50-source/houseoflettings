@@ -20,6 +20,16 @@ const sectionHeadingStyle: React.CSSProperties = { fontSize: 18, fontWeight: 800
 const sectionSubStyle: React.CSSProperties = { fontSize: 13, color: '#6b7280', marginBottom: 20 };
 const dividerStyle: React.CSSProperties = { border: 'none', borderTop: '1.5px solid #e5e7eb', margin: '32px 0' };
 
+/* ── wizard steps ── */
+const STEPS = [
+  { key: 'property', label: 'Property', icon: '🏠' },
+  { key: 'guarantor', label: 'Your Details', icon: '👤' },
+  { key: 'documents', label: 'Documents', icon: '📎' },
+  { key: 'landlord', label: 'Landlord', icon: '🔑' },
+  { key: 'employer', label: 'Employer', icon: '💼' },
+  { key: 'consent', label: 'Consent', icon: '✅' },
+] as const;
+
 /* ── direct-to-Cloudinary upload (bypasses Vercel's ~4.5MB limit) ── */
 async function uploadToCloudinary(file: File): Promise<string> {
   const sigRes = await fetch('/api/cloudinary-sign', {
@@ -190,6 +200,10 @@ export default function GuarantorPage() {
   const set = (k: keyof typeof F) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) =>
     setForm(s => ({ ...s, [k]: e.target.value }));
 
+  // ── wizard step state ──
+  const [step, setStep] = useState(0);
+  const [furthestStep, setFurthestStep] = useState(0);
+
   // The guarantor picks which property they are guaranteeing; its details
   // (address, rent, deposit) are pulled straight from the live listing.
   const [properties, setProperties] = useState<Property[]>([]);
@@ -234,6 +248,7 @@ export default function GuarantorPage() {
 
   const anyUploading = idDoc.uploading || payslips.uploading || proofOfAddress.uploading || bankStatements.uploading || studentDoc.uploading;
 
+  // Full validation — still runs as a safety net right before submission.
   const validate = (): string | null => {
     if (!selectedPropertyId) return 'Please select the property you are guaranteeing.';
     if (!form.guarantorFullName.trim()) return "Guarantor's full name is required.";
@@ -248,6 +263,62 @@ export default function GuarantorPage() {
     if (!consentDeclare) return 'Please confirm the declaration.';
     if (!form.submissionDate) return 'Please add the submission date.';
     return null;
+  };
+
+  // Per-step validation — only checks what's relevant to the step the
+  // person is currently trying to leave.
+  const validateStep = (s: number): string | null => {
+    switch (STEPS[s].key) {
+      case 'property':
+        if (!selectedPropertyId) return 'Please select the property you are guaranteeing.';
+        return null;
+      case 'guarantor':
+        if (!form.guarantorFullName.trim()) return "Please add the guarantor's full name.";
+        if (!form.guarantorMobile.trim()) return "Please add the guarantor's mobile number.";
+        if (!form.guarantorEmail.trim()) return "Please add the guarantor's email.";
+        if (!form.guarantorAddressLine.trim() && !form.guarantorPostcode.trim()) return "Please add the guarantor's address.";
+        return null;
+      case 'documents':
+        if (anyUploading) return 'Please wait for your documents to finish uploading.';
+        if (idDoc.urls.length === 0) return 'Please upload a valid identity document.';
+        if (payslips.urls.length === 0) return 'Please upload your payslips / proof of income.';
+        if (proofOfAddress.urls.length === 0) return 'Please upload a proof of address.';
+        if (bankStatements.urls.length === 0) return 'Please upload your bank statements.';
+        return null;
+      case 'landlord':
+      case 'employer':
+        return null;
+      case 'consent':
+        if (!consentComms) return 'Please give your communications consent.';
+        if (!consentDeclare) return 'Please confirm the declaration.';
+        if (!form.submissionDate) return 'Please add the submission date.';
+        return null;
+      default:
+        return null;
+    }
+  };
+
+  const goNext = () => {
+    const err = validateStep(step);
+    if (err) { setError(err); return; }
+    setError('');
+    const next = Math.min(step + 1, STEPS.length - 1);
+    setStep(next);
+    setFurthestStep(f => Math.max(f, next));
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const goBack = () => {
+    setError('');
+    setStep(s => Math.max(0, s - 1));
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const goToStep = (s: number) => {
+    if (s > furthestStep) return; // can't skip ahead to steps not yet reached
+    setError('');
+    setStep(s);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleSubmit = async () => {
@@ -324,6 +395,9 @@ export default function GuarantorPage() {
     );
   }
 
+  const isFirstStep = step === 0;
+  const isLastStep = step === STEPS.length - 1;
+
   return (
     <main style={{ background: '#f3f4f6', minHeight: '100vh', fontFamily: "'Poppins', sans-serif" }}>
       <style>{`
@@ -336,6 +410,21 @@ export default function GuarantorPage() {
         .g-check { display: flex; align-items: flex-start; gap: 12px; cursor: pointer; font-size: 14px; color: #374151; line-height: 1.6; }
         .g-check input { accent-color: #2563eb; margin-top: 3px; flex-shrink: 0; }
         @media (max-width: 600px) { .g-grid-2 { grid-template-columns: 1fr !important; } }
+
+        /* ── step indicator ── */
+        .g-steps { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 8px; overflow-x: auto; -webkit-overflow-scrolling: touch; padding-bottom: 4px; }
+        .g-step { display: flex; flex-direction: column; align-items: center; gap: 6px; flex: 1; min-width: 0; position: relative; background: none; border: none; padding: 0; cursor: default; }
+        .g-step.g-step-clickable { cursor: pointer; }
+        .g-step-circle { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700; border: 2px solid #d1d5db; background: #fff; color: #9ca3af; transition: all 0.2s; flex-shrink: 0; }
+        .g-step.g-step-active .g-step-circle { border-color: #2563eb; background: #2563eb; color: #fff; }
+        .g-step.g-step-done .g-step-circle { border-color: #16a34a; background: #16a34a; color: #fff; }
+        .g-step-label { font-size: 11px; font-weight: 600; color: #9ca3af; text-align: center; white-space: nowrap; }
+        .g-step.g-step-active .g-step-label { color: #2563eb; }
+        .g-step.g-step-done .g-step-label { color: #16a34a; }
+        .g-step-line { position: absolute; top: 16px; left: 50%; width: 100%; height: 2px; background: #e5e7eb; z-index: 0; }
+        .g-step.g-step-done .g-step-line, .g-step.g-step-active .g-step-line { background: #86efac; }
+        .g-step:first-child .g-step-line { display: none; }
+        @media (max-width: 600px) { .g-step-label { display: none; } }
       `}</style>
 
       <Navbar />
@@ -356,162 +445,236 @@ export default function GuarantorPage() {
 
       <section style={{ padding: '32px 16px 80px' }}>
         <div style={{ maxWidth: 720, margin: '0 auto' }}>
+
+          {/* Step indicator */}
+          <div style={{ background: '#fff', borderRadius: 16, boxShadow: '0 2px 16px rgba(0,0,0,0.07)', padding: isMobile ? '16px 12px' : '20px 32px', marginBottom: 16 }}>
+            <div className="g-steps">
+              {STEPS.map((s, i) => {
+                const isActive = i === step;
+                const isDone = i < step || (i <= furthestStep && i < step);
+                const clickable = i <= furthestStep;
+                return (
+                  <button
+                    key={s.key}
+                    type="button"
+                    onClick={() => goToStep(i)}
+                    className={`g-step ${isActive ? 'g-step-active' : ''} ${isDone ? 'g-step-done' : ''} ${clickable ? 'g-step-clickable' : ''}`}
+                    style={{ cursor: clickable ? 'pointer' : 'default' }}
+                  >
+                    <div className="g-step-line" />
+                    <div className="g-step-circle">{isDone ? '✓' : i + 1}</div>
+                    <span className="g-step-label">{s.label}</span>
+                  </button>
+                );
+              })}
+            </div>
+            <p style={{ textAlign: 'center', fontSize: 12, color: '#9ca3af', margin: '4px 0 0', fontWeight: 600 }}>
+              Step {step + 1} of {STEPS.length} — {STEPS[step].label}
+            </p>
+          </div>
+
           {error && (
             <div style={{ background: '#fef2f2', border: '1px solid #fca5a5', borderRadius: 8, padding: '12px 16px', marginBottom: 20, color: '#dc2626', fontSize: 14, fontWeight: 500 }}>⚠️ {error}</div>
           )}
 
           <div style={{ background: '#fff', borderRadius: 16, boxShadow: '0 2px 16px rgba(0,0,0,0.07)', padding: isMobile ? '24px 16px' : '40px 48px', display: 'flex', flexDirection: 'column', gap: 20 }}>
 
-            {/* Property selection */}
-            <div><h2 style={sectionHeadingStyle}>Property You Are Guaranteeing</h2><p style={sectionSubStyle}>Choose the property this guarantee relates to. Its details are pulled straight from the listing.</p></div>
-            <input
-              style={inputStyle}
-              placeholder="Search by address or area…"
-              value={propertySearch}
-              onChange={e => setPropertySearch(e.target.value)}
-            />
-            {propertiesLoading ? (
-              <p style={{ color: '#6b7280', fontSize: 14 }}>Loading available properties…</p>
-            ) : filteredProperties.length === 0 ? (
-              <p style={{ color: '#6b7280', fontSize: 14 }}>No matching properties found.</p>
-            ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 10, maxHeight: 340, overflowY: 'auto' }}>
-                {filteredProperties.map(p => {
-                  const isSelected = selectedPropertyId === p.id;
-                  return (
-                    <div
-                      key={p.id}
-                      onClick={() => setSelectedPropertyId(p.id || '')}
-                      style={{
-                        display: 'flex', alignItems: 'center', cursor: 'pointer', transition: 'all 0.2s',
-                        border: `1.5px solid ${isSelected ? '#2563eb' : '#d1d5db'}`,
-                        background: isSelected ? '#eff6ff' : '#fff',
-                        borderRadius: 10, padding: '14px 16px',
-                      }}
-                    >
-                      <div style={{ flex: 1, minWidth: 0, paddingRight: 8 }}>
-                        <div style={{ fontWeight: 700, fontSize: 14, color: '#111827', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.title}</div>
-                        <div style={{ fontSize: 12, color: '#6b7280', marginTop: 2 }}>{p.location} · {formatGBP(p.price)} pcm · {p.bedrooms === 0 ? 'Studio' : `${p.bedrooms} bed`}</div>
-                      </div>
-                      {isSelected && <span style={{ color: '#2563eb', fontSize: 18, flexShrink: 0 }}>✓</span>}
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-            {selectedProperty && (
-              <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 12, padding: '18px 22px' }}>
-                {([
-                  ['Property', [selectedProperty.title, selectedProperty.location].filter(Boolean).join(' — ')],
-                  ['Rent', `${formatGBP(selectedProperty.price)} pcm`],
-                  ['Deposit', selectedProperty.depositAmount ? formatGBP(selectedProperty.depositAmount) : '—'],
-                ] as [string, string][]).map(([label, value], i, arr) => (
-                  <div key={label} style={{ display: 'flex', justifyContent: 'space-between', gap: 12, padding: '8px 0', borderBottom: i < arr.length - 1 ? '1px solid #eef0f5' : 'none', fontSize: 14 }}>
-                    <span style={{ color: '#6b7280', fontWeight: 500 }}>{label}</span>
-                    <span style={{ color: '#111827', fontWeight: 600, textAlign: 'right' }}>{value}</span>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            <hr style={dividerStyle} />
-
-            {/* Guarantor details */}
-            <div><h2 style={sectionHeadingStyle}>Your Details (Guarantor)</h2><p style={sectionSubStyle}>Please provide your details as they appear on your official documents.</p></div>
-            <div className="g-grid-2" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-              <div><label style={labelStyle}>Title</label><input style={inputStyle} value={form.guarantorTitle} onChange={set('guarantorTitle')} placeholder="Mr / Mrs / Ms / Dr" /></div>
-              <div><label style={labelStyle}>Full Name <span style={{ color: '#ef4444' }}>*</span></label><input style={inputStyle} value={form.guarantorFullName} onChange={set('guarantorFullName')} placeholder="As on your ID" /></div>
-              <div><label style={labelStyle}>Date of Birth</label><input type="date" style={inputStyle} value={form.guarantorDob} onChange={set('guarantorDob')} /></div>
-              <div><label style={labelStyle}>Mobile <span style={{ color: '#ef4444' }}>*</span></label><input type="tel" style={inputStyle} value={form.guarantorMobile} onChange={set('guarantorMobile')} placeholder="07700 900123" /></div>
-              <div><label style={labelStyle}>Email <span style={{ color: '#ef4444' }}>*</span></label><input type="email" style={inputStyle} value={form.guarantorEmail} onChange={set('guarantorEmail')} placeholder="you@email.co.uk" /></div>
-              <div>
-                <label style={labelStyle}>Postcode</label>
-                <PostcodeLookup
-                  postcode={form.guarantorPostcode}
-                  onPostcodeChange={(v) => setForm(s => ({ ...s, guarantorPostcode: v }))}
-                  onSelect={onGuarantorSelect}
-                  inputStyle={inputStyle}
-                  placeholder="e.g. LS1 1AA"
+            {/* ── STEP 1: Property selection ── */}
+            {step === 0 && (
+              <>
+                <div><h2 style={sectionHeadingStyle}>Property You Are Guaranteeing</h2><p style={sectionSubStyle}>Choose the property this guarantee relates to. Its details are pulled straight from the listing.</p></div>
+                <input
+                  style={inputStyle}
+                  placeholder="Search by address or area…"
+                  value={propertySearch}
+                  onChange={e => setPropertySearch(e.target.value)}
                 />
-              </div>
-              <div style={{ gridColumn: '1 / -1' }}><label style={labelStyle}>Address <span style={{ color: '#ef4444' }}>*</span></label><input style={inputStyle} value={form.guarantorAddressLine} onChange={set('guarantorAddressLine')} placeholder="Your home address" /></div>
-              <div><label style={labelStyle}>How long have you lived at this address?</label><input style={inputStyle} value={form.timeAtAddress} onChange={set('timeAtAddress')} placeholder="e.g. 4 years" /></div>
-              <div><label style={labelStyle}>Previous Address (if current is under 3 years)</label><input style={inputStyle} value={form.previousAddress} onChange={set('previousAddress')} placeholder="Previous full address" /></div>
-            </div>
-            <div>
-              <label style={labelStyle}>Do you have a County Court Judgment (CCJ)?</label>
-              {radio('hasCCJ', ['No', 'Yes'])}
-            </div>
+                {propertiesLoading ? (
+                  <p style={{ color: '#6b7280', fontSize: 14 }}>Loading available properties…</p>
+                ) : filteredProperties.length === 0 ? (
+                  <p style={{ color: '#6b7280', fontSize: 14 }}>No matching properties found.</p>
+                ) : (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 10, maxHeight: 340, overflowY: 'auto' }}>
+                    {filteredProperties.map(p => {
+                      const isSelected = selectedPropertyId === p.id;
+                      return (
+                        <div
+                          key={p.id}
+                          onClick={() => setSelectedPropertyId(p.id || '')}
+                          style={{
+                            display: 'flex', alignItems: 'center', cursor: 'pointer', transition: 'all 0.2s',
+                            border: `1.5px solid ${isSelected ? '#2563eb' : '#d1d5db'}`,
+                            background: isSelected ? '#eff6ff' : '#fff',
+                            borderRadius: 10, padding: '14px 16px',
+                          }}
+                        >
+                          <div style={{ flex: 1, minWidth: 0, paddingRight: 8 }}>
+                            <div style={{ fontWeight: 700, fontSize: 14, color: '#111827', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.title}</div>
+                            <div style={{ fontSize: 12, color: '#6b7280', marginTop: 2 }}>{p.location} · {formatGBP(p.price)} pcm · {p.bedrooms === 0 ? 'Studio' : `${p.bedrooms} bed`}</div>
+                          </div>
+                          {isSelected && <span style={{ color: '#2563eb', fontSize: 18, flexShrink: 0 }}>✓</span>}
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+                {selectedProperty && (
+                  <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 12, padding: '18px 22px' }}>
+                    {([
+                      ['Property', [selectedProperty.title, selectedProperty.location].filter(Boolean).join(' — ')],
+                      ['Rent', `${formatGBP(selectedProperty.price)} pcm`],
+                      ['Deposit', selectedProperty.depositAmount ? formatGBP(selectedProperty.depositAmount) : '—'],
+                    ] as [string, string][]).map(([label, value], i, arr) => (
+                      <div key={label} style={{ display: 'flex', justifyContent: 'space-between', gap: 12, padding: '8px 0', borderBottom: i < arr.length - 1 ? '1px solid #eef0f5' : 'none', fontSize: 14 }}>
+                        <span style={{ color: '#6b7280', fontWeight: 500 }}>{label}</span>
+                        <span style={{ color: '#111827', fontWeight: 600, textAlign: 'right' }}>{value}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </>
+            )}
+
+            {/* ── STEP 2: Guarantor details ── */}
+            {step === 1 && (
+              <>
+                <div><h2 style={sectionHeadingStyle}>Your Details (Guarantor)</h2><p style={sectionSubStyle}>Please provide your details as they appear on your official documents.</p></div>
+                <div className="g-grid-2" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+                  <div><label style={labelStyle}>Title</label><input style={inputStyle} value={form.guarantorTitle} onChange={set('guarantorTitle')} placeholder="Mr / Mrs / Ms / Dr" /></div>
+                  <div><label style={labelStyle}>Full Name <span style={{ color: '#ef4444' }}>*</span></label><input style={inputStyle} value={form.guarantorFullName} onChange={set('guarantorFullName')} placeholder="As on your ID" /></div>
+                  <div><label style={labelStyle}>Date of Birth</label><input type="date" style={inputStyle} value={form.guarantorDob} onChange={set('guarantorDob')} /></div>
+                  <div><label style={labelStyle}>Mobile <span style={{ color: '#ef4444' }}>*</span></label><input type="tel" style={inputStyle} value={form.guarantorMobile} onChange={set('guarantorMobile')} placeholder="07700 900123" /></div>
+                  <div><label style={labelStyle}>Email <span style={{ color: '#ef4444' }}>*</span></label><input type="email" style={inputStyle} value={form.guarantorEmail} onChange={set('guarantorEmail')} placeholder="you@email.co.uk" /></div>
+                  <div>
+                    <label style={labelStyle}>Postcode</label>
+                    <PostcodeLookup
+                      postcode={form.guarantorPostcode}
+                      onPostcodeChange={(v) => setForm(s => ({ ...s, guarantorPostcode: v }))}
+                      onSelect={onGuarantorSelect}
+                      inputStyle={inputStyle}
+                      placeholder="e.g. LS1 1AA"
+                    />
+                  </div>
+                  <div style={{ gridColumn: '1 / -1' }}><label style={labelStyle}>Address <span style={{ color: '#ef4444' }}>*</span></label><input style={inputStyle} value={form.guarantorAddressLine} onChange={set('guarantorAddressLine')} placeholder="Your home address" /></div>
+                  <div><label style={labelStyle}>How long have you lived at this address?</label><input style={inputStyle} value={form.timeAtAddress} onChange={set('timeAtAddress')} placeholder="e.g. 4 years" /></div>
+                  <div><label style={labelStyle}>Previous Address (if current is under 3 years)</label><input style={inputStyle} value={form.previousAddress} onChange={set('previousAddress')} placeholder="Previous full address" /></div>
+                </div>
+                <div>
+                  <label style={labelStyle}>Do you have a County Court Judgment (CCJ)?</label>
+                  {radio('hasCCJ', ['No', 'Yes'])}
+                </div>
+              </>
+            )}
+
+            {/* ── STEP 3: Documents ── */}
+            {step === 2 && (
+              <>
+                <div><h2 style={sectionHeadingStyle}>Your Documents</h2><p style={sectionSubStyle}>Please upload clear copies. PDFs and photos are accepted.</p></div>
+                <FileUpload label="Valid Identity Document (UK Passport or valid visa front &amp; back, with original nationality passport)" required hint="Passport / visa — front and back" state={idDoc} onChange={setIdDoc} />
+                <FileUpload label="Payslips x3 months (most recent) or proof of income" required hint="3 most recent payslips" state={payslips} onChange={setPayslips} />
+                <FileUpload label="Proof of Address (utility bill, bank statement, driving licence)" required hint="Recent — within 3 months" state={proofOfAddress} onChange={setProofOfAddress} />
+                <FileUpload label="Bank Statements x3 months (most recent)" required hint="3 most recent statements" state={bankStatements} onChange={setBankStatements} />
+                <FileUpload label="If a student: course enrolment confirmation (term-time &amp; home address)" hint="Optional — students only" state={studentDoc} onChange={setStudentDoc} />
+              </>
+            )}
+
+            {/* ── STEP 4: Landlord / agent ── */}
+            {step === 3 && (
+              <>
+                <div><h2 style={sectionHeadingStyle}>Your Current Landlord / Letting Agent</h2><p style={sectionSubStyle}>Contact details for your current landlord or letting agent.</p></div>
+                <div className="g-grid-2" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+                  <div><label style={labelStyle}>Title</label><input style={inputStyle} value={form.landlordTitle} onChange={set('landlordTitle')} placeholder="Mr / Mrs / Agency" /></div>
+                  <div><label style={labelStyle}>Full Name</label><input style={inputStyle} value={form.landlordName} onChange={set('landlordName')} placeholder="Landlord / agent name" /></div>
+                  <div style={{ gridColumn: '1 / -1' }}><label style={labelStyle}>Address</label><input style={inputStyle} value={form.landlordAddress} onChange={set('landlordAddress')} placeholder="Address" /></div>
+                  <div><label style={labelStyle}>Postcode</label><input style={inputStyle} value={form.landlordPostcode} onChange={set('landlordPostcode')} placeholder="Postcode" /></div>
+                  <div><label style={labelStyle}>Mobile</label><input type="tel" style={inputStyle} value={form.landlordMobile} onChange={set('landlordMobile')} placeholder="Contact number" /></div>
+                  <div><label style={labelStyle}>Email</label><input type="email" style={inputStyle} value={form.landlordEmail} onChange={set('landlordEmail')} placeholder="Email" /></div>
+                </div>
+              </>
+            )}
+
+            {/* ── STEP 5: Employer ── */}
+            {step === 4 && (
+              <>
+                <div><h2 style={sectionHeadingStyle}>Your Current Employer</h2><p style={sectionSubStyle}>Your employment and income details.</p></div>
+                <div className="g-grid-2" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+                  <div><label style={labelStyle}>Company</label><input style={inputStyle} value={form.employerCompany} onChange={set('employerCompany')} placeholder="Employer name" /></div>
+                  <div><label style={labelStyle}>Contact Name</label><input style={inputStyle} value={form.employerContactName} onChange={set('employerContactName')} placeholder="HR / manager" /></div>
+                  <div style={{ gridColumn: '1 / -1' }}><label style={labelStyle}>Address</label><input style={inputStyle} value={form.employerAddress} onChange={set('employerAddress')} placeholder="Employer address" /></div>
+                  <div><label style={labelStyle}>Postcode</label><input style={inputStyle} value={form.employerPostcode} onChange={set('employerPostcode')} placeholder="Postcode" /></div>
+                  <div><label style={labelStyle}>Annual Gross Salary (£)</label><input style={inputStyle} value={form.annualSalary} onChange={set('annualSalary')} placeholder="e.g. 32000" /></div>
+                  <div><label style={labelStyle}>Job Position</label><input style={inputStyle} value={form.jobPosition} onChange={set('jobPosition')} placeholder="Your role / position" /></div>
+                </div>
+                <div>
+                  <label style={labelStyle}>Type of Employment Contract</label>
+                  {radio('contractType', ['Permanent', 'Temporary'])}
+                </div>
+              </>
+            )}
+
+            {/* ── STEP 6: Consent & declaration ── */}
+            {step === 5 && (
+              <>
+                <div><h2 style={sectionHeadingStyle}>Consent &amp; Declaration</h2><p style={sectionSubStyle}>Please read and confirm the declarations below.</p></div>
+                <label className="g-check">
+                  <input type="checkbox" checked={consentComms} onChange={e => setConsentComms(e.target.checked)} />
+                  <span><strong>I consent</strong> to receive communications from House of Lettings by email, telephone, post and/or text message in connection with my role as guarantor. I understand I may withdraw or amend my preferences at any time. <span style={{ color: '#ef4444' }}>*</span></span>
+                </label>
+                <label className="g-check">
+                  <input type="checkbox" checked={consentDeclare} onChange={e => setConsentDeclare(e.target.checked)} />
+                  <span><strong>I declare</strong> that I have read and understood the above information, including the privacy notice, and consent to my personal data being processed in accordance with these terms. I confirm I understand my obligations as a guarantor and agree to comply with the terms of the guarantor agreement. <span style={{ color: '#ef4444' }}>*</span></span>
+                </label>
+                <div>
+                  <label style={labelStyle}>Submission Date <span style={{ color: '#ef4444' }}>*</span></label>
+                  <input type="date" style={inputStyle} value={form.submissionDate} onChange={set('submissionDate')} />
+                </div>
+              </>
+            )}
 
             <hr style={dividerStyle} />
 
-            {/* Documents */}
-            <div><h2 style={sectionHeadingStyle}>Your Documents</h2><p style={sectionSubStyle}>Please upload clear copies. PDFs and photos are accepted.</p></div>
-            <FileUpload label="Valid Identity Document (UK Passport or valid visa front &amp; back, with original nationality passport)" required hint="Passport / visa — front and back" state={idDoc} onChange={setIdDoc} />
-            <FileUpload label="Payslips x3 months (most recent) or proof of income" required hint="3 most recent payslips" state={payslips} onChange={setPayslips} />
-            <FileUpload label="Proof of Address (utility bill, bank statement, driving licence)" required hint="Recent — within 3 months" state={proofOfAddress} onChange={setProofOfAddress} />
-            <FileUpload label="Bank Statements x3 months (most recent)" required hint="3 most recent statements" state={bankStatements} onChange={setBankStatements} />
-            <FileUpload label="If a student: course enrolment confirmation (term-time &amp; home address)" hint="Optional — students only" state={studentDoc} onChange={setStudentDoc} />
-
-            <hr style={dividerStyle} />
-
-            {/* Landlord / agent */}
-            <div><h2 style={sectionHeadingStyle}>Your Current Landlord / Letting Agent</h2><p style={sectionSubStyle}>Contact details for your current landlord or letting agent.</p></div>
-            <div className="g-grid-2" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-              <div><label style={labelStyle}>Title</label><input style={inputStyle} value={form.landlordTitle} onChange={set('landlordTitle')} placeholder="Mr / Mrs / Agency" /></div>
-              <div><label style={labelStyle}>Full Name</label><input style={inputStyle} value={form.landlordName} onChange={set('landlordName')} placeholder="Landlord / agent name" /></div>
-              <div style={{ gridColumn: '1 / -1' }}><label style={labelStyle}>Address</label><input style={inputStyle} value={form.landlordAddress} onChange={set('landlordAddress')} placeholder="Address" /></div>
-              <div><label style={labelStyle}>Postcode</label><input style={inputStyle} value={form.landlordPostcode} onChange={set('landlordPostcode')} placeholder="Postcode" /></div>
-              <div><label style={labelStyle}>Mobile</label><input type="tel" style={inputStyle} value={form.landlordMobile} onChange={set('landlordMobile')} placeholder="Contact number" /></div>
-              <div><label style={labelStyle}>Email</label><input type="email" style={inputStyle} value={form.landlordEmail} onChange={set('landlordEmail')} placeholder="Email" /></div>
+            {/* ── navigation ── */}
+            <div style={{ display: 'flex', gap: 12 }}>
+              {!isFirstStep && (
+                <button
+                  onClick={goBack}
+                  type="button"
+                  style={{
+                    flex: '0 0 auto', padding: '14px 24px', background: '#fff',
+                    border: '1.5px solid #d1d5db', borderRadius: 8, fontSize: 15, fontWeight: 700,
+                    color: '#374151', cursor: 'pointer',
+                  }}
+                >
+                  ← Back
+                </button>
+              )}
+              {!isLastStep ? (
+                <button
+                  onClick={goNext}
+                  type="button"
+                  style={{
+                    flex: 1, padding: '14px 24px', background: '#2563eb',
+                    border: 'none', borderRadius: 8, fontSize: 15, fontWeight: 700, color: '#fff', cursor: 'pointer',
+                  }}
+                >
+                  Continue →
+                </button>
+              ) : (
+                <button
+                  onClick={handleSubmit}
+                  disabled={submitting || anyUploading}
+                  type="button"
+                  style={{
+                    flex: 1, padding: '14px 24px',
+                    background: (submitting || anyUploading) ? '#93c5fd' : '#16a34a',
+                    border: 'none', borderRadius: 8, fontSize: 15, fontWeight: 700, color: '#fff',
+                    cursor: (submitting || anyUploading) ? 'not-allowed' : 'pointer',
+                  }}
+                >
+                  {submitting ? 'Submitting…' : '✓ Submit Guarantor Form'}
+                </button>
+              )}
             </div>
-
-            <hr style={dividerStyle} />
-
-            {/* Employer */}
-            <div><h2 style={sectionHeadingStyle}>Your Current Employer</h2><p style={sectionSubStyle}>Your employment and income details.</p></div>
-            <div className="g-grid-2" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-              <div><label style={labelStyle}>Company</label><input style={inputStyle} value={form.employerCompany} onChange={set('employerCompany')} placeholder="Employer name" /></div>
-              <div><label style={labelStyle}>Contact Name</label><input style={inputStyle} value={form.employerContactName} onChange={set('employerContactName')} placeholder="HR / manager" /></div>
-              <div style={{ gridColumn: '1 / -1' }}><label style={labelStyle}>Address</label><input style={inputStyle} value={form.employerAddress} onChange={set('employerAddress')} placeholder="Employer address" /></div>
-              <div><label style={labelStyle}>Postcode</label><input style={inputStyle} value={form.employerPostcode} onChange={set('employerPostcode')} placeholder="Postcode" /></div>
-              <div><label style={labelStyle}>Annual Gross Salary (£)</label><input style={inputStyle} value={form.annualSalary} onChange={set('annualSalary')} placeholder="e.g. 32000" /></div>
-              <div><label style={labelStyle}>Job Position</label><input style={inputStyle} value={form.jobPosition} onChange={set('jobPosition')} placeholder="Your role / position" /></div>
-            </div>
-            <div>
-              <label style={labelStyle}>Type of Employment Contract</label>
-              {radio('contractType', ['Permanent', 'Temporary'])}
-            </div>
-
-            <hr style={dividerStyle} />
-
-            {/* Consent & declaration */}
-            <div><h2 style={sectionHeadingStyle}>Consent &amp; Declaration</h2><p style={sectionSubStyle}>Please read and confirm the declarations below.</p></div>
-            <label className="g-check">
-              <input type="checkbox" checked={consentComms} onChange={e => setConsentComms(e.target.checked)} />
-              <span><strong>I consent</strong> to receive communications from House of Lettings by email, telephone, post and/or text message in connection with my role as guarantor. I understand I may withdraw or amend my preferences at any time. <span style={{ color: '#ef4444' }}>*</span></span>
-            </label>
-            <label className="g-check">
-              <input type="checkbox" checked={consentDeclare} onChange={e => setConsentDeclare(e.target.checked)} />
-              <span><strong>I declare</strong> that I have read and understood the above information, including the privacy notice, and consent to my personal data being processed in accordance with these terms. I confirm I understand my obligations as a guarantor and agree to comply with the terms of the guarantor agreement. <span style={{ color: '#ef4444' }}>*</span></span>
-            </label>
-            <div>
-              <label style={labelStyle}>Submission Date <span style={{ color: '#ef4444' }}>*</span></label>
-              <input type="date" style={inputStyle} value={form.submissionDate} onChange={set('submissionDate')} />
-            </div>
-
-            <button
-              onClick={handleSubmit}
-              disabled={submitting || anyUploading}
-              style={{
-                marginTop: 8, width: '100%', padding: '15px 28px',
-                background: (submitting || anyUploading) ? '#93c5fd' : '#16a34a',
-                border: 'none', borderRadius: 8, fontSize: 15, fontWeight: 700, color: '#fff',
-                cursor: (submitting || anyUploading) ? 'not-allowed' : 'pointer',
-              }}
-            >
-              {submitting ? 'Submitting…' : '✓ Submit Guarantor Form'}
-            </button>
           </div>
         </div>
       </section>

@@ -29,30 +29,51 @@ async function sendEmail({ to, subject, html }: { to: string; subject: string; h
   if (!res.ok) console.error("Email failed:", await res.json().catch(() => ({})));
 }
 
-// One table row per property (falls back to the joined address string).
+// One table row per property, with a details line under the address.
 function propertyRows(data: any) {
   const props = Array.isArray(data.properties) ? data.properties : [];
   if (props.length) {
     return props.map((p: any, i: number) => {
-      const addr = [p.street, p.city, p.county, p.postcode].filter(Boolean).join(", ");
-      return `<tr><td>${props.length > 1 ? `Property ${i + 1}` : "Property Address"}</td><td>${addr}</td></tr>`;
+      const addr = [p.flatNumber, p.street, p.city, p.county, p.postcode].filter(Boolean).join(", ");
+      const details = [
+        p.propertyType,
+        p.bedrooms && `${p.bedrooms} bed`,
+        p.bathrooms && `${p.bathrooms} bath`,
+        p.receptions && `${p.receptions} recep`,
+        p.furnishing,
+        p.parking && p.parking !== "None" && `Parking: ${p.parking}`,
+        p.availableFrom && `Available ${p.availableFrom}`,
+        p.securityNote && `Access: ${p.securityNote}`,
+      ].filter(Boolean).join(" · ");
+      const detailLine = details ? `<div style="color:#6b7280;font-size:12px;margin-top:3px;">${details}</div>` : "";
+      return `<tr><td>${props.length > 1 ? `Property ${i + 1}` : "Property"}</td><td>${addr}${detailLine}</td></tr>`;
     }).join("");
   }
   return `<tr><td>Property Address</td><td>${data.address || ""}</td></tr>`;
 }
 
-// Human-readable summary of the three compliance documents for the emails.
+// Human-readable summary of the compliance documents for the emails.
 function docRows(data: any) {
   const docs = data.documents || {};
   const items = [
     ["EPC", docs.epc],
-    ["Electrical & Gas Certificate", docs.gasElec],
+    ["Electrical Safety (EICR)", docs.electrical],
+    ["Gas Safety (CP12)", docs.gas],
     ["Land Registry Title", docs.landReg],
   ] as const;
   return items.map(([label, d]: any) => {
-    if (!d || !d.has) return `<tr><td>${label}</td><td>Not held / to arrange</td></tr>`;
-    const link = d.url ? ` — <a href="${d.url}">view document</a>` : " (will provide later)";
-    return `<tr><td>${label}</td><td>Yes${link}</td></tr>`;
+    const status = d?.status;
+    let value: string;
+    if (status === "yes") {
+      value = d.url ? `Yes — <a href="${d.url}">view document</a>` : "Yes (will provide later)";
+    } else if (status === "nogas") {
+      value = "No gas supply at this property";
+    } else if (status === "no") {
+      value = "Not held / to arrange";
+    } else {
+      value = "—";
+    }
+    return `<tr><td>${label}</td><td>${value}</td></tr>`;
   }).join("");
 }
 
@@ -61,7 +82,7 @@ function confirmationEmailHtml(data: any) {
 }
 
 function adminNotificationHtml(data: any) {
-  return `<!DOCTYPE html><html><head><meta charset="utf-8"/><style>body{font-family:Arial,sans-serif;background:#f4f6f9;margin:0;padding:0;}.wrap{max-width:600px;margin:32px auto;background:#fff;border-radius:14px;overflow:hidden;}.header{background:#1a3c5e;padding:24px 32px;color:#fff;}.header h2{margin:0;font-size:20px;}.body{padding:28px 32px;}table{width:100%;border-collapse:collapse;font-size:14px;}td{padding:10px 12px;border-bottom:1px solid #eef0f5;vertical-align:top;}td:first-child{font-weight:600;color:#6b7280;width:38%;}td:last-child{color:#111;}</style></head><body><div class="wrap"><div class="header"><h2>🔔 New Landlord Registration</h2><p style="margin:4px 0 0;opacity:.8;font-size:13px;">${new Date().toLocaleString("en-GB")}</p></div><div class="body"><table><tr><td>Full Name</td><td>${data.fullName}</td></tr><tr><td>Email</td><td>${data.email}</td></tr><tr><td>Phone</td><td>${data.phone}</td></tr><tr><td>Properties Owned</td><td>${data.propertyCount}</td></tr>${propertyRows(data)}<tr><td>Package Selected</td><td>${data.selectedPackage}</td></tr>${docRows(data)}${data.notes ? `<tr><td>Notes</td><td>${data.notes}</td></tr>` : ""}<tr><td>Terms Accepted</td><td>${data.termsAccepted ? "Yes" : "No"}</td></tr></table></div></div></body></html>`;
+  return `<!DOCTYPE html><html><head><meta charset="utf-8"/><style>body{font-family:Arial,sans-serif;background:#f4f6f9;margin:0;padding:0;}.wrap{max-width:600px;margin:32px auto;background:#fff;border-radius:14px;overflow:hidden;}.header{background:#1a3c5e;padding:24px 32px;color:#fff;}.header h2{margin:0;font-size:20px;}.body{padding:28px 32px;}table{width:100%;border-collapse:collapse;font-size:14px;}td{padding:10px 12px;border-bottom:1px solid #eef0f5;vertical-align:top;}td:first-child{font-weight:600;color:#6b7280;width:38%;}td:last-child{color:#111;}</style></head><body><div class="wrap"><div class="header"><h2>🔔 New Landlord Registration</h2><p style="margin:4px 0 0;opacity:.8;font-size:13px;">${new Date().toLocaleString("en-GB")}</p></div><div class="body"><table><tr><td>Full Name</td><td>${data.fullName}</td></tr><tr><td>Email</td><td>${data.email}</td></tr><tr><td>Telephone</td><td>${data.phone}</td></tr>${data.contactAddress ? `<tr><td>Contact Address</td><td>${data.contactAddress}</td></tr>` : ""}<tr><td>Properties Owned</td><td>${data.propertyCount}</td></tr>${propertyRows(data)}<tr><td>Package Selected</td><td>${data.selectedPackage}</td></tr>${docRows(data)}${data.notes ? `<tr><td>Notes</td><td>${data.notes}</td></tr>` : ""}<tr><td>Terms Accepted</td><td>${data.termsAccepted ? "Yes" : "No"}</td></tr></table></div></div></body></html>`;
 }
 
 export async function POST(request: Request) {

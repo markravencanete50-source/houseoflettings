@@ -18,21 +18,56 @@ const PACKAGES = [
   { id: 'Comprehensive', price: '10%', type: 'Monthly', blurb: 'Our most complete package with inventories and dispute support.' },
 ];
 
-// The three compliance documents we ask about.
+// The compliance documents we ask about. Each has a set of answer options;
+// the gas certificate has an extra "no gas supply" option.
+const YES = { value: 'yes', label: 'Yes, I have it' };
+const NO = { value: 'no', label: 'No / arrange it for me' };
 const DOCS = [
-  { key: 'epc', label: 'Energy Performance Certificate (EPC)', hint: 'Must be rated E or above to let legally.' },
-  { key: 'gasElec', label: 'Electrical & Gas Certificate', hint: 'EICR (5-yearly) and annual Gas Safety Certificate.' },
-  { key: 'landReg', label: 'Land Registry Title', hint: 'Proof of ownership / title documents.' },
+  { key: 'epc', label: 'Energy Performance Certificate (EPC)', hint: 'Must be rated E or above to let legally.', options: [YES, NO] },
+  { key: 'electrical', label: 'Electrical Safety Certificate (EICR)', hint: 'Electrical Installation Condition Report — renewed every 5 years.', options: [YES, NO] },
+  { key: 'gas', label: 'Gas Safety Certificate (CP12)', hint: 'Annual Gas Safety Record for properties with gas appliances.', options: [YES, NO, { value: 'nogas', label: 'No gas supply at this property' }] },
+  { key: 'landReg', label: 'Land Registry Title', hint: 'Proof of ownership / title documents.', options: [YES, NO] },
 ] as const;
+const DOC_KEYS = DOCS.map(d => d.key);
 
-type DocState = { has: '' | 'yes' | 'no'; url: string; uploading: boolean; fileName: string; error: string };
+type DocState = { has: string; url: string; uploading: boolean; fileName: string; error: string };
 const EMPTY_DOC: DocState = { has: '', url: '', uploading: false, fileName: '', error: '' };
+const initDocs = (): Record<string, DocState> => Object.fromEntries(DOC_KEYS.map(k => [k, { ...EMPTY_DOC }]));
 
-type Property = { id: string; postcode: string; street: string; city: string; county: string };
-const newProperty = (id: string): Property => ({ id, postcode: '', street: '', city: '', county: '' });
+const PROPERTY_TYPES = ['Detached house', 'Semi-detached house', 'Terraced house', 'Flat / Apartment', 'Bungalow', 'Maisonette', 'Studio', 'HMO / House share', 'Other'];
+const FURNISHING = ['Furnished', 'Unfurnished', 'Part-furnished'];
+const PARKING = ['None', 'On-street', 'Driveway', 'Garage', 'Allocated space', 'Other'];
+
+type Property = {
+  id: string; postcode: string; street: string; city: string; county: string;
+  propertyType: string; receptions: string; bedrooms: string; bathrooms: string;
+  furnishing: string; parking: string; flatNumber: string; availableFrom: string; securityNote: string;
+};
+const newProperty = (id: string): Property => ({
+  id, postcode: '', street: '', city: '', county: '',
+  propertyType: '', receptions: '', bedrooms: '', bathrooms: '',
+  furnishing: '', parking: '', flatNumber: '', availableFrom: '', securityNote: '',
+});
 const formatAddress = (p: Property) => [p.street, p.city, p.county, p.postcode].filter(Boolean).join(', ');
+const propertyDetails = (p: Property) => [
+  p.propertyType,
+  p.bedrooms && `${p.bedrooms} bed`,
+  p.bathrooms && `${p.bathrooms} bath`,
+  p.receptions && `${p.receptions} recep`,
+  p.furnishing,
+  p.parking && p.parking !== 'None' && `Parking: ${p.parking}`,
+  p.availableFrom && `Available ${p.availableFrom}`,
+].filter(Boolean).join(' · ');
 
-const STEPS = ['About You', 'Your Property', 'Service', 'Documents', 'Confirm'];
+// Human-readable status for a document answer in the confirm summary.
+const docSummary = (st: DocState) => {
+  if (!st || !st.has) return '—';
+  if (st.has === 'yes') return st.url ? 'Yes — uploaded' : 'Yes';
+  if (st.has === 'nogas') return 'No gas supply';
+  return 'To arrange';
+};
+
+const STEPS = ['Landlord Details', 'Property Details', 'Service', 'Documents', 'Confirm'];
 
 // Direct-to-Cloudinary upload (bypasses Vercel's ~4.5MB request-body limit).
 async function uploadToCloudinary(file: File): Promise<string> {
@@ -56,7 +91,7 @@ async function uploadToCloudinary(file: File): Promise<string> {
 }
 
 const EMPTY_FORM = {
-  fullName: '', email: '', phone: '', propertyCount: '',
+  fullName: '', email: '', phone: '', propertyCount: '', contactAddress: '',
   selectedPackage: '', notes: '',
 };
 
@@ -65,7 +100,7 @@ export default function LandlordRegistrationApplyPage() {
   const [form, setForm] = useState(EMPTY_FORM);
   const [properties, setProperties] = useState<Property[]>([newProperty('p0')]);
   const nextPropId = useRef(1);
-  const [docs, setDocs] = useState<Record<string, DocState>>({ epc: { ...EMPTY_DOC }, gasElec: { ...EMPTY_DOC }, landReg: { ...EMPTY_DOC } });
+  const [docs, setDocs] = useState<Record<string, DocState>>(initDocs);
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
@@ -110,18 +145,21 @@ export default function LandlordRegistrationApplyPage() {
       if (!form.fullName.trim()) e.fullName = 'Full name is required';
       if (!form.email.trim()) e.email = 'Email is required';
       else if (!EMAIL_REGEX.test(form.email)) e.email = 'Enter a valid email address';
-      if (!form.phone.trim()) e.phone = 'Phone number is required';
-      else if (!UK_PHONE_REGEX.test(form.phone.replace(/\s/g, ''))) e.phone = 'Enter a valid UK phone number';
+      if (!form.phone.trim()) e.phone = 'Telephone number is required';
+      else if (!UK_PHONE_REGEX.test(form.phone.replace(/\s/g, ''))) e.phone = 'Enter a valid UK telephone number';
+      if (!form.contactAddress.trim()) e.contactAddress = 'Contact address is required';
       if (!form.propertyCount) e.propertyCount = 'Please tell us how many properties you own';
     } else if (s === 1) {
       properties.forEach(p => {
         if (!p.postcode.trim()) e[`prop_${p.id}_postcode`] = 'Postcode is required';
         if (!p.street.trim()) e[`prop_${p.id}_street`] = '1st line of address is required';
+        if (!p.propertyType) e[`prop_${p.id}_propertyType`] = 'Please select a property type';
+        if (!p.bedrooms) e[`prop_${p.id}_bedrooms`] = 'Please select the number of bedrooms';
       });
     } else if (s === 2) {
       if (!form.selectedPackage) e.selectedPackage = 'Please choose a service';
     } else if (s === 3) {
-      DOCS.forEach(d => { if (!docs[d.key].has) e[`doc_${d.key}`] = 'Please answer yes or no'; });
+      DOCS.forEach(d => { if (!docs[d.key].has) e[`doc_${d.key}`] = 'Please choose an option'; });
     } else if (s === 4) {
       if (!termsAccepted) e.terms = 'Please accept the terms & conditions to continue';
     }
@@ -143,12 +181,8 @@ export default function LandlordRegistrationApplyPage() {
           ...form,
           selectedPackage: form.selectedPackage,
           termsAccepted,
-          documents: {
-            epc: { has: docs.epc.has === 'yes', url: docs.epc.url },
-            gasElec: { has: docs.gasElec.has === 'yes', url: docs.gasElec.url },
-            landReg: { has: docs.landReg.has === 'yes', url: docs.landReg.url },
-          },
-          properties: properties.map(({ street, city, county, postcode }) => ({ street, city, county, postcode })),
+          documents: Object.fromEntries(DOC_KEYS.map(k => [k, { status: docs[k].has, url: docs[k].url }])),
+          properties: properties.map(({ id, ...p }) => p),
           postcode: properties[0]?.postcode || '',
           address: properties.map(formatAddress).join(' | '),
         }),
@@ -211,23 +245,29 @@ export default function LandlordRegistrationApplyPage() {
               {/* Step body */}
               <div style={{ padding: 'clamp(22px, 4vw, 32px)' }}>
 
-                {/* STEP 1 — ABOUT YOU */}
+                {/* STEP 1 — LANDLORD DETAILS */}
                 {step === 0 && (
                   <div className="hol-form-grid">
                     <div className="hol-field hol-field--full">
                       <label className="hol-label">Full Name<span className="hol-req">*</span></label>
-                      <input type="text" className={`hol-input${errors.fullName ? ' hol-input--error' : ''}`} placeholder="e.g. James Whitfield" value={form.fullName} onChange={set('fullName')} autoComplete="name" />
+                      <input type="text" className={`hol-input${errors.fullName ? ' hol-input--error' : ''}`} placeholder="e.g. Mr Mansour Nosrati" value={form.fullName} onChange={set('fullName')} autoComplete="name" />
                       {errors.fullName && <p className="hol-err">{errors.fullName}</p>}
                     </div>
                     <div className="hol-field">
                       <label className="hol-label">Email Address<span className="hol-req">*</span></label>
-                      <input type="email" className={`hol-input${errors.email ? ' hol-input--error' : ''}`} placeholder="james@example.co.uk" value={form.email} onChange={set('email')} autoComplete="email" />
+                      <input type="email" className={`hol-input${errors.email ? ' hol-input--error' : ''}`} placeholder="name@example.co.uk" value={form.email} onChange={set('email')} autoComplete="email" />
                       {errors.email && <p className="hol-err">{errors.email}</p>}
                     </div>
                     <div className="hol-field">
-                      <label className="hol-label">Phone Number<span className="hol-req">*</span></label>
-                      <input type="tel" className={`hol-input${errors.phone ? ' hol-input--error' : ''}`} placeholder="e.g. 07700 900123" value={form.phone} onChange={set('phone')} autoComplete="tel" />
+                      <label className="hol-label">Telephone Number<span className="hol-req">*</span></label>
+                      <input type="tel" className={`hol-input${errors.phone ? ' hol-input--error' : ''}`} placeholder="e.g. 07883 809939" value={form.phone} onChange={set('phone')} autoComplete="tel" />
                       {errors.phone && <p className="hol-err">{errors.phone}</p>}
+                    </div>
+                    <div className="hol-field hol-field--full">
+                      <label className="hol-label">Contact Address<span className="hol-req">*</span></label>
+                      <input type="text" className={`hol-input${errors.contactAddress ? ' hol-input--error' : ''}`} placeholder="e.g. 45 Coronation Street, Manchester M27 6DE" value={form.contactAddress} onChange={set('contactAddress')} autoComplete="street-address" />
+                      {errors.contactAddress && <p className="hol-err">{errors.contactAddress}</p>}
+                      <p style={{ fontSize: 12, color: '#9ca3af', margin: '2px 0 0' }}>Your correspondence address (where we send documents). This can differ from the property address.</p>
                     </div>
                     <div className="hol-field hol-field--full">
                       <label className="hol-label">How many properties do you own?<span className="hol-req">*</span></label>
@@ -261,6 +301,8 @@ export default function LandlordRegistrationApplyPage() {
                           onRemove={removeProperty}
                           postcodeError={errors[`prop_${p.id}_postcode`]}
                           streetError={errors[`prop_${p.id}_street`]}
+                          propertyTypeError={errors[`prop_${p.id}_propertyType`]}
+                          bedroomsError={errors[`prop_${p.id}_bedrooms`]}
                         />
                       ))}
                     </div>
@@ -316,8 +358,17 @@ export default function LandlordRegistrationApplyPage() {
                               <p style={{ fontSize: 12, color: '#9ca3af', margin: '2px 0 0' }}>{d.hint}</p>
                             </div>
                             <div className="hol-yesno">
-                              <button type="button" className={`hol-yesno-btn${st.has === 'yes' ? ' on' : ''}`} onClick={() => { setDoc(d.key, { has: 'yes' }); setErrors(er => ({ ...er, [`doc_${d.key}`]: '' })); }}>Yes, I have it</button>
-                              <button type="button" className={`hol-yesno-btn${st.has === 'no' ? ' on' : ''}`} onClick={() => { setDoc(d.key, { has: 'no', url: '', fileName: '' }); setErrors(er => ({ ...er, [`doc_${d.key}`]: '' })); }}>No / arrange for me</button>
+                              {d.options.map(opt => (
+                                <button
+                                  key={opt.value}
+                                  type="button"
+                                  className={`hol-yesno-btn${st.has === opt.value ? ' on' : ''}`}
+                                  onClick={() => {
+                                    setDoc(d.key, opt.value === 'yes' ? { has: 'yes' } : { has: opt.value, url: '', fileName: '' });
+                                    setErrors(er => ({ ...er, [`doc_${d.key}`]: '' }));
+                                  }}
+                                >{opt.label}</button>
+                              ))}
                             </div>
                             {st.has === 'yes' && (
                               <div style={{ marginTop: 12 }}>
@@ -356,15 +407,23 @@ export default function LandlordRegistrationApplyPage() {
                     <div className="hol-summary">
                       <SummaryRow label="Name" value={form.fullName} />
                       <SummaryRow label="Email" value={form.email} />
-                      <SummaryRow label="Phone" value={form.phone} />
+                      <SummaryRow label="Telephone" value={form.phone} />
+                      <SummaryRow label="Contact address" value={form.contactAddress} />
                       <SummaryRow label="Properties owned" value={form.propertyCount} />
                       {properties.map((p, i) => (
-                        <SummaryRow key={p.id} label={properties.length > 1 ? `Property ${i + 1}` : 'Property'} value={formatAddress(p)} />
+                        <div key={p.id} className="hol-summary-row">
+                          <span className="hol-summary-label">{properties.length > 1 ? `Property ${i + 1}` : 'Property'}</span>
+                          <span className="hol-summary-value">
+                            {formatAddress(p) || '—'}
+                            {propertyDetails(p) && <span style={{ display: 'block', fontWeight: 400, color: '#6b7280', fontSize: 12, marginTop: 2 }}>{propertyDetails(p)}</span>}
+                          </span>
+                        </div>
                       ))}
                       <SummaryRow label="Service" value={form.selectedPackage} />
-                      <SummaryRow label="EPC" value={docs.epc.has === 'yes' ? (docs.epc.url ? 'Yes — uploaded' : 'Yes') : docs.epc.has === 'no' ? 'To arrange' : '—'} />
-                      <SummaryRow label="Electrical & Gas" value={docs.gasElec.has === 'yes' ? (docs.gasElec.url ? 'Yes — uploaded' : 'Yes') : docs.gasElec.has === 'no' ? 'To arrange' : '—'} />
-                      <SummaryRow label="Land Registry" value={docs.landReg.has === 'yes' ? (docs.landReg.url ? 'Yes — uploaded' : 'Yes') : docs.landReg.has === 'no' ? 'To arrange' : '—'} />
+                      <SummaryRow label="EPC" value={docSummary(docs.epc)} />
+                      <SummaryRow label="Electrical (EICR)" value={docSummary(docs.electrical)} />
+                      <SummaryRow label="Gas Safety" value={docSummary(docs.gas)} />
+                      <SummaryRow label="Land Registry" value={docSummary(docs.landReg)} />
                     </div>
 
                     <div className="hol-field hol-field--full" style={{ marginTop: 20 }}>
@@ -430,7 +489,7 @@ function SummaryRow({ label, value }: { label: string; value: string }) {
 // PostcodeLookup callbacks stay stable per-property (id-bound) and the Google
 // autocomplete doesn't re-bind on every keystroke.
 function PropertyRow({
-  property, index, total, onUpdate, onRemove, postcodeError, streetError,
+  property, index, total, onUpdate, onRemove, postcodeError, streetError, propertyTypeError, bedroomsError,
 }: {
   property: Property;
   index: number;
@@ -439,7 +498,10 @@ function PropertyRow({
   onRemove: (id: string) => void;
   postcodeError?: string;
   streetError?: string;
+  propertyTypeError?: string;
+  bedroomsError?: string;
 }) {
+  const upd = (field: keyof Property) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => onUpdate(property.id, { [field]: e.target.value });
   const handleSelect = useCallback((addr: AddressResult) => {
     const patch: Partial<Property> = {};
     if (addr.street) patch.street = addr.street;
@@ -482,7 +544,64 @@ function PropertyRow({
         </div>
         <div className="hol-field">
           <label className="hol-label">County <span style={{ color: '#9ca3af', fontWeight: 400 }}>(optional)</span></label>
-          <input type="text" className="hol-input" placeholder="e.g. Greater Manchester" value={property.county} onChange={(e) => onUpdate(property.id, { county: e.target.value })} autoComplete="off" />
+          <input type="text" className="hol-input" placeholder="e.g. Greater Manchester" value={property.county} onChange={upd('county')} autoComplete="off" />
+        </div>
+        <div className="hol-field">
+          <label className="hol-label">Flat / Unit No. <span style={{ color: '#9ca3af', fontWeight: 400 }}>(optional)</span></label>
+          <input type="text" className="hol-input" placeholder="e.g. Flat 2" value={property.flatNumber} onChange={upd('flatNumber')} autoComplete="off" />
+        </div>
+
+        <div className="hol-field">
+          <label className="hol-label">Property Type<span className="hol-req">*</span></label>
+          <select className={`hol-input hol-select${propertyTypeError ? ' hol-input--error' : ''}`} value={property.propertyType} onChange={upd('propertyType')}>
+            <option value="">Select...</option>
+            {PROPERTY_TYPES.map(t => <option key={t}>{t}</option>)}
+          </select>
+          {propertyTypeError && <p className="hol-err">{propertyTypeError}</p>}
+        </div>
+        <div className="hol-field">
+          <label className="hol-label">Bedrooms<span className="hol-req">*</span></label>
+          <select className={`hol-input hol-select${bedroomsError ? ' hol-input--error' : ''}`} value={property.bedrooms} onChange={upd('bedrooms')}>
+            <option value="">Select...</option>
+            {['1', '2', '3', '4', '5', '6+'].map(n => <option key={n}>{n}</option>)}
+          </select>
+          {bedroomsError && <p className="hol-err">{bedroomsError}</p>}
+        </div>
+        <div className="hol-field">
+          <label className="hol-label">Bathrooms <span style={{ color: '#9ca3af', fontWeight: 400 }}>(optional)</span></label>
+          <select className="hol-input hol-select" value={property.bathrooms} onChange={upd('bathrooms')}>
+            <option value="">Select...</option>
+            {['1', '2', '3', '4', '5+'].map(n => <option key={n}>{n}</option>)}
+          </select>
+        </div>
+        <div className="hol-field">
+          <label className="hol-label">Receptions <span style={{ color: '#9ca3af', fontWeight: 400 }}>(optional)</span></label>
+          <select className="hol-input hol-select" value={property.receptions} onChange={upd('receptions')}>
+            <option value="">Select...</option>
+            {['0', '1', '2', '3', '4', '5+'].map(n => <option key={n}>{n}</option>)}
+          </select>
+        </div>
+        <div className="hol-field">
+          <label className="hol-label">Furnishing Status <span style={{ color: '#9ca3af', fontWeight: 400 }}>(optional)</span></label>
+          <select className="hol-input hol-select" value={property.furnishing} onChange={upd('furnishing')}>
+            <option value="">Select...</option>
+            {FURNISHING.map(f => <option key={f}>{f}</option>)}
+          </select>
+        </div>
+        <div className="hol-field">
+          <label className="hol-label">Parking <span style={{ color: '#9ca3af', fontWeight: 400 }}>(optional)</span></label>
+          <select className="hol-input hol-select" value={property.parking} onChange={upd('parking')}>
+            <option value="">Select...</option>
+            {PARKING.map(p => <option key={p}>{p}</option>)}
+          </select>
+        </div>
+        <div className="hol-field">
+          <label className="hol-label">Available From <span style={{ color: '#9ca3af', fontWeight: 400 }}>(optional)</span></label>
+          <input type="date" className="hol-input" style={{ colorScheme: 'light' }} value={property.availableFrom} onChange={upd('availableFrom')} />
+        </div>
+        <div className="hol-field hol-field--full">
+          <label className="hol-label">Security Code / Access Note <span style={{ color: '#9ca3af', fontWeight: 400 }}>(optional)</span></label>
+          <input type="text" className="hol-input" placeholder="e.g. key-safe code, alarm code or access instructions" value={property.securityNote} onChange={upd('securityNote')} autoComplete="off" />
         </div>
       </div>
     </div>

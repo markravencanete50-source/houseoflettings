@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import jsPDF from 'jspdf';
 import Navbar from '@/components/layout/Navbar';
+import PostcodeLookup, { type AddressResult } from '@/components/PostcodeLookup';
 
 /* ────────────────────────────────────────────────────────────
    Shared styles (matched to the tenant-application form)
@@ -49,49 +50,6 @@ async function uploadToCloudinary(file: File): Promise<string> {
   const data = await upRes.json();
   if (!data.secure_url) throw new Error(data.error?.message || 'Upload failed');
   return data.secure_url as string;
-}
-
-/* ────────────────────────────────────────────────────────────
-   Postcode autocomplete (Google Places) — fills postcode + first
-   line of address. Same proven pattern used across the site.
-   ──────────────────────────────────────────────────────────── */
-type AddressResult = { street: string; postcode: string };
-
-function usePostcodeAutocomplete(onSelect: (data: AddressResult) => void) {
-  const inputRef = useRef<HTMLInputElement>(null);
-  useEffect(() => {
-    let ac: any = null;
-    let listener: any = null;
-    function initAutocomplete() {
-      if (!inputRef.current || !(window as any).google?.maps?.places) return;
-      ac = new (window as any).google.maps.places.Autocomplete(inputRef.current, {
-        types: ['geocode'],
-        componentRestrictions: { country: 'gb' },
-        fields: ['address_components'],
-      });
-      listener = ac.addListener('place_changed', () => {
-        const place = ac.getPlace();
-        if (!place?.address_components) return;
-        let postcode = '', streetNumber = '', route = '';
-        place.address_components.forEach((comp: any) => {
-          if (comp.types.includes('street_number')) streetNumber = comp.long_name;
-          if (comp.types.includes('route')) route = comp.long_name;
-          if (comp.types.includes('postal_code')) postcode = comp.long_name;
-        });
-        onSelect({ street: [streetNumber, route].filter(Boolean).join(' '), postcode });
-      });
-    }
-    if ((window as any).google?.maps?.places) {
-      initAutocomplete();
-    } else {
-      const interval = setInterval(() => {
-        if ((window as any).google?.maps?.places) { clearInterval(interval); initAutocomplete(); }
-      }, 300);
-      return () => clearInterval(interval);
-    }
-    return () => { if (listener) (window as any).google?.maps?.event.removeListener(listener); };
-  }, [onSelect]);
-  return inputRef;
 }
 
 /* ────────────────────────────────────────────────────────────
@@ -274,25 +232,11 @@ export default function MaintenancePage() {
     return () => window.removeEventListener('resize', check);
   }, []);
 
-  // Load Google Places once for postcode autocomplete.
-  useEffect(() => {
-    const apiKey = process.env.NEXT_PUBLIC_GOOGLE_PLACES_API_KEY;
-    if (!apiKey) return;
-    if ((window as any).google?.maps?.places) return;
-    if (document.querySelector('script[data-hol-gmaps]')) return;
-    const script = document.createElement('script');
-    script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places`;
-    script.async = true; script.defer = true;
-    (script as any).dataset.holGmaps = '1';
-    document.head.appendChild(script);
-  }, []);
-
   const handleAddressSelect = useCallback((data: AddressResult) => {
     setPostcode(p => data.postcode || p);
     setAddressLine1(p => data.street || p);
     setError('');
   }, []);
-  const postcodeInputRef = usePostcodeAutocomplete(handleAddressSelect);
 
   const validate = (): string | null => {
     if (!fullName.trim()) return 'Your full name is required.';
@@ -370,7 +314,6 @@ export default function MaintenancePage() {
           border-color: #2563eb !important; outline: none;
           box-shadow: 0 0 0 3px rgba(37,99,235,0.08);
         }
-        .pac-container { z-index: 100000 !important; }
         .m-radio-group { display: flex; gap: 10px; flex-wrap: wrap; }
         .m-radio-label {
           display: flex; align-items: center; gap: 8px; border: 1.5px solid #d1d5db;
@@ -440,7 +383,13 @@ export default function MaintenancePage() {
             <div className="m-grid-2" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
               <div>
                 <label style={labelStyle}>Postcode <span style={{ color: '#ef4444' }}>*</span></label>
-                <input ref={postcodeInputRef} style={inputStyle} value={postcode} autoComplete="off" onChange={e => setPostcode(e.target.value)} placeholder="Start typing, e.g. LS1 1AA" />
+                <PostcodeLookup
+                  postcode={postcode}
+                  onPostcodeChange={setPostcode}
+                  onSelect={handleAddressSelect}
+                  inputStyle={inputStyle}
+                  placeholder="e.g. LS1 1AA"
+                />
               </div>
               <div>
                 <label style={labelStyle}>First Line of Address <span style={{ color: '#ef4444' }}>*</span></label>

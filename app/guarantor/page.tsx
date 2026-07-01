@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import jsPDF from 'jspdf';
 import Navbar from '@/components/layout/Navbar';
+import PostcodeLookup, { type AddressResult } from '@/components/PostcodeLookup';
 
 /* ── shared styles (matched to the tenant-application form) ── */
 const inputStyle: React.CSSProperties = {
@@ -33,39 +34,6 @@ async function uploadToCloudinary(file: File): Promise<string> {
   const data = await upRes.json();
   if (!data.secure_url) throw new Error(data.error?.message || 'Upload failed');
   return data.secure_url as string;
-}
-
-/* ── postcode autocomplete (Google Places) — fills street + postcode ── */
-type AddressResult = { street: string; postcode: string };
-function usePostcodeAutocomplete(onSelect: (data: AddressResult) => void) {
-  const inputRef = useRef<HTMLInputElement>(null);
-  useEffect(() => {
-    let ac: any = null, listener: any = null;
-    function initAutocomplete() {
-      if (!inputRef.current || !(window as any).google?.maps?.places) return;
-      ac = new (window as any).google.maps.places.Autocomplete(inputRef.current, {
-        types: ['geocode'], componentRestrictions: { country: 'gb' }, fields: ['address_components'],
-      });
-      listener = ac.addListener('place_changed', () => {
-        const place = ac.getPlace();
-        if (!place?.address_components) return;
-        let postcode = '', streetNumber = '', route = '';
-        place.address_components.forEach((c: any) => {
-          if (c.types.includes('street_number')) streetNumber = c.long_name;
-          if (c.types.includes('route')) route = c.long_name;
-          if (c.types.includes('postal_code')) postcode = c.long_name;
-        });
-        onSelect({ street: [streetNumber, route].filter(Boolean).join(' '), postcode });
-      });
-    }
-    if ((window as any).google?.maps?.places) initAutocomplete();
-    else {
-      const iv = setInterval(() => { if ((window as any).google?.maps?.places) { clearInterval(iv); initAutocomplete(); } }, 300);
-      return () => clearInterval(iv);
-    }
-    return () => { if (listener) (window as any).google?.maps?.event.removeListener(listener); };
-  }, [onSelect]);
-  return inputRef;
 }
 
 /* ── file upload field (multi-file, direct to Cloudinary) ── */
@@ -243,18 +211,6 @@ export default function GuarantorPage() {
     return () => window.removeEventListener('resize', check);
   }, []);
 
-  useEffect(() => {
-    const apiKey = process.env.NEXT_PUBLIC_GOOGLE_PLACES_API_KEY;
-    if (!apiKey) return;
-    if ((window as any).google?.maps?.places) return;
-    if (document.querySelector('script[data-hol-gmaps]')) return;
-    const script = document.createElement('script');
-    script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places`;
-    script.async = true; script.defer = true;
-    (script as any).dataset.holGmaps = '1';
-    document.head.appendChild(script);
-  }, []);
-
   // Read admin pre-fill values from the link query string.
   useEffect(() => {
     const q = new URLSearchParams(window.location.search);
@@ -279,8 +235,6 @@ export default function GuarantorPage() {
   const onGuarantorSelect = useCallback((d: AddressResult) => {
     setForm(s => ({ ...s, guarantorPostcode: d.postcode || s.guarantorPostcode, guarantorAddressLine: d.street || s.guarantorAddressLine }));
   }, []);
-  const propertyRef = usePostcodeAutocomplete(onPropertySelect);
-  const guarantorRef = usePostcodeAutocomplete(onGuarantorSelect);
 
   const anyUploading = idDoc.uploading || payslips.uploading || proofOfAddress.uploading || bankStatements.uploading || studentDoc.uploading;
 
@@ -379,7 +333,6 @@ export default function GuarantorPage() {
       <style>{`
         input::placeholder, textarea::placeholder { color: #9ca3af; }
         input:focus, select:focus, textarea:focus { border-color: #2563eb !important; outline: none; box-shadow: 0 0 0 3px rgba(37,99,235,0.08); }
-        .pac-container { z-index: 100000 !important; }
         .g-radio-group { display: flex; gap: 10px; flex-wrap: wrap; }
         .g-radio-label { display: flex; align-items: center; gap: 8px; border: 1.5px solid #d1d5db; border-radius: 8px; padding: 10px 16px; cursor: pointer; font-size: 14px; font-weight: 500; color: #374151; background: #fff; transition: all 0.2s; flex: 1 1 auto; min-width: 80px; justify-content: center; }
         .g-radio-label:has(input:checked) { border-color: #2563eb; background: #eff6ff; color: #1d4ed8; }
@@ -437,7 +390,13 @@ export default function GuarantorPage() {
                 <div className="g-grid-2" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
                   <div>
                     <label style={labelStyle}>Property Postcode</label>
-                    <input ref={propertyRef} style={inputStyle} value={form.propertyPostcode} autoComplete="off" onChange={set('propertyPostcode')} placeholder="Start typing, e.g. LS1 1AA" />
+                    <PostcodeLookup
+                      postcode={form.propertyPostcode}
+                      onPostcodeChange={(v) => setForm(s => ({ ...s, propertyPostcode: v }))}
+                      onSelect={onPropertySelect}
+                      inputStyle={inputStyle}
+                      placeholder="e.g. LS1 1AA"
+                    />
                   </div>
                   <div>
                     <label style={labelStyle}>Property Address</label>
@@ -465,7 +424,16 @@ export default function GuarantorPage() {
               <div><label style={labelStyle}>Date of Birth</label><input type="date" style={inputStyle} value={form.guarantorDob} onChange={set('guarantorDob')} /></div>
               <div><label style={labelStyle}>Mobile <span style={{ color: '#ef4444' }}>*</span></label><input type="tel" style={inputStyle} value={form.guarantorMobile} onChange={set('guarantorMobile')} placeholder="07700 900123" /></div>
               <div><label style={labelStyle}>Email <span style={{ color: '#ef4444' }}>*</span></label><input type="email" style={inputStyle} value={form.guarantorEmail} onChange={set('guarantorEmail')} placeholder="you@email.co.uk" /></div>
-              <div><label style={labelStyle}>Postcode</label><input ref={guarantorRef} style={inputStyle} value={form.guarantorPostcode} autoComplete="off" onChange={set('guarantorPostcode')} placeholder="Start typing your postcode" /></div>
+              <div>
+                <label style={labelStyle}>Postcode</label>
+                <PostcodeLookup
+                  postcode={form.guarantorPostcode}
+                  onPostcodeChange={(v) => setForm(s => ({ ...s, guarantorPostcode: v }))}
+                  onSelect={onGuarantorSelect}
+                  inputStyle={inputStyle}
+                  placeholder="e.g. LS1 1AA"
+                />
+              </div>
               <div style={{ gridColumn: '1 / -1' }}><label style={labelStyle}>Address <span style={{ color: '#ef4444' }}>*</span></label><input style={inputStyle} value={form.guarantorAddressLine} onChange={set('guarantorAddressLine')} placeholder="Your home address" /></div>
               <div><label style={labelStyle}>How long have you lived at this address?</label><input style={inputStyle} value={form.timeAtAddress} onChange={set('timeAtAddress')} placeholder="e.g. 4 years" /></div>
               <div><label style={labelStyle}>Previous Address (if current is under 3 years)</label><input style={inputStyle} value={form.previousAddress} onChange={set('previousAddress')} placeholder="Previous full address" /></div>

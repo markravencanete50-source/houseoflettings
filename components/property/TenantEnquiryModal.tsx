@@ -2,56 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { createPortal } from "react-dom";
-
-/**
- * Postcode autocomplete (Google Places), modal-aware: the input only exists
- * once the modal is open, so the effect re-runs when `active` becomes true.
- */
-function usePostcodeAutocomplete(onSelect: (postcode: string) => void, active: boolean) {
-  const inputRef = useRef<HTMLInputElement>(null);
-
-  useEffect(() => {
-    if (!active) return;
-    let ac: any = null;
-    let listener: any = null;
-
-    function initAutocomplete() {
-      if (!inputRef.current || !(window as any).google?.maps?.places) return;
-      ac = new (window as any).google.maps.places.Autocomplete(inputRef.current, {
-        types: ["geocode"],
-        componentRestrictions: { country: "gb" },
-        fields: ["address_components"],
-      });
-      listener = ac.addListener("place_changed", () => {
-        const place = ac.getPlace();
-        if (!place?.address_components) return;
-        let postcode = "";
-        place.address_components.forEach((comp: any) => {
-          if (comp.types.includes("postal_code")) postcode = comp.long_name;
-        });
-        if (postcode) onSelect(postcode);
-      });
-    }
-
-    if ((window as any).google?.maps?.places) {
-      initAutocomplete();
-    } else {
-      const interval = setInterval(() => {
-        if ((window as any).google?.maps?.places) {
-          clearInterval(interval);
-          initAutocomplete();
-        }
-      }, 300);
-      return () => clearInterval(interval);
-    }
-
-    return () => {
-      if (listener) (window as any).google?.maps?.event.removeListener(listener);
-    };
-  }, [onSelect, active]);
-
-  return inputRef;
-}
+import PostcodeLookup, { type AddressResult } from "@/components/PostcodeLookup";
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const UK_PHONE_REGEX = /^(\+44|0)[\s-]?[1-9][\d\s-]{8,11}$/;
@@ -197,25 +148,10 @@ export default function TenantEnquiryModal({
     return () => { document.body.style.overflow = ""; };
   }, [isOpen]);
 
-  // Load Google Places once the modal opens, for postcode autocomplete.
-  useEffect(() => {
-    if (!isOpen) return;
-    if ((window as any).google?.maps?.places) return;
-    const apiKey = process.env.NEXT_PUBLIC_GOOGLE_PLACES_API_KEY;
-    if (!apiKey) return;
-    if (document.querySelector('script[data-hol-gmaps]')) return;
-    const script = document.createElement("script");
-    script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places`;
-    script.async = true; script.defer = true;
-    (script as any).dataset.holGmaps = "1";
-    document.head.appendChild(script);
-  }, [isOpen]);
-
-  const handlePostcodeSelect = useCallback((postcode: string) => {
-    setForm(f => ({ ...f, postcode }));
+  const handlePostcodeSelect = useCallback((data: AddressResult) => {
+    setForm(f => ({ ...f, postcode: data.postcode || f.postcode }));
     setErrors(er => ({ ...er, postcode: "" }));
   }, []);
-  const postcodeInputRef = usePostcodeAutocomplete(handlePostcodeSelect, isOpen);
 
   const set = (key: string) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const val = e.target.value;
@@ -350,7 +286,13 @@ export default function TenantEnquiryModal({
                   </div>
                   <div className="hol-field">
                     <label className="hol-label">What property postcode are you looking for?</label>
-                    <input ref={postcodeInputRef} type="text" className="hol-input" placeholder="Start typing a postcode, e.g. M1 1AE" value={form.postcode} onChange={set("postcode")} autoComplete="off"/>
+                    <PostcodeLookup
+                      postcode={form.postcode}
+                      onPostcodeChange={(v) => setForm(f => ({ ...f, postcode: v }))}
+                      onSelect={handlePostcodeSelect}
+                      inputClassName="hol-input"
+                      placeholder="e.g. M1 1AE"
+                    />
                   </div>
                 </div>
 
@@ -594,7 +536,6 @@ const MODAL_CSS = `
   @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&family=Barlow+Condensed:wght@700;800;900&display=swap');
   .hol-overlay{position:fixed;inset:0;z-index:99999;background:rgba(10,15,28,.75);backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;padding:16px;opacity:0;pointer-events:none;transition:opacity .25s ease;}
   .hol-overlay--open{opacity:1;pointer-events:all;}
-  .pac-container{z-index:100000!important;border-radius:10px!important;border:1.5px solid #e5e7eb!important;box-shadow:0 8px 24px rgba(0,0,0,.12)!important;}
   .hol-modal{background:#fff;border-radius:20px;width:100%;max-width:680px;max-height:92vh;overflow-y:auto;box-shadow:0 32px 80px rgba(0,0,0,.28);transform:scale(.94) translateY(10px);transition:transform .3s cubic-bezier(.34,1.56,.64,1);font-family:'Poppins',sans-serif;scrollbar-width:thin;scrollbar-color:#e2e5ed transparent;}
   .hol-modal--wide{max-width:720px;}
   .hol-overlay--open .hol-modal{transform:scale(1) translateY(0);}

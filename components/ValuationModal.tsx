@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { createPortal } from "react-dom";
+import PostcodeLookup, { type AddressResult } from "@/components/PostcodeLookup";
 
 const UK_PHONE_REGEX = /^(\+44|0)[\s-]?[1-9][\d\s-]{8,11}$/;
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -14,7 +15,8 @@ function validate(form: typeof EMPTY_FORM) {
   if (!form.phone.trim()) errors.phone = "Phone number is required";
   else if (!UK_PHONE_REGEX.test(form.phone.replace(/\s/g, "")))
     errors.phone = "Enter a valid UK phone number";
-  if (!form.address.trim()) errors.address = "Property address is required";
+  if (!form.postcode.trim()) errors.postcode = "Postcode is required";
+  if (!form.street.trim()) errors.street = "First line of address is required";
   if (!form.propertyType) errors.propertyType = "Please select a property type";
   if (!form.bedrooms) errors.bedrooms = "Please select number of bedrooms";
   if (!form.preferredDateTime) errors.preferredDateTime = "Please choose a preferred date & time";
@@ -22,59 +24,10 @@ function validate(form: typeof EMPTY_FORM) {
 }
 
 const EMPTY_FORM = {
-  fullName: "", email: "", phone: "", address: "",
+  fullName: "", email: "", phone: "",
   postcode: "", city: "", street: "",
   propertyType: "", bedrooms: "", notes: "", preferredDateTime: "",
 };
-
-function usePlacesAutocomplete(onSelect: (data: { address: string; postcode: string; city: string; street: string }) => void, active: boolean) {
-  const inputRef = useRef<HTMLInputElement>(null);
-
-  useEffect(() => {
-    // The address input only exists once the modal is open, so (re)bind when active.
-    if (!active) return;
-    let ac: any = null;
-    let listener: any = null;
-
-    function initAutocomplete() {
-      if (!inputRef.current || !(window as any).google?.maps?.places) return;
-      ac = new (window as any).google.maps.places.Autocomplete(inputRef.current, {
-        types: ["address"],
-        componentRestrictions: { country: "gb" },
-        fields: ["formatted_address", "address_components"],
-      });
-      listener = ac.addListener("place_changed", () => {
-        const place = ac.getPlace();
-        if (!place?.formatted_address) return;
-        let postcode = "", city = "", street = "";
-        place.address_components?.forEach((comp: any) => {
-          if (comp.types.includes("postal_code")) postcode = comp.long_name;
-          if (comp.types.includes("postal_town") || comp.types.includes("locality")) city = comp.long_name;
-          if (comp.types.includes("route")) street = comp.long_name;
-        });
-        onSelect({ address: place.formatted_address, postcode, city, street });
-      });
-    }
-
-    if ((window as any).google?.maps?.places) {
-      initAutocomplete();
-    } else {
-      const interval = setInterval(() => {
-        if ((window as any).google?.maps?.places) {
-          clearInterval(interval);
-          initAutocomplete();
-        }
-      }, 300);
-      return () => clearInterval(interval);
-    }
-
-    return () => {
-      if (listener) (window as any).google?.maps?.event.removeListener(listener);
-    };
-  }, [onSelect, active]);
-
-  return inputRef;
-}
 
 interface ValuationModalProps {
   isOpen: boolean;
@@ -92,30 +45,19 @@ export default function ValuationModal({ isOpen, onClose }: ValuationModalProps)
   useEffect(() => { setMounted(true); }, []);
 
   useEffect(() => {
-    if (!isOpen) return;
-    if ((window as any).google?.maps?.places) return;
-    const apiKey = process.env.NEXT_PUBLIC_GOOGLE_PLACES_API_KEY;
-    if (!apiKey) return;
-    const existing = document.querySelector('script[data-hol-gmaps]');
-    if (existing) return;
-    const script = document.createElement("script");
-    script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places`;
-    script.async = true; script.defer = true;
-    (script as any).dataset.holGmaps = "1";
-    document.head.appendChild(script);
-  }, [isOpen]);
-
-  useEffect(() => {
     document.body.style.overflow = isOpen ? "hidden" : "";
     return () => { document.body.style.overflow = ""; };
   }, [isOpen]);
 
-  const handlePlaceSelect = useCallback((data: { address: string; postcode: string; city: string; street: string }) => {
-    setForm(f => ({ ...f, ...data }));
-    setErrors(e => ({ ...e, address: "" }));
+  const handleAddressSelect = useCallback((data: AddressResult) => {
+    setForm(f => ({
+      ...f,
+      postcode: data.postcode || f.postcode,
+      city: data.city || f.city,
+      street: data.street || f.street,
+    }));
+    setErrors(e => ({ ...e, postcode: "", street: "" }));
   }, []);
-
-  const addressInputRef = usePlacesAutocomplete(handlePlaceSelect, isOpen);
 
   const set = (key: string) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     setForm(f => ({ ...f, [key]: e.target.value }));
@@ -141,7 +83,10 @@ export default function ValuationModal({ isOpen, onClose }: ValuationModalProps)
       const res = await fetch("/api/book-valuation", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
+        body: JSON.stringify({
+          ...form,
+          address: [form.street, form.city, form.postcode].filter(Boolean).join(", "),
+        }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || "Submission failed");
@@ -177,7 +122,7 @@ export default function ValuationModal({ isOpen, onClose }: ValuationModalProps)
                   <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="20 6 9 17 4 12"/></svg>
                 </div>
                 <h3 className="hol-success__title">Valuation Booked!</h3>
-                <p className="hol-success__msg">Thank you, {form.fullName.split(" ")[0]}. We've received your request for <strong>{form.address}</strong>.</p>
+                <p className="hol-success__msg">Thank you, {form.fullName.split(" ")[0]}. We've received your request for <strong>{[form.street, form.city, form.postcode].filter(Boolean).join(", ")}</strong>.</p>
                 <p className="hol-success__sub">Our team will be in touch within 24 hours to confirm your appointment.</p>
                 <button className="hol-submit hol-submit--outline" onClick={handleClose}>Close</button>
               </div>
@@ -206,12 +151,29 @@ export default function ValuationModal({ isOpen, onClose }: ValuationModalProps)
                   </div>
 
                   <div className="hol-field hol-field--full">
-                    <label className="hol-label">Property Address<span className="hol-req">*</span></label>
-                    <div style={{ position: 'relative' }}>
-                      <svg style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: '#9ca3af', pointerEvents: 'none' }} width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-                      <input ref={addressInputRef} type="text" className={`hol-input${errors.address ? " hol-input--error" : ""}`} style={{ paddingLeft: 36 }} placeholder="Start typing your UK address..." value={form.address} onChange={set("address")} autoComplete="off"/>
-                    </div>
-                    {errors.address && <p className="hol-err">{errors.address}</p>}
+                    <label className="hol-label">Postcode<span className="hol-req">*</span></label>
+                    <PostcodeLookup
+                      postcode={form.postcode}
+                      onPostcodeChange={(v) => setForm(f => ({ ...f, postcode: v }))}
+                      onSelect={handleAddressSelect}
+                      inputClassName={`hol-input${errors.postcode ? " hol-input--error" : ""}`}
+                      placeholder="e.g. M1 1AE"
+                    />
+                    {errors.postcode && <p className="hol-err">{errors.postcode}</p>}
+                    <p style={{ fontSize: 12, color: '#9ca3af', margin: '2px 0 0' }}>
+                      Search your postcode, then select your address to auto-fill the fields below.
+                    </p>
+                  </div>
+
+                  <div className="hol-field hol-field--full">
+                    <label className="hol-label">First Line of Address<span className="hol-req">*</span></label>
+                    <input type="text" className={`hol-input${errors.street ? " hol-input--error" : ""}`} placeholder="e.g. 12 Whitfield Street" value={form.street} onChange={set("street")} autoComplete="off"/>
+                    {errors.street && <p className="hol-err">{errors.street}</p>}
+                  </div>
+
+                  <div className="hol-field">
+                    <label className="hol-label">City</label>
+                    <input type="text" className="hol-input" placeholder="e.g. Manchester" value={form.city} onChange={set("city")} autoComplete="off"/>
                   </div>
 
                   <div className="hol-field">
@@ -319,9 +281,5 @@ const MODAL_CSS = `
   .hol-success__title{font-family:'Playfair Display',Georgia,serif;font-size:22px;color:#0f1f3d;margin:0 0 12px;}
   .hol-success__msg{font-size:14px;color:#374151;max-width:380px;line-height:1.6;margin:0 0 8px;}
   .hol-success__sub{font-size:13px;color:#9ca3af;margin:0 0 24px;}
-  .pac-container{border-radius:10px!important;border:1.5px solid #e5e7eb!important;box-shadow:0 8px 24px rgba(0,0,0,.12)!important;font-family:'DM Sans',sans-serif!important;z-index:99999!important;}
-  .pac-item{padding:8px 12px!important;font-size:13px!important;cursor:pointer;}
-  .pac-item:hover{background:#f0f4ff!important;}
-  .pac-icon{display:none!important;}
   @media(max-width:600px){.hol-modal__header{padding:24px 20px 18px;}.hol-modal__title{font-size:20px;}.hol-modal__body{padding:20px 20px 24px;}.hol-form-grid{grid-template-columns:1fr;gap:14px;}.hol-form-footer{flex-direction:column;align-items:stretch;}.hol-submit{justify-content:center;}}
 `;

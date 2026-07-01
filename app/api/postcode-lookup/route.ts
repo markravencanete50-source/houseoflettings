@@ -32,6 +32,13 @@ export async function GET(request: NextRequest) {
   if (res.status === 400) {
     return NextResponse.json({ error: 'That does not look like a valid UK postcode.' }, { status: 400 });
   }
+  if (res.status === 429) {
+    // Daily look-up limit reached (the free plan allows 20/day).
+    return NextResponse.json(
+      { error: 'The daily address-lookup limit has been reached. Please type your address manually or try again tomorrow.' },
+      { status: 429 },
+    );
+  }
   if (!res.ok) {
     console.error('postcode-lookup: getAddress.io returned', res.status, await res.text().catch(() => ''));
     return NextResponse.json({ error: 'Address lookup failed. Please try again.' }, { status: 502 });
@@ -40,7 +47,7 @@ export async function GET(request: NextRequest) {
   const data = await res.json();
   const addresses = (data.addresses || []).map((a: any) => ({
     line1: a.line_1 || '',
-    line2: a.line_2 || '',
+    line2: [a.line_2, a.line_3, a.line_4].filter(Boolean).join(', '),
     townOrCity: a.town_or_city || '',
     county: a.county || '',
     postcode: data.postcode || postcode,

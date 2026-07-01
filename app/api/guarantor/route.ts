@@ -68,8 +68,6 @@ function confirmationHtml(d: any) {
         <div class="detail-row"><span class="detail-label">Property</span><span class="detail-value">${d.propertyAddress}</span></div>
         <div class="detail-row"><span class="detail-label">Rent</span><span class="detail-value">${d.rent}</span></div>
         <div class="detail-row"><span class="detail-label">Deposit</span><span class="detail-value">${d.deposit}</span></div>
-        <div class="detail-row"><span class="detail-label">Tenancy Start</span><span class="detail-value">${d.tenancyStart || '—'}</span></div>
-        <div class="detail-row"><span class="detail-label">Lease Term</span><span class="detail-value">${d.leaseTerm ? d.leaseTerm + ' months' : '—'}</span></div>
       </div>
       <div class="notice">⚠️ Providing false, misleading, or unverifiable information may result in the application being declined. Failure to meet the guarantor criteria may affect the tenancy application.</div>
       <p style="margin-top:20px;">If you have any questions, please reply to this email.</p>
@@ -107,9 +105,6 @@ function adminNotificationHtml(d: any) {
       ${row('Property Address', d.propertyAddress)}
       ${row('Rent', d.rent)}
       ${row('Deposit', d.deposit)}
-      ${row('Parking Included in Rent', d.parkingIncluded)}
-      ${row('Tenancy Start Date', d.tenancyStart)}
-      ${row('Initial Lease Term', d.leaseTerm ? d.leaseTerm + ' months' : '')}
     </table></div>
 
     <div class="section"><p class="section-title">Guarantor Details</p><table>

@@ -4,6 +4,10 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import jsPDF from 'jspdf';
 import Navbar from '@/components/layout/Navbar';
 import PostcodeLookup, { type AddressResult } from '@/components/PostcodeLookup';
+import { getAllProperties } from '@/services/admin';
+import { Property } from '@/lib/types';
+
+const formatGBP = (n: number) => `£${n.toLocaleString('en-GB')}`;
 
 /* ── shared styles (matched to the tenant-application form) ── */
 const inputStyle: React.CSSProperties = {
@@ -134,9 +138,6 @@ function generateGuarantorPdf(d: Record<string, any>): string {
   sectionTitle('Proposed Let');
   row('Property Address', d.propertyAddress);
   row('Rent', d.rent); row('Deposit', d.deposit);
-  row('Parking Included in Rent', d.parkingIncluded);
-  row('Tenancy Start Date', d.tenancyStart);
-  row('Initial Lease Term', d.leaseTerm ? d.leaseTerm + ' months' : '');
 
   y += 6; sectionTitle('Guarantor Details');
   row('Title', d.guarantorTitle); row('Full Name', d.guarantorFullName);
@@ -173,7 +174,6 @@ function generateGuarantorPdf(d: Record<string, any>): string {
 
 /* ── page ── */
 const F = {
-  propertyPostcode: '', propertyAddressLine: '', rent: '', deposit: '', parkingIncluded: '', tenancyStart: '', leaseTerm: '',
   guarantorTitle: '', guarantorFullName: '', guarantorDob: '', guarantorAddressLine: '', guarantorPostcode: '',
   hasCCJ: '', guarantorMobile: '', guarantorEmail: '', timeAtAddress: '', previousAddress: '',
   landlordTitle: '', landlordName: '', landlordAddress: '', landlordPostcode: '', landlordMobile: '', landlordEmail: '',
@@ -190,11 +190,12 @@ export default function GuarantorPage() {
   const set = (k: keyof typeof F) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) =>
     setForm(s => ({ ...s, [k]: e.target.value }));
 
-  // When an admin sends a pre-filled link, the proposed-let details arrive in
-  // the URL and are shown locked (read-only) so the guarantor only completes
-  // their own section.
-  const [lockLet, setLockLet] = useState(false);
-  const [propertyAddressFull, setPropertyAddressFull] = useState('');
+  // The guarantor picks which property they are guaranteeing; its details
+  // (address, rent, deposit) are pulled straight from the live listing.
+  const [properties, setProperties] = useState<Property[]>([]);
+  const [propertiesLoading, setPropertiesLoading] = useState(true);
+  const [propertySearch, setPropertySearch] = useState('');
+  const [selectedPropertyId, setSelectedPropertyId] = useState('');
 
   const [consentComms, setConsentComms] = useState(false);
   const [consentDeclare, setConsentDeclare] = useState(false);
@@ -211,27 +212,22 @@ export default function GuarantorPage() {
     return () => window.removeEventListener('resize', check);
   }, []);
 
-  // Read admin pre-fill values from the link query string.
+  // Load the live listings so the guarantor can choose which property they
+  // are guaranteeing.
   useEffect(() => {
-    const q = new URLSearchParams(window.location.search);
-    if (!q.toString()) return;
-    const p = q.get('p') || '';
-    if (p) setPropertyAddressFull(p);
-    setForm(s => ({
-      ...s,
-      propertyAddressLine: p || s.propertyAddressLine,
-      rent: q.get('rent') || s.rent,
-      deposit: q.get('dep') || s.deposit,
-      parkingIncluded: q.get('park') || s.parkingIncluded,
-      tenancyStart: q.get('start') || s.tenancyStart,
-      leaseTerm: q.get('term') || s.leaseTerm,
-    }));
-    if (q.get('lock') === '1') setLockLet(true);
+    getAllProperties()
+      .then(all => setProperties(all.filter(p => p.status === 'active')))
+      .catch(() => setProperties([]))
+      .finally(() => setPropertiesLoading(false));
   }, []);
 
-  const onPropertySelect = useCallback((d: AddressResult) => {
-    setForm(s => ({ ...s, propertyPostcode: d.postcode || s.propertyPostcode, propertyAddressLine: d.street || s.propertyAddressLine }));
-  }, []);
+  const selectedProperty = properties.find(p => p.id === selectedPropertyId) || null;
+  const filteredProperties = properties.filter(p =>
+    !propertySearch.trim() ||
+    p.title.toLowerCase().includes(propertySearch.toLowerCase()) ||
+    p.location.toLowerCase().includes(propertySearch.toLowerCase())
+  );
+
   const onGuarantorSelect = useCallback((d: AddressResult) => {
     setForm(s => ({ ...s, guarantorPostcode: d.postcode || s.guarantorPostcode, guarantorAddressLine: d.street || s.guarantorAddressLine }));
   }, []);
@@ -239,7 +235,7 @@ export default function GuarantorPage() {
   const anyUploading = idDoc.uploading || payslips.uploading || proofOfAddress.uploading || bankStatements.uploading || studentDoc.uploading;
 
   const validate = (): string | null => {
-    if (!form.propertyAddressLine.trim() && !form.propertyPostcode.trim()) return 'Property address is required.';
+    if (!selectedPropertyId) return 'Please select the property you are guaranteeing.';
     if (!form.guarantorFullName.trim()) return "Guarantor's full name is required.";
     if (!form.guarantorEmail.trim()) return "Guarantor's email is required.";
     if (!form.guarantorMobile.trim()) return "Guarantor's mobile number is required.";
@@ -260,14 +256,14 @@ export default function GuarantorPage() {
     if (anyUploading) { setError('Please wait for your documents to finish uploading.'); return; }
     setSubmitting(true); setError('');
     try {
-      const propertyAddress = lockLet
-        ? (propertyAddressFull || form.propertyAddressLine)
-        : [form.propertyAddressLine, form.propertyPostcode].filter(Boolean).join(', ');
+      const propertyAddress = selectedProperty
+        ? [selectedProperty.title, selectedProperty.location].filter(Boolean).join(' — ')
+        : '';
       const guarantorAddress = [form.guarantorAddressLine, form.guarantorPostcode].filter(Boolean).join(', ');
       const payload = {
         propertyAddress,
-        rent: form.rent ? `£${form.rent}` : '', deposit: form.deposit ? `£${form.deposit}` : '',
-        parkingIncluded: form.parkingIncluded, tenancyStart: form.tenancyStart, leaseTerm: form.leaseTerm,
+        rent: selectedProperty ? `${formatGBP(selectedProperty.price)} pcm` : '',
+        deposit: selectedProperty?.depositAmount ? formatGBP(selectedProperty.depositAmount) : '',
         guarantorTitle: form.guarantorTitle, guarantorFullName: form.guarantorFullName, guarantorDob: form.guarantorDob,
         guarantorAddress, guarantorPostcode: form.guarantorPostcode, hasCCJ: form.hasCCJ,
         guarantorMobile: form.guarantorMobile, guarantorEmail: form.guarantorEmail,
@@ -366,52 +362,56 @@ export default function GuarantorPage() {
 
           <div style={{ background: '#fff', borderRadius: 16, boxShadow: '0 2px 16px rgba(0,0,0,0.07)', padding: isMobile ? '24px 16px' : '40px 48px', display: 'flex', flexDirection: 'column', gap: 20 }}>
 
-            {/* Proposed let */}
-            <div><h2 style={sectionHeadingStyle}>Details of the Proposed Let</h2><p style={sectionSubStyle}>{lockLet ? 'These details were set by House of Lettings for this guarantee.' : 'The property this guarantee relates to.'}</p></div>
-            {lockLet ? (
+            {/* Property selection */}
+            <div><h2 style={sectionHeadingStyle}>Property You Are Guaranteeing</h2><p style={sectionSubStyle}>Choose the property this guarantee relates to. Its details are pulled straight from the listing.</p></div>
+            <input
+              style={inputStyle}
+              placeholder="Search by address or area…"
+              value={propertySearch}
+              onChange={e => setPropertySearch(e.target.value)}
+            />
+            {propertiesLoading ? (
+              <p style={{ color: '#6b7280', fontSize: 14 }}>Loading available properties…</p>
+            ) : filteredProperties.length === 0 ? (
+              <p style={{ color: '#6b7280', fontSize: 14 }}>No matching properties found.</p>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10, maxHeight: 340, overflowY: 'auto' }}>
+                {filteredProperties.map(p => {
+                  const isSelected = selectedPropertyId === p.id;
+                  return (
+                    <div
+                      key={p.id}
+                      onClick={() => setSelectedPropertyId(p.id || '')}
+                      style={{
+                        display: 'flex', alignItems: 'center', cursor: 'pointer', transition: 'all 0.2s',
+                        border: `1.5px solid ${isSelected ? '#2563eb' : '#d1d5db'}`,
+                        background: isSelected ? '#eff6ff' : '#fff',
+                        borderRadius: 10, padding: '14px 16px',
+                      }}
+                    >
+                      <div style={{ flex: 1, minWidth: 0, paddingRight: 8 }}>
+                        <div style={{ fontWeight: 700, fontSize: 14, color: '#111827', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.title}</div>
+                        <div style={{ fontSize: 12, color: '#6b7280', marginTop: 2 }}>{p.location} · {formatGBP(p.price)} pcm · {p.bedrooms === 0 ? 'Studio' : `${p.bedrooms} bed`}</div>
+                      </div>
+                      {isSelected && <span style={{ color: '#2563eb', fontSize: 18, flexShrink: 0 }}>✓</span>}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+            {selectedProperty && (
               <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 12, padding: '18px 22px' }}>
                 {([
-                  ['Property Address', propertyAddressFull || form.propertyAddressLine || '—'],
-                  ['Rent', form.rent ? `£${form.rent} pcm` : '—'],
-                  ['Deposit', form.deposit ? `£${form.deposit}` : '—'],
-                  ['Parking included in rent', form.parkingIncluded || '—'],
-                  ['Proposed tenancy start', form.tenancyStart || '—'],
-                  ['Initial lease term', form.leaseTerm ? `${form.leaseTerm} months` : '—'],
-                ] as [string, string][]).map(([label, value], i) => (
-                  <div key={label} style={{ display: 'flex', justifyContent: 'space-between', gap: 12, padding: '8px 0', borderBottom: i < 5 ? '1px solid #eef0f5' : 'none', fontSize: 14 }}>
+                  ['Property', [selectedProperty.title, selectedProperty.location].filter(Boolean).join(' — ')],
+                  ['Rent', `${formatGBP(selectedProperty.price)} pcm`],
+                  ['Deposit', selectedProperty.depositAmount ? formatGBP(selectedProperty.depositAmount) : '—'],
+                ] as [string, string][]).map(([label, value], i, arr) => (
+                  <div key={label} style={{ display: 'flex', justifyContent: 'space-between', gap: 12, padding: '8px 0', borderBottom: i < arr.length - 1 ? '1px solid #eef0f5' : 'none', fontSize: 14 }}>
                     <span style={{ color: '#6b7280', fontWeight: 500 }}>{label}</span>
                     <span style={{ color: '#111827', fontWeight: 600, textAlign: 'right' }}>{value}</span>
                   </div>
                 ))}
-                <p style={{ fontSize: 12, color: '#9ca3af', marginTop: 12, marginBottom: 0 }}>🔒 Provided by House of Lettings — if anything looks wrong, please contact us before submitting.</p>
               </div>
-            ) : (
-              <>
-                <div className="g-grid-2" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-                  <div>
-                    <label style={labelStyle}>Property Postcode</label>
-                    <PostcodeLookup
-                      postcode={form.propertyPostcode}
-                      onPostcodeChange={(v) => setForm(s => ({ ...s, propertyPostcode: v }))}
-                      onSelect={onPropertySelect}
-                      inputStyle={inputStyle}
-                      placeholder="e.g. LS1 1AA"
-                    />
-                  </div>
-                  <div>
-                    <label style={labelStyle}>Property Address</label>
-                    <input style={inputStyle} value={form.propertyAddressLine} onChange={set('propertyAddressLine')} placeholder="e.g. 12 Oak Street" />
-                  </div>
-                  <div><label style={labelStyle}>Rent (£ pcm)</label><input style={inputStyle} value={form.rent} onChange={set('rent')} placeholder="e.g. 850" /></div>
-                  <div><label style={labelStyle}>Deposit (£)</label><input style={inputStyle} value={form.deposit} onChange={set('deposit')} placeholder="e.g. 980" /></div>
-                  <div><label style={labelStyle}>Proposed Tenancy Start Date</label><input type="date" style={inputStyle} value={form.tenancyStart} onChange={set('tenancyStart')} /></div>
-                  <div><label style={labelStyle}>Initial Lease Term (months)</label><input type="number" min={1} style={inputStyle} value={form.leaseTerm} onChange={set('leaseTerm')} placeholder="e.g. 12" /></div>
-                </div>
-                <div>
-                  <label style={labelStyle}>Does the car parking space include the rent?</label>
-                  {radio('parkingIncluded', ['No', 'Yes'])}
-                </div>
-              </>
             )}
 
             <hr style={dividerStyle} />

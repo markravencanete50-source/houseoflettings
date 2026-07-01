@@ -308,14 +308,6 @@ export default function AdminDashboard() {
               {item.label}
             </button>
           ))}
-
-          <button
-            className="dash-nav-item"
-            onClick={() => router.push('/admin/guarantor-link')}
-          >
-            <span>🔗</span>
-            Guarantor Link
-          </button>
         </aside>
 
         {/* ── Main Content ── */}

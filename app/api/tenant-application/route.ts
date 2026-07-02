@@ -193,7 +193,8 @@ export async function POST(request: Request) {
         attachments: pdfAttachment,
       }),
       sendEmail({
-        to: process.env.ADMIN_EMAIL || 'admin@houseoflettings.co.uk',
+        // Tenant-side notifications go to the Leeds office inbox.
+        to: process.env.TENANT_ADMIN_EMAIL || 'houseoflettingsleeds@gmail.com',
         subject: `📋 New Tenancy Application — ${data.fullName}`,
         html: adminNotificationHtml(data),
         attachments: pdfAttachment,

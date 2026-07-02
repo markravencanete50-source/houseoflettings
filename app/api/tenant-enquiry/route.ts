@@ -84,7 +84,8 @@ export async function POST(request: Request) {
         html: confirmationEmailHtml(data),
       }),
       sendEmail({
-        to: process.env.ADMIN_EMAIL || "info@houseoflettings.co.uk",
+        // Tenant-side notifications go to the Leeds office inbox.
+        to: process.env.TENANT_ADMIN_EMAIL || "houseoflettingsleeds@gmail.com",
         subject: `🏠 New Viewing Request — ${data.firstName} ${data.lastName}`,
         html: adminNotificationHtml(data),
         reply_to: data.email,

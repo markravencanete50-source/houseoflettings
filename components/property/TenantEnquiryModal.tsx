@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { createPortal } from "react-dom";
 import PostcodeLookup, { type AddressResult } from "@/components/PostcodeLookup";
+import type { SlotView } from "@/lib/viewingSlots";
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const UK_PHONE_REGEX = /^(\+44|0)[\s-]?[1-9][\d\s-]{8,11}$/;
@@ -13,21 +14,24 @@ const EMPTY_FORM = {
   email: "",
   phone: "",
   postcode: "",
+  // Viewing appointment (the calendar)
+  city: "",   // 'Manchester' | 'Leeds' — drives slot availability
+  date: "",   // YYYY-MM-DD
+  time: "",   // HH:mm slot
   // About your move
   moveBy: "",
   moveByOther: "",
+  alignsWithAvailability: "",
   stayDuration: "",
   stayDurationOther: "",
   whoMovingIn: "",
+  sameCity: "",
+  peopleCount: "",
   // About the tenancy
   firstTimeRenting: "",
   employmentStatus: "",
   hasPets: "",
   hasSmokers: "",
-  // About you
-  location: "",
-  viewingAvailability: "",
-  viewingAvailabilityOther: "",
   totalAnnualIncome: "",
   numberOfChildren: "",
   child1Age: "",
@@ -46,6 +50,9 @@ function validate(form: typeof EMPTY_FORM) {
   if (!form.phone.trim()) errors.phone = "Phone number is required";
   else if (!UK_PHONE_REGEX.test(form.phone.replace(/\s/g, "")))
     errors.phone = "Enter a valid UK phone number";
+  if (!form.city) errors.city = "Please choose which city the property is in";
+  if (!form.date) errors.date = "Please choose a date";
+  if (!form.time) errors.time = "Please choose a viewing time slot";
   if (!form.moveBy) errors.moveBy = "Please select when you want to move";
   if (!form.employmentStatus) errors.employmentStatus = "Please select your employment status";
   return errors;
@@ -103,6 +110,16 @@ function RadioGroup({ options, value, onChange, columns = 2 }: RadioGroupProps) 
   );
 }
 
+function slotTitle(status: SlotView["status"]): string {
+  switch (status) {
+    case "full": return "Fully booked (2 clients)";
+    case "blocked-gap": return "Too close to another viewing that day";
+    case "other-city": return "This day is allocated to the other city";
+    case "past": return "This time has passed";
+    default: return "Available";
+  }
+}
+
 function SectionTitle({ children }: { children: React.ReactNode }) {
   return (
     <div style={{
@@ -144,7 +161,39 @@ export default function TenantEnquiryModal({
   const [charCount, setCharCount] = useState(0);
   const overlayRef = useRef<HTMLDivElement>(null);
 
+  // Live slot availability for the chosen city + date.
+  const [slots, setSlots] = useState<SlotView[]>([]);
+  const [lockedCity, setLockedCity] = useState<string | null>(null);
+  const [slotsLoading, setSlotsLoading] = useState(false);
+  const [slotsError, setSlotsError] = useState("");
+  const [refreshKey, setRefreshKey] = useState(0);
+
   useEffect(() => { setMounted(true); }, []);
+
+  // Earliest bookable date is today; allow booking up to ~60 days out.
+  const todayStr = new Date().toLocaleDateString("en-CA", { timeZone: "Europe/London" });
+  const maxDateStr = new Date(Date.now() + 60 * 864e5).toLocaleDateString("en-CA", { timeZone: "Europe/London" });
+
+  // Fetch availability whenever the city or date changes (and the modal is open).
+  useEffect(() => {
+    if (!isOpen || !form.city || !form.date) {
+      setSlots([]); setLockedCity(null); setSlotsError("");
+      return;
+    }
+    let ignore = false;
+    setSlotsLoading(true); setSlotsError("");
+    fetch(`/api/viewing-availability?date=${encodeURIComponent(form.date)}&city=${encodeURIComponent(form.city)}`)
+      .then(async (res) => {
+        const data = await res.json();
+        if (ignore) return;
+        if (!res.ok) throw new Error(data.message || "Could not load times");
+        setSlots(data.slots || []);
+        setLockedCity(data.lockedCity || null);
+      })
+      .catch((e) => { if (!ignore) { setSlots([]); setSlotsError(e.message || "Could not load times"); } })
+      .finally(() => { if (!ignore) setSlotsLoading(false); });
+    return () => { ignore = true; };
+  }, [isOpen, form.city, form.date, refreshKey]);
 
   useEffect(() => {
     document.body.style.overflow = isOpen ? "hidden" : "";
@@ -197,12 +246,47 @@ export default function TenantEnquiryModal({
     if (Object.keys(errs).length) { setErrors(errs); return; }
     setStatus("loading");
     try {
-      const res = await fetch("/api/tenant-enquiry", {
+      const res = await fetch("/api/book-viewing", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...form, propertyTitle }),
+        body: JSON.stringify({
+          name: `${form.firstName} ${form.lastName}`.trim(),
+          email: form.email,
+          phone: form.phone,
+          city: form.city,
+          date: form.date,
+          time: form.time,
+          postcode: form.postcode,
+          propertyTitle,
+          // Screening answers, mapped to the booking API's field names.
+          moveIn: form.moveBy === "Other" ? form.moveByOther : form.moveBy,
+          alignsWithAvailability: form.alignsWithAvailability,
+          sameCity: form.sameCity,
+          peopleCount: form.peopleCount,
+          hasChildren: form.numberOfChildren && form.numberOfChildren !== "No" ? "Yes" : (form.numberOfChildren || ""),
+          childrenAges: [form.child1Age, form.child2Age, form.child3Age].filter(Boolean).join(", "),
+          hasPets: form.hasPets,
+          employmentStatus: form.employmentStatus,
+          annualIncome: form.totalAnnualIncome,
+          rentDuration: form.stayDuration === "Other" ? form.stayDurationOther : form.stayDuration,
+          // Extra context (stored on the booking record).
+          whoMovingIn: form.whoMovingIn,
+          firstTimeRenting: form.firstTimeRenting,
+          hasSmokers: form.hasSmokers,
+          adverseCredit: form.adverseCredit,
+          message: form.message,
+        }),
       });
       const data = await res.json();
+      if (res.status === 409) {
+        // Someone took the slot (or the day locked to the other city) between
+        // loading and submitting — clear the choice and refresh the grid.
+        setForm(f => ({ ...f, time: "" }));
+        setRefreshKey(k => k + 1);
+        setErrorMsg(data.message || "That time was just taken — please pick another.");
+        setStatus("error");
+        return;
+      }
       if (!res.ok) throw new Error(data.message || "Submission failed");
       setStatus("success");
     } catch (err: any) {
@@ -308,6 +392,71 @@ export default function TenantEnquiryModal({
                   </div>
                 </div>
 
+                {/* ── Choose your viewing (calendar) ── */}
+                <SectionTitle>Choose your viewing</SectionTitle>
+                <div className="hol-field hol-field--mb">
+                  <label className="hol-label">Which city is the property in?<span className="hol-req">*</span></label>
+                  <RadioGroup
+                    options={["Manchester", "Leeds"]}
+                    value={form.city}
+                    onChange={(v) => { setRadio("city", v); setForm(f => ({ ...f, time: "" })); }}
+                    columns={2}
+                  />
+                  {errors.city && <p className="hol-err">{errors.city}</p>}
+                </div>
+                <div className="hol-field hol-field--mb">
+                  <label className="hol-label">Date<span className="hol-req">*</span></label>
+                  <input
+                    type="date"
+                    className={`hol-input${errors.date ? " hol-input--error" : ""}`}
+                    style={{ colorScheme: "light", maxWidth: 260 }}
+                    min={todayStr}
+                    max={maxDateStr}
+                    value={form.date}
+                    onChange={(e) => { const v = e.target.value; setForm(f => ({ ...f, date: v, time: "" })); setErrors(er => ({ ...er, date: "", time: "" })); }}
+                  />
+                  {errors.date && <p className="hol-err">{errors.date}</p>}
+                </div>
+                {form.city && form.date && (
+                  <div className="hol-field hol-field--mb">
+                    <label className="hol-label">Available times<span className="hol-req">*</span></label>
+                    {slotsLoading ? (
+                      <p className="hol-slot-note">Loading available times…</p>
+                    ) : slotsError ? (
+                      <p className="hol-err">{slotsError}</p>
+                    ) : lockedCity && lockedCity !== form.city ? (
+                      <p className="hol-slot-note hol-slot-note--warn">
+                        This day is already allocated to <strong>{lockedCity}</strong> viewings — our team is travelling there that day. Please pick another date, or switch the city to {lockedCity}.
+                      </p>
+                    ) : slots.length === 0 ? (
+                      <p className="hol-slot-note">No times available for this day.</p>
+                    ) : (
+                      <>
+                        <div className="hol-slot-grid">
+                          {slots.map((s) => {
+                            const selectable = s.status === "available";
+                            const selected = form.time === s.time;
+                            return (
+                              <button
+                                key={s.time}
+                                type="button"
+                                disabled={!selectable}
+                                className={`hol-slot${selected ? " hol-slot--on" : ""}${selectable ? "" : " hol-slot--off"}`}
+                                onClick={() => { setForm(f => ({ ...f, time: s.time })); setErrors(er => ({ ...er, time: "" })); }}
+                                title={slotTitle(s.status)}
+                              >
+                                {s.time}
+                              </button>
+                            );
+                          })}
+                        </div>
+                        <p className="hol-slot-note">Greyed-out times are fully booked or too close to another viewing. Each time slot takes up to 2 clients.</p>
+                      </>
+                    )}
+                    {errors.time && <p className="hol-err">{errors.time}</p>}
+                  </div>
+                )}
+
                 {/* ── About your move ── */}
                 <SectionTitle>About your move</SectionTitle>
 
@@ -330,6 +479,16 @@ export default function TenantEnquiryModal({
                       style={{ marginTop: 8 }}
                     />
                   )}
+                </div>
+
+                <div className="hol-field hol-field--mb">
+                  <label className="hol-label">Does this align with the advertised availability?</label>
+                  <RadioGroup
+                    options={["Yes", "No", "Not sure"]}
+                    value={form.alignsWithAvailability}
+                    onChange={(v) => setRadio("alignsWithAvailability", v)}
+                    columns={3}
+                  />
                 </div>
 
                 <div className="hol-field hol-field--mb">
@@ -362,6 +521,26 @@ export default function TenantEnquiryModal({
                   />
                 </div>
 
+                <div className="hol-field hol-field--mb">
+                  <label className="hol-label">How many people will be moving in?</label>
+                  <RadioGroup
+                    options={["1", "2", "3", "4", "5", "6+"]}
+                    value={form.peopleCount}
+                    onChange={(v) => setRadio("peopleCount", v)}
+                    columns={6}
+                  />
+                </div>
+
+                <div className="hol-field hol-field--mb">
+                  <label className="hol-label">Do you currently live in the same city?</label>
+                  <RadioGroup
+                    options={["Yes", "No"]}
+                    value={form.sameCity}
+                    onChange={(v) => setRadio("sameCity", v)}
+                    columns={2}
+                  />
+                </div>
+
                 {/* ── About the tenancy ── */}
                 <SectionTitle>About the tenancy</SectionTitle>
 
@@ -379,7 +558,7 @@ export default function TenantEnquiryModal({
                   <label className="hol-label">What's your employment status?<span className="hol-req">*</span></label>
                   {errors.employmentStatus && <p className="hol-err">{errors.employmentStatus}</p>}
                   <RadioGroup
-                    options={["Full-time", "Part-time", "Self-employed", "Unemployed", "Retired", "Student", "Prefer not to say"]}
+                    options={["Full-time", "Part-time", "Temporary", "Permanent", "Self-employed", "Student", "Other"]}
                     value={form.employmentStatus}
                     onChange={(v) => setRadio("employmentStatus", v)}
                     columns={2}
@@ -408,36 +587,6 @@ export default function TenantEnquiryModal({
 
                 {/* ── About you ── */}
                 <SectionTitle>About you</SectionTitle>
-
-                <div className="hol-field hol-field--mb">
-                  <label className="hol-label">Is it Manchester or Leeds?</label>
-                  <RadioGroup
-                    options={["Manchester", "Leeds"]}
-                    value={form.location}
-                    onChange={(v) => setRadio("location", v)}
-                    columns={2}
-                  />
-                </div>
-
-                <div className="hol-field hol-field--mb">
-                  <label className="hol-label">What days and times are you available for a viewing?</label>
-                  <RadioGroup
-                    options={["Weekdays", "Weekends", "Other"]}
-                    value={form.viewingAvailability}
-                    onChange={(v) => setRadio("viewingAvailability", v)}
-                    columns={3}
-                  />
-                  {form.viewingAvailability === "Other" && (
-                    <input
-                      type="text"
-                      className="hol-input"
-                      style={{ marginTop: 10 }}
-                      placeholder="Please describe your availability..."
-                      value={form.viewingAvailabilityOther}
-                      onChange={set("viewingAvailabilityOther")}
-                    />
-                  )}
-                </div>
 
                 <div className="hol-field hol-field--mb">
                   <label className="hol-label">What is the total annual income of all adults moving in?</label>
@@ -572,6 +721,13 @@ const MODAL_CSS = `
   .hol-textarea{resize:vertical;min-height:100px;}
   .hol-err{font-size:12px;color:#e53e3e;margin:0;}
   .hol-err-banner{display:flex;align-items:center;gap:8px;background:#fef2f2;border:1px solid #fecaca;border-radius:10px;padding:12px 14px;font-size:13px;color:#dc2626;margin-bottom:16px;}
+  .hol-slot-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(70px,1fr));gap:8px;margin-top:4px;}
+  .hol-slot{padding:10px 6px;border:1.5px solid #d7dce6;border-radius:9px;background:#fff;color:#1a3c5e;font-family:'Poppins',sans-serif;font-size:13px;font-weight:600;cursor:pointer;transition:all .15s;}
+  .hol-slot:hover:not(:disabled){border-color:#2563a8;background:#f0f4ff;}
+  .hol-slot--on{background:#2563a8;border-color:#2563a8;color:#fff;}
+  .hol-slot--off{background:#f3f4f6;border-color:#eceef2;color:#c2c7d0;cursor:not-allowed;text-decoration:line-through;}
+  .hol-slot-note{font-size:12px;color:#9ca3af;margin:8px 0 0;line-height:1.5;}
+  .hol-slot-note--warn{color:#b45309;background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:10px 12px;}
   .hol-form-footer{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-top:8px;padding-top:20px;border-top:1px solid #f1f3f7;}
   .hol-privacy{display:flex;align-items:center;gap:6px;font-size:12px;color:#9ca3af;margin:0;}
   .hol-submit{display:inline-flex;align-items:center;gap:8px;background:linear-gradient(135deg,#1a3c5e 0%,#2563a8 100%);color:#fff;border:none;border-radius:10px;font-family:'Poppins',sans-serif;font-size:14px;font-weight:600;padding:13px 24px;cursor:pointer;transition:opacity .15s,transform .15s,box-shadow .15s;box-shadow:0 4px 16px rgba(37,99,168,.35);white-space:nowrap;}

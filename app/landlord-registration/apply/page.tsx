@@ -1,7 +1,7 @@
 'use client';
 // app/landlord-registration/apply/page.tsx
 // Step-by-step landlord registration wizard.
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import Navbar from '@/components/layout/Navbar';
 import PostcodeLookup, { type AddressResult } from '@/components/PostcodeLookup';
@@ -95,6 +95,10 @@ const EMPTY_FORM = {
   selectedPackage: '', notes: '',
 };
 
+// Draft answers survive navigating away (e.g. to the pricing or terms page)
+// and coming back — restored from sessionStorage until the form is submitted.
+const STORAGE_KEY = 'hol-landlord-apply-draft';
+
 export default function LandlordRegistrationApplyPage() {
   const [step, setStep] = useState(0);
   const [form, setForm] = useState(EMPTY_FORM);
@@ -105,6 +109,40 @@ export default function LandlordRegistrationApplyPage() {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
   const [errorMsg, setErrorMsg] = useState('');
+  // `restored` must be state (not a ref): the persist effect below may only
+  // run in a render that already contains the restored values, otherwise the
+  // initial empty state overwrites the saved draft (StrictMode double-mount).
+  const [restored, setRestored] = useState(false);
+
+  // Restore a saved draft after mount (not during render, to avoid a
+  // hydration mismatch with the server-rendered empty form).
+  useEffect(() => {
+    try {
+      const raw = sessionStorage.getItem(STORAGE_KEY);
+      if (raw) {
+        const saved = JSON.parse(raw);
+        if (saved.form) setForm({ ...EMPTY_FORM, ...saved.form });
+        if (Array.isArray(saved.properties) && saved.properties.length) {
+          setProperties(saved.properties.map((p: Property) => ({ ...newProperty(p.id), ...p })));
+          nextPropId.current = Math.max(...saved.properties.map((p: Property) => (parseInt(p.id.slice(1), 10) || 0))) + 1;
+        }
+        if (saved.docs) {
+          setDocs(d => Object.fromEntries(DOC_KEYS.map(k => [k, { ...d[k], ...saved.docs[k], uploading: false, error: '' }])));
+        }
+        if (typeof saved.step === 'number') setStep(Math.min(Math.max(saved.step, 0), STEPS.length - 1));
+        if (saved.termsAccepted) setTermsAccepted(true);
+      }
+    } catch { /* corrupt draft — start fresh */ }
+    setRestored(true);
+  }, []);
+
+  // Save the draft on every change so nothing is lost if the page unloads.
+  useEffect(() => {
+    if (!restored) return;
+    try {
+      sessionStorage.setItem(STORAGE_KEY, JSON.stringify({ step, form, properties, docs, termsAccepted }));
+    } catch { /* storage full/unavailable — non-fatal */ }
+  }, [restored, step, form, properties, docs, termsAccepted]);
 
   const set = (key: string) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     setForm(f => ({ ...f, [key]: e.target.value }));
@@ -168,8 +206,14 @@ export default function LandlordRegistrationApplyPage() {
     return Object.keys(e).length === 0;
   }
 
-  const next = () => { if (validateStep(step)) setStep(s => Math.min(STEPS.length - 1, s + 1)); };
-  const back = () => { setErrors({}); setStep(s => Math.max(0, s - 1)); };
+  // Leaving a step: dismiss the keyboard (resets any mobile focus-zoom) and
+  // return to the top of the page so the next step starts from its beginning.
+  const resetView = () => {
+    (document.activeElement as HTMLElement | null)?.blur?.();
+    window.scrollTo(0, 0);
+  };
+  const next = () => { if (validateStep(step)) { setStep(s => Math.min(STEPS.length - 1, s + 1)); resetView(); } };
+  const back = () => { setErrors({}); setStep(s => Math.max(0, s - 1)); resetView(); };
 
   const handleSubmit = async () => {
     if (!validateStep(4)) return;
@@ -190,6 +234,7 @@ export default function LandlordRegistrationApplyPage() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || 'Submission failed');
+      try { sessionStorage.removeItem(STORAGE_KEY); } catch { }
       setStatus('success');
       window.scrollTo({ top: 0, behavior: 'smooth' });
     } catch (err: any) {
@@ -329,7 +374,7 @@ export default function LandlordRegistrationApplyPage() {
                             <span style={{ flex: 1 }}>
                               <span style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 12 }}>
                                 <span style={{ fontWeight: 700, fontSize: 14.5, color: '#0f1f3d' }}>{b.label}{b.badge && <span className="hol-pkg-badge">{b.badge}</span>}</span>
-                                <span style={{ fontWeight: 800, fontSize: 14, color: '#2563eb', whiteSpace: 'nowrap' }}>{b.setupFee} <span style={{ fontSize: 11, fontWeight: 500, color: '#9ca3af' }}>+ {b.mgmtFee}/mo</span></span>
+                                <span style={{ fontWeight: 800, fontSize: 14, color: '#dc2626', whiteSpace: 'nowrap' }}>{b.setupFee} <span style={{ fontSize: 11, fontWeight: 500, color: '#dc2626' }}>+ {b.mgmtFee}/mo</span></span>
                               </span>
                               <span style={{ display: 'block', fontSize: 12.5, color: '#6b7280', marginTop: 3, lineHeight: 1.55 }}>{b.blurb}</span>
                             </span>
@@ -339,7 +384,7 @@ export default function LandlordRegistrationApplyPage() {
                     </div>
                     {errors.selectedPackage && <p className="hol-err" style={{ marginTop: 10 }}>{errors.selectedPackage}</p>}
                     <p style={{ fontSize: 12, color: '#9ca3af', margin: '14px 0 0' }}>
-                      Not sure? See the full breakdown on our <Link href="/pricing" style={{ color: '#2563eb', fontWeight: 600 }}>pricing page</Link>.
+                      Not sure? See the full breakdown on our <Link href="/pricing" target="_blank" rel="noopener noreferrer" style={{ color: '#dc2626', fontWeight: 700, textDecoration: 'underline' }}>pricing page</Link> <span style={{ color: '#9ca3af' }}>(opens in a new tab — your answers stay saved here)</span>.
                     </p>
                   </div>
                 )}
@@ -437,7 +482,7 @@ export default function LandlordRegistrationApplyPage() {
                       <input type="checkbox" checked={termsAccepted} onChange={(e) => { setTermsAccepted(e.target.checked); setErrors(er => ({ ...er, terms: '' })); }} />
                       <span className="hol-checkbox" aria-hidden>{termsAccepted && (<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><polyline points="20 6 9 17 4 12" /></svg>)}</span>
                       <span style={{ fontSize: 13, color: '#374151', lineHeight: 1.6 }}>
-                        I confirm I have read and accept the property management <Link href="/terms" style={{ color: '#2563eb', fontWeight: 600 }}>terms &amp; conditions</Link>, and consent to House of Lettings contacting me about my registration.
+                        I confirm I have read and accept the property management <Link href="/terms" target="_blank" rel="noopener noreferrer" style={{ color: '#dc2626', fontWeight: 700, textDecoration: 'underline' }}>terms &amp; conditions</Link> <span style={{ color: '#9ca3af', fontSize: 12 }}>(opens in a new tab — your answers stay saved here)</span>, and consent to House of Lettings contacting me about my registration.
                       </span>
                     </label>
                     {errors.terms && <p className="hol-err" style={{ marginTop: 6 }}>{errors.terms}</p>}
@@ -635,7 +680,8 @@ function PropertyRow({
           </div>
         )}
 
-        <div className="hol-field">
+        {/* Force the date into the left column regardless of how many optional fields precede it. */}
+        <div className="hol-field" style={{ gridColumn: '1 / 2' }}>
           <label className="hol-label">Available From <span style={{ color: '#9ca3af', fontWeight: 400 }}>(optional)</span></label>
           <input type="date" className="hol-input" style={{ colorScheme: 'light' }} value={property.availableFrom} onChange={upd('availableFrom')} />
         </div>
@@ -739,5 +785,8 @@ const PAGE_CSS = `
 
   @media(max-width:600px){
     .hol-form-grid{grid-template-columns:1fr;gap:14px;}
+    /* iOS Safari auto-zooms into any input under 16px — keep fields at 16px
+       on phones so the page never zooms and each step stays full-width. */
+    .hol-input{font-size:16px;}
   }
 `;

@@ -125,6 +125,8 @@ interface TenantEnquiryModalProps {
   onClose: () => void;
   propertyTitle?: string;
   propertyPrice?: number;
+  /** Postcode of the property being enquired about — pre-fills the postcode field. */
+  propertyPostcode?: string;
 }
 
 export default function TenantEnquiryModal({
@@ -132,6 +134,7 @@ export default function TenantEnquiryModal({
   onClose,
   propertyTitle,
   propertyPrice,
+  propertyPostcode,
 }: TenantEnquiryModalProps) {
   const [form, setForm] = useState(EMPTY_FORM);
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -147,6 +150,15 @@ export default function TenantEnquiryModal({
     document.body.style.overflow = isOpen ? "hidden" : "";
     return () => { document.body.style.overflow = ""; };
   }, [isOpen]);
+
+  // Pre-fill the postcode from the property being viewed, so the tenant is
+  // never asked for something the page already knows. Only fills an empty
+  // field — anything they typed themselves is kept.
+  useEffect(() => {
+    if (isOpen && propertyPostcode) {
+      setForm(f => (f.postcode ? f : { ...f, postcode: propertyPostcode }));
+    }
+  }, [isOpen, propertyPostcode]);
 
   const handlePostcodeSelect = useCallback((data: AddressResult) => {
     setForm(f => ({ ...f, postcode: data.postcode || f.postcode }));
@@ -285,7 +297,7 @@ export default function TenantEnquiryModal({
                     {errors.phone && <p className="hol-err">{errors.phone}</p>}
                   </div>
                   <div className="hol-field">
-                    <label className="hol-label">What property postcode are you looking for?</label>
+                    <label className="hol-label">{propertyPostcode ? "Property postcode" : "What property postcode are you looking for?"}</label>
                     <PostcodeLookup
                       postcode={form.postcode}
                       onPostcodeChange={(v) => setForm(f => ({ ...f, postcode: v }))}

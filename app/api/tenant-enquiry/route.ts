@@ -61,7 +61,9 @@ export async function POST(request: Request) {
   try {
     const data = await request.json();
 
-    const required = ["firstName", "lastName", "email", "phone", "moveBy", "employmentStatus"];
+    // employmentStatus is only asked by the modal, not the /book-viewing page —
+    // the modal enforces it client-side, so it isn't required here.
+    const required = ["firstName", "lastName", "email", "phone", "moveBy"];
     for (const field of required) {
       if (!data[field]?.toString().trim()) {
         return Response.json({ message: `${field} is required` }, { status: 400 });
@@ -72,7 +74,7 @@ export async function POST(request: Request) {
     const docRef = await db.collection("tenantEnquiries").add({
       ...data,
       status: "pending",
-      source: "website-modal",
+      source: data.source || "website-modal",
       createdAt: FieldValue.serverTimestamp(),
       updatedAt: FieldValue.serverTimestamp(),
     });

@@ -16,6 +16,7 @@ export default function BookViewingPage() {
   });
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   const handlePostcodeSelect = useCallback((data: AddressResult) => {
     setFormData((prev) => ({ ...prev, postcode: data.postcode || prev.postcode }));
@@ -27,10 +28,35 @@ export default function BookViewingPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!formData.moveIn) { setError("Please tell us when you want to move in by."); return; }
     setLoading(true);
-    await new Promise((r) => setTimeout(r, 1200));
+    setError("");
+    try {
+      const tenancyLabels: Record<string, string> = {
+        "6months": "6 months", "12months": "12 months", "18months": "18 months",
+        "2years+": "2 years+", "unsure": "Not sure yet",
+      };
+      const res = await fetch("/api/tenant-enquiry", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          firstName: formData.firstName,
+          lastName: formData.lastName,
+          email: formData.email,
+          phone: formData.phone,
+          postcode: formData.postcode,
+          moveBy: formData.moveIn,
+          stayDuration: tenancyLabels[formData.tenancy] || formData.tenancy,
+          source: "book-viewing-page",
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || "Submission failed");
+      setSubmitted(true);
+    } catch (err: any) {
+      setError(err.message || "Something went wrong. Please try again.");
+    }
     setLoading(false);
-    setSubmitted(true);
   };
 
   const inputStyle: React.CSSProperties = {
@@ -248,6 +274,12 @@ export default function BookViewingPage() {
                       <option value="unsure">Not sure yet</option>
                     </select>
                   </div>
+
+                  {error && (
+                    <div style={{ background: "#fef2f2", border: "1px solid #fca5a5", borderRadius: 8, padding: "12px 16px", color: "#dc2626", fontSize: 14, fontWeight: 500 }}>
+                      ⚠️ {error}
+                    </div>
+                  )}
 
                   {/* Footer row */}
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingTop: 8 }}>

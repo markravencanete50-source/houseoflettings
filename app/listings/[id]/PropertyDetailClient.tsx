@@ -11,6 +11,17 @@ import { useAuth } from '@/hooks/useAuth';
 import { Property } from '@/lib/types';
 import TenantEnquiryModal from '@/components/property/TenantEnquiryModal';
 
+// Listings store the postcode at the end of the free-text location string
+// (e.g. "12 Oak Street, Headingley, Leeds, LS6 3AA"). Pull out a full UK
+// postcode, or failing that a trailing outcode like "LS6".
+function extractPostcode(location?: string): string {
+  if (!location) return '';
+  const full = location.match(/\b[A-Z]{1,2}\d[A-Z\d]?\s*\d[A-Z]{2}\b/i);
+  if (full) return full[0].toUpperCase();
+  const outcode = location.match(/\b[A-Z]{1,2}\d[A-Z\d]?\s*$/i);
+  return outcode ? outcode[0].trim().toUpperCase() : '';
+}
+
 export default function PropertyDetailClient() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
@@ -882,6 +893,7 @@ export default function PropertyDetailClient() {
         onClose={() => setEnquiryOpen(false)}
         propertyTitle={property.title}
         propertyPrice={property.price}
+        propertyPostcode={extractPostcode(property.location)}
       />
     </>
   );

@@ -168,8 +168,8 @@ export async function POST(request: Request) {
         attachments: pdfAttachment,
       }),
       sendEmail({
-        // Tenant-side notifications go to the Leeds office inbox.
-        to: process.env.TENANT_ADMIN_EMAIL || 'houseoflettingsleeds@gmail.com',
+        // Maintenance goes to the main admin inbox alongside the landlord forms.
+        to: process.env.ADMIN_EMAIL || 'admin@houseoflettings.co.uk',
         subject: `🔧 New Maintenance Request — ${data.fullName} (${data.propertyAddress})`,
         html: adminNotificationHtml(data),
         attachments: pdfAttachment,

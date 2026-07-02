@@ -336,6 +336,22 @@ export default function PricingPage() {
                 Get Started
               </button>
 
+              <Link
+                href="/landlord-registration"
+                style={{
+                  display: 'block', width: '100%', textAlign: 'center',
+                  padding: '14px 24px', marginTop: 12,
+                  background: 'transparent', color: '#93c5fd',
+                  border: '1.5px solid #2563eb', borderRadius: 6,
+                  fontSize: 14, fontWeight: 700, letterSpacing: '0.5px',
+                  textTransform: 'uppercase', textDecoration: 'none',
+                  fontFamily: "'Poppins', sans-serif",
+                  boxSizing: 'border-box',
+                }}
+              >
+                Landlord Registration
+              </Link>
+
               {/* Step indicator */}
               <div style={{ display: 'flex', justifyContent: 'center', gap: 6, marginTop: 24 }}>
                 {PACKAGES.map((_, i) => (

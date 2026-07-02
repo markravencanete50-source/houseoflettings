@@ -66,22 +66,44 @@ function FileUpload({
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
 
+  // New selections are ADDED to what's already uploaded (mobile pickers often
+  // return one file at a time) — never replace previous files.
   const handleFiles = async (files: FileList | null) => {
     if (!files || files.length === 0) return;
-    const arr = Array.from(files).slice(0, maxFiles);
-    onChange({ ...state, files: arr, uploading: true, error: '' });
-    const urls: string[] = [];
+    const room = Math.max(0, maxFiles - state.urls.length);
+    const newFiles = Array.from(files).slice(0, room);
+    if (newFiles.length === 0) return;
+    // only keep files that actually finished uploading as the base
+    const baseFiles = state.files.slice(0, state.urls.length);
+    const baseUrls = [...state.urls];
+    onChange({ files: [...baseFiles, ...newFiles], urls: baseUrls, uploading: true, error: '' });
+    const added: string[] = [];
     try {
-      for (const file of arr) {
-        urls.push(await uploadToCloudinary(file));
+      for (const file of newFiles) {
+        added.push(await uploadToCloudinary(file));
       }
-      onChange({ files: arr, uploading: false, urls, error: '' });
+      onChange({ files: [...baseFiles, ...newFiles], urls: [...baseUrls, ...added], uploading: false, error: '' });
     } catch (e: any) {
-      onChange({ files: arr, uploading: false, urls: [], error: e.message || 'Upload failed. Please try again.' });
+      // keep whatever did upload; drop only the files that failed
+      onChange({
+        files: [...baseFiles, ...newFiles.slice(0, added.length)],
+        urls: [...baseUrls, ...added],
+        uploading: false,
+        error: e.message || 'Upload failed. Please try again.',
+      });
     }
   };
 
+  const removeFile = (i: number) => {
+    onChange({
+      ...state,
+      files: state.files.filter((_, x) => x !== i),
+      urls: state.urls.filter((_, x) => x !== i),
+    });
+  };
+
   const done = state.urls.length > 0;
+  const full = state.urls.length >= maxFiles;
   return (
     <div>
       <label style={labelStyle}>
@@ -99,14 +121,30 @@ function FileUpload({
           transition: 'all 0.2s',
         }}
       >
-        <input ref={inputRef} type="file" accept={accept} multiple={maxFiles > 1} style={{ display: 'none' }} onChange={e => handleFiles(e.target.files)} />
+        <input
+          ref={inputRef}
+          type="file"
+          accept={accept}
+          multiple={maxFiles > 1}
+          style={{ display: 'none' }}
+          onChange={e => { handleFiles(e.target.files); e.target.value = ''; }}
+        />
         {state.uploading ? (
           <p style={{ color: '#6b7280', fontSize: 14, margin: 0 }}>⏳ Uploading… please wait</p>
         ) : done ? (
           <div>
             <p style={{ color: '#16a34a', fontWeight: 600, fontSize: 14, margin: '0 0 6px' }}>✅ {state.urls.length} file{state.urls.length > 1 ? 's' : ''} uploaded</p>
-            {state.files.map((f, i) => (<p key={i} style={{ color: '#6b7280', fontSize: 12, margin: '2px 0' }}>{f.name}</p>))}
-            <p style={{ color: '#2563eb', fontSize: 12, marginTop: 6 }}>Tap to replace</p>
+            {state.files.map((f, i) => (
+              <p key={i} style={{ color: '#6b7280', fontSize: 12, margin: '2px 0', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+                <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '80%' }}>{f.name}</span>
+                <button
+                  type="button"
+                  onClick={e => { e.stopPropagation(); removeFile(i); }}
+                  style={{ background: 'none', border: 'none', color: '#dc2626', fontWeight: 700, fontSize: 12, cursor: 'pointer', padding: 0 }}
+                >✕ remove</button>
+              </p>
+            ))}
+            {!full && <p style={{ color: '#2563eb', fontSize: 12, marginTop: 6 }}>➕ Tap to add more (up to {maxFiles})</p>}
           </div>
         ) : (
           <div>
@@ -247,7 +285,7 @@ export default function MaintenanceReportPage() {
     if (!issueDescription.trim()) return 'Please describe the maintenance issue.';
     if (!whenHappened) return 'Please tell us when the issue happened.';
     if (!availability.trim()) return 'Please give your availability for a repair visit.';
-    if (photos.urls.length < 3) return 'Please upload at least 3 photos of the issue.';
+    if (photos.urls.length < 1) return 'Please upload at least 1 photo of the issue.';
     if (!experiencedBefore) return 'Please tell us if you have experienced this issue before.';
     if (!cause) return 'Please tell us what you think caused the issue.';
     return null;
@@ -445,12 +483,12 @@ export default function MaintenanceReportPage() {
             {/* Evidence */}
             <div>
               <h2 style={sectionHeadingStyle}>Photos &amp; Videos</h2>
-              <p style={sectionSubStyle}>Clear photos help us diagnose the problem faster. At least 3 photos are required.</p>
+              <p style={sectionSubStyle}>At least 1 photo is required — you can add photos one at a time, and more angles help us diagnose faster.</p>
             </div>
             <FileUpload
-              label="Photos of the Issue" required minFiles={3} maxFiles={10}
+              label="Photos of the Issue" required minFiles={1} maxFiles={10}
               accept="image/*"
-              hint="At least 3 images · JPG/PNG/HEIC"
+              hint="JPG/PNG/HEIC · add up to 10 photos, one at a time is fine"
               state={photos} onChange={setPhotos}
             />
             <FileUpload

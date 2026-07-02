@@ -22,6 +22,14 @@ const DOCS = [
 ] as const;
 const DOC_KEYS = DOCS.map(d => d.key);
 
+// Identity documents requested on the first step: the landlord's photo ID and
+// a proof of their billing/correspondence address.
+const ID_DOCS = [
+  { key: 'landlordId', label: 'Landlord ID', hint: 'Passport, driving licence or national ID card.' },
+  { key: 'billingProof', label: 'Billing Address Document', hint: 'Utility bill, council tax or bank statement (dated within the last 3 months) showing your contact address.' },
+] as const;
+const ID_DOC_KEYS = ID_DOCS.map(d => d.key);
+
 type DocState = { has: string; url: string; uploading: boolean; fileName: string; error: string };
 const EMPTY_DOC: DocState = { has: '', url: '', uploading: false, fileName: '', error: '' };
 const initDocs = (): Record<string, DocState> => Object.fromEntries(DOC_KEYS.map(k => [k, { ...EMPTY_DOC }]));
@@ -105,6 +113,8 @@ export default function LandlordRegistrationApplyPage() {
   const [properties, setProperties] = useState<Property[]>([newProperty('p0')]);
   const nextPropId = useRef(1);
   const [docs, setDocs] = useState<Record<string, DocState>>(initDocs);
+  const [idDocs, setIdDocs] = useState<Record<string, DocState>>(() => Object.fromEntries(ID_DOC_KEYS.map(k => [k, { ...EMPTY_DOC }])));
+  const [expandedBundle, setExpandedBundle] = useState<string | null>(null);
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
@@ -129,6 +139,9 @@ export default function LandlordRegistrationApplyPage() {
         if (saved.docs) {
           setDocs(d => Object.fromEntries(DOC_KEYS.map(k => [k, { ...d[k], ...saved.docs[k], uploading: false, error: '' }])));
         }
+        if (saved.idDocs) {
+          setIdDocs(d => Object.fromEntries(ID_DOC_KEYS.map(k => [k, { ...d[k], ...saved.idDocs[k], uploading: false, error: '' }])));
+        }
         if (typeof saved.step === 'number') setStep(Math.min(Math.max(saved.step, 0), STEPS.length - 1));
         if (saved.termsAccepted) setTermsAccepted(true);
       }
@@ -140,9 +153,9 @@ export default function LandlordRegistrationApplyPage() {
   useEffect(() => {
     if (!restored) return;
     try {
-      sessionStorage.setItem(STORAGE_KEY, JSON.stringify({ step, form, properties, docs, termsAccepted }));
+      sessionStorage.setItem(STORAGE_KEY, JSON.stringify({ step, form, properties, docs, idDocs, termsAccepted }));
     } catch { /* storage full/unavailable — non-fatal */ }
-  }, [restored, step, form, properties, docs, termsAccepted]);
+  }, [restored, step, form, properties, docs, idDocs, termsAccepted]);
 
   const set = (key: string) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     setForm(f => ({ ...f, [key]: e.target.value }));
@@ -164,6 +177,19 @@ export default function LandlordRegistrationApplyPage() {
   }, []);
 
   const setDoc = (key: string, patch: Partial<DocState>) => setDocs(d => ({ ...d, [key]: { ...d[key], ...patch } }));
+  const setIdDoc = (key: string, patch: Partial<DocState>) => setIdDocs(d => ({ ...d, [key]: { ...d[key], ...patch } }));
+
+  const handleIdFile = async (key: string, file: File | undefined) => {
+    if (!file) return;
+    setIdDoc(key, { uploading: true, error: '', fileName: file.name });
+    setErrors(er => ({ ...er, [`id_${key}`]: '' }));
+    try {
+      const url = await uploadToCloudinary(file);
+      setIdDoc(key, { uploading: false, url });
+    } catch (e: any) {
+      setIdDoc(key, { uploading: false, url: '', error: e.message || 'Upload failed' });
+    }
+  };
 
   const handleFile = async (key: string, file: File | undefined) => {
     if (!file) return;
@@ -187,6 +213,10 @@ export default function LandlordRegistrationApplyPage() {
       else if (!UK_PHONE_REGEX.test(form.phone.replace(/\s/g, ''))) e.phone = 'Enter a valid UK telephone number';
       if (!form.contactAddress.trim()) e.contactAddress = 'Contact address is required';
       if (!form.propertyCount) e.propertyCount = 'Please tell us how many properties you own';
+      ID_DOCS.forEach(d => {
+        if (idDocs[d.key].uploading) e[`id_${d.key}`] = 'Please wait for the upload to finish';
+        else if (!idDocs[d.key].url) e[`id_${d.key}`] = `Please upload your ${d.label.toLowerCase()}`;
+      });
     } else if (s === 1) {
       properties.forEach(p => {
         if (!p.postcode.trim()) e[`prop_${p.id}_postcode`] = 'Postcode is required';
@@ -226,6 +256,10 @@ export default function LandlordRegistrationApplyPage() {
           ...form,
           selectedPackage: form.selectedPackage,
           termsAccepted,
+          landlordIdUrl: idDocs.landlordId.url,
+          landlordIdFileName: idDocs.landlordId.fileName,
+          billingProofUrl: idDocs.billingProof.url,
+          billingProofFileName: idDocs.billingProof.fileName,
           documents: Object.fromEntries(DOC_KEYS.map(k => [k, { status: docs[k].has, url: docs[k].url }])),
           properties: properties.map(({ id, ...p }) => p),
           postcode: properties[0]?.postcode || '',
@@ -243,7 +277,7 @@ export default function LandlordRegistrationApplyPage() {
     }
   };
 
-  const anyUploading = Object.values(docs).some(d => d.uploading);
+  const anyUploading = [...Object.values(docs), ...Object.values(idDocs)].some(d => d.uploading);
 
   return (
     <>
@@ -327,6 +361,34 @@ export default function LandlordRegistrationApplyPage() {
                       </select>
                       {errors.propertyCount && <p className="hol-err">{errors.propertyCount}</p>}
                     </div>
+                    {ID_DOCS.map(d => {
+                      const st = idDocs[d.key];
+                      return (
+                        <div key={d.key} className="hol-field hol-field--full">
+                          <label className="hol-label">{d.label}<span className="hol-req">*</span></label>
+                          {st.url ? (
+                            <div className="hol-uploaded">
+                              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="20 6 9 17 4 12" /></svg>
+                              <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{st.fileName || 'Uploaded'}</span>
+                              <a href={st.url} target="_blank" rel="noreferrer" className="hol-view-link">View</a>
+                              <button type="button" onClick={() => setIdDoc(d.key, { url: '', fileName: '' })} className="hol-remove">Remove</button>
+                            </div>
+                          ) : (
+                            <label className={`hol-upload${st.uploading ? ' is-loading' : ''}${errors[`id_${d.key}`] ? ' hol-upload--error' : ''}`}>
+                              <input type="file" accept=".pdf,.jpg,.jpeg,.png,.webp" onChange={(e) => handleIdFile(d.key, e.target.files?.[0])} disabled={st.uploading} />
+                              {st.uploading ? (
+                                <><svg className="hol-spinner" width="15" height="15" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" strokeOpacity=".25" /><path d="M12 2a10 10 0 0 1 10 10" stroke="currentColor" strokeWidth="3" strokeLinecap="round" /></svg> Uploading…</>
+                              ) : (
+                                <><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12" /></svg> Upload {d.label} (photo or PDF)</>
+                              )}
+                            </label>
+                          )}
+                          {st.error && <p className="hol-err">{st.error}</p>}
+                          {errors[`id_${d.key}`] && <p className="hol-err">{errors[`id_${d.key}`]}</p>}
+                          <p style={{ fontSize: 12, color: '#9ca3af', margin: '2px 0 0' }}>{d.hint}</p>
+                        </div>
+                      );
+                    })}
                   </div>
                 )}
 
@@ -367,18 +429,36 @@ export default function LandlordRegistrationApplyPage() {
                     <div className="hol-pkg-list">
                       {BUNDLES.map(b => {
                         const on = form.selectedPackage === b.label;
+                        const expanded = expandedBundle === b.id;
                         return (
-                          <label key={b.id} className={`hol-pkg${on ? ' hol-pkg--on' : ''}`}>
-                            <input type="radio" name="package" checked={on} onChange={() => { setForm(f => ({ ...f, selectedPackage: b.label })); setErrors(er => ({ ...er, selectedPackage: '' })); }} />
-                            <span className="hol-radio" aria-hidden>{on && <span className="hol-radio-dot" />}</span>
-                            <span style={{ flex: 1 }}>
-                              <span style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 12 }}>
-                                <span style={{ fontWeight: 700, fontSize: 14.5, color: '#0f1f3d' }}>{b.label}{b.badge && <span className="hol-pkg-badge">{b.badge}</span>}</span>
-                                <span style={{ fontWeight: 800, fontSize: 14, color: '#dc2626', whiteSpace: 'nowrap' }}>{b.setupFee} <span style={{ fontSize: 11, fontWeight: 500, color: '#dc2626' }}>+ {b.mgmtFee}/mo</span></span>
+                          <div key={b.id} className={`hol-pkg${on ? ' hol-pkg--on' : ''}`}>
+                            <label className="hol-pkg-main">
+                              <input type="radio" name="package" checked={on} onChange={() => { setForm(f => ({ ...f, selectedPackage: b.label })); setErrors(er => ({ ...er, selectedPackage: '' })); }} />
+                              <span className="hol-radio" aria-hidden>{on && <span className="hol-radio-dot" />}</span>
+                              <span style={{ flex: 1 }}>
+                                <span style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 12 }}>
+                                  <span style={{ fontWeight: 700, fontSize: 14.5, color: '#0f1f3d' }}>{b.label}{b.badge && <span className="hol-pkg-badge">{b.badge}</span>}</span>
+                                  <span style={{ fontWeight: 800, fontSize: 14, color: '#dc2626', whiteSpace: 'nowrap' }}>{b.setupFee} <span style={{ fontSize: 11, fontWeight: 500, color: '#dc2626' }}>+ {b.mgmtFee}/mo</span></span>
+                                </span>
+                                <span style={{ display: 'block', fontSize: 12.5, color: '#6b7280', marginTop: 3, lineHeight: 1.55 }}>{b.blurb}</span>
                               </span>
-                              <span style={{ display: 'block', fontSize: 12.5, color: '#6b7280', marginTop: 3, lineHeight: 1.55 }}>{b.blurb}</span>
-                            </span>
-                          </label>
+                            </label>
+                            <button type="button" className="hol-readmore" onClick={() => setExpandedBundle(x => (x === b.id ? null : b.id))}>
+                              {expanded ? 'Hide details ▲' : 'Read more — everything included ▼'}
+                            </button>
+                            {expanded && (
+                              <div className="hol-pkg-details">
+                                {b.groups.map(g => (
+                                  <div key={g.heading}>
+                                    <p className="hol-pkg-details-head">{g.heading}</p>
+                                    <ul>
+                                      {g.items.map(item => <li key={item}>{item}</li>)}
+                                    </ul>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </div>
                         );
                       })}
                     </div>
@@ -456,6 +536,8 @@ export default function LandlordRegistrationApplyPage() {
                       <SummaryRow label="Email" value={form.email} />
                       <SummaryRow label="Telephone" value={form.phone} />
                       <SummaryRow label="Contact address" value={form.contactAddress} />
+                      <SummaryRow label="Landlord ID" value={idDocs.landlordId.url ? `Uploaded — ${idDocs.landlordId.fileName || 'document'}` : '—'} />
+                      <SummaryRow label="Billing address document" value={idDocs.billingProof.url ? `Uploaded — ${idDocs.billingProof.fileName || 'document'}` : '—'} />
                       <SummaryRow label="Properties owned" value={form.propertyCount} />
                       {properties.map((p, i) => (
                         <div key={p.id} className="hol-summary-row">
@@ -564,8 +646,20 @@ function PropertyRow({
     <div className="hol-prop-card">
       {total > 1 && (
         <div className="hol-prop-head">
-          <span className="hol-prop-badge">Property {index + 1}</span>
-          <button type="button" className="hol-prop-remove" onClick={() => onRemove(property.id)}>Remove</button>
+          <span className="hol-prop-badge">Property {index + 1}{property.street ? ` — ${property.street}` : ''}</span>
+          <button
+            type="button"
+            className="hol-prop-remove"
+            onClick={() => {
+              // Guard against removing the wrong card: if this property has
+              // details filled in, ask before deleting them.
+              const filled = [property.postcode, property.street, property.propertyType, property.bedrooms].some(Boolean);
+              const name = property.street || `Property ${index + 1}`;
+              if (!filled || window.confirm(`Remove ${name}?\n\nOnly this property and its details will be deleted — your other properties are kept.`)) {
+                onRemove(property.id);
+              }
+            }}
+          >Remove this property</button>
         </div>
       )}
       <div className="hol-form-grid">
@@ -739,9 +833,17 @@ const PAGE_CSS = `
   .hol-occupied-head{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#2563a8;margin-bottom:12px;}
 
   .hol-pkg-list{display:flex;flex-direction:column;gap:10px;}
-  .hol-pkg{display:flex;align-items:flex-start;gap:12px;border:1.5px solid #e5e7eb;border-radius:12px;padding:14px 16px;cursor:pointer;transition:border-color .15s,background .15s;background:#fff;}
+  .hol-pkg{border:1.5px solid #e5e7eb;border-radius:12px;padding:14px 16px;transition:border-color .15s,background .15s;background:#fff;}
   .hol-pkg:hover{border-color:#bcd0ee;}
   .hol-pkg--on{border-color:#2563a8;background:#f5f9ff;}
+  .hol-pkg-main{display:flex;align-items:flex-start;gap:12px;cursor:pointer;}
+  .hol-readmore{background:none;border:none;padding:0;margin:10px 0 0 32px;font-family:'Poppins',sans-serif;font-size:12px;font-weight:700;color:#2563eb;cursor:pointer;}
+  .hol-readmore:hover{text-decoration:underline;}
+  .hol-pkg-details{margin:10px 0 2px 32px;border-top:1px dashed #dbe3f0;padding-top:4px;}
+  .hol-pkg-details-head{font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#1a3c5e;margin:10px 0 4px;}
+  .hol-pkg-details ul{margin:0;padding-left:18px;}
+  .hol-pkg-details li{font-size:12.5px;color:#4b5563;line-height:1.75;}
+  .hol-upload--error{border-color:#e53e3e;}
   .hol-pkg input,.hol-terms-accept input,.hol-upload input{position:absolute;opacity:0;width:0;height:0;}
   .hol-radio{flex-shrink:0;width:20px;height:20px;border-radius:50%;border:1.5px solid #cbd5e1;display:flex;align-items:center;justify-content:center;margin-top:2px;background:#fff;transition:all .15s;}
   .hol-pkg--on .hol-radio{border-color:#2563a8;}

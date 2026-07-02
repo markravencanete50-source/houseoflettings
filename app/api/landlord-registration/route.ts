@@ -144,8 +144,15 @@ function registrationPdfBase64(data: any, ref: string): string {
     line("Company Name", data.companyName);
     line("Company Number", data.companyNumber);
     line("Registered Office", data.registeredAddress);
+    const people = Array.isArray(data.companyPeople) ? data.companyPeople : [];
+    people.forEach((p: any, i: number) => {
+      const desc = [p.name, p.role, p.share ? `${p.share}% share` : ""].filter(Boolean).join(" — ");
+      line(i === 0 ? "Person 1 (contact)" : `Person ${i + 1}`, desc);
+    });
+    if (!people.length) line("Contact Person", data.fullName);
+  } else {
+    line("Full Name", data.fullName);
   }
-  line(isCompany ? `Contact Person${data.contactRole ? ` (${data.contactRole})` : ""}` : "Full Name", data.fullName);
   line("Email", data.email);
   line("Telephone", data.phone);
   line("Contact Address", data.contactAddress);
@@ -192,10 +199,14 @@ function confirmationEmailHtml(data: any) {
 
 function adminNotificationHtml(data: any) {
   const isCompany = data.ownerType === "company";
+  const people = isCompany && Array.isArray(data.companyPeople) ? data.companyPeople : [];
+  const peopleRows = people
+    .map((p: any, i: number) => `<tr><td>${i === 0 ? "Person 1 (contact)" : `Person ${i + 1}`}</td><td>${[p.name, p.role, p.share ? `${p.share}% share` : ""].filter(Boolean).join(" — ")}</td></tr>`)
+    .join("");
   const companyRows = isCompany
-    ? `<tr><td>Company Name</td><td>${data.companyName || "—"}</td></tr><tr><td>Company Number</td><td>${data.companyNumber || "—"}</td></tr><tr><td>Registered Office</td><td>${data.registeredAddress || "—"}</td></tr>`
+    ? `<tr><td>Company Name</td><td>${data.companyName || "—"}</td></tr><tr><td>Company Number</td><td>${data.companyNumber || "—"}</td></tr><tr><td>Registered Office</td><td>${data.registeredAddress || "—"}</td></tr>${peopleRows}`
     : "";
-  return `<!DOCTYPE html><html><head><meta charset="utf-8"/><style>body{font-family:Arial,sans-serif;background:#f4f6f9;margin:0;padding:0;}.wrap{max-width:600px;margin:32px auto;background:#fff;border-radius:14px;overflow:hidden;}.header{background:#1a3c5e;padding:24px 32px;color:#fff;}.header h2{margin:0;font-size:20px;}.body{padding:28px 32px;}table{width:100%;border-collapse:collapse;font-size:14px;}td{padding:10px 12px;border-bottom:1px solid #eef0f5;vertical-align:top;}td:first-child{font-weight:600;color:#6b7280;width:38%;}td:last-child{color:#111;}</style></head><body><div class="wrap"><div class="header"><h2>🔔 New Landlord Registration</h2><p style="margin:4px 0 0;opacity:.8;font-size:13px;">${new Date().toLocaleString("en-GB")}</p></div><div class="body"><table><tr><td>Owner Type</td><td>${isCompany ? "Company / Ltd" : "Individual owner"}</td></tr>${companyRows}<tr><td>${isCompany ? `Contact Person${data.contactRole ? ` (${data.contactRole})` : ""}` : "Full Name"}</td><td>${data.fullName}</td></tr><tr><td>Email</td><td>${data.email}</td></tr><tr><td>Telephone</td><td>${data.phone}</td></tr><tr><td>Contact Address</td><td>${data.contactAddress || "—"}</td></tr><tr><td>${isCompany ? "Director's ID" : "Landlord ID"}</td><td>${data.landlordIdUrl ? `<a href="${data.landlordIdUrl}">view document</a>` : "—"}</td></tr><tr><td>Billing Address Document</td><td>${data.billingProofUrl ? `<a href="${data.billingProofUrl}">view document</a>` : "—"}</td></tr><tr><td>Proof of Ownership</td><td>${data.ownershipProofUrl ? `<a href="${data.ownershipProofUrl}">view document</a>` : "—"}</td></tr><tr><td>Properties Owned</td><td>${data.propertyCount}</td></tr>${propertyRows(data)}<tr><td>Package Selected</td><td>${data.selectedPackage}</td></tr>${docRows(data)}<tr><td>Notes</td><td>${data.notes || "—"}</td></tr><tr><td>Terms &amp; Conditions</td><td>Agreed by submitting the registration</td></tr></table><p style="font-size:12px;color:#9ca3af;margin:16px 0 0;">A PDF copy of the full registration is attached.</p></div></div></body></html>`;
+  return `<!DOCTYPE html><html><head><meta charset="utf-8"/><style>body{font-family:Arial,sans-serif;background:#f4f6f9;margin:0;padding:0;}.wrap{max-width:600px;margin:32px auto;background:#fff;border-radius:14px;overflow:hidden;}.header{background:#1a3c5e;padding:24px 32px;color:#fff;}.header h2{margin:0;font-size:20px;}.body{padding:28px 32px;}table{width:100%;border-collapse:collapse;font-size:14px;}td{padding:10px 12px;border-bottom:1px solid #eef0f5;vertical-align:top;}td:first-child{font-weight:600;color:#6b7280;width:38%;}td:last-child{color:#111;}</style></head><body><div class="wrap"><div class="header"><h2>🔔 New Landlord Registration</h2><p style="margin:4px 0 0;opacity:.8;font-size:13px;">${new Date().toLocaleString("en-GB")}</p></div><div class="body"><table><tr><td>Owner Type</td><td>${isCompany ? "Company / Ltd" : "Individual owner"}</td></tr>${companyRows}${isCompany && people.length ? "" : `<tr><td>${isCompany ? "Contact Person" : "Full Name"}</td><td>${data.fullName}</td></tr>`}<tr><td>Email</td><td>${data.email}</td></tr><tr><td>Telephone</td><td>${data.phone}</td></tr><tr><td>Contact Address</td><td>${data.contactAddress || "—"}</td></tr><tr><td>${isCompany ? "Director's ID" : "Landlord ID"}</td><td>${data.landlordIdUrl ? `<a href="${data.landlordIdUrl}">view document</a>` : "—"}</td></tr><tr><td>Billing Address Document</td><td>${data.billingProofUrl ? `<a href="${data.billingProofUrl}">view document</a>` : "—"}</td></tr><tr><td>Proof of Ownership</td><td>${data.ownershipProofUrl ? `<a href="${data.ownershipProofUrl}">view document</a>` : "—"}</td></tr><tr><td>Properties Owned</td><td>${data.propertyCount}</td></tr>${propertyRows(data)}<tr><td>Package Selected</td><td>${data.selectedPackage}</td></tr>${docRows(data)}<tr><td>Notes</td><td>${data.notes || "—"}</td></tr><tr><td>Terms &amp; Conditions</td><td>Agreed by submitting the registration</td></tr></table><p style="font-size:12px;color:#9ca3af;margin:16px 0 0;">A PDF copy of the full registration is attached.</p></div></div></body></html>`;
 }
 
 export async function POST(request: Request) {

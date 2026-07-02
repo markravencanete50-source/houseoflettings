@@ -33,6 +33,12 @@ const ID_DOC_KEYS = ID_DOCS.map(d => d.key);
 // UK company number: 8 digits, or 2-letter prefix + 6 digits (e.g. SC123456).
 const COMPANY_NUMBER_REGEX = /^([A-Za-z]{2})?\d{6,8}$/;
 
+// A person who owns or runs the company. The first person in the list is the
+// main contact for the registration.
+type CompanyPerson = { id: string; name: string; role: string; share: string };
+const newPerson = (id: string): CompanyPerson => ({ id, name: '', role: '', share: '' });
+const PERSON_ROLES = ['Director', 'Secretary', 'Person with significant control', 'Shareholder', 'Other'];
+
 type DocState = { has: string; url: string; uploading: boolean; fileName: string; error: string };
 const EMPTY_DOC: DocState = { has: '', url: '', uploading: false, fileName: '', error: '' };
 const initDocs = (): Record<string, DocState> => Object.fromEntries(DOC_KEYS.map(k => [k, { ...EMPTY_DOC }]));
@@ -118,6 +124,8 @@ export default function LandlordRegistrationApplyPage() {
   const [form, setForm] = useState(EMPTY_FORM);
   const [properties, setProperties] = useState<Property[]>([newProperty('p0')]);
   const nextPropId = useRef(1);
+  const [companyPeople, setCompanyPeople] = useState<CompanyPerson[]>([newPerson('cp0')]);
+  const nextPersonId = useRef(1);
   const [docs, setDocs] = useState<Record<string, DocState>>(initDocs);
   const [idDocs, setIdDocs] = useState<Record<string, DocState>>(() => Object.fromEntries(ID_DOC_KEYS.map(k => [k, { ...EMPTY_DOC }])));
   const [expandedBundle, setExpandedBundle] = useState<string | null>(null);
@@ -141,6 +149,10 @@ export default function LandlordRegistrationApplyPage() {
           setProperties(saved.properties.map((p: Property) => ({ ...newProperty(p.id), ...p })));
           nextPropId.current = Math.max(...saved.properties.map((p: Property) => (parseInt(p.id.slice(1), 10) || 0))) + 1;
         }
+        if (Array.isArray(saved.companyPeople) && saved.companyPeople.length) {
+          setCompanyPeople(saved.companyPeople.map((p: CompanyPerson) => ({ ...newPerson(p.id), ...p })));
+          nextPersonId.current = Math.max(...saved.companyPeople.map((p: CompanyPerson) => (parseInt(p.id.slice(2), 10) || 0))) + 1;
+        }
         if (saved.docs) {
           setDocs(d => Object.fromEntries(DOC_KEYS.map(k => [k, { ...d[k], ...saved.docs[k], uploading: false, error: '' }])));
         }
@@ -157,9 +169,9 @@ export default function LandlordRegistrationApplyPage() {
   useEffect(() => {
     if (!restored) return;
     try {
-      sessionStorage.setItem(STORAGE_KEY, JSON.stringify({ step, form, properties, docs, idDocs }));
+      sessionStorage.setItem(STORAGE_KEY, JSON.stringify({ step, form, properties, companyPeople, docs, idDocs }));
     } catch { /* storage full/unavailable — non-fatal */ }
-  }, [restored, step, form, properties, docs, idDocs]);
+  }, [restored, step, form, properties, companyPeople, docs, idDocs]);
 
   const set = (key: string) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     setForm(f => ({ ...f, [key]: e.target.value }));
@@ -179,6 +191,17 @@ export default function LandlordRegistrationApplyPage() {
   const removeProperty = useCallback((id: string) => {
     setProperties(ps => (ps.length > 1 ? ps.filter(p => p.id !== id) : ps));
   }, []);
+
+  const updatePerson = (id: string, patch: Partial<CompanyPerson>) => {
+    setCompanyPeople(ps => ps.map(p => (p.id === id ? { ...p, ...patch } : p)));
+    setErrors(e => {
+      const next = { ...e };
+      Object.keys(patch).forEach(f => { delete next[`person_${id}_${f}`]; });
+      return next;
+    });
+  };
+  const addPerson = () => setCompanyPeople(ps => [...ps, newPerson(`cp${nextPersonId.current++}`)]);
+  const removePerson = (id: string) => setCompanyPeople(ps => (ps.length > 1 ? ps.filter(p => p.id !== id) : ps));
 
   const setDoc = (key: string, patch: Partial<DocState>) => setDocs(d => ({ ...d, [key]: { ...d[key], ...patch } }));
   const setIdDoc = (key: string, patch: Partial<DocState>) => setIdDocs(d => ({ ...d, [key]: { ...d[key], ...patch } }));
@@ -219,9 +242,15 @@ export default function LandlordRegistrationApplyPage() {
         if (!form.companyNumber.trim()) e.companyNumber = 'Company number is required';
         else if (!COMPANY_NUMBER_REGEX.test(form.companyNumber.replace(/\s/g, ''))) e.companyNumber = 'Enter a valid Companies House number (e.g. 13506429)';
         if (!form.registeredAddress.trim()) e.registeredAddress = 'Registered office address is required';
-        if (!form.contactRole) e.contactRole = 'Please select your role in the company';
-      }
-      if (!form.fullName.trim()) e.fullName = isCompany ? 'Contact person name is required' : 'Full name is required';
+        companyPeople.forEach((p, i) => {
+          if (!p.name.trim()) e[`person_${p.id}_name`] = i === 0 ? 'Main contact name is required' : 'Name is required — or remove this person';
+          if (i === 0 && !p.role) e[`person_${p.id}_role`] = 'Please select their role';
+          if (p.share.trim()) {
+            const v = parseFloat(p.share);
+            if (isNaN(v) || v < 0 || v > 100) e[`person_${p.id}_share`] = 'Enter a percentage between 0 and 100';
+          }
+        });
+      } else if (!form.fullName.trim()) e.fullName = 'Full name is required';
       if (!form.email.trim()) e.email = 'Email is required';
       else if (!EMAIL_REGEX.test(form.email)) e.email = 'Enter a valid email address';
       if (!form.phone.trim()) e.phone = 'Telephone number is required';
@@ -268,6 +297,10 @@ export default function LandlordRegistrationApplyPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...form,
+          // For a company, the first person in the list is the main contact.
+          fullName: isCompany ? companyPeople[0].name : form.fullName,
+          contactRole: isCompany ? companyPeople[0].role : '',
+          companyPeople: isCompany ? companyPeople.map(({ id, ...rest }) => rest) : [],
           selectedPackage: form.selectedPackage,
           // No checkbox any more — submitting the form is the agreement.
           termsAccepted: true,
@@ -311,7 +344,7 @@ export default function LandlordRegistrationApplyPage() {
               </div>
               <h2 style={{ fontSize: 26, fontWeight: 700, color: '#0f1f3d', marginBottom: 12 }}>Registration Received!</h2>
               <p style={{ fontSize: 15, color: '#374151', maxWidth: 440, margin: '0 auto 8px', lineHeight: 1.6 }}>
-                Thank you, {form.fullName.split(' ')[0]}. We&rsquo;ve received your registration for <strong>{properties[0].street || 'your property'}{properties[0].city ? `, ${properties[0].city}` : ''}</strong>
+                Thank you, {((isCompany ? companyPeople[0].name : form.fullName) || 'there').split(' ')[0]}. We&rsquo;ve received your registration for <strong>{properties[0].street || 'your property'}{properties[0].city ? `, ${properties[0].city}` : ''}</strong>
                 {properties.length > 1 ? ` and ${properties.length - 1} other propert${properties.length - 1 === 1 ? 'y' : 'ies'}` : ''}.
               </p>
               <p style={{ fontSize: 13, color: '#9ca3af', marginBottom: 28 }}>Our lettings team will be in touch within 24–48 hours with your tailored proposal.</p>
@@ -388,35 +421,64 @@ export default function LandlordRegistrationApplyPage() {
                           <input type="text" className={`hol-input${errors.companyName ? ' hol-input--error' : ''}`} placeholder="e.g. Mark Properties Ltd" value={form.companyName} onChange={set('companyName')} autoComplete="organization" />
                           {errors.companyName && <p className="hol-err">{errors.companyName}</p>}
                         </div>
-                        <div className="hol-field">
+                        <div className="hol-field hol-field--full">
                           <label className="hol-label">Company Number<span className="hol-req">*</span></label>
                           <input type="text" className={`hol-input${errors.companyNumber ? ' hol-input--error' : ''}`} placeholder="e.g. 13506429" value={form.companyNumber} onChange={set('companyNumber')} autoComplete="off" />
                           {errors.companyNumber && <p className="hol-err">{errors.companyNumber}</p>}
                           <p style={{ fontSize: 12, color: '#9ca3af', margin: '2px 0 0' }}>As registered at Companies House.</p>
-                        </div>
-                        <div className="hol-field">
-                          <label className="hol-label">Your Role in the Company<span className="hol-req">*</span></label>
-                          <select className={`hol-input hol-select${errors.contactRole ? ' hol-input--error' : ''}`} value={form.contactRole} onChange={set('contactRole')}>
-                            <option value="">Select...</option>
-                            <option>Director</option>
-                            <option>Secretary</option>
-                            <option>Person with significant control</option>
-                            <option>Other</option>
-                          </select>
-                          {errors.contactRole && <p className="hol-err">{errors.contactRole}</p>}
                         </div>
                         <div className="hol-field hol-field--full">
                           <label className="hol-label">Registered Office Address<span className="hol-req">*</span></label>
                           <input type="text" className={`hol-input${errors.registeredAddress ? ' hol-input--error' : ''}`} placeholder="e.g. 49 St. Kilda's Road, London, England, N16 5BS" value={form.registeredAddress} onChange={set('registeredAddress')} autoComplete="off" />
                           {errors.registeredAddress && <p className="hol-err">{errors.registeredAddress}</p>}
                         </div>
+                        <div className="hol-field hol-field--full">
+                          <label className="hol-label">Owners &amp; Officers<span className="hol-req">*</span></label>
+                          <p style={{ fontSize: 12, color: '#9ca3af', margin: '0 0 4px' }}>Add each person who owns or runs the company, with their shareholding. The first person is our main contact.</p>
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                            {companyPeople.map((p, i) => (
+                              <div key={p.id} className="hol-prop-card">
+                                <div className="hol-prop-head">
+                                  <span className="hol-prop-badge">{i === 0 ? 'Person 1 — Main Contact' : `Person ${i + 1}`}</span>
+                                  {i > 0 && <button type="button" className="hol-prop-remove" onClick={() => removePerson(p.id)}>Remove</button>}
+                                </div>
+                                <div className="hol-form-grid">
+                                  <div className="hol-field hol-field--full">
+                                    <label className="hol-label">Full Name<span className="hol-req">*</span></label>
+                                    <input type="text" className={`hol-input${errors[`person_${p.id}_name`] ? ' hol-input--error' : ''}`} placeholder="e.g. Shalom Mark" value={p.name} onChange={(e) => updatePerson(p.id, { name: e.target.value })} autoComplete="off" />
+                                    {errors[`person_${p.id}_name`] && <p className="hol-err">{errors[`person_${p.id}_name`]}</p>}
+                                  </div>
+                                  <div className="hol-field">
+                                    <label className="hol-label">Role{i === 0 && <span className="hol-req">*</span>}</label>
+                                    <select className={`hol-input hol-select${errors[`person_${p.id}_role`] ? ' hol-input--error' : ''}`} value={p.role} onChange={(e) => updatePerson(p.id, { role: e.target.value })}>
+                                      <option value="">Select...</option>
+                                      {PERSON_ROLES.map(r => <option key={r}>{r}</option>)}
+                                    </select>
+                                    {errors[`person_${p.id}_role`] && <p className="hol-err">{errors[`person_${p.id}_role`]}</p>}
+                                  </div>
+                                  <div className="hol-field">
+                                    <label className="hol-label">Shareholding (%) <span style={{ color: '#9ca3af', fontWeight: 400 }}>(optional)</span></label>
+                                    <input type="text" inputMode="decimal" className={`hol-input${errors[`person_${p.id}_share`] ? ' hol-input--error' : ''}`} placeholder="e.g. 50" value={p.share} onChange={(e) => updatePerson(p.id, { share: e.target.value })} autoComplete="off" />
+                                    {errors[`person_${p.id}_share`] && <p className="hol-err">{errors[`person_${p.id}_share`]}</p>}
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                          <button type="button" className="hol-add-property" onClick={addPerson}>
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 5v14M5 12h14" /></svg>
+                            Add another person
+                          </button>
+                        </div>
                       </>
                     )}
-                    <div className="hol-field hol-field--full">
-                      <label className="hol-label">{isCompany ? 'Contact Person (Director / Officer)' : 'Full Name'}<span className="hol-req">*</span></label>
-                      <input type="text" className={`hol-input${errors.fullName ? ' hol-input--error' : ''}`} placeholder="e.g. Mr Mansour Nosrati" value={form.fullName} onChange={set('fullName')} autoComplete="name" />
-                      {errors.fullName && <p className="hol-err">{errors.fullName}</p>}
-                    </div>
+                    {!isCompany && (
+                      <div className="hol-field hol-field--full">
+                        <label className="hol-label">Full Name<span className="hol-req">*</span></label>
+                        <input type="text" className={`hol-input${errors.fullName ? ' hol-input--error' : ''}`} placeholder="e.g. Mr Mansour Nosrati" value={form.fullName} onChange={set('fullName')} autoComplete="name" />
+                        {errors.fullName && <p className="hol-err">{errors.fullName}</p>}
+                      </div>
+                    )}
                     <div className="hol-field">
                       <label className="hol-label">Email Address<span className="hol-req">*</span></label>
                       <input type="email" className={`hol-input${errors.email ? ' hol-input--error' : ''}`} placeholder="name@example.co.uk" value={form.email} onChange={set('email')} autoComplete="email" />
@@ -625,7 +687,17 @@ export default function LandlordRegistrationApplyPage() {
                           <SummaryRow label="Registered office" value={form.registeredAddress} />
                         </>
                       )}
-                      <SummaryRow label={isCompany ? `Contact person${form.contactRole ? ` (${form.contactRole})` : ''}` : 'Name'} value={form.fullName} />
+                      {isCompany ? (
+                        companyPeople.map((p, i) => (
+                          <SummaryRow
+                            key={p.id}
+                            label={i === 0 ? 'Person 1 (main contact)' : `Person ${i + 1}`}
+                            value={[p.name, p.role, p.share.trim() ? `${p.share}% share` : ''].filter(Boolean).join(' · ')}
+                          />
+                        ))
+                      ) : (
+                        <SummaryRow label="Name" value={form.fullName} />
+                      )}
                       <SummaryRow label="Email" value={form.email} />
                       <SummaryRow label="Telephone" value={form.phone} />
                       <SummaryRow label="Contact address" value={form.contactAddress} />

@@ -197,6 +197,7 @@ export default function LandlordRegistrationApplyPage() {
     setErrors(e => {
       const next = { ...e };
       Object.keys(patch).forEach(f => { delete next[`person_${id}_${f}`]; });
+      if (patch.share !== undefined) delete next.companyShareTotal;
       return next;
     });
   };
@@ -245,11 +246,15 @@ export default function LandlordRegistrationApplyPage() {
         companyPeople.forEach((p, i) => {
           if (!p.name.trim()) e[`person_${p.id}_name`] = i === 0 ? 'Main contact name is required' : 'Name is required — or remove this person';
           if (i === 0 && !p.role) e[`person_${p.id}_role`] = 'Please select their role';
-          if (p.share.trim()) {
+          if (!p.share.trim()) {
+            e[`person_${p.id}_share`] = 'Please enter their shareholding percentage — enter 0 if they hold no shares';
+          } else {
             const v = parseFloat(p.share);
             if (isNaN(v) || v < 0 || v > 100) e[`person_${p.id}_share`] = 'Enter a percentage between 0 and 100';
           }
         });
+        const totalShare = companyPeople.reduce((sum, p) => sum + (parseFloat(p.share) || 0), 0);
+        if (totalShare > 100) e.companyShareTotal = `The shareholding percentages add up to ${totalShare}% — the total cannot be more than 100%`;
       } else if (!form.fullName.trim()) e.fullName = 'Full name is required';
       if (!form.email.trim()) e.email = 'Email is required';
       else if (!EMAIL_REGEX.test(form.email)) e.email = 'Enter a valid email address';
@@ -443,7 +448,7 @@ export default function LandlordRegistrationApplyPage() {
                                   {i > 0 && <button type="button" className="hol-prop-remove" onClick={() => removePerson(p.id)}>Remove</button>}
                                 </div>
                                 <div className="hol-form-grid">
-                                  <div className="hol-field hol-field--full">
+                                  <div className="hol-field">
                                     <label className="hol-label">Full Name<span className="hol-req">*</span></label>
                                     <input type="text" className={`hol-input${errors[`person_${p.id}_name`] ? ' hol-input--error' : ''}`} placeholder="e.g. Shalom Mark" value={p.name} onChange={(e) => updatePerson(p.id, { name: e.target.value })} autoComplete="off" />
                                     {errors[`person_${p.id}_name`] && <p className="hol-err">{errors[`person_${p.id}_name`]}</p>}
@@ -456,15 +461,28 @@ export default function LandlordRegistrationApplyPage() {
                                     </select>
                                     {errors[`person_${p.id}_role`] && <p className="hol-err">{errors[`person_${p.id}_role`]}</p>}
                                   </div>
-                                  <div className="hol-field">
-                                    <label className="hol-label">Shareholding (%) <span style={{ color: '#9ca3af', fontWeight: 400 }}>(optional)</span></label>
-                                    <input type="text" inputMode="decimal" className={`hol-input${errors[`person_${p.id}_share`] ? ' hol-input--error' : ''}`} placeholder="e.g. 50" value={p.share} onChange={(e) => updatePerson(p.id, { share: e.target.value })} autoComplete="off" />
+                                  <div className="hol-field hol-field--full">
+                                    <label className="hol-label">What percentage of the company does this person own?<span className="hol-req">*</span></label>
+                                    <div style={{ position: 'relative' }}>
+                                      <input type="text" inputMode="decimal" className={`hol-input${errors[`person_${p.id}_share`] ? ' hol-input--error' : ''}`} placeholder="e.g. 50" style={{ paddingRight: 36 }} value={p.share} onChange={(e) => updatePerson(p.id, { share: e.target.value })} autoComplete="off" />
+                                      <span style={{ position: 'absolute', right: 14, top: '50%', transform: 'translateY(-50%)', color: '#9ca3af', fontSize: 14, fontWeight: 600, pointerEvents: 'none' }}>%</span>
+                                    </div>
                                     {errors[`person_${p.id}_share`] && <p className="hol-err">{errors[`person_${p.id}_share`]}</p>}
+                                    <p style={{ fontSize: 12, color: '#9ca3af', margin: '2px 0 0' }}>Their shareholding, regardless of their role. Enter 0 if they hold no shares.</p>
                                   </div>
                                 </div>
                               </div>
                             ))}
                           </div>
+                          {(() => {
+                            const total = companyPeople.reduce((sum, p) => sum + (parseFloat(p.share) || 0), 0);
+                            return (
+                              <p style={{ fontSize: 12.5, fontWeight: 600, color: total > 100 ? '#dc2626' : '#6b7280', margin: '8px 0 0' }}>
+                                Total shareholding entered: {total}%{total > 100 ? ' — cannot be more than 100%' : ''}
+                              </p>
+                            );
+                          })()}
+                          {errors.companyShareTotal && <p className="hol-err" style={{ marginTop: 4 }}>{errors.companyShareTotal}</p>}
                           <button type="button" className="hol-add-property" onClick={addPerson}>
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 5v14M5 12h14" /></svg>
                             Add another person

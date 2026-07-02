@@ -4,7 +4,7 @@
 // availability / booking API routes (server) so the two can never disagree.
 //
 // Rules (from the House of Lettings brief):
-//  • Viewings run 10:00 → 19:30, in 15-minute slots.
+//  • Viewings run 09:00 → 19:30, in 15-minute slots.
 //  • Each slot time holds a maximum of 2 clients; a 3rd is blocked (greyed out).
 //  • A 3-hour travel gap is required between viewings at DIFFERENT slot times on
 //    the same day (a second client may still share the SAME slot time).
@@ -15,7 +15,7 @@
 export type City = 'Leeds' | 'Manchester';
 export const CITIES: City[] = ['Leeds', 'Manchester'];
 
-export const DAY_START_MIN = 10 * 60;      // 10:00
+export const DAY_START_MIN = 9 * 60;       // 09:00
 export const DAY_END_MIN = 19 * 60 + 30;   // 19:30 (last bookable slot)
 export const SLOT_INTERVAL_MIN = 15;       // slots every 15 minutes
 export const SLOT_CAPACITY = 2;            // max clients per slot time
@@ -122,7 +122,7 @@ export function bookingRejectionReason(
     minutes > DAY_END_MIN ||
     (minutes - DAY_START_MIN) % SLOT_INTERVAL_MIN !== 0
   ) {
-    return 'That time is outside our viewing hours (10:00–19:30).';
+    return 'That time is outside our viewing hours (09:00–19:30).';
   }
 
   const lockedCity = lockedCityFor(bookings);

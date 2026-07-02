@@ -18,17 +18,20 @@ const DOCS = [
   { key: 'epc', label: 'Energy Performance Certificate (EPC)', hint: 'Must be rated E or above to let legally.', options: [YES, NO] },
   { key: 'electrical', label: 'Electrical Safety Certificate (EICR)', hint: 'Electrical Installation Condition Report — renewed every 5 years.', options: [YES, NO] },
   { key: 'gas', label: 'Gas Safety Certificate (CP12)', hint: 'Annual Gas Safety Record for properties with gas appliances.', options: [YES, NO, { value: 'nogas', label: 'No gas supply at this property' }] },
-  { key: 'landReg', label: 'Land Registry Title', hint: 'Proof of ownership / title documents.', options: [YES, NO] },
 ] as const;
 const DOC_KEYS = DOCS.map(d => d.key);
 
-// Identity documents requested on the first step: the landlord's photo ID and
-// a proof of their billing/correspondence address.
+// Identity/ownership documents requested on the details step: photo ID,
+// proof of billing address, and Land Registry / proof of ownership.
 const ID_DOCS = [
-  { key: 'landlordId', label: 'Landlord ID', hint: 'Passport, driving licence or national ID card.' },
-  { key: 'billingProof', label: 'Billing Address Document', hint: 'Utility bill, council tax or bank statement (dated within the last 3 months) showing your contact address.' },
+  { key: 'landlordId', label: 'Landlord ID', companyLabel: "Director's ID", hint: 'Passport, driving licence or national ID card.' },
+  { key: 'billingProof', label: 'Billing Address Document', companyLabel: 'Billing Address Document', hint: 'Utility bill, council tax or bank statement (dated within the last 3 months) showing your contact address.' },
+  { key: 'ownershipProof', label: 'Proof of Ownership', companyLabel: 'Proof of Ownership', hint: 'Land Registry title or other proof of ownership for your property.' },
 ] as const;
 const ID_DOC_KEYS = ID_DOCS.map(d => d.key);
+
+// UK company number: 8 digits, or 2-letter prefix + 6 digits (e.g. SC123456).
+const COMPANY_NUMBER_REGEX = /^([A-Za-z]{2})?\d{6,8}$/;
 
 type DocState = { has: string; url: string; uploading: boolean; fileName: string; error: string };
 const EMPTY_DOC: DocState = { has: '', url: '', uploading: false, fileName: '', error: '' };
@@ -75,7 +78,7 @@ const docSummary = (st: DocState) => {
   return 'To arrange';
 };
 
-const STEPS = ['Landlord Details', 'Property Details', 'Service', 'Documents', 'Confirm'];
+const STEPS = ['Owner Type', 'Your Details', 'Property Details', 'Service', 'Documents', 'Confirm'];
 
 // Direct-to-Cloudinary upload (bypasses Vercel's ~4.5MB request-body limit).
 async function uploadToCloudinary(file: File): Promise<string> {
@@ -99,13 +102,16 @@ async function uploadToCloudinary(file: File): Promise<string> {
 }
 
 const EMPTY_FORM = {
+  ownerType: '', // 'individual' | 'company'
+  companyName: '', companyNumber: '', registeredAddress: '', contactRole: '',
   fullName: '', email: '', phone: '', propertyCount: '', contactAddress: '',
   selectedPackage: '', notes: '',
 };
 
 // Draft answers survive navigating away (e.g. to the pricing or terms page)
 // and coming back — restored from sessionStorage until the form is submitted.
-const STORAGE_KEY = 'hol-landlord-apply-draft';
+// v2: step indexes shifted when the Owner Type step was added.
+const STORAGE_KEY = 'hol-landlord-apply-draft-v2';
 
 export default function LandlordRegistrationApplyPage() {
   const [step, setStep] = useState(0);
@@ -115,7 +121,6 @@ export default function LandlordRegistrationApplyPage() {
   const [docs, setDocs] = useState<Record<string, DocState>>(initDocs);
   const [idDocs, setIdDocs] = useState<Record<string, DocState>>(() => Object.fromEntries(ID_DOC_KEYS.map(k => [k, { ...EMPTY_DOC }])));
   const [expandedBundle, setExpandedBundle] = useState<string | null>(null);
-  const [termsAccepted, setTermsAccepted] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
   const [errorMsg, setErrorMsg] = useState('');
@@ -143,7 +148,6 @@ export default function LandlordRegistrationApplyPage() {
           setIdDocs(d => Object.fromEntries(ID_DOC_KEYS.map(k => [k, { ...d[k], ...saved.idDocs[k], uploading: false, error: '' }])));
         }
         if (typeof saved.step === 'number') setStep(Math.min(Math.max(saved.step, 0), STEPS.length - 1));
-        if (saved.termsAccepted) setTermsAccepted(true);
       }
     } catch { /* corrupt draft — start fresh */ }
     setRestored(true);
@@ -153,9 +157,9 @@ export default function LandlordRegistrationApplyPage() {
   useEffect(() => {
     if (!restored) return;
     try {
-      sessionStorage.setItem(STORAGE_KEY, JSON.stringify({ step, form, properties, docs, idDocs, termsAccepted }));
+      sessionStorage.setItem(STORAGE_KEY, JSON.stringify({ step, form, properties, docs, idDocs }));
     } catch { /* storage full/unavailable — non-fatal */ }
-  }, [restored, step, form, properties, docs, idDocs, termsAccepted]);
+  }, [restored, step, form, properties, docs, idDocs]);
 
   const set = (key: string) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     setForm(f => ({ ...f, [key]: e.target.value }));
@@ -202,11 +206,22 @@ export default function LandlordRegistrationApplyPage() {
     }
   };
 
+  const isCompany = form.ownerType === 'company';
+
   // Validate only the current step; returns true if OK to advance.
   function validateStep(s: number): boolean {
     const e: Record<string, string> = {};
     if (s === 0) {
-      if (!form.fullName.trim()) e.fullName = 'Full name is required';
+      if (!form.ownerType) e.ownerType = 'Please tell us if the property is owned by you personally or by a company';
+    } else if (s === 1) {
+      if (isCompany) {
+        if (!form.companyName.trim()) e.companyName = 'Company name is required';
+        if (!form.companyNumber.trim()) e.companyNumber = 'Company number is required';
+        else if (!COMPANY_NUMBER_REGEX.test(form.companyNumber.replace(/\s/g, ''))) e.companyNumber = 'Enter a valid Companies House number (e.g. 13506429)';
+        if (!form.registeredAddress.trim()) e.registeredAddress = 'Registered office address is required';
+        if (!form.contactRole) e.contactRole = 'Please select your role in the company';
+      }
+      if (!form.fullName.trim()) e.fullName = isCompany ? 'Contact person name is required' : 'Full name is required';
       if (!form.email.trim()) e.email = 'Email is required';
       else if (!EMAIL_REGEX.test(form.email)) e.email = 'Enter a valid email address';
       if (!form.phone.trim()) e.phone = 'Telephone number is required';
@@ -214,10 +229,11 @@ export default function LandlordRegistrationApplyPage() {
       if (!form.contactAddress.trim()) e.contactAddress = 'Contact address is required';
       if (!form.propertyCount) e.propertyCount = 'Please tell us how many properties you own';
       ID_DOCS.forEach(d => {
+        const label = isCompany ? d.companyLabel : d.label;
         if (idDocs[d.key].uploading) e[`id_${d.key}`] = 'Please wait for the upload to finish';
-        else if (!idDocs[d.key].url) e[`id_${d.key}`] = `Please upload your ${d.label.toLowerCase()}`;
+        else if (!idDocs[d.key].url) e[`id_${d.key}`] = `Please upload your ${label.toLowerCase()}`;
       });
-    } else if (s === 1) {
+    } else if (s === 2) {
       properties.forEach(p => {
         if (!p.postcode.trim()) e[`prop_${p.id}_postcode`] = 'Postcode is required';
         if (!p.street.trim()) e[`prop_${p.id}_street`] = '1st line of address is required';
@@ -225,12 +241,10 @@ export default function LandlordRegistrationApplyPage() {
         if (!p.bedrooms) e[`prop_${p.id}_bedrooms`] = 'Please select the number of bedrooms';
         if (!p.occupancy) e[`prop_${p.id}_occupancy`] = 'Please tell us if the property is occupied or vacant';
       });
-    } else if (s === 2) {
-      if (!form.selectedPackage) e.selectedPackage = 'Please choose a service';
     } else if (s === 3) {
-      DOCS.forEach(d => { if (!docs[d.key].has) e[`doc_${d.key}`] = 'Please choose an option'; });
+      if (!form.selectedPackage) e.selectedPackage = 'Please choose a service';
     } else if (s === 4) {
-      if (!termsAccepted) e.terms = 'Please accept the terms & conditions to continue';
+      DOCS.forEach(d => { if (!docs[d.key].has) e[`doc_${d.key}`] = 'Please choose an option'; });
     }
     setErrors(e);
     return Object.keys(e).length === 0;
@@ -246,7 +260,7 @@ export default function LandlordRegistrationApplyPage() {
   const back = () => { setErrors({}); setStep(s => Math.max(0, s - 1)); resetView(); };
 
   const handleSubmit = async () => {
-    if (!validateStep(4)) return;
+    if (!validateStep(5)) return;
     setStatus('loading');
     try {
       const res = await fetch('/api/landlord-registration', {
@@ -255,11 +269,14 @@ export default function LandlordRegistrationApplyPage() {
         body: JSON.stringify({
           ...form,
           selectedPackage: form.selectedPackage,
-          termsAccepted,
+          // No checkbox any more — submitting the form is the agreement.
+          termsAccepted: true,
           landlordIdUrl: idDocs.landlordId.url,
           landlordIdFileName: idDocs.landlordId.fileName,
           billingProofUrl: idDocs.billingProof.url,
           billingProofFileName: idDocs.billingProof.fileName,
+          ownershipProofUrl: idDocs.ownershipProof.url,
+          ownershipProofFileName: idDocs.ownershipProof.fileName,
           documents: Object.fromEntries(DOC_KEYS.map(k => [k, { status: docs[k].has, url: docs[k].url }])),
           properties: properties.map(({ id, ...p }) => p),
           postcode: properties[0]?.postcode || '',
@@ -325,11 +342,78 @@ export default function LandlordRegistrationApplyPage() {
               {/* Step body */}
               <div style={{ padding: 'clamp(22px, 4vw, 32px)' }}>
 
-                {/* STEP 1 — LANDLORD DETAILS */}
+                {/* STEP 1 — OWNER TYPE */}
                 {step === 0 && (
+                  <div>
+                    <p style={{ fontSize: 13, color: '#6b7280', margin: '0 0 18px' }}>
+                      Who owns the property? This decides which details we ask for next.
+                    </p>
+                    <div className="hol-owner-grid">
+                      {[
+                        { v: 'individual', title: 'Individual Owner', desc: 'The property is owned in your personal name (or jointly with another person).' },
+                        { v: 'company', title: 'Company / Ltd', desc: 'The property is owned by a limited company or business registered at Companies House.' },
+                      ].map(o => {
+                        const on = form.ownerType === o.v;
+                        return (
+                          <button
+                            key={o.v}
+                            type="button"
+                            className={`hol-owner-card${on ? ' hol-owner-card--on' : ''}`}
+                            onClick={() => { setForm(f => ({ ...f, ownerType: o.v })); setErrors(er => ({ ...er, ownerType: '' })); }}
+                          >
+                            <span className="hol-owner-icon" aria-hidden>
+                              {o.v === 'individual' ? (
+                                <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></svg>
+                              ) : (
+                                <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M3 21h18M5 21V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16" /><path d="M9 7h1M9 11h1M9 15h1M14 7h1M14 11h1M14 15h1" /></svg>
+                              )}
+                            </span>
+                            <span style={{ display: 'block', fontWeight: 700, fontSize: 15, color: '#0f1f3d', marginBottom: 4 }}>{o.title}</span>
+                            <span style={{ display: 'block', fontSize: 12.5, color: '#6b7280', lineHeight: 1.55 }}>{o.desc}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                    {errors.ownerType && <p className="hol-err" style={{ marginTop: 10 }}>{errors.ownerType}</p>}
+                  </div>
+                )}
+
+                {/* STEP 2 — YOUR DETAILS (individual or company) */}
+                {step === 1 && (
                   <div className="hol-form-grid">
+                    {isCompany && (
+                      <>
+                        <div className="hol-field hol-field--full">
+                          <label className="hol-label">Company Name<span className="hol-req">*</span></label>
+                          <input type="text" className={`hol-input${errors.companyName ? ' hol-input--error' : ''}`} placeholder="e.g. Mark Properties Ltd" value={form.companyName} onChange={set('companyName')} autoComplete="organization" />
+                          {errors.companyName && <p className="hol-err">{errors.companyName}</p>}
+                        </div>
+                        <div className="hol-field">
+                          <label className="hol-label">Company Number<span className="hol-req">*</span></label>
+                          <input type="text" className={`hol-input${errors.companyNumber ? ' hol-input--error' : ''}`} placeholder="e.g. 13506429" value={form.companyNumber} onChange={set('companyNumber')} autoComplete="off" />
+                          {errors.companyNumber && <p className="hol-err">{errors.companyNumber}</p>}
+                          <p style={{ fontSize: 12, color: '#9ca3af', margin: '2px 0 0' }}>As registered at Companies House.</p>
+                        </div>
+                        <div className="hol-field">
+                          <label className="hol-label">Your Role in the Company<span className="hol-req">*</span></label>
+                          <select className={`hol-input hol-select${errors.contactRole ? ' hol-input--error' : ''}`} value={form.contactRole} onChange={set('contactRole')}>
+                            <option value="">Select...</option>
+                            <option>Director</option>
+                            <option>Secretary</option>
+                            <option>Person with significant control</option>
+                            <option>Other</option>
+                          </select>
+                          {errors.contactRole && <p className="hol-err">{errors.contactRole}</p>}
+                        </div>
+                        <div className="hol-field hol-field--full">
+                          <label className="hol-label">Registered Office Address<span className="hol-req">*</span></label>
+                          <input type="text" className={`hol-input${errors.registeredAddress ? ' hol-input--error' : ''}`} placeholder="e.g. 49 St. Kilda's Road, London, England, N16 5BS" value={form.registeredAddress} onChange={set('registeredAddress')} autoComplete="off" />
+                          {errors.registeredAddress && <p className="hol-err">{errors.registeredAddress}</p>}
+                        </div>
+                      </>
+                    )}
                     <div className="hol-field hol-field--full">
-                      <label className="hol-label">Full Name<span className="hol-req">*</span></label>
+                      <label className="hol-label">{isCompany ? 'Contact Person (Director / Officer)' : 'Full Name'}<span className="hol-req">*</span></label>
                       <input type="text" className={`hol-input${errors.fullName ? ' hol-input--error' : ''}`} placeholder="e.g. Mr Mansour Nosrati" value={form.fullName} onChange={set('fullName')} autoComplete="name" />
                       {errors.fullName && <p className="hol-err">{errors.fullName}</p>}
                     </div>
@@ -363,9 +447,10 @@ export default function LandlordRegistrationApplyPage() {
                     </div>
                     {ID_DOCS.map(d => {
                       const st = idDocs[d.key];
+                      const docLabel = isCompany ? d.companyLabel : d.label;
                       return (
                         <div key={d.key} className="hol-field hol-field--full">
-                          <label className="hol-label">{d.label}<span className="hol-req">*</span></label>
+                          <label className="hol-label">{docLabel}<span className="hol-req">*</span></label>
                           {st.url ? (
                             <div className="hol-uploaded">
                               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="20 6 9 17 4 12" /></svg>
@@ -379,7 +464,7 @@ export default function LandlordRegistrationApplyPage() {
                               {st.uploading ? (
                                 <><svg className="hol-spinner" width="15" height="15" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" strokeOpacity=".25" /><path d="M12 2a10 10 0 0 1 10 10" stroke="currentColor" strokeWidth="3" strokeLinecap="round" /></svg> Uploading…</>
                               ) : (
-                                <><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12" /></svg> Upload {d.label} (photo or PDF)</>
+                                <><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12" /></svg> Upload {docLabel} (photo or PDF)</>
                               )}
                             </label>
                           )}
@@ -392,8 +477,8 @@ export default function LandlordRegistrationApplyPage() {
                   </div>
                 )}
 
-                {/* STEP 2 — YOUR PROPERTY (one or more) */}
-                {step === 1 && (
+                {/* STEP 3 — YOUR PROPERTY (one or more) */}
+                {step === 2 && (
                   <div>
                     <p style={{ fontSize: 13, color: '#6b7280', margin: '0 0 18px' }}>
                       Add each property you&rsquo;d like us to manage. Managing more than one? Use <strong>Add another property</strong> below.
@@ -422,8 +507,8 @@ export default function LandlordRegistrationApplyPage() {
                   </div>
                 )}
 
-                {/* STEP 3 — SERVICE / BUNDLE */}
-                {step === 2 && (
+                {/* STEP 4 — SERVICE / BUNDLE */}
+                {step === 3 && (
                   <div>
                     <p style={{ fontSize: 13, color: '#6b7280', margin: '0 0 16px' }}>Choose a management bundle. Each pairs a one-time tenant-find fee with an ongoing monthly management fee — you can discuss and change this with your agent later.</p>
                     <div className="hol-pkg-list">
@@ -469,8 +554,8 @@ export default function LandlordRegistrationApplyPage() {
                   </div>
                 )}
 
-                {/* STEP 4 — DOCUMENTS */}
-                {step === 3 && (
+                {/* STEP 5 — DOCUMENTS */}
+                {step === 4 && (
                   <div>
                     <p style={{ fontSize: 13, color: '#6b7280', margin: '0 0 18px' }}>
                       Do you already have any of the following documents? If so, you can upload them now — or provide them later.
@@ -528,16 +613,25 @@ export default function LandlordRegistrationApplyPage() {
                   </div>
                 )}
 
-                {/* STEP 5 — CONFIRM */}
-                {step === 4 && (
+                {/* STEP 6 — CONFIRM */}
+                {step === 5 && (
                   <div>
                     <div className="hol-summary">
-                      <SummaryRow label="Name" value={form.fullName} />
+                      <SummaryRow label="Owner type" value={isCompany ? 'Company / Ltd' : 'Individual owner'} />
+                      {isCompany && (
+                        <>
+                          <SummaryRow label="Company name" value={form.companyName} />
+                          <SummaryRow label="Company number" value={form.companyNumber} />
+                          <SummaryRow label="Registered office" value={form.registeredAddress} />
+                        </>
+                      )}
+                      <SummaryRow label={isCompany ? `Contact person${form.contactRole ? ` (${form.contactRole})` : ''}` : 'Name'} value={form.fullName} />
                       <SummaryRow label="Email" value={form.email} />
                       <SummaryRow label="Telephone" value={form.phone} />
                       <SummaryRow label="Contact address" value={form.contactAddress} />
-                      <SummaryRow label="Landlord ID" value={idDocs.landlordId.url ? `Uploaded — ${idDocs.landlordId.fileName || 'document'}` : '—'} />
+                      <SummaryRow label={isCompany ? "Director's ID" : 'Landlord ID'} value={idDocs.landlordId.url ? `Uploaded — ${idDocs.landlordId.fileName || 'document'}` : '—'} />
                       <SummaryRow label="Billing address document" value={idDocs.billingProof.url ? `Uploaded — ${idDocs.billingProof.fileName || 'document'}` : '—'} />
+                      <SummaryRow label="Proof of ownership" value={idDocs.ownershipProof.url ? `Uploaded — ${idDocs.ownershipProof.fileName || 'document'}` : '—'} />
                       <SummaryRow label="Properties owned" value={form.propertyCount} />
                       {properties.map((p, i) => (
                         <div key={p.id} className="hol-summary-row">
@@ -552,7 +646,6 @@ export default function LandlordRegistrationApplyPage() {
                       <SummaryRow label="EPC" value={docSummary(docs.epc)} />
                       <SummaryRow label="Electrical (EICR)" value={docSummary(docs.electrical)} />
                       <SummaryRow label="Gas Safety" value={docSummary(docs.gas)} />
-                      <SummaryRow label="Land Registry" value={docSummary(docs.landReg)} />
                     </div>
 
                     <div className="hol-field hol-field--full" style={{ marginTop: 20 }}>
@@ -560,14 +653,9 @@ export default function LandlordRegistrationApplyPage() {
                       <textarea className="hol-input hol-textarea" rows={3} placeholder="Anything else we should know..." value={form.notes} onChange={set('notes')} />
                     </div>
 
-                    <label className={`hol-terms-accept${errors.terms ? ' hol-terms-accept--error' : ''}`}>
-                      <input type="checkbox" checked={termsAccepted} onChange={(e) => { setTermsAccepted(e.target.checked); setErrors(er => ({ ...er, terms: '' })); }} />
-                      <span className="hol-checkbox" aria-hidden>{termsAccepted && (<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><polyline points="20 6 9 17 4 12" /></svg>)}</span>
-                      <span style={{ fontSize: 13, color: '#374151', lineHeight: 1.6 }}>
-                        I confirm I have read and accept the property management <Link href="/terms" target="_blank" rel="noopener noreferrer" style={{ color: '#dc2626', fontWeight: 700, textDecoration: 'underline' }}>terms &amp; conditions</Link> <span style={{ color: '#9ca3af', fontSize: 12 }}>(opens in a new tab — your answers stay saved here)</span>, and consent to House of Lettings contacting me about my registration.
-                      </span>
-                    </label>
-                    {errors.terms && <p className="hol-err" style={{ marginTop: 6 }}>{errors.terms}</p>}
+                    <p className="hol-terms-note">
+                      By completing this registration you confirm the details provided are accurate, agree to the property management <Link href="/terms" target="_blank" rel="noopener noreferrer" style={{ color: '#dc2626', fontWeight: 700, textDecoration: 'underline' }}>terms &amp; conditions</Link>, and consent to House of Lettings contacting you about your registration.
+                    </p>
 
                     {status === 'error' && (
                       <div className="hol-err-banner">
@@ -844,6 +932,16 @@ const PAGE_CSS = `
   .hol-pkg-details ul{margin:0;padding-left:18px;}
   .hol-pkg-details li{font-size:12.5px;color:#4b5563;line-height:1.75;}
   .hol-upload--error{border-color:#e53e3e;}
+
+  .hol-owner-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+  @media(max-width:540px){ .hol-owner-grid{grid-template-columns:1fr;} }
+  .hol-owner-card{text-align:left;background:#fff;border:1.5px solid #e5e7eb;border-radius:14px;padding:20px 18px;cursor:pointer;font-family:'Poppins',sans-serif;transition:border-color .15s,background .15s,box-shadow .15s;}
+  .hol-owner-card:hover{border-color:#bcd0ee;}
+  .hol-owner-card--on{border-color:#2563a8;background:#f5f9ff;box-shadow:0 0 0 3px rgba(37,99,168,.12);}
+  .hol-owner-icon{display:flex;align-items:center;justify-content:center;width:48px;height:48px;border-radius:12px;background:#eef4ff;color:#2563a8;margin-bottom:12px;}
+  .hol-owner-card--on .hol-owner-icon{background:#2563a8;color:#fff;}
+
+  .hol-terms-note{margin:22px 0 0;padding:14px 16px;border:1px solid #e5e7eb;border-radius:12px;background:#fafbff;font-size:12.5px;color:#6b7280;line-height:1.65;}
   .hol-pkg input,.hol-terms-accept input,.hol-upload input{position:absolute;opacity:0;width:0;height:0;}
   .hol-radio{flex-shrink:0;width:20px;height:20px;border-radius:50%;border:1.5px solid #cbd5e1;display:flex;align-items:center;justify-content:center;margin-top:2px;background:#fff;transition:all .15s;}
   .hol-pkg--on .hol-radio{border-color:#2563a8;}

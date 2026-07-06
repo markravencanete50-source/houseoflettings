@@ -541,9 +541,24 @@ export default function TenantEnquiryModal({
                   {hasProperty
                     ? availDates !== null && (
                         upcomingDates.length > 0 ? (
-                          <p className="hol-slot-note">
-                            Next available viewings on <strong>{upcomingDates.map(prettyDate).join(", ")}</strong>.
-                          </p>
+                          <div className="hol-avail-box">
+                            <div className="hol-avail-box__label">
+                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                              Next available viewings — tap a date
+                            </div>
+                            <div className="hol-avail-chips">
+                              {upcomingDates.map((iso) => (
+                                <button
+                                  key={iso}
+                                  type="button"
+                                  className={`hol-avail-chip${form.date === iso ? " hol-avail-chip--on" : ""}`}
+                                  onClick={() => { setForm(f => ({ ...f, date: iso, time: "" })); setErrors(er => ({ ...er, date: "", time: "" })); }}
+                                >
+                                  {prettyDate(iso)}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
                         ) : (
                           <p className="hol-slot-note">
                             No viewing times set for this property yet — please call us to arrange.
@@ -552,9 +567,24 @@ export default function TenantEnquiryModal({
                       )
                     : activeCity && (
                         upcomingDates.length > 0 ? (
-                          <p className="hol-slot-note">
-                            We&apos;re next in {activeCity} on <strong>{upcomingDates.map(prettyDate).join(", ")}</strong>.
-                          </p>
+                          <div className="hol-avail-box">
+                            <div className="hol-avail-box__label">
+                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                              We&apos;re next in {activeCity} — tap a date
+                            </div>
+                            <div className="hol-avail-chips">
+                              {upcomingDates.map((iso) => (
+                                <button
+                                  key={iso}
+                                  type="button"
+                                  className={`hol-avail-chip${form.date === iso ? " hol-avail-chip--on" : ""}`}
+                                  onClick={() => { setForm(f => ({ ...f, date: iso, time: "" })); setErrors(er => ({ ...er, date: "", time: "" })); }}
+                                >
+                                  {prettyDate(iso)}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
                         ) : (
                           <p className="hol-slot-note">
                             No {activeCity} viewing days in the next 60 days — please call us to arrange.
@@ -910,6 +940,12 @@ const MODAL_CSS = `
   .hol-slot-note--warn{color:#b45309;background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:10px 12px;}
   .hol-city-detected{display:flex;align-items:center;gap:10px;background:#f0f4ff;border:1.5px solid #dbeafe;border-radius:10px;padding:12px 14px;font-size:14px;color:#1a3c5e;}
   .hol-city-detected strong{color:#0f1f3d;}
+  .hol-avail-box{margin-top:10px;background:#f0f4ff;border:1.5px solid #dbeafe;border-radius:12px;padding:12px 14px;}
+  .hol-avail-box__label{display:flex;align-items:center;gap:7px;font-size:12px;font-weight:700;letter-spacing:.02em;color:#1a3c5e;margin-bottom:10px;}
+  .hol-avail-chips{display:flex;flex-wrap:wrap;gap:8px;}
+  .hol-avail-chip{padding:9px 14px;border:1.5px solid #2563a8;border-radius:999px;background:#fff;color:#1a3c5e;font-family:'Poppins',sans-serif;font-size:13px;font-weight:600;cursor:pointer;transition:all .15s;white-space:nowrap;}
+  .hol-avail-chip:hover{background:#2563a8;color:#fff;transform:translateY(-1px);box-shadow:0 3px 10px rgba(37,99,168,.3);}
+  .hol-avail-chip--on{background:#2563a8;color:#fff;box-shadow:0 3px 10px rgba(37,99,168,.3);}
   .hol-form-footer{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-top:8px;padding-top:20px;border-top:1px solid #f1f3f7;}
   .hol-privacy{display:flex;align-items:center;gap:6px;font-size:12px;color:#9ca3af;margin:0;}
   .hol-submit{display:inline-flex;align-items:center;gap:8px;background:linear-gradient(135deg,#1a3c5e 0%,#2563a8 100%);color:#fff;border:none;border-radius:10px;font-family:'Poppins',sans-serif;font-size:14px;font-weight:600;padding:13px 24px;cursor:pointer;transition:opacity .15s,transform .15s,box-shadow .15s;box-shadow:0 4px 16px rgba(37,99,168,.35);white-space:nowrap;}

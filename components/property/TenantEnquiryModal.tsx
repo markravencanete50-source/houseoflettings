@@ -3,7 +3,14 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { createPortal } from "react-dom";
 import PostcodeLookup, { type AddressResult } from "@/components/PostcodeLookup";
-import type { SlotView } from "@/lib/viewingSlots";
+import {
+  citiesForDateIn,
+  isCityScheduledIn,
+  nextDatesForCityIn,
+  type SlotView,
+  type City,
+  type ScheduleMap,
+} from "@/lib/viewingSlots";
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const UK_PHONE_REGEX = /^(\+44|0)[\s-]?[1-9][\d\s-]{8,11}$/;
@@ -41,7 +48,7 @@ const EMPTY_FORM = {
   message: "",
 };
 
-function validate(form: typeof EMPTY_FORM) {
+function validate(form: typeof EMPTY_FORM, schedule: ScheduleMap | null) {
   const errors: Record<string, string> = {};
   if (!form.firstName.trim()) errors.firstName = "First name is required";
   if (!form.lastName.trim()) errors.lastName = "Last name is required";
@@ -52,6 +59,8 @@ function validate(form: typeof EMPTY_FORM) {
     errors.phone = "Enter a valid UK phone number";
   if (!form.city) errors.city = "Please choose which city the property is in";
   if (!form.date) errors.date = "Please choose a date";
+  else if (form.city && !isCityScheduledIn(schedule, form.city as City, form.date))
+    errors.date = "Our team isn't in this city on that day — please pick another date";
   if (!form.time) errors.time = "Please choose a viewing time slot";
   if (!form.moveBy) errors.moveBy = "Please select when you want to move";
   if (!form.employmentStatus) errors.employmentStatus = "Please select your employment status";
@@ -144,6 +153,9 @@ interface TenantEnquiryModalProps {
   propertyPrice?: number;
   /** Postcode of the property being enquired about — pre-fills the postcode field. */
   propertyPostcode?: string;
+  /** City the property is in, auto-detected by the listing page. When set, the
+   *  tenant isn't asked to choose — the viewing is locked to this city. */
+  propertyCity?: City | null;
 }
 
 export default function TenantEnquiryModal({
@@ -152,6 +164,7 @@ export default function TenantEnquiryModal({
   propertyTitle,
   propertyPrice,
   propertyPostcode,
+  propertyCity,
 }: TenantEnquiryModalProps) {
   const [form, setForm] = useState(EMPTY_FORM);
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -168,15 +181,34 @@ export default function TenantEnquiryModal({
   const [slotsError, setSlotsError] = useState("");
   const [refreshKey, setRefreshKey] = useState(0);
 
+  // Live city rota, mirrored from the office Google Calendar (null until loaded;
+  // helpers fall back to the weekly default rota while null).
+  const [schedule, setSchedule] = useState<ScheduleMap | null>(null);
+
   useEffect(() => { setMounted(true); }, []);
 
   // Earliest bookable date is today; allow booking up to ~60 days out.
   const todayStr = new Date().toLocaleDateString("en-CA", { timeZone: "Europe/London" });
   const maxDateStr = new Date(Date.now() + 60 * 864e5).toLocaleDateString("en-CA", { timeZone: "Europe/London" });
 
-  // Fetch availability whenever the city or date changes (and the modal is open).
+  // Load the live rota when the modal opens so hints/warnings reflect the
+  // calendar. Silent on failure — the map-aware helpers fall back to the
+  // built-in weekly rota, and the server still enforces the real rota.
   useEffect(() => {
-    if (!isOpen || !form.city || !form.date) {
+    if (!isOpen) return;
+    let ignore = false;
+    fetch(`/api/viewing-schedule?from=${todayStr}&days=60`)
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => { if (!ignore && data?.schedule) setSchedule(data.schedule); })
+      .catch(() => {});
+    return () => { ignore = true; };
+  }, [isOpen, todayStr]);
+
+  // Fetch availability whenever the city or date changes (and the modal is open).
+  // Skip the fetch entirely when the team isn't in this city on the chosen day —
+  // the schedule warning is shown instead of an empty grid.
+  useEffect(() => {
+    if (!isOpen || !form.city || !form.date || !isCityScheduledIn(schedule, form.city as City, form.date)) {
       setSlots([]); setLockedCity(null); setSlotsError("");
       return;
     }
@@ -193,7 +225,7 @@ export default function TenantEnquiryModal({
       .catch((e) => { if (!ignore) { setSlots([]); setSlotsError(e.message || "Could not load times"); } })
       .finally(() => { if (!ignore) setSlotsLoading(false); });
     return () => { ignore = true; };
-  }, [isOpen, form.city, form.date, refreshKey]);
+  }, [isOpen, form.city, form.date, refreshKey, schedule]);
 
   useEffect(() => {
     document.body.style.overflow = isOpen ? "hidden" : "";
@@ -208,6 +240,14 @@ export default function TenantEnquiryModal({
       setForm(f => (f.postcode ? f : { ...f, postcode: propertyPostcode }));
     }
   }, [isOpen, propertyPostcode]);
+
+  // Lock the viewing to the property's detected city so the tenant is never
+  // asked something the page already knows. Clears any stale time selection.
+  useEffect(() => {
+    if (isOpen && propertyCity) {
+      setForm(f => (f.city === propertyCity ? f : { ...f, city: propertyCity, time: "" }));
+    }
+  }, [isOpen, propertyCity]);
 
   const handlePostcodeSelect = useCallback((data: AddressResult) => {
     setForm(f => ({ ...f, postcode: data.postcode || f.postcode }));
@@ -242,7 +282,7 @@ export default function TenantEnquiryModal({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const errs = validate(form);
+    const errs = validate(form, schedule);
     if (Object.keys(errs).length) { setErrors(errs); return; }
     setStatus("loading");
     try {
@@ -296,6 +336,24 @@ export default function TenantEnquiryModal({
   };
 
   if (!mounted || !isOpen) return null;
+
+  // Schedule-aware helpers for the "Choose your viewing" section. All driven by
+  // the live rota map (falls back to the built-in weekly rota while it loads).
+  const cityDetected = !!propertyCity;
+  const activeCity = (form.city || "") as City | "";
+  const prettyDate = (iso: string) =>
+    new Date(`${iso}T12:00:00`).toLocaleDateString("en-GB", {
+      weekday: "short", day: "numeric", month: "short",
+    });
+  // The next handful of days the team is in this city — the "when can I book?" hint.
+  const upcomingDates = activeCity
+    ? nextDatesForCityIn(schedule, activeCity, todayStr, 5, 60)
+    : [];
+  const dateOffSchedule =
+    !!activeCity && !!form.date && !isCityScheduledIn(schedule, activeCity, form.date);
+  const suggestedDates = dateOffSchedule
+    ? nextDatesForCityIn(schedule, activeCity, form.date, 3, 60)
+    : [];
 
   return createPortal(
     <>
@@ -394,16 +452,29 @@ export default function TenantEnquiryModal({
 
                 {/* ── Choose your viewing (calendar) ── */}
                 <SectionTitle>Choose your viewing</SectionTitle>
-                <div className="hol-field hol-field--mb">
-                  <label className="hol-label">Which city is the property in?<span className="hol-req">*</span></label>
-                  <RadioGroup
-                    options={["Manchester", "Leeds"]}
-                    value={form.city}
-                    onChange={(v) => { setRadio("city", v); setForm(f => ({ ...f, time: "" })); }}
-                    columns={2}
-                  />
-                  {errors.city && <p className="hol-err">{errors.city}</p>}
-                </div>
+                {cityDetected ? (
+                  // City auto-detected from the property — shown, not asked.
+                  <div className="hol-field hol-field--mb">
+                    <label className="hol-label">Viewing location</label>
+                    <div className="hol-city-detected">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#2563a8" strokeWidth="2">
+                        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>
+                      </svg>
+                      <span>This property is in <strong>{form.city}</strong></span>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="hol-field hol-field--mb">
+                    <label className="hol-label">Which city is the property in?<span className="hol-req">*</span></label>
+                    <RadioGroup
+                      options={["Manchester", "Leeds"]}
+                      value={form.city}
+                      onChange={(v) => { setRadio("city", v); setForm(f => ({ ...f, time: "" })); }}
+                      columns={2}
+                    />
+                    {errors.city && <p className="hol-err">{errors.city}</p>}
+                  </div>
+                )}
                 <div className="hol-field hol-field--mb">
                   <label className="hol-label">Date<span className="hol-req">*</span></label>
                   <input
@@ -415,9 +486,43 @@ export default function TenantEnquiryModal({
                     value={form.date}
                     onChange={(e) => { const v = e.target.value; setForm(f => ({ ...f, date: v, time: "" })); setErrors(er => ({ ...er, date: "", time: "" })); }}
                   />
+                  {activeCity && upcomingDates.length > 0 && (
+                    <p className="hol-slot-note">
+                      We&apos;re next in {activeCity} on <strong>{upcomingDates.map(prettyDate).join(", ")}</strong>.
+                    </p>
+                  )}
+                  {activeCity && upcomingDates.length === 0 && (
+                    <p className="hol-slot-note">
+                      No {activeCity} viewing days in the next 60 days — please call us to arrange.
+                    </p>
+                  )}
                   {errors.date && <p className="hol-err">{errors.date}</p>}
                 </div>
-                {form.city && form.date && (
+                {dateOffSchedule && (
+                  <div className="hol-field hol-field--mb">
+                    <p className="hol-slot-note hol-slot-note--warn">
+                      Our team isn&apos;t in <strong>{activeCity}</strong> on {prettyDate(form.date)}
+                      {citiesForDateIn(schedule, form.date).length > 0 && <> (that day covers {citiesForDateIn(schedule, form.date).join(" & ")})</>}.
+                      {suggestedDates.length > 0 && " Try one of these dates instead:"}
+                    </p>
+                    {suggestedDates.length > 0 && (
+                      <div className="hol-slot-grid" style={{ marginTop: 8 }}>
+                        {suggestedDates.map((iso) => (
+                          <button
+                            key={iso}
+                            type="button"
+                            className="hol-slot"
+                            style={{ minWidth: 110 }}
+                            onClick={() => { setForm(f => ({ ...f, date: iso, time: "" })); setErrors(er => ({ ...er, date: "", time: "" })); }}
+                          >
+                            {prettyDate(iso)}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+                {form.city && form.date && !dateOffSchedule && (
                   <div className="hol-field hol-field--mb">
                     <label className="hol-label">Available times<span className="hol-req">*</span></label>
                     {slotsLoading ? (
@@ -728,6 +833,8 @@ const MODAL_CSS = `
   .hol-slot--off{background:#f3f4f6;border-color:#eceef2;color:#c2c7d0;cursor:not-allowed;text-decoration:line-through;}
   .hol-slot-note{font-size:12px;color:#9ca3af;margin:8px 0 0;line-height:1.5;}
   .hol-slot-note--warn{color:#b45309;background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:10px 12px;}
+  .hol-city-detected{display:flex;align-items:center;gap:10px;background:#f0f4ff;border:1.5px solid #dbeafe;border-radius:10px;padding:12px 14px;font-size:14px;color:#1a3c5e;}
+  .hol-city-detected strong{color:#0f1f3d;}
   .hol-form-footer{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-top:8px;padding-top:20px;border-top:1px solid #f1f3f7;}
   .hol-privacy{display:flex;align-items:center;gap:6px;font-size:12px;color:#9ca3af;margin:0;}
   .hol-submit{display:inline-flex;align-items:center;gap:8px;background:linear-gradient(135deg,#1a3c5e 0%,#2563a8 100%);color:#fff;border:none;border-radius:10px;font-family:'Poppins',sans-serif;font-size:14px;font-weight:600;padding:13px 24px;cursor:pointer;transition:opacity .15s,transform .15s,box-shadow .15s;box-shadow:0 4px 16px rgba(37,99,168,.35);white-space:nowrap;}

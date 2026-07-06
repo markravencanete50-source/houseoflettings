@@ -7,6 +7,7 @@ import {
   type City,
   type ExistingBooking,
 } from "@/lib/viewingSlots";
+import { citiesForDateLive } from "@/lib/citySchedule";
 
 function getFirestoreClient() {
   if (!getApps().length) {
@@ -49,6 +50,20 @@ export async function GET(request: Request) {
       return Response.json({ message: "A valid city is required" }, { status: 400 });
     }
 
+    // The team's rota comes from the office calendar — if they're not in this
+    // city that day, there are no bookable times at all, regardless of bookings.
+    const scheduledCities = await citiesForDateLive(date);
+    if (!scheduledCities.includes(city)) {
+      return Response.json({
+        date,
+        city,
+        lockedCity: null,
+        cityScheduled: false,
+        scheduledCities,
+        slots: [],
+      });
+    }
+
     const db = getFirestoreClient();
     const snap = await db
       .collection("viewingBookings")
@@ -68,6 +83,8 @@ export async function GET(request: Request) {
       date,
       city,
       lockedCity: lockedCityFor(bookings),
+      cityScheduled: true,
+      scheduledCities,
       slots,
     });
   } catch (error) {

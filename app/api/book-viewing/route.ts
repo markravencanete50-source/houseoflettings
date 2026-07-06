@@ -4,11 +4,14 @@ import {
   bookingRejectionReason,
   minutesToTime,
   timeToMinutes,
+  weekdayOf,
+  WEEKDAY_NAMES,
   SLOT_INTERVAL_MIN,
   CITIES,
   type City,
   type ExistingBooking,
 } from "@/lib/viewingSlots";
+import { citiesForDateLive } from "@/lib/citySchedule";
 import { pushViewingToCalendar } from "@/lib/googleCalendar";
 import {
   composeClientSms,
@@ -93,6 +96,17 @@ export async function POST(request: Request) {
     }
     if (!/^\d{4}-\d{2}-\d{2}$/.test(data.date) || !/^\d{2}:\d{2}$/.test(data.time)) {
       return Response.json({ message: "Please choose a valid date and time" }, { status: 400 });
+    }
+
+    // Enforce the live city rota (office calendar): the team can only view this
+    // city on the days it's actually there. 409 so the modal clears the time
+    // and refreshes.
+    const cities = await citiesForDateLive(data.date);
+    if (!cities.includes(city)) {
+      const day = WEEKDAY_NAMES[weekdayOf(data.date)];
+      return Response.json({
+        message: `Our team isn't in ${city} on a ${day}${cities.length ? ` — that day covers ${cities.join(" & ")}` : ""}. Please pick a day we're in ${city}.`,
+      }, { status: 409 });
     }
 
     const db = getFirestoreClient();

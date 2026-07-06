@@ -15,6 +15,125 @@
 export type City = 'Leeds' | 'Manchester';
 export const CITIES: City[] = ['Leeds', 'Manchester'];
 
+// ── Weekly city rota (the "guide") ─────────────────────────────────────────
+// Which city (or cities) the viewing team covers each weekday. This mirrors the
+// office calendar: most days are Leeds, Wednesday is Manchester, and Fri/Sat
+// the team covers both. Keyed by JS weekday (0 = Sunday … 6 = Saturday).
+// Editing this object is all it takes to change availability across the site.
+export const WEEKDAY_NAMES = [
+  'Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday',
+] as const;
+
+export const CITY_SCHEDULE: Record<number, City[]> = {
+  0: ['Leeds'],                 // Sunday
+  1: ['Leeds'],                 // Monday
+  2: ['Leeds'],                 // Tuesday
+  3: ['Manchester'],            // Wednesday
+  4: ['Leeds'],                 // Thursday
+  5: ['Leeds', 'Manchester'],   // Friday
+  6: ['Leeds', 'Manchester'],   // Saturday
+};
+
+// Weekday (0–6) for a 'YYYY-MM-DD' string, computed via UTC-noon so it never
+// drifts by a day due to the server's own timezone.
+export function weekdayOf(dateStr: string): number {
+  const [y, m, d] = dateStr.split('-').map(Number);
+  return new Date(Date.UTC(y, m - 1, d, 12)).getUTCDay();
+}
+
+// Which cities the team covers on a given date.
+export function citiesForDate(dateStr: string): City[] {
+  return CITY_SCHEDULE[weekdayOf(dateStr)] ?? [];
+}
+
+// Is the team in `city` on `dateStr`?
+export function isCityScheduledOn(city: City, dateStr: string): boolean {
+  return citiesForDate(dateStr).includes(city);
+}
+
+// The weekdays (0–6) the team is in a given city — for "we visit Leeds on…" hints.
+export function scheduledWeekdaysFor(city: City): number[] {
+  return Object.keys(CITY_SCHEDULE)
+    .map(Number)
+    .filter((d) => CITY_SCHEDULE[d].includes(city))
+    .sort((a, b) => a - b);
+}
+
+// The next `count` dates (from `fromStr`, inclusive) the team is in `city`,
+// within `horizonDays`. Used to steer tenants to a bookable day.
+export function nextDatesForCity(
+  city: City,
+  fromStr: string,
+  count = 3,
+  horizonDays = 60,
+): string[] {
+  const [y, m, d] = fromStr.split('-').map(Number);
+  const out: string[] = [];
+  for (let i = 0; i <= horizonDays && out.length < count; i++) {
+    const dt = new Date(Date.UTC(y, m - 1, d + i, 12));
+    if (CITY_SCHEDULE[dt.getUTCDay()]?.includes(city)) out.push(dt.toISOString().slice(0, 10));
+  }
+  return out;
+}
+
+// ── Live schedule map (calendar-driven) ────────────────────────────────────
+// A dense date→cities map, produced server-side from the office Google Calendar
+// (see lib/citySchedule.ts). The helpers below take such a map and fall back to
+// the weekly CITY_SCHEDULE above when it's null (calendar not loaded yet / not
+// configured), so the UI and rules keep working either way.
+export type ScheduleMap = Record<string, City[]>;
+
+export function citiesForDateIn(map: ScheduleMap | null | undefined, dateStr: string): City[] {
+  if (map) return map[dateStr] ?? [];
+  return citiesForDate(dateStr);
+}
+
+export function isCityScheduledIn(
+  map: ScheduleMap | null | undefined,
+  city: City,
+  dateStr: string,
+): boolean {
+  return citiesForDateIn(map, dateStr).includes(city);
+}
+
+export function nextDatesForCityIn(
+  map: ScheduleMap | null | undefined,
+  city: City,
+  fromStr: string,
+  count = 3,
+  horizonDays = 60,
+): string[] {
+  if (!map) return nextDatesForCity(city, fromStr, count, horizonDays);
+  const [y, m, d] = fromStr.split('-').map(Number);
+  const out: string[] = [];
+  for (let i = 0; i <= horizonDays && out.length < count; i++) {
+    const iso = new Date(Date.UTC(y, m - 1, d + i, 12)).toISOString().slice(0, 10);
+    if ((map[iso] ?? []).includes(city)) out.push(iso);
+  }
+  return out;
+}
+
+// ── City auto-detection ────────────────────────────────────────────────────
+// Best-effort guess of a property's city from its free-text location/postcode.
+// Returns null when it genuinely can't tell, so callers can fall back to asking.
+const MANCHESTER_AREAS = ['M', 'OL', 'BL', 'SK', 'WN', 'WA'];
+const LEEDS_AREAS = ['LS', 'WF', 'BD', 'HD', 'HX', 'HG', 'YO'];
+
+export function cityFromText(text?: string): City | null {
+  if (!text) return null;
+  const lower = text.toLowerCase();
+  if (lower.includes('manchester')) return 'Manchester';
+  if (lower.includes('leeds')) return 'Leeds';
+  // Fall back to the postcode's outward area (the letters before the first digit).
+  const m = text.toUpperCase().match(/\b([A-Z]{1,2})\d/);
+  const area = m?.[1];
+  if (area) {
+    if (MANCHESTER_AREAS.includes(area)) return 'Manchester';
+    if (LEEDS_AREAS.includes(area)) return 'Leeds';
+  }
+  return null;
+}
+
 export const DAY_START_MIN = 9 * 60;       // 09:00
 export const DAY_END_MIN = 19 * 60 + 30;   // 19:30 (last bookable slot)
 export const SLOT_INTERVAL_MIN = 15;       // slots every 15 minutes

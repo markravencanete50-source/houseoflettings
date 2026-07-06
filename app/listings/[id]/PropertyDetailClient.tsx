@@ -10,6 +10,7 @@ import { getUserProfile } from '@/services/auth';
 import { useAuth } from '@/hooks/useAuth';
 import { Property } from '@/lib/types';
 import TenantEnquiryModal from '@/components/property/TenantEnquiryModal';
+import { cityFromText } from '@/lib/viewingSlots';
 
 // Listings store the postcode at the end of the free-text location string
 // (e.g. "12 Oak Street, Headingley, Leeds, LS6 3AA"). Pull out a full UK
@@ -139,7 +140,11 @@ export default function PropertyDetailClient() {
   );
 
   const bedsLabel = property.bedrooms === 0 ? 'Studio' : `${property.bedrooms} Bedroom${property.bedrooms > 1 ? 's' : ''}`;
-  const isLeeds = /leeds|LS\d/i.test(property.location || '');
+  // Detect the property's city once and reuse it for both the contact phone and
+  // the viewing modal. Falls back to the old Leeds-or-Manchester heuristic for
+  // the phone (which must always pick one) while the modal handles null itself.
+  const detectedCity = cityFromText(property.location);
+  const isLeeds = detectedCity === 'Leeds' || /leeds|LS\d/i.test(property.location || '');
   const contactPhone = isLeeds ? '+44 113 868 9212' : '+44 161 768 1758';
   const contactPhoneHref = isLeeds ? 'tel:+441138689212' : 'tel:+441617681758';
   const images = property.images || [];
@@ -894,6 +899,7 @@ export default function PropertyDetailClient() {
         propertyTitle={property.title}
         propertyPrice={property.price}
         propertyPostcode={extractPostcode(property.location)}
+        propertyCity={detectedCity}
       />
     </>
   );

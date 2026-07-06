@@ -25,7 +25,7 @@ export function isCalendarConfigured(): boolean {
   );
 }
 
-async function getAccessToken(): Promise<string> {
+export async function getCalendarAccessToken(): Promise<string> {
   const clientEmail = process.env.GOOGLE_SA_CLIENT_EMAIL as string;
   const privateKey = (process.env.GOOGLE_SA_PRIVATE_KEY as string).replace(/\\n/g, "\n");
   const now = Math.floor(Date.now() / 1000);
@@ -77,7 +77,7 @@ export interface CalendarViewing {
 export async function pushViewingToCalendar(v: CalendarViewing): Promise<string | null> {
   if (!isCalendarConfigured()) return null;
   try {
-    const token = await getAccessToken();
+    const token = await getCalendarAccessToken();
     const calendarId = encodeURIComponent(process.env.GOOGLE_CALENDAR_ID as string);
     const summary = `Viewing — ${v.name} (${v.city})`;
     const descriptionLines = [
@@ -116,4 +116,36 @@ export async function pushViewingToCalendar(v: CalendarViewing): Promise<string 
     console.error("pushViewingToCalendar error:", err);
     return null;
   }
+}
+
+export interface CalendarEvent {
+  summary?: string;
+  start?: { date?: string; dateTime?: string };
+}
+
+// List events between two ISO instants (read-only). Used to derive the team's
+// city rota from the office calendar. Returns [] when not configured.
+export async function listCalendarEvents(
+  timeMinISO: string,
+  timeMaxISO: string,
+): Promise<CalendarEvent[]> {
+  if (!isCalendarConfigured()) return [];
+  const token = await getCalendarAccessToken();
+  const calendarId = encodeURIComponent(process.env.GOOGLE_CALENDAR_ID as string);
+  const params = new URLSearchParams({
+    timeMin: timeMinISO,
+    timeMax: timeMaxISO,
+    singleEvents: "true",     // expand recurring rota events into individual days
+    orderBy: "startTime",
+    maxResults: "2500",
+  });
+  const res = await fetch(
+    `https://www.googleapis.com/calendar/v3/calendars/${calendarId}/events?${params}`,
+    { headers: { Authorization: `Bearer ${token}` } },
+  );
+  if (!res.ok) {
+    throw new Error(`Google Calendar list failed: ${res.status} ${await res.text().catch(() => "")}`);
+  }
+  const json = await res.json();
+  return (json.items as CalendarEvent[]) || [];
 }

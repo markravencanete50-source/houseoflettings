@@ -213,15 +213,21 @@ function ImageGallery() {
 
       {/* Lightbox */}
       {lightbox !== null && (
-        <div className="hol-lightbox" onClick={() => setLightbox(null)}>
-          <button className="hol-lb-close" onClick={() => setLightbox(null)}>&times;</button>
-          <button className="hol-lb-prev" onClick={e => { e.stopPropagation(); setLightbox((lightbox - 1 + GALLERY_ITEMS.length) % GALLERY_ITEMS.length); }}>&lsaquo;</button>
+        <div
+          className="hol-lightbox"
+          onClick={() => setLightbox(null)}
+          onKeyDown={(e) => e.key === 'Escape' && setLightbox(null)}
+          role="dialog"
+          aria-label="Image viewer"
+        >
+          <button className="hol-lb-close" onClick={() => setLightbox(null)} aria-label="Close image viewer">&times;</button>
+          <button className="hol-lb-prev" aria-label="Previous image" onClick={e => { e.stopPropagation(); setLightbox((lightbox - 1 + GALLERY_ITEMS.length) % GALLERY_ITEMS.length); }}>&lsaquo;</button>
           <img
             src={GALLERY_ITEMS[lightbox].img}
             alt={GALLERY_ITEMS[lightbox].label}
             onClick={e => e.stopPropagation()}
           />
-          <button className="hol-lb-next" onClick={e => { e.stopPropagation(); setLightbox((lightbox + 1) % GALLERY_ITEMS.length); }}>&rsaquo;</button>
+          <button className="hol-lb-next" aria-label="Next image" onClick={e => { e.stopPropagation(); setLightbox((lightbox + 1) % GALLERY_ITEMS.length); }}>&rsaquo;</button>
           <div className="hol-lb-caption">{GALLERY_ITEMS[lightbox].label}</div>
         </div>
       )}
@@ -267,7 +273,17 @@ function ImageGallery() {
           <div
             key={i}
             className="hol-gallery-card"
+            role="button"
+            tabIndex={0}
+            aria-label={`View ${item.label}`}
             onClick={() => { setActive(i); setLightbox(i); }}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                setActive(i);
+                setLightbox(i);
+              }
+            }}
             style={{
               flexShrink: 0,
               width: i % 3 === 0 ? 360 : 280,
@@ -315,7 +331,7 @@ function ImageGallery() {
               <div style={{ fontSize: 15, fontWeight: 700, color: '#fff', marginBottom: 4, fontFamily: "'Poppins', sans-serif" }}>
                 {item.label}
               </div>
-              <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.65)', letterSpacing: 0.5 }}>
+              <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.75)', letterSpacing: 0.5 }}>
                 {item.sub}
               </div>
             </div>
@@ -424,6 +440,10 @@ export default function HomePage() {
     <>
       {/* ── GLOBAL REVEAL + SMART NAVBAR + MOBILE FAB STYLES ── */}
       <style>{`
+        @media (prefers-reduced-motion: reduce) {
+          * { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
+        }
+
         .reveal {
           opacity: 0;
           transform: translateY(32px);
@@ -526,6 +546,15 @@ export default function HomePage() {
         .hol-gallery-card:hover img {
           transform: scale(1.06) !important;
         }
+
+        @media (max-width: 768px) {
+          .hcw-orb-a, .hcw-orb-b, .hcw-orb-c,
+          .hcw-grid-lines,
+          .hol-gallery-card:hover img,
+          .hol-gallery-card:hover .svc-shimmer {
+            animation: none !important;
+          }
+        }
       `}</style>
 
       {/* Scroll progress bar */}
@@ -565,20 +594,12 @@ export default function HomePage() {
 
         <div style={{ position: 'relative', maxWidth: 700, margin: '0 auto', textAlign: 'center' }}>
           <h1 style={{
-            fontFamily: "'Barlow Condensed', 'Poppins', sans-serif",
+            fontFamily: "var(--font-barlow-condensed), 'Poppins', sans-serif",
             fontSize: 'clamp(36px,5.5vw,68px)',
-            fontWeight: 700, color: '#fff', lineHeight: 1.05, letterSpacing: '0.5px', marginBottom: 6,
+            fontWeight: 700, color: '#fff', lineHeight: 1.05, letterSpacing: '0.5px', marginBottom: 28,
             textTransform: 'uppercase',
           }}>
-            We Handle the Details.
-          </h1>
-          <h1 style={{
-            fontFamily: "'Barlow Condensed', 'Poppins', sans-serif",
-            fontSize: 'clamp(36px,5.5vw,68px)',
-            fontWeight: 700, color: '#4a90d9', lineHeight: 1.05, letterSpacing: '0.5px', marginBottom: 28,
-            textTransform: 'uppercase',
-          }}>
-            You Enjoy the Returns.
+            We Handle the Details. <br /> <span style={{ color: '#4a90d9' }}>You Enjoy the Returns.</span>
           </h1>
 
           {/* Divider */}
@@ -1217,7 +1238,7 @@ export default function HomePage() {
             <h2 style={{ fontFamily: "'Poppins', sans-serif", fontSize: 'clamp(28px,4vw,48px)', fontWeight: 700, color: '#fff', margin: '0 0 16px' }}>
               Choose Your Package
             </h2>
-            <p style={{ fontSize: 15, color: 'rgba(255,255,255,0.5)', maxWidth: 560, margin: '0 auto', lineHeight: 1.7, fontWeight: 300, fontFamily: "'Poppins', sans-serif" }}>
+            <p style={{ fontSize: 15, color: 'rgba(255,255,255,0.70)', maxWidth: 560, margin: '0 auto', lineHeight: 1.7, fontWeight: 300, fontFamily: "'Poppins', sans-serif" }}>
               Every package builds on the last. Start with what you need and upgrade whenever you&apos;re ready.
             </p>
           </div>
@@ -1245,7 +1266,7 @@ export default function HomePage() {
                     Most Popular
                   </div>
                 )}
-                <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 10, fontFamily: "'Poppins', sans-serif" }}>
+                <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.65)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 10, fontFamily: "'Poppins', sans-serif" }}>
                   {pkg.type}
                 </div>
                 <div style={{ fontFamily: "'Poppins', sans-serif", fontSize: 'clamp(28px,3vw,40px)', fontWeight: 700, color: pkg.popular ? '#4a90d9' : '#fff', lineHeight: 1, marginBottom: 12 }}>
@@ -1332,7 +1353,7 @@ export default function HomePage() {
           background: '#fff', borderRadius: 10, padding: 'clamp(24px, 4vw, 40px)',
           boxShadow: '0 4px 32px rgba(0,0,0,0.08)', border: '1px solid #e5e7eb',
         }}>
-          <div style={{ fontSize: 13, fontWeight: 700, letterSpacing: 2, textTransform: 'uppercase', color: '#9ca3af', marginBottom: 28, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 8 }}>
+          <div style={{ fontSize: 13, fontWeight: 700, letterSpacing: 2, textTransform: 'uppercase', color: '#6b7280', marginBottom: 28, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 8 }}>
             <span>Search Properties</span>
             {(location || minPrice || maxPrice || bedrooms) && (
               <span style={{
@@ -1351,8 +1372,9 @@ export default function HomePage() {
           </div>
           <div className="search-grid">
             <div>
-              <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#6b7280', marginBottom: 8, textTransform: 'uppercase', letterSpacing: 1 }}>Location</label>
+              <label htmlFor="location-input" style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#6b7280', marginBottom: 8, textTransform: 'uppercase', letterSpacing: 1 }}>Location</label>
               <input
+                id="location-input"
                 value={location} onChange={e => setLocation(e.target.value)}
                 placeholder="City, postcode or area…"
                 onKeyDown={e => e.key === 'Enter' && handleSearch()}
@@ -1365,8 +1387,8 @@ export default function HomePage() {
               />
             </div>
             <div>
-              <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#6b7280', marginBottom: 8, textTransform: 'uppercase', letterSpacing: 1 }}>Min Price</label>
-              <select value={minPrice} onChange={e => setMinPrice(e.target.value)} style={{
+              <label htmlFor="minprice-select" style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#6b7280', marginBottom: 8, textTransform: 'uppercase', letterSpacing: 1 }}>Min Price</label>
+              <select id="minprice-select" value={minPrice} onChange={e => setMinPrice(e.target.value)} style={{
                 width: '100%', padding: '14px 16px', fontSize: 15,
                 border: '1px solid #d1d5db', borderRadius: 6, outline: 'none',
                 fontFamily: "'Poppins', sans-serif", color: '#0f1f3d',
@@ -1381,8 +1403,8 @@ export default function HomePage() {
               </select>
             </div>
             <div>
-              <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#6b7280', marginBottom: 8, textTransform: 'uppercase', letterSpacing: 1 }}>Max Price</label>
-              <select value={maxPrice} onChange={e => setMaxPrice(e.target.value)} style={{
+              <label htmlFor="maxprice-select" style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#6b7280', marginBottom: 8, textTransform: 'uppercase', letterSpacing: 1 }}>Max Price</label>
+              <select id="maxprice-select" value={maxPrice} onChange={e => setMaxPrice(e.target.value)} style={{
                 width: '100%', padding: '14px 16px', fontSize: 15,
                 border: '1px solid #d1d5db', borderRadius: 6, outline: 'none',
                 fontFamily: "'Poppins', sans-serif", color: '#0f1f3d',
@@ -1397,8 +1419,8 @@ export default function HomePage() {
               </select>
             </div>
             <div>
-              <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#6b7280', marginBottom: 8, textTransform: 'uppercase', letterSpacing: 1 }}>Bedrooms</label>
-              <select value={bedrooms} onChange={e => setBedrooms(e.target.value)} style={{
+              <label htmlFor="bedrooms-select" style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#6b7280', marginBottom: 8, textTransform: 'uppercase', letterSpacing: 1 }}>Bedrooms</label>
+              <select id="bedrooms-select" value={bedrooms} onChange={e => setBedrooms(e.target.value)} style={{
                 width: '100%', padding: '14px 16px', fontSize: 15,
                 border: '1px solid #d1d5db', borderRadius: 6, outline: 'none',
                 fontFamily: "'Poppins', sans-serif", color: '#0f1f3d',
@@ -1657,13 +1679,13 @@ export default function HomePage() {
             <span style={{ width: 7, height: 7, background: '#2563eb', borderRadius: '50%', display: 'inline-block' }} />
             House of Lettings
           </div>
-          <p style={{ color: 'rgba(255,255,255,0.25)', fontSize: 13 }}>
+          <p style={{ color: 'rgba(255,255,255,0.65)', fontSize: 13 }}>
             © {new Date().getFullYear()} House of Lettings Ltd. All rights reserved.
           </p>
           <div style={{ display: 'flex', gap: 24 }}>
-            <Link href="/cookie-policy" style={{ color: 'rgba(255,255,255,0.35)', fontSize: 13, textDecoration: 'none' }}>Cookie Policy</Link>
-            <Link href="/terms" style={{ color: 'rgba(255,255,255,0.35)', fontSize: 13, textDecoration: 'none' }}>Terms</Link>
-            <span style={{ color: 'rgba(255,255,255,0.35)', fontSize: 13, cursor: 'pointer' }}>Contact</span>
+            <Link href="/cookie-policy" style={{ color: 'rgba(255,255,255,0.65)', fontSize: 13, textDecoration: 'none' }}>Cookie Policy</Link>
+            <Link href="/terms" style={{ color: 'rgba(255,255,255,0.65)', fontSize: 13, textDecoration: 'none' }}>Terms</Link>
+            <Link href="/contact" style={{ color: 'rgba(255,255,255,0.65)', fontSize: 13, textDecoration: 'none' }}>Contact</Link>
           </div>
         </div>
       </footer>

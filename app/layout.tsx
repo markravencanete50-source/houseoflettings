@@ -1,7 +1,7 @@
 // app/layout.tsx
 import type { Metadata } from 'next';
 import ReactDOM from 'react-dom';
-import { Poppins } from 'next/font/google';
+import { Poppins, Barlow_Condensed } from 'next/font/google';
 import { AuthProvider } from '@/hooks/useAuth';
 import CookieBanner from '@/components/CookieBanner';
 import './globals.css';
@@ -10,6 +10,13 @@ const poppins = Poppins({
   subsets: ['latin'],
   weight: ['300', '400', '500', '600', '700', '800'],
   variable: '--font-sans',
+  display: 'swap',
+});
+
+const barlowCondensed = Barlow_Condensed({
+  subsets: ['latin'],
+  weight: ['700', '800', '900'],
+  variable: '--font-barlow-condensed',
   display: 'swap',
 });
 
@@ -78,7 +85,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   ReactDOM.preload('/images/heropage.webp', { as: 'image', fetchPriority: 'high' });
 
   return (
-    <html lang="en" className={poppins.variable}>
+    <html lang="en" className={`${poppins.variable} ${barlowCondensed.variable}`}>
       <body style={{ paddingTop: '72px' }}>
         <AuthProvider>
           {children}

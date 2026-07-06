@@ -117,7 +117,11 @@ export default function PropertyCard({ property }: PropertyCardProps) {
           style={{
             marginTop: 14,
             width: '100%',
-            padding: '11px 0',
+            padding: '12px 16px',
+            minHeight: '44px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
             background: btnHovered ? '#c0392b' : '#0f1f3d',
             color: '#fff',
             border: 'none',

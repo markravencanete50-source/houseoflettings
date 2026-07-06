@@ -180,11 +180,11 @@ export function windowBookingRejectionReason(
 
 // ── Property ⇆ calendar-event address matching ─────────────────────────────
 // Agents tag an availability event with the property's FULL address (which
-// includes the postcode). Matching is postcode-anchored: the event must carry
-// the property's full postcode, and — when both give a house/flat number — the
-// same number. This is deliberately strict so that generic day-marker events
-// like "Leeds"/"Manchester" (no postcode) can never be mistaken for a specific
-// property's availability, even though a property address contains that city.
+// includes the postcode). An event matches a property when BOTH the full
+// postcode AND the first line of the address match. The postcode requirement
+// excludes generic day-marker events like "Leeds"/"Manchester" (no postcode);
+// the first-line requirement keeps different properties at the same postcode
+// (e.g. two flats) distinct.
 function normAddr(s: string): string {
   return s.toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
 }
@@ -192,24 +192,26 @@ function fullPostcode(s: string): string | null {
   const m = s.toUpperCase().match(/\b[A-Z]{1,2}\d[A-Z\d]?\s*\d[A-Z]{2}\b/);
   return m ? m[0].replace(/\s+/g, '') : null;
 }
-function leadingNumber(normalised: string): string | null {
-  const m = normalised.match(/\b\d+[a-z]?\b/);
-  return m ? m[0] : null;
+// The first line of an address (the part before the first comma), with any
+// postcode and punctuation stripped — e.g.
+// "6 Browning Road, Huddersfield, HD2 1HU" → "6 browning road".
+function firstLine(s: string): string {
+  const before = (s || '').split(',')[0].replace(/\b[A-Za-z]{1,2}\d[A-Za-z\d]?\s*\d[A-Za-z]{2}\b/g, ' ');
+  return normAddr(before);
 }
 
 export function addressMatches(eventText: string, propertyAddress: string): boolean {
   const eventPostcode = fullPostcode(eventText || '');
   const propPostcode = fullPostcode(propertyAddress || '');
-  // Must share the property's full postcode — this is what excludes the bare
-  // "Leeds"/"Manchester" city markers (which have no postcode).
+  // Postcodes must match — excludes bare "Leeds"/"Manchester" city markers.
   if (!eventPostcode || !propPostcode || eventPostcode !== propPostcode) return false;
-  // Same postcode: if both give a house/flat number, they must be the same unit
-  // (keeps two flats at one postcode distinct). If either lacks a number, the
-  // shared postcode is enough.
-  const eventNum = leadingNumber(normAddr(eventText || ''));
-  const propNum = leadingNumber(normAddr(propertyAddress || ''));
-  if (eventNum && propNum && eventNum !== propNum) return false;
-  return true;
+  // …and the first line must match too (equal, or one contained in the other so
+  // a "Viewing: <address>" prefix still matches). If either side has no first
+  // line beyond the postcode, the shared postcode is enough.
+  const fe = firstLine(eventText || '');
+  const fp = firstLine(propertyAddress || '');
+  if (!fe || !fp) return true;
+  return fe === fp || fe.includes(fp) || fp.includes(fe);
 }
 
 // ── City auto-detection ────────────────────────────────────────────────────

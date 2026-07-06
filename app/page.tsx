@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useCallback, lazy, Suspense } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
 import Navbar from '@/components/layout/Navbar';
 import PropertyCard from '@/components/property/PropertyCard';
 import { getProperties } from '@/services/property';
@@ -299,13 +300,13 @@ function ImageGallery() {
               outlineOffset: 3,
             }}
           >
-            <img
+            <Image
               src={item.img}
               alt={item.label}
+              fill
               draggable={false}
-              loading="lazy"
-              decoding="async"
-              style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+              sizes="360px"
+              style={{ objectFit: 'cover' }}
             />
 
             {/* Overlay */}
@@ -574,14 +575,17 @@ export default function HomePage() {
         justifyContent: 'center',
         padding: 'calc(var(--navbar-height, 72px) + 40px) 5% 60px',
       }}>
-        {/* Hero background image - happy family */}
-        <div style={{
-          position: 'absolute', inset: 0,
-          backgroundImage: 'url(/images/heropage.webp)',
-          backgroundSize: 'cover', backgroundPosition: 'center top',
-          backgroundRepeat: 'no-repeat',
-          filter: 'brightness(1.0)',
-        }} />
+        {/* Hero background image - happy family (LCP element: next/image serves a
+            mobile-sized AVIF/WebP and marks it high priority) */}
+        <Image
+          src="/images/heropage.webp"
+          alt=""
+          fill
+          priority
+          sizes="100vw"
+          quality={70}
+          style={{ objectFit: 'cover', objectPosition: 'center top' }}
+        />
         {/* Dark overlay for text readability */}
         <div style={{
           position: 'absolute', inset: 0,
@@ -708,7 +712,7 @@ export default function HomePage() {
             <div className="inline-btn-wrap"><ValuationInlineButton /></div>
           </div>
           <div className="bav-photo">
-            <img src="/images/Background_Book_Valuation.webp" alt="Book a Valuation" loading="lazy" decoding="async" />
+            <Image src="/images/Background_Book_Valuation.webp" alt="Book a Valuation" fill sizes="(max-width: 768px) 100vw, 50vw" style={{ objectFit: 'cover' }} />
           </div>
         </div>
       </section>
@@ -744,7 +748,7 @@ export default function HomePage() {
       <section style={{ overflow: 'hidden', background: '#f3f4f6' }}>
         <div className="bvw-grid">
           <div className="bvw-photo">
-            <img src="/images/agent-photo.webp" alt="Book a Viewing" loading="lazy" decoding="async" />
+            <Image src="/images/agent-photo.webp" alt="Book a Viewing" fill sizes="(max-width: 768px) 100vw, 50vw" style={{ objectFit: 'cover' }} />
           </div>
           <div className="bvw-text reveal">
             <h2 style={{

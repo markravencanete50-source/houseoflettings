@@ -303,6 +303,8 @@ function ImageGallery() {
               src={item.img}
               alt={item.label}
               draggable={false}
+              loading="lazy"
+              decoding="async"
               style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
             />
 
@@ -594,7 +596,7 @@ export default function HomePage() {
 
         <div style={{ position: 'relative', maxWidth: 700, margin: '0 auto', textAlign: 'center' }}>
           <h1 style={{
-            fontFamily: "var(--font-barlow-condensed), 'Poppins', sans-serif",
+            fontFamily: "'Barlow Condensed', 'Poppins', sans-serif",
             fontSize: 'clamp(36px,5.5vw,68px)',
             fontWeight: 700, color: '#fff', lineHeight: 1.05, letterSpacing: '0.5px', marginBottom: 28,
             textTransform: 'uppercase',
@@ -706,7 +708,7 @@ export default function HomePage() {
             <div className="inline-btn-wrap"><ValuationInlineButton /></div>
           </div>
           <div className="bav-photo">
-            <img src="/images/Background_Book_Valuation.webp" alt="Book a Valuation" />
+            <img src="/images/Background_Book_Valuation.webp" alt="Book a Valuation" loading="lazy" decoding="async" />
           </div>
         </div>
       </section>
@@ -742,7 +744,7 @@ export default function HomePage() {
       <section style={{ overflow: 'hidden', background: '#f3f4f6' }}>
         <div className="bvw-grid">
           <div className="bvw-photo">
-            <img src="/images/agent-photo.webp" alt="Book a Viewing" />
+            <img src="/images/agent-photo.webp" alt="Book a Viewing" loading="lazy" decoding="async" />
           </div>
           <div className="bvw-text reveal">
             <h2 style={{

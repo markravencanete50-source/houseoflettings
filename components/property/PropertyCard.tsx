@@ -42,6 +42,8 @@ export default function PropertyCard({ property }: PropertyCardProps) {
           <img
             src={property.images[0]}
             alt={property.title}
+            loading="lazy"
+            decoding="async"
             style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
           />
         ) : (

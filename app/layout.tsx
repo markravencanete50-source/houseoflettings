@@ -1,24 +1,18 @@
 // app/layout.tsx
 import type { Metadata } from 'next';
 import ReactDOM from 'react-dom';
-import { Poppins, Barlow_Condensed } from 'next/font/google';
 import { AuthProvider } from '@/hooks/useAuth';
 import CookieBanner from '@/components/CookieBanner';
 import './globals.css';
 
-const poppins = Poppins({
-  subsets: ['latin'],
-  weight: ['300', '400', '500', '600', '700', '800'],
-  variable: '--font-sans',
-  display: 'swap',
-});
-
-const barlowCondensed = Barlow_Condensed({
-  subsets: ['latin'],
-  weight: ['700', '800', '900'],
-  variable: '--font-barlow-condensed',
-  display: 'swap',
-});
+// The whole codebase references the literal family names 'Poppins' and
+// 'Barlow Condensed' in hundreds of inline styles, so the fonts must be
+// registered under those exact names. We load them via preconnect + preinit
+// (parallel, non-chained — faster than a CSS @import) rather than next/font,
+// which only exposes hashed family names. Barlow is trimmed to the single
+// weight (700) actually used by the hero.
+const GOOGLE_FONTS_HREF =
+  'https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&family=Barlow+Condensed:wght@700&display=swap';
 
 export const metadata: Metadata = {
   title: 'House of Lettings | Letting Agents in Leeds & Manchester',
@@ -83,9 +77,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   // ReactDOM.preload injects the <link> into <head> during SSR without a body DOM node,
   // avoiding hydration structure mismatches.
   ReactDOM.preload('/images/heropage.webp', { as: 'image', fetchPriority: 'high' });
+  // Open the font-CDN connections early and load the stylesheet in parallel.
+  ReactDOM.preconnect('https://fonts.googleapis.com');
+  ReactDOM.preconnect('https://fonts.gstatic.com', { crossOrigin: 'anonymous' });
+  ReactDOM.preinit(GOOGLE_FONTS_HREF, { as: 'style' });
 
   return (
-    <html lang="en" className={`${poppins.variable} ${barlowCondensed.variable}`}>
+    <html lang="en">
       <body style={{ paddingTop: '72px' }}>
         <AuthProvider>
           {children}

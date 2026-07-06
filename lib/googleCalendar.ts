@@ -121,6 +121,7 @@ export async function pushViewingToCalendar(v: CalendarViewing): Promise<string 
 export interface CalendarEvent {
   summary?: string;
   start?: { date?: string; dateTime?: string };
+  end?: { date?: string; dateTime?: string };
 }
 
 // List events between two ISO instants (read-only). Used to derive the team's

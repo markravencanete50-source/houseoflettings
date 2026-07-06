@@ -113,6 +113,103 @@ export function nextDatesForCityIn(
   return out;
 }
 
+// ── Per-property availability windows (calendar-driven) ────────────────────
+// When agents set availability per property on the office calendar, a viewing
+// time is only offered if it falls inside one of that property's windows for
+// the day. This replaces the city-day rota for property-specific bookings.
+export interface AvailabilityWindow {
+  startMin: number; // minutes from midnight (Europe/London)
+  endMin: number;
+}
+
+// 15-min bookable slots inside the given windows, with capacity reduced by the
+// property's existing bookings that day.
+export function computeWindowSlots(
+  windows: AvailabilityWindow[],
+  bookedTimes: string[],
+  opts: { isToday?: boolean; nowMinutes?: number } = {},
+): SlotView[] {
+  const { isToday = false, nowMinutes = 0 } = opts;
+
+  const countByMinute = new Map<number, number>();
+  for (const t of bookedTimes) {
+    const m = timeToMinutes(t);
+    countByMinute.set(m, (countByMinute.get(m) || 0) + 1);
+  }
+
+  const slotMinutes = new Set<number>();
+  for (const w of windows) {
+    const first = Math.ceil(w.startMin / SLOT_INTERVAL_MIN) * SLOT_INTERVAL_MIN;
+    for (let m = first; m + SLOT_INTERVAL_MIN <= w.endMin; m += SLOT_INTERVAL_MIN) {
+      slotMinutes.add(m);
+    }
+  }
+
+  return Array.from(slotMinutes)
+    .sort((a, b) => a - b)
+    .map((m): SlotView => {
+      const count = countByMinute.get(m) || 0;
+      const spotsLeft = Math.max(0, SLOT_CAPACITY - count);
+      let status: SlotStatus = 'available';
+      if (isToday && m <= nowMinutes) status = 'past';
+      else if (count >= SLOT_CAPACITY) status = 'full';
+      return { time: minutesToTime(m), minutes: m, status, spotsLeft };
+    });
+}
+
+// Server gate for a per-property booking: the time must sit inside a window and
+// still have capacity. Returns null if OK, else a human-readable reason.
+export function windowBookingRejectionReason(
+  time: string,
+  windows: AvailabilityWindow[],
+  bookedTimes: string[],
+): string | null {
+  const minutes = timeToMinutes(time);
+  const inWindow = windows.some(
+    (w) => minutes >= w.startMin && minutes + SLOT_INTERVAL_MIN <= w.endMin,
+  );
+  if (!inWindow) {
+    return 'That time is no longer available for this property. Please pick an offered slot.';
+  }
+  const taken = bookedTimes.filter((t) => timeToMinutes(t) === minutes).length;
+  if (taken >= SLOT_CAPACITY) {
+    return 'That slot is now fully booked. Please choose another time.';
+  }
+  return null;
+}
+
+// ── Property ⇆ calendar-event address matching ─────────────────────────────
+// Agents tag an availability event with the property's full address. Matching
+// is lenient: normalised containment either way, or same full postcode + same
+// leading house number, so minor formatting differences still match.
+function normAddr(s: string): string {
+  return s.toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
+}
+function fullPostcode(s: string): string | null {
+  const m = s.toUpperCase().match(/\b[A-Z]{1,2}\d[A-Z\d]?\s*\d[A-Z]{2}\b/);
+  return m ? m[0].replace(/\s+/g, '') : null;
+}
+function leadingNumber(normalised: string): string | null {
+  const m = normalised.match(/\b\d+[a-z]?\b/);
+  return m ? m[0] : null;
+}
+
+export function addressMatches(eventText: string, propertyAddress: string): boolean {
+  const a = normAddr(eventText || '');
+  const b = normAddr(propertyAddress || '');
+  if (!a || !b) return false;
+  if (a.includes(b) || b.includes(a)) return true;
+  const pa = fullPostcode(eventText);
+  const pb = fullPostcode(propertyAddress);
+  if (pa && pb && pa === pb) {
+    const na = leadingNumber(a);
+    const nb = leadingNumber(b);
+    if (!nb) return true;            // property has no house number → postcode is enough
+    if (na && na === nb) return true;
+  }
+  return false;
+}
+
 // ── City auto-detection ────────────────────────────────────────────────────
 // Best-effort guess of a property's city from its free-text location/postcode.
 // Returns null when it genuinely can't tell, so callers can fall back to asking.

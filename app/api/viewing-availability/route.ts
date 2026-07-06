@@ -2,12 +2,15 @@ import { initializeApp, getApps, cert } from "firebase-admin/app";
 import { getFirestore } from "firebase-admin/firestore";
 import {
   computeSlots,
+  computeWindowSlots,
   lockedCityFor,
+  addressMatches,
   CITIES,
   type City,
   type ExistingBooking,
 } from "@/lib/viewingSlots";
 import { citiesForDateLive } from "@/lib/citySchedule";
+import { getWindowsForDate } from "@/lib/calendarAvailability";
 
 function getFirestoreClient() {
   if (!getApps().length) {
@@ -41,11 +44,32 @@ export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const date = searchParams.get("date") || "";
+    const address = (searchParams.get("address") || "").trim();
     const city = searchParams.get("city") as City | null;
 
     if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
       return Response.json({ message: "A valid date (YYYY-MM-DD) is required" }, { status: 400 });
     }
+
+    // ── Per-property mode: times come from the property's calendar windows ──
+    if (address) {
+      const { windows, configured } = await getWindowsForDate(address, date);
+
+      const db = getFirestoreClient();
+      const snap = await db.collection("viewingBookings").where("date", "==", date).get();
+      const bookedTimes = snap.docs
+        .map((d) => d.data())
+        .filter((b) => b.time && addressMatches(b.propertyAddress || b.postcode || "", address))
+        .map((b) => b.time as string);
+
+      const now = londonNow();
+      const isToday = now.date === date;
+      const slots = computeWindowSlots(windows, bookedTimes, { isToday, nowMinutes: now.minutes });
+
+      return Response.json({ date, mode: "property", configured, hasWindows: windows.length > 0, slots });
+    }
+
+    // ── City mode (generic enquiry, no specific property) ──
     if (!city || !CITIES.includes(city)) {
       return Response.json({ message: "A valid city is required" }, { status: 400 });
     }

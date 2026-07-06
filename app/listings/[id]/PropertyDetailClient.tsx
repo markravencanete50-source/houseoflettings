@@ -900,6 +900,7 @@ export default function PropertyDetailClient() {
         propertyPrice={property.price}
         propertyPostcode={extractPostcode(property.location)}
         propertyCity={detectedCity}
+        propertyAddress={property.location}
       />
     </>
   );

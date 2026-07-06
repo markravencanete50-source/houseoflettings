@@ -2,6 +2,8 @@ import { initializeApp, getApps, cert } from "firebase-admin/app";
 import { getFirestore, FieldValue } from "firebase-admin/firestore";
 import {
   bookingRejectionReason,
+  windowBookingRejectionReason,
+  addressMatches,
   minutesToTime,
   timeToMinutes,
   weekdayOf,
@@ -12,6 +14,7 @@ import {
   type ExistingBooking,
 } from "@/lib/viewingSlots";
 import { citiesForDateLive } from "@/lib/citySchedule";
+import { getWindowsForDate } from "@/lib/calendarAvailability";
 import { pushViewingToCalendar } from "@/lib/googleCalendar";
 import {
   composeClientSms,
@@ -98,15 +101,22 @@ export async function POST(request: Request) {
       return Response.json({ message: "Please choose a valid date and time" }, { status: 400 });
     }
 
-    // Enforce the live city rota (office calendar): the team can only view this
-    // city on the days it's actually there. 409 so the modal clears the time
-    // and refreshes.
-    const cities = await citiesForDateLive(data.date);
-    if (!cities.includes(city)) {
-      const day = WEEKDAY_NAMES[weekdayOf(data.date)];
-      return Response.json({
-        message: `Our team isn't in ${city} on a ${day}${cities.length ? ` — that day covers ${cities.join(" & ")}` : ""}. Please pick a day we're in ${city}.`,
-      }, { status: 409 });
+    const propertyAddress = (data.propertyAddress || "").toString().trim();
+    const isProperty = !!propertyAddress;
+
+    // Per-property bookings are gated by the property's calendar windows; generic
+    // (no-property) bookings by the live city rota. Load the property's windows
+    // up front (cached) so the transaction can re-check them.
+    const windows = isProperty ? (await getWindowsForDate(propertyAddress, data.date)).windows : [];
+
+    if (!isProperty) {
+      const cities = await citiesForDateLive(data.date);
+      if (!cities.includes(city)) {
+        const day = WEEKDAY_NAMES[weekdayOf(data.date)];
+        return Response.json({
+          message: `Our team isn't in ${city} on a ${day}${cities.length ? ` — that day covers ${cities.join(" & ")}` : ""}. Please pick a day we're in ${city}.`,
+        }, { status: 409 });
+      }
     }
 
     const db = getFirestoreClient();
@@ -117,12 +127,21 @@ export async function POST(request: Request) {
     let bookingId = "";
     const rejection = await db.runTransaction(async (tx) => {
       const snap = await tx.get(col.where("date", "==", data.date));
-      const bookings: ExistingBooking[] = snap.docs
-        .map((doc) => doc.data())
-        .filter((b) => b.time && b.city)
-        .map((b) => ({ time: b.time as string, city: b.city as City }));
+      const dayDocs = snap.docs.map((doc) => doc.data());
 
-      const reason = bookingRejectionReason(city, data.time, bookings);
+      let reason: string | null;
+      if (isProperty) {
+        // Same-property bookings only, matched by address.
+        const bookedTimes = dayDocs
+          .filter((b) => b.time && addressMatches(b.propertyAddress || b.postcode || "", propertyAddress))
+          .map((b) => b.time as string);
+        reason = windowBookingRejectionReason(data.time, windows, bookedTimes);
+      } else {
+        const bookings: ExistingBooking[] = dayDocs
+          .filter((b) => b.time && b.city)
+          .map((b) => ({ time: b.time as string, city: b.city as City }));
+        reason = bookingRejectionReason(city, data.time, bookings);
+      }
       if (reason) return reason;
 
       const ref = col.doc();

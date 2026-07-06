@@ -48,7 +48,7 @@ const EMPTY_FORM = {
   message: "",
 };
 
-function validate(form: typeof EMPTY_FORM, schedule: ScheduleMap | null) {
+function validate(form: typeof EMPTY_FORM, dateBookable: boolean) {
   const errors: Record<string, string> = {};
   if (!form.firstName.trim()) errors.firstName = "First name is required";
   if (!form.lastName.trim()) errors.lastName = "Last name is required";
@@ -59,8 +59,8 @@ function validate(form: typeof EMPTY_FORM, schedule: ScheduleMap | null) {
     errors.phone = "Enter a valid UK phone number";
   if (!form.city) errors.city = "Please choose which city the property is in";
   if (!form.date) errors.date = "Please choose a date";
-  else if (form.city && !isCityScheduledIn(schedule, form.city as City, form.date))
-    errors.date = "Our team isn't in this city on that day — please pick another date";
+  else if (!dateBookable)
+    errors.date = "No viewing availability on that date — please pick another";
   if (!form.time) errors.time = "Please choose a viewing time slot";
   if (!form.moveBy) errors.moveBy = "Please select when you want to move";
   if (!form.employmentStatus) errors.employmentStatus = "Please select your employment status";
@@ -156,6 +156,9 @@ interface TenantEnquiryModalProps {
   /** City the property is in, auto-detected by the listing page. When set, the
    *  tenant isn't asked to choose — the viewing is locked to this city. */
   propertyCity?: City | null;
+  /** Full address of the property. When set, viewing times come from this
+   *  property's calendar availability windows (per-property booking mode). */
+  propertyAddress?: string;
 }
 
 export default function TenantEnquiryModal({
@@ -165,7 +168,12 @@ export default function TenantEnquiryModal({
   propertyPrice,
   propertyPostcode,
   propertyCity,
+  propertyAddress,
 }: TenantEnquiryModalProps) {
+  // Per-property mode = a specific property whose calendar windows drive the
+  // available times. Without an address (e.g. the homepage) we keep the generic
+  // city-rota flow.
+  const hasProperty = !!(propertyAddress && propertyAddress.trim());
   const [form, setForm] = useState(EMPTY_FORM);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
@@ -181,9 +189,11 @@ export default function TenantEnquiryModal({
   const [slotsError, setSlotsError] = useState("");
   const [refreshKey, setRefreshKey] = useState(0);
 
-  // Live city rota, mirrored from the office Google Calendar (null until loaded;
-  // helpers fall back to the weekly default rota while null).
+  // Generic (no-property) mode: live city rota from the office calendar (null
+  // until loaded; helpers fall back to the weekly default rota while null).
   const [schedule, setSchedule] = useState<ScheduleMap | null>(null);
+  // Per-property mode: the dates this property has viewing availability on.
+  const [availDates, setAvailDates] = useState<string[] | null>(null);
 
   useEffect(() => { setMounted(true); }, []);
 
@@ -191,30 +201,53 @@ export default function TenantEnquiryModal({
   const todayStr = new Date().toLocaleDateString("en-CA", { timeZone: "Europe/London" });
   const maxDateStr = new Date(Date.now() + 60 * 864e5).toLocaleDateString("en-CA", { timeZone: "Europe/London" });
 
-  // Load the live rota when the modal opens so hints/warnings reflect the
-  // calendar. Silent on failure — the map-aware helpers fall back to the
-  // built-in weekly rota, and the server still enforces the real rota.
+  // Generic mode: load the live city rota when the modal opens so hints/warnings
+  // reflect the calendar (falls back to the weekly rota while null).
   useEffect(() => {
-    if (!isOpen) return;
+    if (!isOpen || hasProperty) return;
     let ignore = false;
     fetch(`/api/viewing-schedule?from=${todayStr}&days=60`)
       .then((res) => (res.ok ? res.json() : null))
       .then((data) => { if (!ignore && data?.schedule) setSchedule(data.schedule); })
       .catch(() => {});
     return () => { ignore = true; };
-  }, [isOpen, todayStr]);
+  }, [isOpen, hasProperty, todayStr]);
 
-  // Fetch availability whenever the city or date changes (and the modal is open).
-  // Skip the fetch entirely when the team isn't in this city on the chosen day —
-  // the schedule warning is shown instead of an empty grid.
+  // Per-property mode: load which dates this property is available for viewings.
   useEffect(() => {
-    if (!isOpen || !form.city || !form.date || !isCityScheduledIn(schedule, form.city as City, form.date)) {
-      setSlots([]); setLockedCity(null); setSlotsError("");
-      return;
+    if (!isOpen || !hasProperty) return;
+    let ignore = false;
+    setAvailDates(null);
+    fetch(`/api/property-availability?address=${encodeURIComponent(propertyAddress!.trim())}&from=${todayStr}&days=60`)
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => { if (!ignore && Array.isArray(data?.dates)) setAvailDates(data.dates); })
+      .catch(() => {});
+    return () => { ignore = true; };
+  }, [isOpen, hasProperty, propertyAddress, todayStr, refreshKey]);
+
+  // Fetch bookable times when the date (and, in generic mode, city) changes.
+  // Property mode: skip if this property has no availability that date.
+  // Generic mode: skip if the team isn't in the city that day.
+  useEffect(() => {
+    if (!isOpen || !form.date) { setSlots([]); setLockedCity(null); setSlotsError(""); return; }
+    if (hasProperty) {
+      // availDates === null means "still loading" — allow the fetch through.
+      if (availDates && !availDates.includes(form.date)) {
+        setSlots([]); setLockedCity(null); setSlotsError("");
+        return;
+      }
+    } else {
+      if (!form.city || !isCityScheduledIn(schedule, form.city as City, form.date)) {
+        setSlots([]); setLockedCity(null); setSlotsError("");
+        return;
+      }
     }
     let ignore = false;
     setSlotsLoading(true); setSlotsError("");
-    fetch(`/api/viewing-availability?date=${encodeURIComponent(form.date)}&city=${encodeURIComponent(form.city)}`)
+    const url = hasProperty
+      ? `/api/viewing-availability?date=${encodeURIComponent(form.date)}&address=${encodeURIComponent(propertyAddress!.trim())}`
+      : `/api/viewing-availability?date=${encodeURIComponent(form.date)}&city=${encodeURIComponent(form.city)}`;
+    fetch(url)
       .then(async (res) => {
         const data = await res.json();
         if (ignore) return;
@@ -225,7 +258,7 @@ export default function TenantEnquiryModal({
       .catch((e) => { if (!ignore) { setSlots([]); setSlotsError(e.message || "Could not load times"); } })
       .finally(() => { if (!ignore) setSlotsLoading(false); });
     return () => { ignore = true; };
-  }, [isOpen, form.city, form.date, refreshKey, schedule]);
+  }, [isOpen, hasProperty, propertyAddress, form.city, form.date, refreshKey, schedule, availDates]);
 
   useEffect(() => {
     document.body.style.overflow = isOpen ? "hidden" : "";
@@ -266,6 +299,14 @@ export default function TenantEnquiryModal({
     setErrors(er => ({ ...er, [key]: "" }));
   };
 
+  // Whether a date can be booked: property mode checks this property's available
+  // dates (allowed while still loading); generic mode checks the city rota.
+  const isDateBookable = (date: string): boolean => {
+    if (!date) return false;
+    if (hasProperty) return availDates ? availDates.includes(date) : true;
+    return !!form.city && isCityScheduledIn(schedule, form.city as City, date);
+  };
+
   const handleClose = () => {
     if (status === "loading") return;
     setForm(EMPTY_FORM);
@@ -282,7 +323,7 @@ export default function TenantEnquiryModal({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const errs = validate(form, schedule);
+    const errs = validate(form, isDateBookable(form.date));
     if (Object.keys(errs).length) { setErrors(errs); return; }
     setStatus("loading");
     try {
@@ -298,6 +339,7 @@ export default function TenantEnquiryModal({
           time: form.time,
           postcode: form.postcode,
           propertyTitle,
+          propertyAddress: propertyAddress || "",
           // Screening answers, mapped to the booking API's field names.
           moveIn: form.moveBy === "Other" ? form.moveByOther : form.moveBy,
           alignsWithAvailability: form.alignsWithAvailability,
@@ -337,23 +379,33 @@ export default function TenantEnquiryModal({
 
   if (!mounted || !isOpen) return null;
 
-  // Schedule-aware helpers for the "Choose your viewing" section. All driven by
-  // the live rota map (falls back to the built-in weekly rota while it loads).
+  // Helpers for the "Choose your viewing" section. Property mode is driven by
+  // this property's calendar availability; generic mode by the live city rota.
   const cityDetected = !!propertyCity;
   const activeCity = (form.city || "") as City | "";
   const prettyDate = (iso: string) =>
     new Date(`${iso}T12:00:00`).toLocaleDateString("en-GB", {
       weekday: "short", day: "numeric", month: "short",
     });
-  // The next handful of days the team is in this city — the "when can I book?" hint.
-  const upcomingDates = activeCity
-    ? nextDatesForCityIn(schedule, activeCity, todayStr, 5, 60)
-    : [];
-  const dateOffSchedule =
-    !!activeCity && !!form.date && !isCityScheduledIn(schedule, activeCity, form.date);
-  const suggestedDates = dateOffSchedule
-    ? nextDatesForCityIn(schedule, activeCity, form.date, 3, 60)
-    : [];
+
+  // The next handful of bookable dates — the "when can I book?" hint.
+  const upcomingDates = hasProperty
+    ? (availDates ?? []).filter((d) => d >= todayStr).slice(0, 5)
+    : activeCity
+      ? nextDatesForCityIn(schedule, activeCity, todayStr, 5, 60)
+      : [];
+  // Whether the chosen date has no availability (only once we know: property mode
+  // waits for availDates to load; generic mode uses the rota).
+  const dateOffSchedule = !!form.date && (
+    hasProperty
+      ? (availDates !== null && !availDates.includes(form.date))
+      : (!!activeCity && !isCityScheduledIn(schedule, activeCity, form.date))
+  );
+  const suggestedDates = !dateOffSchedule
+    ? []
+    : hasProperty
+      ? (availDates ?? []).filter((d) => d >= todayStr).slice(0, 3)
+      : nextDatesForCityIn(schedule, activeCity as City, form.date, 3, 60);
 
   return createPortal(
     <>
@@ -486,23 +538,42 @@ export default function TenantEnquiryModal({
                     value={form.date}
                     onChange={(e) => { const v = e.target.value; setForm(f => ({ ...f, date: v, time: "" })); setErrors(er => ({ ...er, date: "", time: "" })); }}
                   />
-                  {activeCity && upcomingDates.length > 0 && (
-                    <p className="hol-slot-note">
-                      We&apos;re next in {activeCity} on <strong>{upcomingDates.map(prettyDate).join(", ")}</strong>.
-                    </p>
-                  )}
-                  {activeCity && upcomingDates.length === 0 && (
-                    <p className="hol-slot-note">
-                      No {activeCity} viewing days in the next 60 days — please call us to arrange.
-                    </p>
-                  )}
+                  {hasProperty
+                    ? availDates !== null && (
+                        upcomingDates.length > 0 ? (
+                          <p className="hol-slot-note">
+                            Next available viewings on <strong>{upcomingDates.map(prettyDate).join(", ")}</strong>.
+                          </p>
+                        ) : (
+                          <p className="hol-slot-note">
+                            No viewing times set for this property yet — please call us to arrange.
+                          </p>
+                        )
+                      )
+                    : activeCity && (
+                        upcomingDates.length > 0 ? (
+                          <p className="hol-slot-note">
+                            We&apos;re next in {activeCity} on <strong>{upcomingDates.map(prettyDate).join(", ")}</strong>.
+                          </p>
+                        ) : (
+                          <p className="hol-slot-note">
+                            No {activeCity} viewing days in the next 60 days — please call us to arrange.
+                          </p>
+                        )
+                      )}
                   {errors.date && <p className="hol-err">{errors.date}</p>}
                 </div>
                 {dateOffSchedule && (
                   <div className="hol-field hol-field--mb">
                     <p className="hol-slot-note hol-slot-note--warn">
-                      Our team isn&apos;t in <strong>{activeCity}</strong> on {prettyDate(form.date)}
-                      {citiesForDateIn(schedule, form.date).length > 0 && <> (that day covers {citiesForDateIn(schedule, form.date).join(" & ")})</>}.
+                      {hasProperty ? (
+                        <>No viewings are available for this property on {prettyDate(form.date)}.</>
+                      ) : (
+                        <>
+                          Our team isn&apos;t in <strong>{activeCity}</strong> on {prettyDate(form.date)}
+                          {citiesForDateIn(schedule, form.date).length > 0 && <> (that day covers {citiesForDateIn(schedule, form.date).join(" & ")})</>}.
+                        </>
+                      )}
                       {suggestedDates.length > 0 && " Try one of these dates instead:"}
                     </p>
                     {suggestedDates.length > 0 && (
@@ -522,14 +593,14 @@ export default function TenantEnquiryModal({
                     )}
                   </div>
                 )}
-                {form.city && form.date && !dateOffSchedule && (
+                {(hasProperty ? !!form.date : (form.city && form.date)) && !dateOffSchedule && (
                   <div className="hol-field hol-field--mb">
                     <label className="hol-label">Available times<span className="hol-req">*</span></label>
                     {slotsLoading ? (
                       <p className="hol-slot-note">Loading available times…</p>
                     ) : slotsError ? (
                       <p className="hol-err">{slotsError}</p>
-                    ) : lockedCity && lockedCity !== form.city ? (
+                    ) : !hasProperty && lockedCity && lockedCity !== form.city ? (
                       <p className="hol-slot-note hol-slot-note--warn">
                         This day is already allocated to <strong>{lockedCity}</strong> viewings — our team is travelling there that day. Please pick another date, or switch the city to {lockedCity}.
                       </p>
@@ -555,7 +626,11 @@ export default function TenantEnquiryModal({
                             );
                           })}
                         </div>
-                        <p className="hol-slot-note">Greyed-out times are fully booked or too close to another viewing. Each time slot takes up to 2 clients.</p>
+                        <p className="hol-slot-note">
+                          {hasProperty
+                            ? "Greyed-out times are already booked. Each time slot takes up to 2 clients."
+                            : "Greyed-out times are fully booked or too close to another viewing. Each time slot takes up to 2 clients."}
+                        </p>
                       </>
                     )}
                     {errors.time && <p className="hol-err">{errors.time}</p>}

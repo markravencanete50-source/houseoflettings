@@ -129,7 +129,7 @@ export default function BookViewingPage() {
       >
         <div style={{
           position: "absolute", inset: 0,
-          backgroundImage: "url(/images/Tenants_Book_viewing_background.png)",
+          backgroundImage: "url(/images/Tenants_Book_viewing_background.webp)",
           backgroundSize: "cover",
           backgroundPosition: "center",
           backgroundRepeat: "no-repeat",

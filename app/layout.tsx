@@ -1,5 +1,6 @@
 // app/layout.tsx
 import type { Metadata } from 'next';
+import ReactDOM from 'react-dom';
 import { Poppins } from 'next/font/google';
 import { AuthProvider } from '@/hooks/useAuth';
 import CookieBanner from '@/components/CookieBanner';
@@ -25,7 +26,7 @@ export const metadata: Metadata = {
     siteName: 'House of Lettings',
     images: [
       {
-        url: '/images/heropage.png',
+        url: '/images/heropage-og.jpg',
         width: 1200,
         height: 630,
         alt: 'House of Lettings – Letting Agents in Leeds & Manchester',
@@ -38,7 +39,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'House of Lettings | Letting Agents in Leeds & Manchester',
     description: 'Transparent pricing. No hidden fees. Free valuation from local experts.',
-    images: ['/images/heropage.png'],
+    images: ['/images/heropage-og.jpg'],
   },
   icons: {
     icon: [
@@ -71,6 +72,11 @@ const organizationSchema = {
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
+  // Preload the hero background so it starts downloading before CSS is parsed (helps LCP).
+  // ReactDOM.preload injects the <link> into <head> during SSR without a body DOM node,
+  // avoiding hydration structure mismatches.
+  ReactDOM.preload('/images/heropage.webp', { as: 'image', fetchPriority: 'high' });
+
   return (
     <html lang="en" className={poppins.variable}>
       <body style={{ paddingTop: '72px' }}>

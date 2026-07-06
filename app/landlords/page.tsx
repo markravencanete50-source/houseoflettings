@@ -68,7 +68,7 @@ export default function LandlordsPage() {
         {/* Background image */}
         <div style={{
           position: 'absolute', inset: 0,
-          backgroundImage: 'url(/images/Landlord_page.png)',
+          backgroundImage: 'url(/images/Landlord_page.webp)',
           backgroundSize: 'cover',
           backgroundPosition: 'center center',
           backgroundRepeat: 'no-repeat',
@@ -214,7 +214,7 @@ export default function LandlordsPage() {
             </Link>
           </div>
           <img
-            src="/images/Landlord_Book_valuation_background.png"
+            src="/images/Landlord_Book_valuation_background.webp"
             alt="Better Management. Better Tenants. Better Returns."
             className="ll-intro-img"
             style={{

@@ -81,7 +81,7 @@ export default function MaintenancePage() {
       <section
         style={{
           backgroundImage:
-            'linear-gradient(160deg, rgba(2,11,26,0.82) 0%, rgba(4,18,48,0.78) 60%, rgba(6,26,66,0.72) 100%), url(/images/Tenants_Book_viewing_background.png)',
+            'linear-gradient(160deg, rgba(2,11,26,0.82) 0%, rgba(4,18,48,0.78) 60%, rgba(6,26,66,0.72) 100%), url(/images/Tenants_Book_viewing_background.webp)',
           backgroundSize: 'cover',
           backgroundPosition: 'center',
           backgroundRepeat: 'no-repeat',

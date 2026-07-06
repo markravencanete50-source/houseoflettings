@@ -168,7 +168,7 @@ export default function PricingPage() {
       }}>
         <div style={{
           position: 'absolute', inset: 0,
-          backgroundImage: 'url(/images/Background_of_the_services.png)',
+          backgroundImage: 'url(/images/Background_of_the_services.webp)',
           backgroundSize: 'cover', backgroundPosition: 'center',
           backgroundRepeat: 'no-repeat',
         }} />
@@ -211,7 +211,7 @@ export default function PricingPage() {
         {/* Background photo — more visible now */}
         <div style={{
           position: 'absolute', inset: 0,
-          backgroundImage: 'url(/images/Background_of_the_services.png)',
+          backgroundImage: 'url(/images/Background_of_the_services.webp)',
           backgroundSize: 'cover',
           backgroundPosition: 'center',
           backgroundRepeat: 'no-repeat',

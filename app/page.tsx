@@ -133,27 +133,27 @@ function BookViewingInlineButton() {
 // ── GALLERY DATA ─────────────────────────────────────────────────────────────
 const GALLERY_ITEMS = [
   {
-    img: '/images/agent-photo.jpeg',
+    img: '/images/agent-photo.webp',
     label: 'Leeds & Manchester Experts',
     sub: 'Local knowledge, professional service.',
   },
   {
-    img: '/images/brand-desk.jpeg',
+    img: '/images/brand-desk.webp',
     label: 'We Handle the Details.',
     sub: 'You enjoy the returns.',
   },
   {
-    img: '/images/service-compare.png',
+    img: '/images/service-compare.webp',
     label: 'Full Lettings & Management',
     sub: 'AI powered system, expert team.',
   },
   {
-    img: '/images/landlord-app.png',
+    img: '/images/landlord-app.webp',
     label: 'Everything You Need',
     sub: 'To succeed as a landlord.',
   },
   {
-    img: '/images/compliance.jpeg',
+    img: '/images/compliance.webp',
     label: 'Stay Fully Compliant',
     sub: 'We track the rules so you don\'t have to.',
   },
@@ -546,7 +546,7 @@ export default function HomePage() {
         {/* Hero background image - happy family */}
         <div style={{
           position: 'absolute', inset: 0,
-          backgroundImage: 'url(/images/heropage.png)',
+          backgroundImage: 'url(/images/heropage.webp)',
           backgroundSize: 'cover', backgroundPosition: 'center top',
           backgroundRepeat: 'no-repeat',
           filter: 'brightness(1.0)',
@@ -685,7 +685,7 @@ export default function HomePage() {
             <div className="inline-btn-wrap"><ValuationInlineButton /></div>
           </div>
           <div className="bav-photo">
-            <img src="/images/Background_Book_Valuation.png" alt="Book a Valuation" />
+            <img src="/images/Background_Book_Valuation.webp" alt="Book a Valuation" />
           </div>
         </div>
       </section>
@@ -721,7 +721,7 @@ export default function HomePage() {
       <section style={{ overflow: 'hidden', background: '#f3f4f6' }}>
         <div className="bvw-grid">
           <div className="bvw-photo">
-            <img src="/images/agent-photo.jpeg" alt="Book a Viewing" />
+            <img src="/images/agent-photo.webp" alt="Book a Viewing" />
           </div>
           <div className="bvw-text reveal">
             <h2 style={{
@@ -1203,7 +1203,7 @@ export default function HomePage() {
       <section style={{ padding: 'clamp(60px, 8vw, 100px) clamp(20px, 5%, 5%)', position: 'relative', overflow: 'hidden' }}>
         <div style={{
           position: 'absolute', inset: 0,
-          backgroundImage: 'url(/images/Background_of_the_services.png)',
+          backgroundImage: 'url(/images/Background_of_the_services.webp)',
           backgroundSize: 'cover', backgroundPosition: 'center bottom',
           backgroundRepeat: 'no-repeat',
         }} />
@@ -1286,7 +1286,7 @@ export default function HomePage() {
         <div className="split-grid" style={{ alignItems: 'stretch', minHeight: 560 }}>
           <div
             className="split-photo"
-            style={{ backgroundImage: 'url(/images/Tenants_Book_viewing_background.png)', backgroundPosition: 'center center', alignSelf: 'stretch', minHeight: 560 }}
+            style={{ backgroundImage: 'url(/images/Tenants_Book_viewing_background.webp)', backgroundPosition: 'center center', alignSelf: 'stretch', minHeight: 560 }}
           />
           <div className="split-text" style={{ background: '#ffffff', justifyContent: 'center' }}>
             <p className="split-eyebrow">For Tenants</p>

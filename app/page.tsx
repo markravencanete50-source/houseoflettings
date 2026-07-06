@@ -575,17 +575,18 @@ export default function HomePage() {
         justifyContent: 'center',
         padding: 'calc(var(--navbar-height, 72px) + 40px) 5% 60px',
       }}>
-        {/* Hero background image - happy family (LCP element: next/image serves a
-            mobile-sized AVIF/WebP and marks it high priority) */}
-        <Image
-          src="/images/heropage.webp"
-          alt=""
-          fill
-          priority
-          sizes="100vw"
-          quality={70}
-          style={{ objectFit: 'cover', objectPosition: 'center top' }}
-        />
+        {/* Hero background image - happy family (LCP element).
+            Served as a directly-preloaded static WebP (see layout.tsx) rather than
+            through next/image: heropage.webp is already only ~52KB, so the optimizer
+            adds a network hop + AVIF-decode cost on throttled mobile with no byte
+            saving — a measured LCP/PageSpeed regression. Keep it a raw background. */}
+        <div style={{
+          position: 'absolute', inset: 0,
+          backgroundImage: 'url(/images/heropage.webp)',
+          backgroundSize: 'cover', backgroundPosition: 'center top',
+          backgroundRepeat: 'no-repeat',
+          filter: 'brightness(1.0)',
+        }} />
         {/* Dark overlay for text readability */}
         <div style={{
           position: 'absolute', inset: 0,

@@ -73,9 +73,11 @@ const organizationSchema = {
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
-  // The hero image is now a <Image priority> in the homepage, which emits its own
-  // preload for the optimized (AVIF/WebP, mobile-sized) URL — so we no longer
-  // preload the raw webp here (that would double-download an unused full-size file).
+  // Preload the hero background so it starts downloading before CSS is parsed (helps LCP).
+  // ReactDOM.preload injects the <link> into <head> during SSR without a body DOM node,
+  // avoiding hydration structure mismatches. The hero is a static ~52KB WebP background
+  // (not next/image) — preloading the raw file is the fastest path to the LCP paint.
+  ReactDOM.preload('/images/heropage.webp', { as: 'image', fetchPriority: 'high' });
   // Open the font-CDN connections early and load the stylesheet in parallel.
   ReactDOM.preconnect('https://fonts.googleapis.com');
   ReactDOM.preconnect('https://fonts.gstatic.com', { crossOrigin: 'anonymous' });

@@ -25,7 +25,7 @@ import {
 } from "./viewingSlots";
 
 const HORIZON_DAYS = 70;
-const TTL_MS = 5 * 60 * 1000; // 5-minute cache over the whole horizon
+const TTL_MS = 60 * 1000; // 1-minute cache so calendar edits reflect quickly
 
 let cache: { at: number; events: CalendarEvent[]; configured: boolean } | null = null;
 

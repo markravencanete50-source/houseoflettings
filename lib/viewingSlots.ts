@@ -179,9 +179,12 @@ export function windowBookingRejectionReason(
 }
 
 // ── Property ⇆ calendar-event address matching ─────────────────────────────
-// Agents tag an availability event with the property's full address. Matching
-// is lenient: normalised containment either way, or same full postcode + same
-// leading house number, so minor formatting differences still match.
+// Agents tag an availability event with the property's FULL address (which
+// includes the postcode). Matching is postcode-anchored: the event must carry
+// the property's full postcode, and — when both give a house/flat number — the
+// same number. This is deliberately strict so that generic day-marker events
+// like "Leeds"/"Manchester" (no postcode) can never be mistaken for a specific
+// property's availability, even though a property address contains that city.
 function normAddr(s: string): string {
   return s.toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
 }
@@ -195,19 +198,18 @@ function leadingNumber(normalised: string): string | null {
 }
 
 export function addressMatches(eventText: string, propertyAddress: string): boolean {
-  const a = normAddr(eventText || '');
-  const b = normAddr(propertyAddress || '');
-  if (!a || !b) return false;
-  if (a.includes(b) || b.includes(a)) return true;
-  const pa = fullPostcode(eventText);
-  const pb = fullPostcode(propertyAddress);
-  if (pa && pb && pa === pb) {
-    const na = leadingNumber(a);
-    const nb = leadingNumber(b);
-    if (!nb) return true;            // property has no house number → postcode is enough
-    if (na && na === nb) return true;
-  }
-  return false;
+  const eventPostcode = fullPostcode(eventText || '');
+  const propPostcode = fullPostcode(propertyAddress || '');
+  // Must share the property's full postcode — this is what excludes the bare
+  // "Leeds"/"Manchester" city markers (which have no postcode).
+  if (!eventPostcode || !propPostcode || eventPostcode !== propPostcode) return false;
+  // Same postcode: if both give a house/flat number, they must be the same unit
+  // (keeps two flats at one postcode distinct). If either lacks a number, the
+  // shared postcode is enough.
+  const eventNum = leadingNumber(normAddr(eventText || ''));
+  const propNum = leadingNumber(normAddr(propertyAddress || ''));
+  if (eventNum && propNum && eventNum !== propNum) return false;
+  return true;
 }
 
 // ── City auto-detection ────────────────────────────────────────────────────

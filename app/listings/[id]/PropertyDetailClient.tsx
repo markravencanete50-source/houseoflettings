@@ -38,6 +38,7 @@ export default function PropertyDetailClient() {
   const [viewingHovered, setViewingHovered] = useState(false);
   const [imgFading, setImgFading] = useState(false);
   const [enquiryOpen, setEnquiryOpen] = useState(false);
+  const [copiedTitle, setCopiedTitle] = useState(false);
 
   // Lightbox state
   const [lightboxOpen, setLightboxOpen] = useState(false);
@@ -812,6 +813,43 @@ export default function PropertyDetailClient() {
                     >
                       BOOK A VIEWING
                     </button>
+
+                    {/* Agent-only: exact calendar event title to open viewing
+                        availability for this property (matched by first line + postcode). */}
+                    {profile?.role === 'admin' && property.location && (
+                      <div style={{
+                        marginTop: 12, marginBottom: 4, padding: '12px 14px',
+                        background: '#f0f4ff', border: '1px dashed #93b4e6',
+                        borderRadius: 8, fontFamily: "'Poppins', sans-serif",
+                      }}>
+                        <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', color: '#1a3c5e', marginBottom: 6 }}>
+                          Agent · calendar event title
+                        </div>
+                        <div style={{ fontSize: 13, color: '#0f1f3d', fontWeight: 600, wordBreak: 'break-word', marginBottom: 8 }}>
+                          {property.location}
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            navigator.clipboard?.writeText(property.location || '').then(() => {
+                              setCopiedTitle(true);
+                              setTimeout(() => setCopiedTitle(false), 2000);
+                            });
+                          }}
+                          style={{
+                            width: '100%', padding: '8px 10px', fontSize: 12, fontWeight: 600,
+                            border: '1px solid #2563a8', borderRadius: 6, cursor: 'pointer',
+                            background: copiedTitle ? '#2563a8' : '#fff', color: copiedTitle ? '#fff' : '#2563a8',
+                            fontFamily: "'Poppins', sans-serif", transition: 'all 0.15s',
+                          }}
+                        >
+                          {copiedTitle ? '✓ Copied' : 'Copy title'}
+                        </button>
+                        <p style={{ fontSize: 11, color: '#5b6b82', margin: '8px 0 0', lineHeight: 1.5 }}>
+                          Create a Google Calendar event with this title and set its time to the viewing window. Times sync to this listing within ~1 min.
+                        </p>
+                      </div>
+                    )}
 
                     <div style={{ borderTop: '1px solid var(--gray-200)', marginTop: 16, paddingTop: 16 }}>
                       {[

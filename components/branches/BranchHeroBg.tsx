@@ -7,6 +7,7 @@
 // flash of a "previous"/placeholder picture and no fade/animation.
 import { useEffect, useState } from 'react';
 import { useActiveProperties, realBranchPhoto } from '@/components/branches/useActiveProperties';
+import { optimizedImage } from '@/lib/imageUrl';
 import { Branch } from '@/lib/branches';
 
 export default function BranchHeroBg({ branch }: { branch: Branch }) {
@@ -14,7 +15,8 @@ export default function BranchHeroBg({ branch }: { branch: Branch }) {
   const [img, setImg] = useState<string | null>(null);
 
   useEffect(() => {
-    const url = realBranchPhoto(props, branch);
+    const raw = realBranchPhoto(props, branch);
+    const url = raw ? optimizedImage(raw, 1600) : null;
     if (!url || url === img) return;
     // Preload fully before showing so the photo paints in one go — no half-load
     // pop and no swap from a placeholder image.

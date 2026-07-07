@@ -3,6 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { Property } from '@/lib/types';
+import { optimizedImage } from '@/lib/imageUrl';
 import LetAgreedRibbon from '@/components/property/LetAgreedRibbon';
 
 interface PropertyCardProps {
@@ -42,7 +43,7 @@ export default function PropertyCard({ property }: PropertyCardProps) {
       <div style={{ position: 'relative', width: '100%', height: 200, flexShrink: 0 }}>
         {property.images?.[0] && !imgFailed ? (
           <img
-            src={property.images[0]}
+            src={optimizedImage(property.images[0], 640)}
             alt={property.title}
             loading="lazy"
             decoding="async"

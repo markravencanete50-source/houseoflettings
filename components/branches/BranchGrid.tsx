@@ -9,6 +9,7 @@ import { useMemo, useState } from 'react';
 import Link from 'next/link';
 import Reveal from '@/components/branches/Reveal';
 import { Branch, OFFICES } from '@/lib/branches';
+import { optimizedImage } from '@/lib/imageUrl';
 import { useActiveProperties, assignBranchImages } from '@/components/branches/useActiveProperties';
 
 function CardImage({ src, fallback, alt }: { src: string; fallback: string; alt: string }) {
@@ -44,7 +45,7 @@ export default function BranchGrid({ branches }: { branches: Branch[] }) {
           <Reveal key={b.slug} delay={(i % 3) * 80}>
             <Link href={`/branches/${b.slug}`} className="hol-branch-card">
               <div className="hol-branch-card__media">
-                <CardImage src={img} fallback={b.heroImage} alt={`Property to rent in ${b.name}`} />
+                <CardImage src={optimizedImage(img, 640)} fallback={b.heroImage} alt={`Property to rent in ${b.name}`} />
                 <span className="hol-branch-card__badge">{b.postcodes.join(' · ')}</span>
               </div>
               <div style={{ padding: '18px 20px 20px', display: 'flex', flexDirection: 'column', flex: 1 }}>

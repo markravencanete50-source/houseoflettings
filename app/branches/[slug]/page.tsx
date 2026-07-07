@@ -6,6 +6,7 @@ import Navbar from '@/components/layout/Navbar';
 import Reveal from '@/components/branches/Reveal';
 import BranchProperties from '@/components/branches/BranchProperties';
 import BranchHeroBg from '@/components/branches/BranchHeroBg';
+import BranchReviews from '@/components/branches/BranchReviews';
 import { BRANCHES, getBranch, OFFICES } from '@/lib/branches';
 
 const BASE = 'https://www.houseoflettings.uk';
@@ -244,6 +245,9 @@ export default function BranchPage({ params }: { params: { slug: string } }) {
           </Reveal>
           <BranchProperties branch={branch} />
         </section>
+
+        {/* ── City reviews (social proof, Hunters-style) ── */}
+        <BranchReviews city={branch.city} />
 
         {/* ── Popular searches (internal SEO links) ── */}
         <section style={{ maxWidth: 1080, margin: '0 auto', padding: 'clamp(36px,5vw,56px) 5%' }}>

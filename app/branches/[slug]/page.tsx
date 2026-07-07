@@ -5,6 +5,7 @@ import Link from 'next/link';
 import Navbar from '@/components/layout/Navbar';
 import Reveal from '@/components/branches/Reveal';
 import BranchProperties from '@/components/branches/BranchProperties';
+import BranchHeroBg from '@/components/branches/BranchHeroBg';
 import { BRANCHES, getBranch, OFFICES } from '@/lib/branches';
 
 const BASE = 'https://www.houseoflettings.uk';
@@ -99,12 +100,11 @@ export default function BranchPage({ params }: { params: { slug: string } }) {
           display: 'flex',
           alignItems: 'flex-end',
           color: '#fff',
-          backgroundImage: `linear-gradient(180deg, rgba(10,22,47,0.35) 0%, rgba(10,22,47,0.82) 100%), url(${branch.heroImage})`,
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
+          background: 'var(--navy)',
         }}
       >
-        <div style={{ maxWidth: 1240, margin: '0 auto', padding: 'clamp(32px,5vw,56px) 5%', width: '100%' }}>
+        <BranchHeroBg branch={branch} fallback={branch.heroImage} />
+        <div style={{ position: 'relative', zIndex: 1, maxWidth: 1240, margin: '0 auto', padding: 'clamp(32px,5vw,56px) 5%', width: '100%' }}>
           <Reveal>
             {/* Breadcrumb */}
             <nav aria-label="Breadcrumb" style={{ marginBottom: 16, fontSize: 13, color: 'rgba(255,255,255,0.75)' }}>

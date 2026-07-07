@@ -3,6 +3,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import Navbar from '@/components/layout/Navbar';
 import Reveal from '@/components/branches/Reveal';
+import BranchGrid from '@/components/branches/BranchGrid';
 import { BRANCHES, branchesByCity, OFFICES, City } from '@/lib/branches';
 
 const BASE = 'https://www.houseoflettings.uk';
@@ -55,33 +56,7 @@ function CitySection({ city, subtitle }: { city: City; subtitle: string }) {
         </p>
       </Reveal>
 
-      <div
-        style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
-          gap: 24,
-        }}
-      >
-        {branches.map((b, i) => (
-          <Reveal key={b.slug} delay={(i % 3) * 80}>
-            <Link href={`/branches/${b.slug}`} className="hol-branch-card">
-              <div className="hol-branch-card__media">
-                <img className="hol-branch-card__img" src={b.heroImage} alt={`${b.name} letting agents`} loading="lazy" decoding="async" />
-                <span className="hol-branch-card__badge">{b.postcodes.join(' · ')}</span>
-              </div>
-              <div style={{ padding: '18px 20px 22px', display: 'flex', flexDirection: 'column', flex: 1 }}>
-                <h3 style={{ fontFamily: "'Poppins',sans-serif", fontSize: 19, fontWeight: 700, color: 'var(--navy)', marginBottom: 6 }}>
-                  {b.name}
-                </h3>
-                <p style={{ color: 'var(--gray-600)', fontSize: 14, lineHeight: 1.55, flex: 1 }}>{b.intro}</p>
-                <span style={{ marginTop: 16, color: 'var(--red)', fontWeight: 600, fontSize: 13, letterSpacing: '0.04em', textTransform: 'uppercase' }}>
-                  View branch →
-                </span>
-              </div>
-            </Link>
-          </Reveal>
-        ))}
-      </div>
+      <BranchGrid branches={branches} />
     </section>
   );
 }

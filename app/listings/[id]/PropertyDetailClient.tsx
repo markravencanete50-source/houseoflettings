@@ -10,6 +10,7 @@ import { getUserProfile } from '@/services/auth';
 import { useAuth } from '@/hooks/useAuth';
 import { Property } from '@/lib/types';
 import TenantEnquiryModal from '@/components/property/TenantEnquiryModal';
+import LetAgreedRibbon from '@/components/property/LetAgreedRibbon';
 import { cityFromText } from '@/lib/viewingSlots';
 
 // Listings store the postcode at the end of the free-text location string
@@ -526,6 +527,8 @@ export default function PropertyDetailClient() {
                 No Image Available
               </div>
             )}
+
+            {property.letAgreed && <LetAgreedRibbon fontSize={28} />}
 
             {images.length > 0 && (
               <div className="hol-gallery-counter">

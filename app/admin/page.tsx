@@ -11,6 +11,7 @@ import {
   deleteUserRecord,
   adminDeleteProperty,
   adminSetPropertyStatus,
+  adminSetPropertyLetAgreed,
   getAnalytics,
 } from '@/services/admin';
 import { AppUser, Property } from '@/lib/types';
@@ -202,6 +203,14 @@ export default function AdminDashboard() {
     await adminSetPropertyStatus(prop.id!, newStatus);
     setProperties(prev =>
       prev.map(p => p.id === prop.id ? { ...p, status: newStatus } : p)
+    );
+  };
+
+  const handleToggleLetAgreed = async (prop: Property) => {
+    const newVal = !prop.letAgreed;
+    await adminSetPropertyLetAgreed(prop.id!, newVal);
+    setProperties(prev =>
+      prev.map(p => p.id === prop.id ? { ...p, letAgreed: newVal } : p)
     );
   };
 
@@ -523,7 +532,18 @@ export default function AdminDashboard() {
                         </td>
                         <td style={{ fontSize: 13, color: 'var(--gray-600)' }}>{p.location}</td>
                         <td style={{ fontWeight: 700, color: 'var(--red)' }}>£{p.price.toLocaleString()}</td>
-                        <td><span className={`status-badge ${p.status}`}>{p.status}</span></td>
+                        <td>
+                          <span className={`status-badge ${p.status}`}>{p.status}</span>
+                          {p.letAgreed && (
+                            <span style={{
+                              display: 'inline-block', marginTop: 4, fontSize: 10, fontWeight: 700,
+                              background: 'var(--red)', color: '#fff', borderRadius: 3,
+                              padding: '2px 7px', textTransform: 'uppercase', letterSpacing: 0.5,
+                            }}>
+                              Let Agreed
+                            </span>
+                          )}
+                        </td>
                         <td style={{ fontSize: 13 }}>{p.bedrooms === 0 ? 'Studio' : `${p.bedrooms}`}</td>
                         <td>
                           <div style={{ display: 'flex', gap: 6 }}>
@@ -547,6 +567,18 @@ export default function AdminDashboard() {
                               }}
                             >
                               {p.status === 'active' ? 'Deactivate' : 'Approve'}
+                            </button>
+                            <button
+                              onClick={() => handleToggleLetAgreed(p)}
+                              style={{
+                                padding: '5px 10px',
+                                background: p.letAgreed ? 'var(--red)' : 'transparent',
+                                border: '1px solid var(--red)',
+                                color: p.letAgreed ? '#fff' : 'var(--red)',
+                                borderRadius: 4, fontSize: 11, cursor: 'pointer', whiteSpace: 'nowrap',
+                              }}
+                            >
+                              {p.letAgreed ? 'Set Available' : 'Let Agreed'}
                             </button>
                             <button className="btn-danger" onClick={() => handleDeleteProperty(p.id!)}>
                               Delete

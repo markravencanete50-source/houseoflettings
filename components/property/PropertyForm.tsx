@@ -89,6 +89,7 @@ export default function PropertyForm({
   const [billsIncluded, setBillsIncluded] = useState<boolean>((existing as any)?.billsIncluded || false);
   const [billsNote, setBillsNote]         = useState<string>((existing as any)?.billsNote || '');
   const [videoTourUrl, setVideoTourUrl]   = useState<string>((existing as any)?.videoTourUrl || '');
+  const [letAgreed, setLetAgreed]         = useState<boolean>((existing as any)?.letAgreed || false);
 
   // ── Postcode lookup ─────────────────────────────────────────────────────
   const [postcode, setPostcode]           = useState('');
@@ -264,6 +265,7 @@ export default function PropertyForm({
         billsIncluded,
         billsNote: billsIncluded ? billsNote : '',
         videoTourUrl: videoTourUrl || null,
+        letAgreed,
         ...(existing?.badge ? { badge: existing.badge } : {}),
         ...(adminOverride ?? {}),
       } as any;
@@ -326,6 +328,18 @@ export default function PropertyForm({
               <div style={{ fontSize: 12, color: 'var(--gray-400)' }}>{opt.desc}</div>
             </button>
           ))}
+        </div>
+      </div>
+
+      {/* Let Agreed */}
+      <div className="form-group" style={{ marginBottom: 20 }}>
+        <label className="form-label">Availability</label>
+        <div style={{ display: 'flex', gap: 10, marginTop: 6 }}>
+          <TogglePill label="🔴 Let Agreed" value={letAgreed} onChange={setLetAgreed} />
+        </div>
+        <div style={{ fontSize: 12, color: 'var(--gray-400)', marginTop: 6 }}>
+          When on, a red <strong>LET AGREED</strong> banner shows on the cover photo and the property is hidden from
+          new tenant applications. The listing stays visible on the website.
         </div>
       </div>
 

@@ -3,6 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { Property } from '@/lib/types';
+import LetAgreedRibbon from '@/components/property/LetAgreedRibbon';
 
 interface PropertyCardProps {
   property: Property;
@@ -66,6 +67,7 @@ export default function PropertyCard({ property }: PropertyCardProps) {
             {property.badge}
           </span>
         )}
+        {property.letAgreed && <LetAgreedRibbon fontSize={16} />}
       </div>
 
       {/* Body */}

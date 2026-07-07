@@ -27,6 +27,7 @@ export interface Property {
   status: 'active' | 'inactive' | 'pending';
   badge?: string;         // 'Featured' | 'New' | 'Popular' | etc.
   featured?: boolean;
+  letAgreed?: boolean;    // true = offer accepted: show "LET AGREED" banner + hide from tenant applications
   furnished?: 'furnished' | 'unfurnished' | 'part-furnished';
   availableFrom?: string;
 

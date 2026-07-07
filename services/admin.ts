@@ -52,6 +52,14 @@ export async function adminSetPropertyStatus(
   await updateDoc(doc(db, 'properties', id), { status });
 }
 
+// ── Toggle "Let Agreed" ───────────────────────────────────────
+export async function adminSetPropertyLetAgreed(
+  id: string,
+  letAgreed: boolean
+): Promise<void> {
+  await updateDoc(doc(db, 'properties', id), { letAgreed });
+}
+
 // ── Analytics ────────────────────────────────────────────────
 export async function getAnalytics() {
   const safeCount = async (col: string) => {

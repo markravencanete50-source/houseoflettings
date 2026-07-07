@@ -135,16 +135,16 @@ export default function BranchPage({ params }: { params: { slug: string } }) {
 
       <main style={{ background: '#fff' }}>
         {/* ── Contact (local office) ── */}
-        <section style={{ background: 'linear-gradient(135deg, #0a162f 0%, #12274d 100%)', color: '#fff', padding: 'clamp(48px,6vw,80px) 5%' }}>
+        <section style={{ background: 'var(--gray-100)', color: 'var(--gray-800)', padding: 'clamp(48px,6vw,80px) 5%' }}>
           <div style={{ maxWidth: 1080, margin: '0 auto', display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(280px,1fr))', gap: 36, alignItems: 'center' }}>
             <Reveal>
-              <p style={{ color: 'var(--teal)', fontWeight: 600, letterSpacing: '0.12em', textTransform: 'uppercase', fontSize: 13, marginBottom: 12 }}>
+              <p style={{ color: 'var(--teal-dark)', fontWeight: 600, letterSpacing: '0.12em', textTransform: 'uppercase', fontSize: 13, marginBottom: 12 }}>
                 Your local office
               </p>
-              <h2 style={{ fontFamily: "'Poppins',sans-serif", fontSize: 'clamp(24px,3.2vw,32px)', fontWeight: 800, marginBottom: 16 }}>
+              <h2 style={{ fontFamily: "'Poppins',sans-serif", fontSize: 'clamp(24px,3.2vw,32px)', fontWeight: 800, marginBottom: 16, color: 'var(--navy)', letterSpacing: '-0.5px' }}>
                 Talk to the {branch.city} team
               </h2>
-              <p style={{ color: 'rgba(255,255,255,0.75)', fontSize: 16, lineHeight: 1.7, marginBottom: 24 }}>
+              <p style={{ color: 'var(--gray-800)', fontSize: 16, lineHeight: 1.7, marginBottom: 24 }}>
                 Thinking of letting a property in {branch.name}, or looking for your next home here? Our {branch.city}{' '}
                 office covers {branch.postcodes.join(', ')} and the surrounding areas.
               </p>
@@ -152,28 +152,28 @@ export default function BranchPage({ params }: { params: { slug: string } }) {
                 <Link href="/book-valuation" className="hol-branch-btn hol-branch-btn--teal">
                   Book a free valuation
                 </Link>
-                <Link href="/book-viewing" className="hol-branch-btn hol-branch-btn--ghost">
+                <Link href="/book-viewing" className="hol-branch-btn hol-branch-btn--outline">
                   Book a viewing
                 </Link>
               </div>
             </Reveal>
 
             <Reveal delay={80}>
-              <div style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 16, padding: '30px 28px' }}>
-                <div style={{ fontFamily: "'Poppins',sans-serif", fontWeight: 700, fontSize: 18, marginBottom: 18 }}>
+              <div style={{ background: '#fff', border: '1px solid var(--gray-200)', borderRadius: 16, padding: '30px 28px', boxShadow: '0 2px 14px rgba(15,31,61,0.06)' }}>
+                <div style={{ fontFamily: "'Poppins',sans-serif", fontWeight: 700, fontSize: 18, marginBottom: 18, color: 'var(--navy)' }}>
                   House of Lettings — {branch.city}
                 </div>
                 <ContactRow label="Address">
                   {office.addressLines.join(', ')}, {office.addressCity} {office.postcode}
                 </ContactRow>
                 <ContactRow label="Phone">
-                  <a href={office.phoneHref} style={{ color: '#fff', fontWeight: 600 }}>{office.phoneDisplay}</a>
+                  <a href={office.phoneHref} style={{ color: 'var(--navy)', fontWeight: 600 }}>{office.phoneDisplay}</a>
                 </ContactRow>
                 <ContactRow label="Email">
-                  <a href={`mailto:${office.email}`} style={{ color: '#fff', fontWeight: 600, wordBreak: 'break-word' }}>{office.email}</a>
+                  <a href={`mailto:${office.email}`} style={{ color: 'var(--navy)', fontWeight: 600, wordBreak: 'break-word' }}>{office.email}</a>
                 </ContactRow>
                 <ContactRow label="Opening hours">{office.hours}</ContactRow>
-                <a href={mapsHref} target="_blank" rel="noopener noreferrer" className="hol-branch-btn hol-branch-btn--ghost" style={{ marginTop: 8, width: '100%' }}>
+                <a href={mapsHref} target="_blank" rel="noopener noreferrer" className="hol-branch-btn hol-branch-btn--outline" style={{ marginTop: 8, width: '100%' }}>
                   Get directions →
                 </a>
               </div>
@@ -293,9 +293,9 @@ export default function BranchPage({ params }: { params: { slug: string } }) {
 
 function ContactRow({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <div style={{ display: 'flex', gap: 12, padding: '10px 0', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
-      <span style={{ minWidth: 96, color: 'rgba(255,255,255,0.5)', fontSize: 13 }}>{label}</span>
-      <span style={{ fontSize: 14.5, lineHeight: 1.5 }}>{children}</span>
+    <div style={{ display: 'flex', gap: 12, padding: '10px 0', borderBottom: '1px solid var(--gray-200)' }}>
+      <span style={{ minWidth: 96, color: 'var(--gray-400)', fontSize: 13 }}>{label}</span>
+      <span style={{ fontSize: 14.5, lineHeight: 1.5, color: 'var(--gray-800)' }}>{children}</span>
     </div>
   );
 }

@@ -282,6 +282,13 @@ ul, ol { list-style: none; }
   border: 1.5px solid rgba(255,255,255,0.55);
 }
 .hol-branch-btn--ghost:hover { background: #fff; color: var(--navy); transform: translateY(-2px); }
+/* Solid white button — for use on dark/navy backgrounds (e.g. hero) */
+.hol-branch-btn--white {
+  background: #fff;
+  color: var(--navy);
+  border: 1.5px solid #fff;
+}
+.hol-branch-btn--white:hover { background: rgba(255,255,255,0.88); transform: translateY(-2px); box-shadow: 0 8px 22px rgba(0,0,0,0.18); }
 
 .hol-branch-card {
   display: flex;

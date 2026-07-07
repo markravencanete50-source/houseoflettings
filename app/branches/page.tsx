@@ -145,10 +145,10 @@ export default function BranchesIndexPage() {
             offices, one standard of service.
           </p>
           <div style={{ display: 'flex', gap: 14, justifyContent: 'center', flexWrap: 'wrap' }}>
-            <Link href="/listings" className="hol-branch-btn hol-branch-btn--teal">
+            <Link href="/listings" className="hol-branch-btn hol-branch-btn--white">
               Browse all properties
             </Link>
-            <Link href="/book-valuation" className="hol-branch-btn hol-branch-btn--ghost">
+            <Link href="/book-valuation" className="hol-branch-btn hol-branch-btn--white">
               Free rental valuation
             </Link>
           </div>

@@ -75,14 +75,16 @@ export interface Branch {
 }
 
 // A small rotating pool of on-brand imagery (we don't hold per-street photos).
-const HERO_POOL = [
+// Exported so the client image-assigner can use these as distinct last-resort
+// fillers when a city has fewer live property photos than branches.
+export const BRAND_IMAGES = [
   '/images/heropage.webp',
   '/images/brand-desk.webp',
   '/images/compliance.webp',
   '/images/Landlord_page.webp',
   '/images/service-compare.webp',
 ];
-const hero = (i: number) => HERO_POOL[i % HERO_POOL.length];
+const hero = (i: number) => BRAND_IMAGES[i % BRAND_IMAGES.length];
 
 // ── Leeds branches ─────────────────────────────────────────────
 const LEEDS: Branch[] = [

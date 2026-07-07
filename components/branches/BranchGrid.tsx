@@ -3,13 +3,15 @@
 // Client grid of branch cards. Subscribes once to live listings and shows a
 // real matching property photo per card, falling back to a brand image only
 // while loading or when a city has no photographed listings yet.
+import { useMemo } from 'react';
 import Link from 'next/link';
 import Reveal from '@/components/branches/Reveal';
 import { Branch } from '@/lib/branches';
-import { useActiveProperties, pickBranchImage } from '@/components/branches/useActiveProperties';
+import { useActiveProperties, assignBranchImages } from '@/components/branches/useActiveProperties';
 
 export default function BranchGrid({ branches }: { branches: Branch[] }) {
   const { props } = useActiveProperties();
+  const imageMap = useMemo(() => assignBranchImages(props, branches), [props, branches]);
 
   return (
     <div
@@ -20,7 +22,7 @@ export default function BranchGrid({ branches }: { branches: Branch[] }) {
       }}
     >
       {branches.map((b, i) => {
-        const img = pickBranchImage(props, b) || b.heroImage;
+        const img = imageMap.get(b.slug) || b.heroImage;
         return (
           <Reveal key={b.slug} delay={(i % 3) * 80}>
             <Link href={`/branches/${b.slug}`} className="hol-branch-card">

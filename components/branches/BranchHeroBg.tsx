@@ -6,7 +6,7 @@
 // photo is then painted in a single frame (it's already cached), so there is no
 // flash of a "previous"/placeholder picture and no fade/animation.
 import { useEffect, useState } from 'react';
-import { useActiveProperties, pickBranchImage } from '@/components/branches/useActiveProperties';
+import { useActiveProperties, realBranchPhoto } from '@/components/branches/useActiveProperties';
 import { Branch } from '@/lib/branches';
 
 export default function BranchHeroBg({ branch }: { branch: Branch }) {
@@ -14,7 +14,7 @@ export default function BranchHeroBg({ branch }: { branch: Branch }) {
   const [img, setImg] = useState<string | null>(null);
 
   useEffect(() => {
-    const url = pickBranchImage(props, branch);
+    const url = realBranchPhoto(props, branch);
     if (!url || url === img) return;
     // Preload fully before showing so the photo paints in one go — no half-load
     // pop and no swap from a placeholder image.

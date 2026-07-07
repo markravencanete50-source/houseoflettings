@@ -106,18 +106,6 @@ export default function BranchPage({ params }: { params: { slug: string } }) {
         <BranchHeroBg branch={branch} fallback={branch.heroImage} />
         <div style={{ position: 'relative', zIndex: 1, maxWidth: 1240, margin: '0 auto', padding: 'clamp(32px,5vw,56px) 5%', width: '100%' }}>
           <Reveal>
-            {/* Breadcrumb */}
-            <nav aria-label="Breadcrumb" style={{ marginBottom: 16, fontSize: 13, color: 'rgba(255,255,255,0.75)' }}>
-              <Link href="/" style={{ color: 'inherit' }}>Home</Link>
-              <span style={{ margin: '0 8px', opacity: 0.6 }}>/</span>
-              <Link href="/branches" style={{ color: 'inherit' }}>Branches</Link>
-              <span style={{ margin: '0 8px', opacity: 0.6 }}>/</span>
-              <span style={{ color: '#fff' }}>{branch.name}</span>
-            </nav>
-
-            <p style={{ color: 'var(--teal)', fontWeight: 600, letterSpacing: '0.12em', textTransform: 'uppercase', fontSize: 13, marginBottom: 12 }}>
-              Letting Agents · {branch.postcodes.join(' · ')} · {branch.city}
-            </p>
             <h1
               style={{
                 fontFamily: "'Barlow Condensed','Poppins',sans-serif",
@@ -146,6 +134,53 @@ export default function BranchPage({ params }: { params: { slug: string } }) {
       </header>
 
       <main style={{ background: '#fff' }}>
+        {/* ── Contact (local office) ── */}
+        <section style={{ background: 'linear-gradient(135deg, #0a162f 0%, #12274d 100%)', color: '#fff', padding: 'clamp(48px,6vw,80px) 5%' }}>
+          <div style={{ maxWidth: 1080, margin: '0 auto', display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(280px,1fr))', gap: 36, alignItems: 'center' }}>
+            <Reveal>
+              <p style={{ color: 'var(--teal)', fontWeight: 600, letterSpacing: '0.12em', textTransform: 'uppercase', fontSize: 13, marginBottom: 12 }}>
+                Your local office
+              </p>
+              <h2 style={{ fontFamily: "'Poppins',sans-serif", fontSize: 'clamp(24px,3.2vw,32px)', fontWeight: 800, marginBottom: 16 }}>
+                Talk to the {branch.city} team
+              </h2>
+              <p style={{ color: 'rgba(255,255,255,0.75)', fontSize: 16, lineHeight: 1.7, marginBottom: 24 }}>
+                Thinking of letting a property in {branch.name}, or looking for your next home here? Our {branch.city}{' '}
+                office covers {branch.postcodes.join(', ')} and the surrounding areas.
+              </p>
+              <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap' }}>
+                <Link href="/book-valuation" className="hol-branch-btn hol-branch-btn--teal">
+                  Book a free valuation
+                </Link>
+                <Link href="/book-viewing" className="hol-branch-btn hol-branch-btn--ghost">
+                  Book a viewing
+                </Link>
+              </div>
+            </Reveal>
+
+            <Reveal delay={80}>
+              <div style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 16, padding: '30px 28px' }}>
+                <div style={{ fontFamily: "'Poppins',sans-serif", fontWeight: 700, fontSize: 18, marginBottom: 18 }}>
+                  House of Lettings — {branch.city}
+                </div>
+                <ContactRow label="Address">
+                  {office.addressLines.join(', ')}, {office.addressCity} {office.postcode}
+                </ContactRow>
+                <ContactRow label="Phone">
+                  <a href={office.phoneHref} style={{ color: '#fff', fontWeight: 600 }}>{office.phoneDisplay}</a>
+                </ContactRow>
+                <ContactRow label="Email">
+                  <a href={`mailto:${office.email}`} style={{ color: '#fff', fontWeight: 600, wordBreak: 'break-word' }}>{office.email}</a>
+                </ContactRow>
+                <ContactRow label="Opening hours">{office.hours}</ContactRow>
+                <a href={mapsHref} target="_blank" rel="noopener noreferrer" className="hol-branch-btn hol-branch-btn--ghost" style={{ marginTop: 8, width: '100%' }}>
+                  Get directions →
+                </a>
+              </div>
+            </Reveal>
+          </div>
+        </section>
+
         {/* ── About the area ── */}
         <section style={{ maxWidth: 1000, margin: '0 auto', padding: 'clamp(48px,7vw,84px) 5% clamp(32px,4vw,48px)' }}>
           <Reveal>
@@ -208,53 +243,6 @@ export default function BranchPage({ params }: { params: { slug: string } }) {
             </p>
           </Reveal>
           <BranchProperties branch={branch} />
-        </section>
-
-        {/* ── Contact ── */}
-        <section style={{ background: 'linear-gradient(135deg, #0a162f 0%, #12274d 100%)', color: '#fff', padding: 'clamp(48px,6vw,80px) 5%' }}>
-          <div style={{ maxWidth: 1080, margin: '0 auto', display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(280px,1fr))', gap: 36, alignItems: 'center' }}>
-            <Reveal>
-              <p style={{ color: 'var(--teal)', fontWeight: 600, letterSpacing: '0.12em', textTransform: 'uppercase', fontSize: 13, marginBottom: 12 }}>
-                Your local office
-              </p>
-              <h2 style={{ fontFamily: "'Poppins',sans-serif", fontSize: 'clamp(24px,3.2vw,32px)', fontWeight: 800, marginBottom: 16 }}>
-                Talk to the {branch.city} team
-              </h2>
-              <p style={{ color: 'rgba(255,255,255,0.75)', fontSize: 16, lineHeight: 1.7, marginBottom: 24 }}>
-                Thinking of letting a property in {branch.name}, or looking for your next home here? Our {branch.city}{' '}
-                office covers {branch.postcodes.join(', ')} and the surrounding areas.
-              </p>
-              <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap' }}>
-                <Link href="/book-valuation" className="hol-branch-btn hol-branch-btn--teal">
-                  Book a free valuation
-                </Link>
-                <Link href="/book-viewing" className="hol-branch-btn hol-branch-btn--ghost">
-                  Book a viewing
-                </Link>
-              </div>
-            </Reveal>
-
-            <Reveal delay={80}>
-              <div style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 16, padding: '30px 28px' }}>
-                <div style={{ fontFamily: "'Poppins',sans-serif", fontWeight: 700, fontSize: 18, marginBottom: 18 }}>
-                  House of Lettings — {branch.city}
-                </div>
-                <ContactRow label="Address">
-                  {office.addressLines.join(', ')}, {office.addressCity} {office.postcode}
-                </ContactRow>
-                <ContactRow label="Phone">
-                  <a href={office.phoneHref} style={{ color: '#fff', fontWeight: 600 }}>{office.phoneDisplay}</a>
-                </ContactRow>
-                <ContactRow label="Email">
-                  <a href={`mailto:${office.email}`} style={{ color: '#fff', fontWeight: 600, wordBreak: 'break-word' }}>{office.email}</a>
-                </ContactRow>
-                <ContactRow label="Opening hours">{office.hours}</ContactRow>
-                <a href={mapsHref} target="_blank" rel="noopener noreferrer" className="hol-branch-btn hol-branch-btn--ghost" style={{ marginTop: 8, width: '100%' }}>
-                  Get directions →
-                </a>
-              </div>
-            </Reveal>
-          </div>
         </section>
 
         {/* ── Popular searches (internal SEO links) ── */}

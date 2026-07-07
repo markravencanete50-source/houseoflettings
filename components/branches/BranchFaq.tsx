@@ -60,7 +60,7 @@ export default function BranchFaq({ faqs }: { faqs: Faq[] }) {
                   flexShrink: 0,
                   fontSize: 22,
                   lineHeight: 1,
-                  color: 'var(--teal-dark)',
+                  color: 'var(--red)',
                   transform: isOpen ? 'rotate(45deg)' : 'none',
                   transition: 'transform 0.2s',
                 }}

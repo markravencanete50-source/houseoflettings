@@ -62,7 +62,7 @@ function ReviewCard({ review }: { review: Review }) {
         {isLong && (
           <button
             onClick={() => setExpanded((e) => !e)}
-            style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--teal-dark)', fontSize: 13, fontWeight: 600, paddingLeft: 4 }}
+            style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--navy)', fontSize: 13, fontWeight: 600, paddingLeft: 4 }}
           >
             {expanded ? 'show less' : 'read more'}
           </button>
@@ -166,7 +166,7 @@ export default function BranchReviews({ city }: { city: City }) {
           ) : (
             <>Genuine reviews from our {city} landlords and tenants on </>
           )}
-          <a href={mapsHref} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--teal-dark)', fontWeight: 600 }}>
+          <a href={mapsHref} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--navy)', fontWeight: 600 }}>
             Google
           </a>
         </p>

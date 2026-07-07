@@ -29,7 +29,10 @@ function CitySection({ city, subtitle }: { city: City; subtitle: string }) {
   const office = OFFICES[city];
   const branches = branchesByCity(city);
   return (
-    <section style={{ padding: 'clamp(48px, 6vw, 72px) 5%', maxWidth: 1240, margin: '0 auto' }}>
+    <section
+      id={city.toLowerCase()}
+      style={{ padding: 'clamp(48px, 6vw, 72px) 5%', maxWidth: 1240, margin: '0 auto', scrollMarginTop: 80 }}
+    >
       <Reveal>
         <div style={{ display: 'flex', alignItems: 'baseline', gap: 14, flexWrap: 'wrap', marginBottom: 6 }}>
           <h2
@@ -113,6 +116,15 @@ export default function BranchesIndexPage() {
             <Link href="/book-valuation" className="hol-branch-btn hol-branch-btn--ghost">
               Free rental valuation
             </Link>
+          </div>
+          {/* Quick jump — long page on mobile, let visitors skip to their city */}
+          <div style={{ display: 'flex', gap: 22, justifyContent: 'center', flexWrap: 'wrap', marginTop: 26 }}>
+            <a href="#leeds" style={{ color: 'rgba(255,255,255,0.85)', fontSize: 14, fontWeight: 600, textDecoration: 'underline', textUnderlineOffset: 4 }}>
+              Leeds branches ↓
+            </a>
+            <a href="#manchester" style={{ color: 'rgba(255,255,255,0.85)', fontSize: 14, fontWeight: 600, textDecoration: 'underline', textUnderlineOffset: 4 }}>
+              Manchester branches ↓
+            </a>
           </div>
         </Reveal>
       </header>

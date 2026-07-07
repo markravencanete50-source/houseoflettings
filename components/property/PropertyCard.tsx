@@ -13,6 +13,7 @@ export default function PropertyCard({ property }: PropertyCardProps) {
   const router = useRouter();
   const [hovered, setHovered] = useState(false);
   const [btnHovered, setBtnHovered] = useState(false);
+  const [imgFailed, setImgFailed] = useState(false);
 
   const bedsLabel = property.bedrooms === 0 ? 'Studio' :
     `${property.bedrooms} Bed${property.bedrooms > 1 ? 's' : ''}`;
@@ -39,12 +40,13 @@ export default function PropertyCard({ property }: PropertyCardProps) {
     >
       {/* Image */}
       <div style={{ position: 'relative', width: '100%', height: 200, flexShrink: 0 }}>
-        {property.images?.[0] ? (
+        {property.images?.[0] && !imgFailed ? (
           <img
             src={property.images[0]}
             alt={property.title}
             loading="lazy"
             decoding="async"
+            onError={() => setImgFailed(true)}
             style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
           />
         ) : (

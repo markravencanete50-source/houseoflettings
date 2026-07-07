@@ -16,7 +16,7 @@ import {
   CITY_CONTENT,
   SERVICES,
   INFO_CARDS,
-  FAQS,
+  faqsForCity,
   branchesByCity,
 } from '@/lib/branches';
 
@@ -194,15 +194,47 @@ export default function BranchOffice({ city }: { city: City }) {
           </div>
         </section>
 
-        {/* ── For tenants / for landlords ── */}
-        <section style={{ maxWidth: 1160, margin: '0 auto', padding: 'clamp(48px,6vw,84px) 5%' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(320px,1fr))', gap: 26 }}>
+        {/* ── Why live in this city? (unique per branch) ── */}
+        <section style={{ maxWidth: 1160, margin: '0 auto', padding: 'clamp(48px,6vw,84px) 5% 0' }}>
+          <SectionHeading kicker="The city" title={`Why live in ${city}?`} />
+          <div style={{ maxWidth: 860, marginTop: 18 }}>
+            {content.whyLive.map((para, i) => (
+              <Reveal key={i} delay={i * 60}>
+                <p style={{ fontSize: 17, lineHeight: 1.75, color: 'var(--gray-800)', marginBottom: 18 }}>{para}</p>
+              </Reveal>
+            ))}
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(230px,1fr))', gap: 18, marginTop: 14 }}>
+            {content.perks.map((p, i) => (
+              <Reveal key={p.label} delay={(i % 4) * 70}>
+                <div style={{ background: 'var(--gray-100)', borderRadius: 12, padding: '22px 22px', height: '100%', borderLeft: '3px solid var(--teal)' }}>
+                  <div style={{ fontSize: 26, marginBottom: 10 }}>{p.icon}</div>
+                  <div style={{ fontFamily: "'Poppins',sans-serif", fontWeight: 700, color: 'var(--navy)', fontSize: 15, marginBottom: 6 }}>{p.label}</div>
+                  <div style={{ color: 'var(--gray-600)', fontSize: 14, lineHeight: 1.6 }}>{p.text}</div>
+                </div>
+              </Reveal>
+            ))}
+          </div>
+        </section>
+
+        {/* ── For tenants / for landlords ──
+            Text-only, full-width two-column layout (client feedback: the boxed
+            cards looked isolated in the surrounding white space). A thin
+            divider separates the columns on desktop; they stack on mobile. */}
+        <section style={{ maxWidth: 1240, margin: '0 auto', padding: 'clamp(48px,6vw,84px) 5%' }}>
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit,minmax(320px,1fr))',
+              gap: 'clamp(36px, 5vw, 72px)',
+            }}
+          >
             <Reveal>
-              <div style={{ background: 'var(--gray-100)', borderRadius: 16, padding: 'clamp(26px,3vw,36px)', height: '100%', borderTop: '4px solid var(--teal)' }}>
-                <p style={{ color: 'var(--teal-dark)', fontWeight: 600, letterSpacing: '0.12em', textTransform: 'uppercase', fontSize: 12.5, marginBottom: 10 }}>
+              <div>
+                <p style={{ color: 'var(--teal-dark)', fontWeight: 600, letterSpacing: '0.12em', textTransform: 'uppercase', fontSize: 13, marginBottom: 12 }}>
                   For tenants
                 </p>
-                <h2 style={{ fontFamily: "'Poppins',sans-serif", fontSize: 'clamp(21px,2.6vw,27px)', fontWeight: 800, color: 'var(--navy)', letterSpacing: '-0.4px' }}>
+                <h2 style={{ fontFamily: "'Poppins',sans-serif", fontSize: 'clamp(23px,2.8vw,30px)', fontWeight: 800, color: 'var(--navy)', letterSpacing: '-0.4px', marginBottom: 6 }}>
                   Renting in {city}? Here’s why tenants choose us
                 </h2>
                 <Ticks items={content.whyRent} />
@@ -213,24 +245,17 @@ export default function BranchOffice({ city }: { city: City }) {
               </div>
             </Reveal>
             <Reveal delay={80}>
-              <div style={{ background: 'var(--navy)', color: '#fff', borderRadius: 16, padding: 'clamp(26px,3vw,36px)', height: '100%', borderTop: '4px solid var(--red)' }}>
-                <p style={{ color: 'var(--teal)', fontWeight: 600, letterSpacing: '0.12em', textTransform: 'uppercase', fontSize: 12.5, marginBottom: 10 }}>
+              <div>
+                <p style={{ color: 'var(--red)', fontWeight: 600, letterSpacing: '0.12em', textTransform: 'uppercase', fontSize: 13, marginBottom: 12 }}>
                   For landlords
                 </p>
-                <h2 style={{ fontFamily: "'Poppins',sans-serif", fontSize: 'clamp(21px,2.6vw,27px)', fontWeight: 800, letterSpacing: '-0.4px' }}>
+                <h2 style={{ fontFamily: "'Poppins',sans-serif", fontSize: 'clamp(23px,2.8vw,30px)', fontWeight: 800, color: 'var(--navy)', letterSpacing: '-0.4px', marginBottom: 6 }}>
                   Letting in {city}? Here’s why landlords choose us
                 </h2>
-                <ul style={{ listStyle: 'none', padding: 0, margin: '18px 0 26px', display: 'flex', flexDirection: 'column', gap: 12 }}>
-                  {content.landlordPitch.map((t) => (
-                    <li key={t} style={{ display: 'flex', gap: 12, fontSize: 15, lineHeight: 1.6, color: 'rgba(255,255,255,0.9)' }}>
-                      <span aria-hidden style={{ color: 'var(--teal)', fontWeight: 800, flexShrink: 0 }}>✓</span>
-                      {t}
-                    </li>
-                  ))}
-                </ul>
+                <Ticks items={content.landlordPitch} />
                 <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
                   <Link href="/book-valuation" className="hol-branch-btn hol-branch-btn--teal">Free rental valuation</Link>
-                  <Link href="/landlord-registration" className="hol-branch-btn hol-branch-btn--ghost">Register a property</Link>
+                  <Link href="/landlord-registration" className="hol-branch-btn hol-branch-btn--outline">Register a property</Link>
                 </div>
               </div>
             </Reveal>
@@ -268,7 +293,7 @@ export default function BranchOffice({ city }: { city: City }) {
           <div style={{ maxWidth: 1160, margin: '0 auto' }}>
             <SectionHeading kicker="News & guides" title="What every landlord & tenant should know" sub="Plain-English guidance on the rules that protect you — kept up to date so you don’t have to be." />
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(280px,1fr))', gap: 22, marginTop: 34 }}>
-              {INFO_CARDS.map((n, i) => {
+              {[content.newsCard, ...INFO_CARDS].map((n, i) => {
                 const inner = (
                   <div style={{ background: '#fff', borderRadius: 14, padding: '26px 24px', height: '100%', boxShadow: '0 2px 12px rgba(15,31,61,0.06)', display: 'flex', flexDirection: 'column' }}>
                     <span style={{ alignSelf: 'flex-start', background: 'rgba(0,184,160,0.12)', color: 'var(--teal-dark)', fontSize: 11.5, fontWeight: 700, letterSpacing: '0.05em', textTransform: 'uppercase', padding: '4px 10px', borderRadius: 999, marginBottom: 14 }}>
@@ -298,11 +323,6 @@ export default function BranchOffice({ city }: { city: City }) {
                 );
               })}
             </div>
-            <Reveal>
-              <p style={{ maxWidth: 900, margin: '30px auto 0', textAlign: 'center', color: 'var(--gray-600)', fontSize: 14.5, lineHeight: 1.7, fontStyle: 'italic' }}>
-                {content.marketNote}
-              </p>
-            </Reveal>
           </div>
         </section>
 
@@ -311,7 +331,7 @@ export default function BranchOffice({ city }: { city: City }) {
           <div style={{ marginBottom: 34 }}>
             <SectionHeading center kicker="FAQs" title="Frequently asked questions" />
           </div>
-          <BranchFaq faqs={FAQS} />
+          <BranchFaq faqs={faqsForCity(city)} />
         </section>
 
         {/* ── Reviews ── */}

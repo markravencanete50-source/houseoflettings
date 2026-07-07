@@ -653,8 +653,27 @@ export interface Faq {
   a: string;
 }
 
-// Tenant + landlord FAQs. About our service and UK law, so identical
-// for both offices.
+// Tenant + landlord FAQs, personalised to the branch (office phone and
+// city woven into the answers so the two pages don't read identically).
+export function faqsForCity(city: City): Faq[] {
+  const office = OFFICES[city];
+  return [
+    {
+      q: 'How do I apply for a property?',
+      a: `Book a viewing through the property listing or call our ${city} office on ${office.phoneDisplay}. If it’s right for you, we’ll take you through a short application and referencing — usually completed within a few working days.`,
+    },
+    ...FAQS.slice(1, 4),
+    {
+      q: 'What are your management fees for landlords?',
+      a: `We keep pricing transparent with no hidden fees — Tenant Find, Rent Collection and Full Management tiers. See our pricing page for the full breakdown or call the ${city} team for a tailored quote.`,
+    },
+    {
+      q: `How quickly can you let my ${city} property?`,
+      a: `Well-presented ${city} homes priced to the local market often let within days. We market from day one across the major portals with professional photos and accompanied viewings to minimise voids.`,
+    },
+  ];
+}
+
 export const FAQS: Faq[] = [
   {
     q: 'How do I apply for a property?',
@@ -682,15 +701,23 @@ export const FAQS: Faq[] = [
   },
 ];
 
+export interface CityPerk {
+  icon: string;
+  label: string;
+  text: string;
+}
+
 export interface CityContent {
   slug: string;
   city: City;
   heroKicker: string;
   heroTagline: string;
   blurb: string;              // one-line intro used on index cards + meta
+  whyLive: string[];          // "Why live in <city>?" narrative (Hunters-style)
+  perks: CityPerk[];          // the perks of living in this city
   whyRent: string[];          // reasons a tenant rents through us here
   landlordPitch: string[];    // reasons a landlord chooses us here
-  marketNote: string;         // one city-specific market line for the news strip
+  newsCard: InfoCard;         // city-specific market card for the news grid
   seoTitle: string;
   seoDescription: string;
 }
@@ -702,21 +729,36 @@ export const CITY_CONTENT: Record<City, CityContent> = {
     heroKicker: 'Your local branch',
     heroTagline: 'Letting agents in Leeds — homes to rent and hands-off management across West Yorkshire, run from our Harehills office.',
     blurb: 'Our Leeds office lets and manages homes across the city, from city-centre apartments to family houses in the northern suburbs.',
+    whyLive: [
+      'Leeds is the economic capital of the North — the UK’s largest financial, legal and professional-services centre outside London, with major employers in banking, health, digital and media. Add two big universities and one of the youngest populations of any UK city, and you get a place where careers start and stay.',
+      'It’s also a city you can actually afford to enjoy. Rents stretch much further than in the South, and the choice runs from waterfront apartments at Granary Wharf to Victorian terraces in Headingley and family homes beside Roundhay Park — one of the largest city parks in Europe — with the Yorkshire Dales under an hour away.',
+    ],
+    perks: [
+      { icon: '💼', label: 'Careers', text: 'The biggest financial and legal jobs market outside London, plus major NHS, digital and media employers.' },
+      { icon: '🏡', label: 'More for your money', text: 'Rents well below southern cities — from LS1 apartments to leafy family suburbs like Horsforth and Roundhay.' },
+      { icon: '🚉', label: 'Connected', text: 'Leeds station runs direct to London in ~2¼ hours, with buses and rail linking every corner of West Yorkshire.' },
+      { icon: '🌳', label: 'Lifestyle', text: 'Roundhay Park, Kirkstall Abbey and the Dales on the doorstep — plus an award-winning food, music and arts scene.' },
+    ],
     whyRent: [
-      'No hidden tenant fees — only your rent and a deposit capped at five weeks’ rent.',
-      'Every home is checked for gas, electrical and EPC compliance before you move in.',
-      'Fast, fair referencing and a named local contact at our Leeds office.',
-      'Report maintenance any time — our team handles it for managed properties.',
-      'Your deposit is protected in a government-approved scheme.',
+      'Homes at every price point — LS1 city-centre flats, Headingley house-shares, family homes in Horsforth and Roundhay.',
+      'A named local contact at our Harehills office — call 0113 868 9212 and speak to someone who knows your street.',
+      'No hidden tenant fees — just your rent and a deposit capped at five weeks (and protected in a government scheme).',
+      'Every home gas, electrical and EPC checked before you get the keys.',
+      'Report a repair any time online — our Leeds team handles it for managed homes.',
     ],
     landlordPitch: [
-      'A local team that knows Leeds rents — accurate valuations and minimal voids.',
-      'Fully referenced, Right-to-Rent-checked tenants placed quickly.',
-      'Gas, EICR, EPC and deposit compliance all handled for you.',
-      'Transparent pricing with no hidden fees.',
-      'Rent collection, inspections and maintenance managed end to end.',
+      'We know Leeds rents street by street — from Headingley HMOs to Roundhay family lets — so your valuation is accurate, not optimistic.',
+      'Demand from two universities and the North’s biggest professional workforce keeps voids short all year.',
+      'Fully referenced, Right-to-Rent-checked tenants placed fast.',
+      'Gas, EICR, EPC and deposit compliance tracked and handled for you.',
+      'Transparent pricing, rent collection, inspections and maintenance — genuinely hands-off.',
     ],
-    marketNote: 'Leeds is one of the strongest rental markets outside London — driven by two universities, a large professional workforce and steady demand across LS postcodes.',
+    newsCard: {
+      category: 'Leeds market',
+      title: 'Why Leeds rents keep their value',
+      text: 'Two universities, the largest professional jobs market outside London and a growing city-centre population keep demand for Leeds rentals strong across the LS postcodes — good news for landlords, and a reason for tenants to move quickly on the right home.',
+      href: '/listings',
+    },
     seoTitle: 'Leeds Branch | Letting Agents in Leeds | House of Lettings',
     seoDescription: 'Our Leeds letting agents — based in Harehills — let and manage homes to rent across Leeds and West Yorkshire. Free valuations, full compliance, no hidden fees. Call 0113 868 9212.',
   },
@@ -726,21 +768,36 @@ export const CITY_CONTENT: Record<City, CityContent> = {
     heroKicker: 'Your local branch',
     heroTagline: 'Letting agents in Manchester — homes to rent and hands-off management across Greater Manchester, run from our Oxford Street office.',
     blurb: 'Our Manchester office lets and manages homes across the city, from city-centre apartments to family houses in the southern suburbs.',
+    whyLive: [
+      'Manchester is the UK’s fastest-growing major city — home to MediaCityUK, a booming tech and creative sector, two giant universities and a graduate population that increasingly stays put. The skyline tells the story: tens of thousands of new apartments built for people moving here for work and staying for the life.',
+      'And what a life — world-famous music and football, the independents of the Northern Quarter, a Metrolink tram network that makes the whole city easy without a car, an international airport, and the Peak District within an hour. All at rents far below London for a comparable career.',
+    ],
+    perks: [
+      { icon: '🚀', label: 'Careers', text: 'One of Europe’s fastest-growing tech and media hubs — MediaCityUK, big finance names and 100,000 students.' },
+      { icon: '🏙️', label: 'More for your money', text: 'City-centre living at a fraction of London rents — or space and schools in Didsbury, Chorlton and Sale.' },
+      { icon: '🚋', label: 'Connected', text: 'Metrolink trams across the city, two mainline stations and a global airport 20 minutes out.' },
+      { icon: '🎸', label: 'Lifestyle', text: 'Music, two football giants, the Northern Quarter’s independents — and the Peak District within the hour.' },
+    ],
     whyRent: [
-      'No hidden tenant fees — only your rent and a deposit capped at five weeks’ rent.',
-      'Every home is checked for gas, electrical and EPC compliance before you move in.',
-      'Fast, fair referencing and a named local contact at our Manchester office.',
-      'Report maintenance any time — our team handles it for managed properties.',
-      'Your deposit is protected in a government-approved scheme.',
+      'Homes across Greater Manchester — Northern Quarter and Deansgate apartments, family houses in Didsbury, Chorlton and Sale.',
+      'A named local contact at our Oxford Street office — call 0161 768 1758 and speak to someone who knows the area.',
+      'No hidden tenant fees — your rent and a five-week capped deposit, protected in a government scheme. That’s it.',
+      'Gas, electrical and EPC compliance verified on every home before move-in.',
+      'Round-the-clock online repair reporting, handled by our Manchester team for managed homes.',
     ],
     landlordPitch: [
-      'A local team that knows Manchester rents — accurate valuations and minimal voids.',
-      'Fully referenced, Right-to-Rent-checked tenants placed quickly.',
-      'Gas, EICR, EPC and deposit compliance all handled for you.',
-      'Transparent pricing with no hidden fees.',
-      'Rent collection, inspections and maintenance managed end to end.',
+      'We know the Manchester market — from city-centre high-rises to south Manchester suburbs — so you go to market at the right rent.',
+      'Demand driven by MediaCityUK, a fast-growing tech scene and 100,000 students keeps quality homes let year-round.',
+      'Fully referenced, Right-to-Rent-checked tenants placed fast.',
+      'Gas, EICR, EPC and deposit compliance tracked and handled for you.',
+      'Transparent pricing, rent collection, inspections and maintenance — genuinely hands-off.',
     ],
-    marketNote: 'Manchester is one of the fastest-growing rental markets in the UK — tens of thousands of new apartments, major employers and two universities keep demand high across the M postcodes.',
+    newsCard: {
+      category: 'Manchester market',
+      title: 'Manchester’s rental boom, explained',
+      text: 'Tens of thousands of new apartments, MediaCityUK, a thriving tech sector and two major universities have made Manchester one of the UK’s busiest rental markets. Well-priced homes let in days — whichever side of the deal you’re on, local knowledge pays.',
+      href: '/listings',
+    },
     seoTitle: 'Manchester Branch | Letting Agents in Manchester | House of Lettings',
     seoDescription: 'Our Manchester letting agents — based on Oxford Street — let and manage homes to rent across Greater Manchester. Free valuations, full compliance, no hidden fees. Call 0161 768 1758.',
   },

@@ -7,7 +7,7 @@ import Reveal from '@/components/branches/Reveal';
 import BranchProperties from '@/components/branches/BranchProperties';
 import BranchHeroBg from '@/components/branches/BranchHeroBg';
 import BranchReviews from '@/components/branches/BranchReviews';
-import { BRANCHES, getBranch, OFFICES } from '@/lib/branches';
+import { BRANCHES, getBranch, OFFICES, SERVICES } from '@/lib/branches';
 
 const BASE = 'https://www.houseoflettings.uk';
 
@@ -41,13 +41,6 @@ export function generateMetadata({ params }: { params: { slug: string } }): Meta
     },
   };
 }
-
-const SERVICES = [
-  { icon: '🔎', title: 'Tenant Find', text: 'Marketing, accompanied viewings and full referencing to place quality, vetted tenants fast.' },
-  { icon: '🛠', title: 'Full Management', text: 'Rent collection, maintenance, inspections and compliance — a genuinely hands-off let.' },
-  { icon: '📄', title: 'Rent & Legal', text: 'Right to Rent, deposit protection, gas, electrical and EPC compliance handled for you.' },
-  { icon: '📈', title: 'Free Valuation', text: 'An accurate, local rental valuation so your property goes to market at the right price.' },
-];
 
 export default function BranchPage({ params }: { params: { slug: string } }) {
   const branch = getBranch(params.slug);

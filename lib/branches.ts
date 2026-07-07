@@ -566,3 +566,186 @@ export function listingMatchesCity(location: string, city: City): boolean {
   const loc = (location || '').toLowerCase();
   return city === 'Leeds' ? LEEDS_AREAS.test(loc) : MANCHESTER_AREAS.test(loc);
 }
+
+// ─────────────────────────────────────────────────────────────────
+// Branch OFFICE pages (/branches/leeds, /branches/manchester)
+// The client has exactly TWO branches — one office per city. These
+// pages put the office front-and-centre (address/phone/map), then
+// pitch to tenants and landlords, list services, share plain-English
+// guidance every renter/landlord should know, answer FAQs and show
+// the latest homes to rent in that city. The 20 neighbourhood pages
+// above still exist for local SEO and are surfaced here as
+// "areas we cover".
+// ─────────────────────────────────────────────────────────────────
+
+// Two real branches, keyed by city — used by the index cards + the
+// office pages. Slugs are the static routes /branches/<slug>.
+export const CITY_BRANCHES: { slug: string; city: City }[] = [
+  { slug: 'leeds', city: 'Leeds' },
+  { slug: 'manchester', city: 'Manchester' },
+];
+
+export interface Service {
+  icon: string;
+  title: string;
+  text: string;
+}
+
+// Shared across the office pages and the neighbourhood pages.
+export const SERVICES: Service[] = [
+  { icon: '🔎', title: 'Tenant Find', text: 'Marketing, accompanied viewings and full referencing to place quality, vetted tenants fast.' },
+  { icon: '🛠', title: 'Full Management', text: 'Rent collection, maintenance, inspections and compliance — a genuinely hands-off let.' },
+  { icon: '📄', title: 'Rent & Legal', text: 'Right to Rent, deposit protection, gas, electrical and EPC compliance handled for you.' },
+  { icon: '📈', title: 'Free Valuation', text: 'An accurate, local rental valuation so your property goes to market at the right price.' },
+];
+
+export interface InfoCard {
+  category: string;
+  title: string;
+  text: string;
+  href?: string;      // internal page or external resource
+  external?: boolean;
+}
+
+// "News & guides" — plain-English things every landlord and tenant
+// should know. Mostly national law (same for both cities), so shared.
+export const INFO_CARDS: InfoCard[] = [
+  {
+    category: 'Renters’ Rights',
+    title: 'The Renters’ Rights Act — what’s changing',
+    text: 'The Renters’ Rights Act ends fixed-term assured shorthold tenancies and Section 21 “no-fault” evictions, moving every tenancy to a periodic (rolling) agreement. We keep every let we manage compliant so both landlords and tenants are protected.',
+    href: '/landlord-registration',
+  },
+  {
+    category: 'Tenants',
+    title: 'Your deposit is protected',
+    text: 'Every deposit we hold is registered in a government-approved scheme within 30 days and you’re served the prescribed information. At the end of the tenancy it’s returned in full, less any deductions agreed under the check-out report.',
+    href: '/tenant-application',
+  },
+  {
+    category: 'Tenants',
+    title: 'No hidden tenant fees',
+    text: 'Under the Tenant Fees Act we can only charge your rent and a deposit (capped at five weeks’ rent). No admin fees, no renewal fees, no surprises — everything you pay is set out before you sign.',
+  },
+  {
+    category: 'Landlords',
+    title: 'Right to Rent checks — handled',
+    text: 'Landlords must confirm every adult occupier has the legal right to rent in England. We carry out and record these checks on every let, keeping you the right side of the rules without the paperwork.',
+    href: '/landlord-registration',
+  },
+  {
+    category: 'Landlords',
+    title: 'Your compliance checklist',
+    text: 'A legal let needs an annual Gas Safety certificate, an electrical (EICR) report every five years, an EPC rated E or above, and working smoke and carbon-monoxide alarms. We track every renewal date so nothing lapses.',
+    href: '/pricing',
+  },
+  {
+    category: 'Tenants',
+    title: 'The “How to Rent” guide',
+    text: 'Every tenant in England should be given the government’s How to Rent checklist at the start of a tenancy — your key rights and what to check before you move in. We issue it as standard with every tenancy.',
+    href: 'https://www.gov.uk/government/publications/how-to-rent',
+    external: true,
+  },
+];
+
+export interface Faq {
+  q: string;
+  a: string;
+}
+
+// Tenant + landlord FAQs. About our service and UK law, so identical
+// for both offices.
+export const FAQS: Faq[] = [
+  {
+    q: 'How do I apply for a property?',
+    a: 'Book a viewing through the property listing or call your local office. If it’s right for you, we’ll take you through a short application and referencing — usually completed within a few working days.',
+  },
+  {
+    q: 'How much deposit do I need to pay?',
+    a: 'Deposits are capped by law at five weeks’ rent (six weeks where the annual rent is £50,000 or more). It’s protected in a government scheme for the length of your tenancy.',
+  },
+  {
+    q: 'Do I need a guarantor?',
+    a: 'Not always — it depends on your referencing. If your income or credit history means you need one, we’ll tell you up front and guide you and your guarantor through it.',
+  },
+  {
+    q: 'How do I report a repair?',
+    a: 'Managed tenants can report maintenance any time through our site, and it goes straight to the team. Genuine emergencies are prioritised and we keep you updated until it’s resolved.',
+  },
+  {
+    q: 'What are your management fees for landlords?',
+    a: 'We keep pricing transparent with no hidden fees — Tenant Find, Rent Collection and Full Management tiers. See our pricing page for the full breakdown or ask for a tailored quote.',
+  },
+  {
+    q: 'How quickly can you let my property?',
+    a: 'Well-presented homes priced to the local market often let within days. We market from day one across the major portals with professional photos and accompanied viewings to minimise voids.',
+  },
+];
+
+export interface CityContent {
+  slug: string;
+  city: City;
+  heroKicker: string;
+  heroTagline: string;
+  blurb: string;              // one-line intro used on index cards + meta
+  whyRent: string[];          // reasons a tenant rents through us here
+  landlordPitch: string[];    // reasons a landlord chooses us here
+  marketNote: string;         // one city-specific market line for the news strip
+  seoTitle: string;
+  seoDescription: string;
+}
+
+export const CITY_CONTENT: Record<City, CityContent> = {
+  Leeds: {
+    slug: 'leeds',
+    city: 'Leeds',
+    heroKicker: 'Your local branch',
+    heroTagline: 'Letting agents in Leeds — homes to rent and hands-off management across West Yorkshire, run from our Harehills office.',
+    blurb: 'Our Leeds office lets and manages homes across the city, from city-centre apartments to family houses in the northern suburbs.',
+    whyRent: [
+      'No hidden tenant fees — only your rent and a deposit capped at five weeks’ rent.',
+      'Every home is checked for gas, electrical and EPC compliance before you move in.',
+      'Fast, fair referencing and a named local contact at our Leeds office.',
+      'Report maintenance any time — our team handles it for managed properties.',
+      'Your deposit is protected in a government-approved scheme.',
+    ],
+    landlordPitch: [
+      'A local team that knows Leeds rents — accurate valuations and minimal voids.',
+      'Fully referenced, Right-to-Rent-checked tenants placed quickly.',
+      'Gas, EICR, EPC and deposit compliance all handled for you.',
+      'Transparent pricing with no hidden fees.',
+      'Rent collection, inspections and maintenance managed end to end.',
+    ],
+    marketNote: 'Leeds is one of the strongest rental markets outside London — driven by two universities, a large professional workforce and steady demand across LS postcodes.',
+    seoTitle: 'Leeds Branch | Letting Agents in Leeds | House of Lettings',
+    seoDescription: 'Our Leeds letting agents — based in Harehills — let and manage homes to rent across Leeds and West Yorkshire. Free valuations, full compliance, no hidden fees. Call 0113 868 9212.',
+  },
+  Manchester: {
+    slug: 'manchester',
+    city: 'Manchester',
+    heroKicker: 'Your local branch',
+    heroTagline: 'Letting agents in Manchester — homes to rent and hands-off management across Greater Manchester, run from our Oxford Street office.',
+    blurb: 'Our Manchester office lets and manages homes across the city, from city-centre apartments to family houses in the southern suburbs.',
+    whyRent: [
+      'No hidden tenant fees — only your rent and a deposit capped at five weeks’ rent.',
+      'Every home is checked for gas, electrical and EPC compliance before you move in.',
+      'Fast, fair referencing and a named local contact at our Manchester office.',
+      'Report maintenance any time — our team handles it for managed properties.',
+      'Your deposit is protected in a government-approved scheme.',
+    ],
+    landlordPitch: [
+      'A local team that knows Manchester rents — accurate valuations and minimal voids.',
+      'Fully referenced, Right-to-Rent-checked tenants placed quickly.',
+      'Gas, EICR, EPC and deposit compliance all handled for you.',
+      'Transparent pricing with no hidden fees.',
+      'Rent collection, inspections and maintenance managed end to end.',
+    ],
+    marketNote: 'Manchester is one of the fastest-growing rental markets in the UK — tens of thousands of new apartments, major employers and two universities keep demand high across the M postcodes.',
+    seoTitle: 'Manchester Branch | Letting Agents in Manchester | House of Lettings',
+    seoDescription: 'Our Manchester letting agents — based on Oxford Street — let and manage homes to rent across Greater Manchester. Free valuations, full compliance, no hidden fees. Call 0161 768 1758.',
+  },
+};
+
+export function getCityBySlug(slug: string): City | undefined {
+  return CITY_BRANCHES.find((b) => b.slug === slug)?.city;
+}

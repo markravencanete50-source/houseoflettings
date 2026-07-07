@@ -1,22 +1,24 @@
 // app/branches/page.tsx
+// Branches index. The client has exactly TWO branches — Leeds and Manchester —
+// so this page shows two office cards, not the twenty neighbourhood pages
+// (those still exist for local SEO and are linked from each branch page under
+// "areas we cover").
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import Navbar from '@/components/layout/Navbar';
 import Reveal from '@/components/branches/Reveal';
-import BranchGrid from '@/components/branches/BranchGrid';
-import { BRANCHES, branchesByCity, OFFICES, City } from '@/lib/branches';
+import { OFFICES, CITY_CONTENT, CITY_BRANCHES, branchesByCity, City } from '@/lib/branches';
 
 const BASE = 'https://www.houseoflettings.uk';
 
 export const metadata: Metadata = {
   title: 'Our Branches | Letting Agents in Leeds & Manchester | House of Lettings',
   description:
-    'Find your local House of Lettings branch. Letting agents across Leeds and Manchester — browse properties to rent by area, from Headingley and Roundhay to Didsbury and Chorlton.',
+    'Two local branches — Leeds and Manchester. Find your nearest House of Lettings office, get straight through to the right local team, and browse homes to rent.',
   alternates: { canonical: `${BASE}/branches` },
   openGraph: {
     title: 'Our Branches | Letting Agents in Leeds & Manchester',
-    description:
-      'Local letting experts across Leeds and Manchester. Browse properties to rent by area and find your nearest branch.',
+    description: 'Two local branches — Leeds and Manchester. Find your nearest House of Lettings office and browse homes to rent.',
     url: `${BASE}/branches`,
     siteName: 'House of Lettings',
     images: [{ url: '/images/heropage-og.jpg', width: 1200, height: 630, alt: 'House of Lettings branches' }],
@@ -25,42 +27,75 @@ export const metadata: Metadata = {
   },
 };
 
-function CitySection({ city, subtitle }: { city: City; subtitle: string }) {
+function BranchCard({ city, delay }: { city: City; delay: number }) {
   const office = OFFICES[city];
-  const branches = branchesByCity(city);
-  return (
-    <section
-      id={city.toLowerCase()}
-      style={{ padding: 'clamp(48px, 6vw, 72px) 5%', maxWidth: 1240, margin: '0 auto', scrollMarginTop: 80 }}
-    >
-      <Reveal>
-        <div style={{ display: 'flex', alignItems: 'baseline', gap: 14, flexWrap: 'wrap', marginBottom: 6 }}>
-          <h2
-            style={{
-              fontFamily: "'Poppins',sans-serif",
-              fontSize: 'clamp(26px, 3.4vw, 38px)',
-              fontWeight: 800,
-              color: 'var(--navy)',
-              letterSpacing: '-0.5px',
-            }}
-          >
-            {city} Branches
-          </h2>
-          <span style={{ color: 'var(--teal-dark)', fontWeight: 600, fontSize: 14 }}>
-            {branches.length} local areas
-          </span>
-        </div>
-        <p style={{ color: 'var(--gray-600)', fontSize: 16, maxWidth: 720, marginBottom: 10 }}>{subtitle}</p>
-        <p style={{ color: 'var(--gray-600)', fontSize: 14, marginBottom: 34 }}>
-          <strong>{city} office:</strong> {office.addressLines.join(', ')}, {office.addressCity} {office.postcode} ·{' '}
-          <a href={office.phoneHref} style={{ color: 'var(--red)', fontWeight: 600 }}>
-            {office.phoneDisplay}
-          </a>
-        </p>
-      </Reveal>
+  const content = CITY_CONTENT[city];
+  const areas = branchesByCity(city);
+  const areaNames = areas.slice(0, 3).map((a) => a.name).join(', ');
+  const more = areas.length - 3;
+  const mapEmbed = `https://www.google.com/maps?q=${encodeURIComponent(office.mapQuery)}&output=embed`;
 
-      <BranchGrid branches={branches} />
-    </section>
+  return (
+    <Reveal delay={delay}>
+      <div
+        style={{
+          background: '#fff',
+          border: '1px solid var(--gray-200)',
+          borderRadius: 18,
+          overflow: 'hidden',
+          boxShadow: '0 2px 14px rgba(15,31,61,0.07)',
+          display: 'flex',
+          flexDirection: 'column',
+          height: '100%',
+        }}
+      >
+        <div style={{ height: 200, borderBottom: '1px solid var(--gray-200)' }}>
+          <iframe
+            title={`Map of the House of Lettings ${city} office`}
+            src={mapEmbed}
+            loading="lazy"
+            referrerPolicy="no-referrer-when-downgrade"
+            style={{ border: 0, width: '100%', height: '100%', display: 'block' }}
+          />
+        </div>
+        <div style={{ padding: 'clamp(24px,3vw,32px)', display: 'flex', flexDirection: 'column', flex: 1 }}>
+          <p style={{ color: 'var(--teal-dark)', fontWeight: 600, letterSpacing: '0.12em', textTransform: 'uppercase', fontSize: 12, marginBottom: 8 }}>
+            {office.region}
+          </p>
+          <h2 style={{ fontFamily: "'Poppins',sans-serif", fontSize: 'clamp(22px,3vw,28px)', fontWeight: 800, color: 'var(--navy)', letterSpacing: '-0.5px', marginBottom: 16 }}>
+            House of Lettings {city}
+          </h2>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10, fontSize: 14.5, color: 'var(--gray-800)', marginBottom: 16 }}>
+            <div style={{ display: 'flex', gap: 10 }}>
+              <span aria-hidden>📍</span>
+              <span>{office.addressLines.join(', ')}, {office.addressCity} {office.postcode}</span>
+            </div>
+            <div style={{ display: 'flex', gap: 10 }}>
+              <span aria-hidden>📞</span>
+              <a href={office.phoneHref} style={{ color: 'var(--navy)', fontWeight: 600 }}>{office.phoneDisplay}</a>
+            </div>
+            <div style={{ display: 'flex', gap: 10 }}>
+              <span aria-hidden>🕘</span>
+              <span>{office.hours}</span>
+            </div>
+          </div>
+
+          <p style={{ color: 'var(--gray-600)', fontSize: 13.5, lineHeight: 1.55, marginBottom: 22 }}>
+            Covers {areaNames}{more > 0 ? ` & ${more} more areas` : ''} across {city}.
+          </p>
+
+          <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginTop: 'auto' }}>
+            <Link href={`/branches/${content.slug}`} className="hol-branch-btn hol-branch-btn--navy">
+              View {city} branch →
+            </Link>
+            <a href={office.phoneHref} className="hol-branch-btn hol-branch-btn--outline">
+              Call the team
+            </a>
+          </div>
+        </div>
+      </div>
+    </Reveal>
   );
 }
 
@@ -69,10 +104,10 @@ export default function BranchesIndexPage() {
     '@context': 'https://schema.org',
     '@type': 'ItemList',
     name: 'House of Lettings branches',
-    itemListElement: BRANCHES.map((b, i) => ({
+    itemListElement: CITY_BRANCHES.map((b, i) => ({
       '@type': 'ListItem',
       position: i + 1,
-      name: `${b.name} letting agents`,
+      name: `House of Lettings ${b.city}`,
       url: `${BASE}/branches/${b.slug}`,
     })),
   };
@@ -103,11 +138,11 @@ export default function BranchesIndexPage() {
               marginBottom: 18,
             }}
           >
-            Our Branches Across Leeds &amp; Manchester
+            Two Branches. One Dedicated Lettings Service.
           </h1>
-          <p style={{ color: 'rgba(255,255,255,0.72)', fontSize: 'clamp(15px, 2vw, 19px)', maxWidth: 680, margin: '0 auto 30px', fontWeight: 300 }}>
-            Choose your area to see homes to rent nearby, meet your local team and get straight through to the right
-            office. Twenty neighbourhoods, two cities, one dedicated lettings service.
+          <p style={{ color: 'rgba(255,255,255,0.72)', fontSize: 'clamp(15px, 2vw, 19px)', maxWidth: 640, margin: '0 auto 30px', fontWeight: 300, lineHeight: 1.6 }}>
+            Choose your branch to meet your local team, see the office, and browse homes to rent nearby. Two cities, two
+            offices, one standard of service.
           </p>
           <div style={{ display: 'flex', gap: 14, justifyContent: 'center', flexWrap: 'wrap' }}>
             <Link href="/listings" className="hol-branch-btn hol-branch-btn--teal">
@@ -117,28 +152,22 @@ export default function BranchesIndexPage() {
               Free rental valuation
             </Link>
           </div>
-          {/* Quick jump — long page on mobile, let visitors skip to their city */}
-          <div style={{ display: 'flex', gap: 22, justifyContent: 'center', flexWrap: 'wrap', marginTop: 26 }}>
-            <a href="#leeds" style={{ color: 'rgba(255,255,255,0.85)', fontSize: 14, fontWeight: 600, textDecoration: 'underline', textUnderlineOffset: 4 }}>
-              Leeds branches ↓
-            </a>
-            <a href="#manchester" style={{ color: 'rgba(255,255,255,0.85)', fontSize: 14, fontWeight: 600, textDecoration: 'underline', textUnderlineOffset: 4 }}>
-              Manchester branches ↓
-            </a>
-          </div>
         </Reveal>
       </header>
 
-      <main style={{ background: 'var(--gray-100)' }}>
-        <CitySection
-          city="Leeds"
-          subtitle="From the city centre to the leafy northern suburbs, our Leeds team lets and manages homes across West Yorkshire. Pick your neighbourhood below."
-        />
-        <div style={{ height: 1, background: 'var(--gray-200)', maxWidth: 1240, margin: '0 auto' }} />
-        <CitySection
-          city="Manchester"
-          subtitle="Across Greater Manchester — from waterfront apartments to south-Manchester villages — our local team keeps landlords let and tenants moving. Choose an area to start."
-        />
+      <main style={{ background: 'var(--gray-100)', padding: 'clamp(48px,6vw,80px) 5%' }}>
+        <div
+          style={{
+            maxWidth: 1000,
+            margin: '0 auto',
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
+            gap: 28,
+          }}
+        >
+          <BranchCard city="Leeds" delay={0} />
+          <BranchCard city="Manchester" delay={90} />
+        </div>
       </main>
 
       {/* Footer */}

@@ -103,7 +103,7 @@ export default function BranchPage({ params }: { params: { slug: string } }) {
           background: 'var(--navy)',
         }}
       >
-        <BranchHeroBg branch={branch} fallback={branch.heroImage} />
+        <BranchHeroBg branch={branch} />
         <div style={{ position: 'relative', zIndex: 1, maxWidth: 1240, margin: '0 auto', padding: 'clamp(32px,5vw,56px) 5%', width: '100%' }}>
           <Reveal>
             <h1

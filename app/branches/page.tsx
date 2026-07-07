@@ -55,11 +55,11 @@ function BranchCard({ city, delay }: { city: City; delay: number }) {
             src={mapEmbed}
             loading="lazy"
             referrerPolicy="no-referrer-when-downgrade"
-            style={{ border: 0, width: '100%', height: '100%', display: 'block', filter: 'grayscale(1)' }}
+            style={{ border: 0, width: '100%', height: '100%', display: 'block' }}
           />
         </div>
         <div style={{ padding: 'clamp(24px,3vw,32px)', display: 'flex', flexDirection: 'column', flex: 1 }}>
-          <p style={{ color: 'var(--red)', fontWeight: 600, letterSpacing: '0.12em', textTransform: 'uppercase', fontSize: 12, marginBottom: 8 }}>
+          <p style={{ color: 'var(--navy)', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', fontSize: 12, marginBottom: 8 }}>
             {office.region}
           </p>
           <h2 style={{ fontFamily: "'Poppins',sans-serif", fontSize: 'clamp(22px,3vw,28px)', fontWeight: 800, color: 'var(--navy)', letterSpacing: '-0.5px', marginBottom: 16 }}>
@@ -126,7 +126,7 @@ export default function BranchesIndexPage() {
         }}
       >
         <Reveal>
-          <p style={{ color: 'var(--red)', fontWeight: 600, letterSpacing: '0.14em', textTransform: 'uppercase', fontSize: 13, marginBottom: 14 }}>
+          <p style={{ color: '#fff', fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', fontSize: 13, marginBottom: 14 }}>
             Local experts, on your doorstep
           </p>
           <h1

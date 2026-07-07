@@ -35,7 +35,7 @@ function SectionHeading({ kicker, title, sub, center }: { kicker?: string; title
   return (
     <Reveal>
       {kicker && (
-        <p style={{ color: 'var(--red)', fontWeight: 600, letterSpacing: '0.12em', textTransform: 'uppercase', fontSize: 13, marginBottom: 10, textAlign: center ? 'center' : 'left' }}>
+        <p style={{ color: 'var(--navy)', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', fontSize: 13, marginBottom: 10, textAlign: center ? 'center' : 'left' }}>
           {kicker}
         </p>
       )}
@@ -56,7 +56,7 @@ function Ticks({ items }: { items: string[] }) {
     <ul style={{ listStyle: 'none', padding: 0, margin: '18px 0 26px', display: 'flex', flexDirection: 'column', gap: 12 }}>
       {items.map((t) => (
         <li key={t} style={{ display: 'flex', gap: 12, fontSize: 15, lineHeight: 1.6, color: 'var(--gray-800)' }}>
-          <span aria-hidden style={{ color: 'var(--red)', fontWeight: 800, flexShrink: 0 }}>✓</span>
+          <span aria-hidden style={{ color: 'var(--navy)', fontWeight: 800, flexShrink: 0 }}>✓</span>
           {t}
         </li>
       ))}
@@ -119,7 +119,7 @@ export default function BranchOffice({ city }: { city: City }) {
       >
         <div style={{ maxWidth: 1080, margin: '0 auto' }}>
           <Reveal>
-            <p style={{ color: 'var(--red)', fontWeight: 600, letterSpacing: '0.14em', textTransform: 'uppercase', fontSize: 13, marginBottom: 14 }}>
+            <p style={{ color: '#fff', fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', fontSize: 13, marginBottom: 14 }}>
               {content.heroKicker}
             </p>
             <h1
@@ -137,7 +137,7 @@ export default function BranchOffice({ city }: { city: City }) {
               {content.heroTagline}
             </p>
             <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap' }}>
-              <a href="#properties" className="hol-branch-btn hol-branch-btn--red">
+              <a href="#properties" className="hol-branch-btn hol-branch-btn--white">
                 Properties to rent
               </a>
               <a href={office.phoneHref} className="hol-branch-btn hol-branch-btn--ghost">
@@ -170,7 +170,7 @@ export default function BranchOffice({ city }: { city: City }) {
                   </ContactRow>
                   <ContactRow label="Opening hours">{office.hours}</ContactRow>
                   <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginTop: 18 }}>
-                    <Link href="/book-valuation" className="hol-branch-btn hol-branch-btn--red">
+                    <Link href="/book-valuation" className="hol-branch-btn hol-branch-btn--navy">
                       Book a free valuation
                     </Link>
                     <a href={mapsHref} target="_blank" rel="noopener noreferrer" className="hol-branch-btn hol-branch-btn--outline">
@@ -186,7 +186,7 @@ export default function BranchOffice({ city }: { city: City }) {
                     src={mapEmbed}
                     loading="lazy"
                     referrerPolicy="no-referrer-when-downgrade"
-                    style={{ border: 0, width: '100%', height: '100%', minHeight: 300, display: 'block', filter: 'grayscale(1)' }}
+                    style={{ border: 0, width: '100%', height: '100%', minHeight: 300, display: 'block' }}
                   />
                 </div>
               </Reveal>
@@ -207,7 +207,7 @@ export default function BranchOffice({ city }: { city: City }) {
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(230px,1fr))', gap: 18, marginTop: 14 }}>
             {content.perks.map((p, i) => (
               <Reveal key={p.label} delay={(i % 4) * 70}>
-                <div style={{ background: 'var(--gray-100)', borderRadius: 12, padding: '22px 22px', height: '100%', borderLeft: '3px solid var(--red)' }}>
+                <div style={{ background: 'var(--gray-100)', borderRadius: 12, padding: '22px 22px', height: '100%', borderLeft: '3px solid var(--navy)' }}>
                   <div style={{ fontSize: 26, marginBottom: 10 }}>{p.icon}</div>
                   <div style={{ fontFamily: "'Poppins',sans-serif", fontWeight: 700, color: 'var(--navy)', fontSize: 15, marginBottom: 6 }}>{p.label}</div>
                   <div style={{ color: 'var(--gray-600)', fontSize: 14, lineHeight: 1.6 }}>{p.text}</div>
@@ -231,7 +231,7 @@ export default function BranchOffice({ city }: { city: City }) {
           >
             <Reveal>
               <div>
-                <p style={{ color: 'var(--red)', fontWeight: 600, letterSpacing: '0.12em', textTransform: 'uppercase', fontSize: 13, marginBottom: 12 }}>
+                <p style={{ color: 'var(--navy)', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', fontSize: 13, marginBottom: 12 }}>
                   For tenants
                 </p>
                 <h2 style={{ fontFamily: "'Poppins',sans-serif", fontSize: 'clamp(23px,2.8vw,30px)', fontWeight: 800, color: 'var(--navy)', letterSpacing: '-0.4px', marginBottom: 6 }}>
@@ -246,7 +246,7 @@ export default function BranchOffice({ city }: { city: City }) {
             </Reveal>
             <Reveal delay={80}>
               <div>
-                <p style={{ color: 'var(--red)', fontWeight: 600, letterSpacing: '0.12em', textTransform: 'uppercase', fontSize: 13, marginBottom: 12 }}>
+                <p style={{ color: 'var(--navy)', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', fontSize: 13, marginBottom: 12 }}>
                   For landlords
                 </p>
                 <h2 style={{ fontFamily: "'Poppins',sans-serif", fontSize: 'clamp(23px,2.8vw,30px)', fontWeight: 800, color: 'var(--navy)', letterSpacing: '-0.4px', marginBottom: 6 }}>
@@ -254,7 +254,7 @@ export default function BranchOffice({ city }: { city: City }) {
                 </h2>
                 <Ticks items={content.landlordPitch} />
                 <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
-                  <Link href="/book-valuation" className="hol-branch-btn hol-branch-btn--red">Free rental valuation</Link>
+                  <Link href="/book-valuation" className="hol-branch-btn hol-branch-btn--navy">Free rental valuation</Link>
                   <Link href="/landlord-registration" className="hol-branch-btn hol-branch-btn--outline">Register a property</Link>
                 </div>
               </div>
@@ -302,7 +302,7 @@ export default function BranchOffice({ city }: { city: City }) {
                     <h3 style={{ fontFamily: "'Poppins',sans-serif", fontSize: 17, fontWeight: 700, color: 'var(--navy)', marginBottom: 10, lineHeight: 1.35 }}>{n.title}</h3>
                     <p style={{ color: 'var(--gray-600)', fontSize: 14.5, lineHeight: 1.65, flex: 1 }}>{n.text}</p>
                     {n.href && (
-                      <span style={{ color: 'var(--red)', fontWeight: 600, fontSize: 13.5, marginTop: 16, letterSpacing: '0.03em' }}>
+                      <span style={{ color: 'var(--navy)', fontWeight: 700, fontSize: 13.5, marginTop: 16, letterSpacing: '0.03em' }}>
                         Learn more →
                       </span>
                     )}

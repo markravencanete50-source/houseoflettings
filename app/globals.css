@@ -247,3 +247,71 @@ ul, ol { list-style: none; }
 @keyframes spin {
   to { transform: rotate(360deg); }
 }
+
+/* ── Branch / location pages ───────────────────────────────── */
+.hol-branch-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 13px 22px;
+  min-height: 46px;
+  border-radius: 6px;
+  font-family: 'Poppins', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.2s, box-shadow 0.2s, color 0.2s;
+}
+.hol-branch-btn--navy   { background: var(--navy); color: #fff; }
+.hol-branch-btn--navy:hover   { background: var(--red); transform: translateY(-2px); }
+.hol-branch-btn--teal   { background: var(--teal); color: #fff; }
+.hol-branch-btn--teal:hover   { background: var(--teal-dark); transform: translateY(-2px); }
+.hol-branch-btn--outline {
+  background: transparent;
+  color: var(--navy);
+  border: 1.5px solid var(--navy);
+}
+.hol-branch-btn--outline:hover { background: var(--navy); color: #fff; transform: translateY(-2px); }
+.hol-branch-btn--ghost {
+  background: rgba(255,255,255,0.12);
+  color: #fff;
+  border: 1.5px solid rgba(255,255,255,0.55);
+}
+.hol-branch-btn--ghost:hover { background: #fff; color: var(--navy); transform: translateY(-2px); }
+
+.hol-branch-card {
+  display: flex;
+  flex-direction: column;
+  background: #fff;
+  border: 1px solid var(--gray-200);
+  border-radius: 14px;
+  overflow: hidden;
+  text-decoration: none;
+  color: inherit;
+  box-shadow: 0 2px 12px rgba(15,31,61,0.06);
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+.hol-branch-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 16px 34px rgba(15,31,61,0.16);
+}
+.hol-branch-card:hover .hol-branch-card__img { transform: scale(1.05); }
+.hol-branch-card__media { position: relative; height: 170px; overflow: hidden; }
+.hol-branch-card__img {
+  width: 100%; height: 100%; object-fit: cover;
+  transition: transform 0.5s ease;
+}
+.hol-branch-card__badge {
+  position: absolute; top: 12px; left: 12px;
+  background: rgba(10,22,47,0.9); color: #fff;
+  font-size: 11px; font-weight: 600; letter-spacing: 0.05em;
+  padding: 5px 10px; border-radius: 4px;
+}
+
+@media (max-width: 600px) {
+  .hol-branch-btn { width: 100%; }
+}

@@ -1,8 +1,16 @@
 // app/sitemap.ts
 import { MetadataRoute } from 'next';
+import { BRANCHES } from '@/lib/branches';
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const baseUrl = 'https://www.houseoflettings.uk';
+
+  const branchUrls: MetadataRoute.Sitemap = BRANCHES.map((b) => ({
+    url: `${baseUrl}/branches/${b.slug}`,
+    lastModified: new Date(),
+    changeFrequency: 'weekly',
+    priority: 0.7,
+  }));
 
   return [
     {
@@ -17,6 +25,13 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: 'daily',
       priority: 0.9,
     },
+    {
+      url: `${baseUrl}/branches`,
+      lastModified: new Date(),
+      changeFrequency: 'weekly',
+      priority: 0.8,
+    },
+    ...branchUrls,
     {
       url: `${baseUrl}/pricing`,
       lastModified: new Date(),

@@ -1690,6 +1690,7 @@ export default function HomePage() {
             © {new Date().getFullYear()} House of Lettings Ltd. All rights reserved.
           </p>
           <div style={{ display: 'flex', gap: 24 }}>
+            <Link href="/branches" style={{ color: 'rgba(255,255,255,0.65)', fontSize: 13, textDecoration: 'none' }}>Branches</Link>
             <Link href="/cookie-policy" style={{ color: 'rgba(255,255,255,0.65)', fontSize: 13, textDecoration: 'none' }}>Cookie Policy</Link>
             <Link href="/terms" style={{ color: 'rgba(255,255,255,0.65)', fontSize: 13, textDecoration: 'none' }}>Terms</Link>
             <Link href="/contact" style={{ color: 'rgba(255,255,255,0.65)', fontSize: 13, textDecoration: 'none' }}>Contact</Link>

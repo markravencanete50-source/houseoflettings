@@ -10,7 +10,7 @@ const steps = [
   {
     num: '01',
     title: 'You report the issue',
-    body: 'Tell us what’s wrong through our maintenance form — a short description and a few photos so we can see the problem clearly.',
+    body: 'Tell us what’s wrong through our maintenance form. Add a short description and a few photos so we can see the problem clearly.',
   },
   {
     num: '02',
@@ -50,7 +50,7 @@ const faqs = [
   },
   {
     q: 'Why do you need the landlord to approve the repair first?',
-    a: 'The landlord owns the property and is responsible for authorising repair costs. We keep them informed and get their agreement before instructing a contractor — for anything non-emergency this keeps everything transparent and above board.',
+    a: 'The landlord owns the property and is responsible for authorising repair costs. We keep them informed and get their agreement before instructing a contractor. For anything non-emergency, this keeps everything transparent and above board.',
   },
   {
     q: 'How long will the repair take?',
@@ -66,7 +66,7 @@ const faqs = [
   },
   {
     q: 'Can I arrange my own contractor?',
-    a: 'Please don’t arrange repairs yourself without speaking to us first. Report the issue and let us coordinate it — that protects you, keeps the landlord informed, and makes sure the work is done to the right standard.',
+    a: 'Please don’t arrange repairs yourself without speaking to us first. Report the issue and let us coordinate it. That protects you, keeps the landlord informed, and makes sure the work is done to the right standard.',
   },
 ];
 
@@ -101,7 +101,7 @@ export default function MaintenancePage() {
             Something broken? We take it from here.
           </h1>
           <p style={{ fontSize: 'clamp(1rem, 2.5vw, 1.15rem)', color: 'rgba(255,255,255,0.68)', maxWidth: 600, margin: '0 auto 36px', lineHeight: 1.7 }}>
-            When you report a maintenance issue, we handle the whole process — coordinating with your landlord,
+            When you report a maintenance issue, we handle the whole process, coordinating with your landlord,
             instructing a trusted contractor, and getting it fixed. Here’s exactly how it works.
           </p>
           <a

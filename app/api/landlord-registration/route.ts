@@ -66,10 +66,10 @@ const DOC_LABELS: [string, string][] = [
 
 function docStatusText(d: any): string {
   const status = d?.status;
-  if (status === "yes") return d.url ? "Yes — document uploaded" : "Yes (will provide later)";
+  if (status === "yes") return d.url ? "Yes, document uploaded" : "Yes (will provide later)";
   if (status === "nogas") return "No gas supply at this property";
   if (status === "no") return "Not held / to arrange";
-  return "—";
+  return "-";
 }
 
 // One fully-labelled block per property — every field on its own row so
@@ -80,7 +80,7 @@ function propertyRows(data: any) {
   return props.map((p: any, i: number) => {
     const heading = `<tr><td colspan="2" style="background:#f0f4fb;font-weight:700;color:#1a3c5e;padding:12px;">${props.length > 1 ? `Property ${i + 1}` : "Property"}</td></tr>`;
     const rows = propertyFields(p)
-      .map(([label, value]) => `<tr><td style="padding-left:24px;">${label}</td><td>${value || "—"}</td></tr>`)
+      .map(([label, value]) => `<tr><td style="padding-left:24px;">${label}</td><td>${value || "-"}</td></tr>`)
       .join("");
     return heading + rows;
   }).join("");
@@ -91,7 +91,7 @@ function docRows(data: any) {
   return DOC_LABELS.map(([key, label]) => {
     const d = docs[key];
     let value = docStatusText(d);
-    if (d?.status === "yes" && d.url) value = `Yes — <a href="${d.url}">view document</a>`;
+    if (d?.status === "yes" && d.url) value = `Yes: <a href="${d.url}">view document</a>`;
     return `<tr><td>${label}</td><td>${value}</td></tr>`;
   }).join("");
 }
@@ -127,7 +127,7 @@ function registrationPdfBase64(data: any, ref: string): string {
     y += 9;
   };
   const line = (label: string, value: string) => {
-    const text = (value || "—").toString();
+    const text = (value || "-").toString();
     const wrapped: string[] = doc.splitTextToSize(text, pageW - left * 2 - labelW);
     ensureRoom(wrapped.length * 5 + 2);
     doc.setFont("helvetica", "bold"); doc.setFontSize(9); doc.setTextColor(110, 118, 130);
@@ -146,7 +146,7 @@ function registrationPdfBase64(data: any, ref: string): string {
     line("Registered Office", data.registeredAddress);
     const people = Array.isArray(data.companyPeople) ? data.companyPeople : [];
     people.forEach((p: any, i: number) => {
-      const desc = [p.name, p.role, p.share ? `${p.share}% share` : ""].filter(Boolean).join(" — ");
+      const desc = [p.name, p.role, p.share ? `${p.share}% share` : ""].filter(Boolean).join(", ");
       line(i === 0 ? "Person 1 (contact)" : `Person ${i + 1}`, desc);
     });
     if (!people.length) line("Contact Person", data.fullName);
@@ -156,11 +156,11 @@ function registrationPdfBase64(data: any, ref: string): string {
   line("Email", data.email);
   line("Telephone", data.phone);
   line("Contact Address", data.contactAddress);
-  line(isCompany ? "Director's ID" : "Landlord ID", data.landlordIdUrl ? `Uploaded${data.landlordIdFileName ? ` — ${data.landlordIdFileName}` : ""}` : "—");
+  line(isCompany ? "Director's ID" : "Landlord ID", data.landlordIdUrl ? `Uploaded${data.landlordIdFileName ? ` (${data.landlordIdFileName})` : ""}` : "-");
   if (data.landlordIdUrl) line("", data.landlordIdUrl);
-  line("Billing Address Doc", data.billingProofUrl ? `Uploaded${data.billingProofFileName ? ` — ${data.billingProofFileName}` : ""}` : "—");
+  line("Billing Address Doc", data.billingProofUrl ? `Uploaded${data.billingProofFileName ? ` (${data.billingProofFileName})` : ""}` : "-");
   if (data.billingProofUrl) line("", data.billingProofUrl);
-  line("Proof of Ownership", data.ownershipProofUrl ? `Uploaded${data.ownershipProofFileName ? ` — ${data.ownershipProofFileName}` : ""}` : "—");
+  line("Proof of Ownership", data.ownershipProofUrl ? `Uploaded${data.ownershipProofFileName ? ` (${data.ownershipProofFileName})` : ""}` : "-");
   if (data.ownershipProofUrl) line("", data.ownershipProofUrl);
   line("Properties Owned", data.propertyCount);
 
@@ -194,19 +194,19 @@ function registrationPdfBase64(data: any, ref: string): string {
 }
 
 function confirmationEmailHtml(data: any) {
-  return `<!DOCTYPE html><html><head><meta charset="utf-8"/><style>body{font-family:Arial,sans-serif;background:#f4f6f9;margin:0;padding:0;}.wrap{max-width:600px;margin:40px auto;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,.08);}.header{background:linear-gradient(135deg,#1a3c5e,#2563a8);padding:36px 40px;color:#fff;}.header h1{margin:0 0 6px;font-size:24px;font-weight:700;}.body{padding:36px 40px;}.body p{font-size:15px;line-height:1.65;color:#374151;margin:0 0 16px;}.detail-box{background:#f8f9ff;border-radius:12px;padding:20px 24px;margin:24px 0;}.detail-row{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #eef0f5;font-size:14px;gap:16px;}.detail-row:last-child{border-bottom:none;}.detail-label{color:#6b7280;font-weight:500;flex-shrink:0;}.detail-value{color:#111827;font-weight:600;text-align:right;}.footer{background:#f8f9ff;padding:20px 40px;text-align:center;font-size:12px;color:#9ca3af;}</style></head><body><div class="wrap"><div class="header"><h1>🏠 Landlord Registration Received</h1><p>House of Lettings — Property Management</p></div><div class="body"><p>Dear <strong>${data.fullName}</strong>,</p><p>Thank you for registering as a landlord with House of Lettings. Our lettings team will review your details and be in touch within <strong>24–48 hours</strong> to discuss how we can manage your property.</p><div class="detail-box"><div class="detail-row"><span class="detail-label">${Array.isArray(data.properties) && data.properties.length > 1 ? `Properties (${data.properties.length})` : "Property Address"}</span><span class="detail-value">${data.address}</span></div><div class="detail-row"><span class="detail-label">Properties Owned</span><span class="detail-value">${data.propertyCount}</span></div><div class="detail-row"><span class="detail-label">Package Selected</span><span class="detail-value">${data.selectedPackage}</span></div></div><p>A PDF copy of everything you submitted is attached to this email for your records.</p><p>If you need to make any changes, please reply to this email.</p></div><div class="footer">© ${new Date().getFullYear()} House of Lettings Ltd. All rights reserved.</div></div></body></html>`;
+  return `<!DOCTYPE html><html><head><meta charset="utf-8"/><style>body{font-family:Arial,sans-serif;background:#f4f6f9;margin:0;padding:0;}.wrap{max-width:600px;margin:40px auto;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,.08);}.header{background:linear-gradient(135deg,#1a3c5e,#2563a8);padding:36px 40px;color:#fff;}.header h1{margin:0 0 6px;font-size:24px;font-weight:700;}.body{padding:36px 40px;}.body p{font-size:15px;line-height:1.65;color:#374151;margin:0 0 16px;}.detail-box{background:#f8f9ff;border-radius:12px;padding:20px 24px;margin:24px 0;}.detail-row{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #eef0f5;font-size:14px;gap:16px;}.detail-row:last-child{border-bottom:none;}.detail-label{color:#6b7280;font-weight:500;flex-shrink:0;}.detail-value{color:#111827;font-weight:600;text-align:right;}.footer{background:#f8f9ff;padding:20px 40px;text-align:center;font-size:12px;color:#9ca3af;}</style></head><body><div class="wrap"><div class="header"><h1>🏠 Landlord Registration Received</h1><p>House of Lettings, Property Management</p></div><div class="body"><p>Dear <strong>${data.fullName}</strong>,</p><p>Thank you for registering as a landlord with House of Lettings. Our lettings team will review your details and be in touch within <strong>24-48 hours</strong> to discuss how we can manage your property.</p><div class="detail-box"><div class="detail-row"><span class="detail-label">${Array.isArray(data.properties) && data.properties.length > 1 ? `Properties (${data.properties.length})` : "Property Address"}</span><span class="detail-value">${data.address}</span></div><div class="detail-row"><span class="detail-label">Properties Owned</span><span class="detail-value">${data.propertyCount}</span></div><div class="detail-row"><span class="detail-label">Package Selected</span><span class="detail-value">${data.selectedPackage}</span></div></div><p>A PDF copy of everything you submitted is attached to this email for your records.</p><p>If you need to make any changes, please reply to this email.</p></div><div class="footer">© ${new Date().getFullYear()} House of Lettings Ltd. All rights reserved.</div></div></body></html>`;
 }
 
 function adminNotificationHtml(data: any) {
   const isCompany = data.ownerType === "company";
   const people = isCompany && Array.isArray(data.companyPeople) ? data.companyPeople : [];
   const peopleRows = people
-    .map((p: any, i: number) => `<tr><td>${i === 0 ? "Person 1 (contact)" : `Person ${i + 1}`}</td><td>${[p.name, p.role, p.share ? `${p.share}% share` : ""].filter(Boolean).join(" — ")}</td></tr>`)
+    .map((p: any, i: number) => `<tr><td>${i === 0 ? "Person 1 (contact)" : `Person ${i + 1}`}</td><td>${[p.name, p.role, p.share ? `${p.share}% share` : ""].filter(Boolean).join(", ")}</td></tr>`)
     .join("");
   const companyRows = isCompany
-    ? `<tr><td>Company Name</td><td>${data.companyName || "—"}</td></tr><tr><td>Company Number</td><td>${data.companyNumber || "—"}</td></tr><tr><td>Registered Office</td><td>${data.registeredAddress || "—"}</td></tr>${peopleRows}`
+    ? `<tr><td>Company Name</td><td>${data.companyName || "-"}</td></tr><tr><td>Company Number</td><td>${data.companyNumber || "-"}</td></tr><tr><td>Registered Office</td><td>${data.registeredAddress || "-"}</td></tr>${peopleRows}`
     : "";
-  return `<!DOCTYPE html><html><head><meta charset="utf-8"/><style>body{font-family:Arial,sans-serif;background:#f4f6f9;margin:0;padding:0;}.wrap{max-width:600px;margin:32px auto;background:#fff;border-radius:14px;overflow:hidden;}.header{background:#1a3c5e;padding:24px 32px;color:#fff;}.header h2{margin:0;font-size:20px;}.body{padding:28px 32px;}table{width:100%;border-collapse:collapse;font-size:14px;}td{padding:10px 12px;border-bottom:1px solid #eef0f5;vertical-align:top;}td:first-child{font-weight:600;color:#6b7280;width:38%;}td:last-child{color:#111;}</style></head><body><div class="wrap"><div class="header"><h2>🔔 New Landlord Registration</h2><p style="margin:4px 0 0;opacity:.8;font-size:13px;">${new Date().toLocaleString("en-GB")}</p></div><div class="body"><table><tr><td>Owner Type</td><td>${isCompany ? "Company / Ltd" : "Individual owner"}</td></tr>${companyRows}${isCompany && people.length ? "" : `<tr><td>${isCompany ? "Contact Person" : "Full Name"}</td><td>${data.fullName}</td></tr>`}<tr><td>Email</td><td>${data.email}</td></tr><tr><td>Telephone</td><td>${data.phone}</td></tr><tr><td>Contact Address</td><td>${data.contactAddress || "—"}</td></tr><tr><td>${isCompany ? "Director's ID" : "Landlord ID"}</td><td>${data.landlordIdUrl ? `<a href="${data.landlordIdUrl}">view document</a>` : "—"}</td></tr><tr><td>Billing Address Document</td><td>${data.billingProofUrl ? `<a href="${data.billingProofUrl}">view document</a>` : "—"}</td></tr><tr><td>Proof of Ownership</td><td>${data.ownershipProofUrl ? `<a href="${data.ownershipProofUrl}">view document</a>` : "—"}</td></tr><tr><td>Properties Owned</td><td>${data.propertyCount}</td></tr>${propertyRows(data)}<tr><td>Package Selected</td><td>${data.selectedPackage}</td></tr>${docRows(data)}<tr><td>Notes</td><td>${data.notes || "—"}</td></tr><tr><td>Terms &amp; Conditions</td><td>Agreed by submitting the registration</td></tr></table><p style="font-size:12px;color:#9ca3af;margin:16px 0 0;">A PDF copy of the full registration is attached.</p></div></div></body></html>`;
+  return `<!DOCTYPE html><html><head><meta charset="utf-8"/><style>body{font-family:Arial,sans-serif;background:#f4f6f9;margin:0;padding:0;}.wrap{max-width:600px;margin:32px auto;background:#fff;border-radius:14px;overflow:hidden;}.header{background:#1a3c5e;padding:24px 32px;color:#fff;}.header h2{margin:0;font-size:20px;}.body{padding:28px 32px;}table{width:100%;border-collapse:collapse;font-size:14px;}td{padding:10px 12px;border-bottom:1px solid #eef0f5;vertical-align:top;}td:first-child{font-weight:600;color:#6b7280;width:38%;}td:last-child{color:#111;}</style></head><body><div class="wrap"><div class="header"><h2>🔔 New Landlord Registration</h2><p style="margin:4px 0 0;opacity:.8;font-size:13px;">${new Date().toLocaleString("en-GB")}</p></div><div class="body"><table><tr><td>Owner Type</td><td>${isCompany ? "Company / Ltd" : "Individual owner"}</td></tr>${companyRows}${isCompany && people.length ? "" : `<tr><td>${isCompany ? "Contact Person" : "Full Name"}</td><td>${data.fullName}</td></tr>`}<tr><td>Email</td><td>${data.email}</td></tr><tr><td>Telephone</td><td>${data.phone}</td></tr><tr><td>Contact Address</td><td>${data.contactAddress || "-"}</td></tr><tr><td>${isCompany ? "Director's ID" : "Landlord ID"}</td><td>${data.landlordIdUrl ? `<a href="${data.landlordIdUrl}">view document</a>` : "-"}</td></tr><tr><td>Billing Address Document</td><td>${data.billingProofUrl ? `<a href="${data.billingProofUrl}">view document</a>` : "-"}</td></tr><tr><td>Proof of Ownership</td><td>${data.ownershipProofUrl ? `<a href="${data.ownershipProofUrl}">view document</a>` : "-"}</td></tr><tr><td>Properties Owned</td><td>${data.propertyCount}</td></tr>${propertyRows(data)}<tr><td>Package Selected</td><td>${data.selectedPackage}</td></tr>${docRows(data)}<tr><td>Notes</td><td>${data.notes || "-"}</td></tr><tr><td>Terms &amp; Conditions</td><td>Agreed by submitting the registration</td></tr></table><p style="font-size:12px;color:#9ca3af;margin:16px 0 0;">A PDF copy of the full registration is attached.</p></div></div></body></html>`;
 }
 
 export async function POST(request: Request) {
@@ -242,13 +242,13 @@ export async function POST(request: Request) {
     await Promise.allSettled([
       sendEmail({
         to: data.email,
-        subject: "🏠 Your Landlord Registration — House of Lettings",
+        subject: "🏠 Your Landlord Registration | House of Lettings",
         html: confirmationEmailHtml(data),
         attachments,
       }),
       sendEmail({
         to: process.env.ADMIN_EMAIL || "admin@houseoflettings.co.uk",
-        subject: `🔔 New Landlord Registration — ${data.fullName}`,
+        subject: `🔔 New Landlord Registration: ${data.fullName}`,
         html: adminNotificationHtml(data),
         attachments,
       }),

@@ -112,7 +112,7 @@ export default function BookValuationPage() {
             fontSize: 17, color: 'rgba(255,255,255,0.6)', maxWidth: 500,
             margin: '0 auto', lineHeight: 1.65, fontWeight: 400,
           }}>
-            Our local experts will provide an accurate, no-obligation valuation — usually within 48 hours.
+            Our local experts will provide an accurate, no-obligation valuation, usually within 48 hours.
           </p>
         </div>
 
@@ -176,7 +176,7 @@ export default function BookValuationPage() {
                   Book a Property Valuation
                 </h2>
                 <p style={{ fontSize: 14, color: '#6b7280', margin: 0, lineHeight: 1.5, fontFamily: "'Poppins', sans-serif" }}>
-                  Our local experts will provide an accurate, no-obligation valuation — usually within 48 hours.
+                  Our local experts will provide an accurate, no-obligation valuation, usually within 48 hours.
                 </p>
               </div>
 

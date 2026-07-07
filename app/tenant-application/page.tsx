@@ -138,7 +138,7 @@ function generateApplicationPdf(data: Record<string, any>): string {
 
   const row = (label: string, value?: string) => {
     if (y > 770) { doc.addPage(); y = 40; }
-    const val = value && value.toString().trim() ? value.toString() : '—';
+    const val = value && value.toString().trim() ? value.toString() : '-';
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(9.5);
     doc.setTextColor(gray);
@@ -208,14 +208,14 @@ function generateApplicationPdf(data: Record<string, any>): string {
   row('Tenancy Start', data.tenancyStart);
   row('Tenancy End', data.tenancyEnd);
   row('Reason for Leaving', data.reasonLeaving);
-  row('Desired Move-In', data.moveInDate ? new Date(data.moveInDate).toLocaleDateString('en-GB') : '—');
+  row('Desired Move-In', data.moveInDate ? new Date(data.moveInDate).toLocaleDateString('en-GB') : '-');
   row('Lease Term', data.leaseTerm);
   row('Pets', data.pets);
   row('Guarantor', data.guarantor);
   if (data.guarantor === 'Yes') {
-    row('Guarantor Name', data.guarantorName || '—');
-    row('Guarantor Phone', data.guarantorPhone || '—');
-    row('Guarantor Email', data.guarantorEmail || '—');
+    row('Guarantor Name', data.guarantorName || '-');
+    row('Guarantor Phone', data.guarantorPhone || '-');
+    row('Guarantor Email', data.guarantorEmail || '-');
   }
   fileLinks('Holding Deposit Receipt', data.holdingDepositReceiptUrls);
 
@@ -552,7 +552,7 @@ export default function TenantApplicationPage() {
             <h2 style={{ fontSize: isMobile ? '1.5rem' : '1.8rem', fontWeight: 800, color: '#111827', marginBottom: 12 }}>Application Submitted</h2>
             <p style={{ color: '#6b7280', fontSize: 15, lineHeight: 1.7, marginBottom: 24 }}>
               Thank you, <strong>{fullName}</strong>. We've received your tenancy application for{' '}
-              <strong>{selectedProperty?.location}</strong>. Our team will review it and be in touch within 24–48 hours.
+              <strong>{selectedProperty?.location}</strong>. Our team will review it and be in touch within 24-48 hours.
             </p>
             <p style={{ color: '#9ca3af', fontSize: 13 }}>
               A confirmation email with a PDF copy of your application has been sent to <strong>{email}</strong>.
@@ -959,7 +959,7 @@ export default function TenantApplicationPage() {
                   </div>
                   <div>
                     <label style={labelStyle}>Additional Income Sources <span style={{ color: '#ef4444' }}>*</span></label>
-                    <input style={inputStyle} value={additionalIncome} onChange={e => setAdditionalIncome(e.target.value)} placeholder="e.g. pension — or None" />
+                    <input style={inputStyle} value={additionalIncome} onChange={e => setAdditionalIncome(e.target.value)} placeholder="e.g. pension, or None" />
                   </div>
                 </div>
                 <hr style={dividerStyle} />
@@ -1071,7 +1071,7 @@ export default function TenantApplicationPage() {
 
                   {guarantor === 'Yes' && (
                     <div className="guarantor-subform">
-                      <p className="guarantor-subform-note">All fields below are optional — provide as much detail as you have.</p>
+                      <p className="guarantor-subform-note">All fields below are optional. Provide as much detail as you have.</p>
                       <div className="ta-grid-2" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
                         <div style={{ gridColumn: '1 / -1' }}>
                           <label style={labelStyle}>Guarantor Full Name</label>
@@ -1178,19 +1178,19 @@ export default function TenantApplicationPage() {
                     ['Right to Rent', rightToRent === 'Other' ? rightToRentOther : rightToRent],
                     ['Employment Status', employmentStatus],
                     ['Annual Income', annualIncome],
-                    ['Move-In Date', moveInDate ? new Date(moveInDate).toLocaleDateString('en-GB') : '—'],
+                    ['Move-In Date', moveInDate ? new Date(moveInDate).toLocaleDateString('en-GB') : '-'],
                     ['Lease Term', leaseTerm === 'Other' ? leaseTermOther : leaseTerm],
                     ['Pets', pets],
                     ['Guarantor', guarantor],
                     ...(guarantor === 'Yes' ? [
-                      ['Guarantor Name', guarantorName || '—'],
-                      ['Guarantor Phone', guarantorPhone || '—'],
-                      ['Guarantor Email', guarantorEmail || '—'],
+                      ['Guarantor Name', guarantorName || '-'],
+                      ['Guarantor Phone', guarantorPhone || '-'],
+                      ['Guarantor Email', guarantorEmail || '-'],
                     ] : []),
                   ].map(([label, value]) => (
                     <div key={label} className="ta-answer-row">
                       <span style={{ color: '#6b7280', fontWeight: 500, flexShrink: 0 }}>{label}</span>
-                      <span style={{ color: '#111827', fontWeight: 600, textAlign: 'right', wordBreak: 'break-word' }}>{value || '—'}</span>
+                      <span style={{ color: '#111827', fontWeight: 600, textAlign: 'right', wordBreak: 'break-word' }}>{value || '-'}</span>
                     </div>
                   ))}
                 </div>
@@ -1309,7 +1309,7 @@ export default function TenantApplicationPage() {
 
           {/* ── TRUST BADGES ── */}
           <div className="trust-badges">
-            {['Information is kept confidential', 'Response within 24–48 hours', 'Secure file uploads'].map(t => (
+            {['Information is kept confidential', 'Response within 24-48 hours', 'Secure file uploads'].map(t => (
               <span key={t} className="trust-badge">
                 <svg width="13" height="13" viewBox="0 0 16 16" fill="none">
                   <path d="M3 8l3.5 3.5L13 5" stroke="#2563eb" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />

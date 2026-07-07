@@ -195,7 +195,7 @@ export default function PricingPage() {
             lineHeight: 1.75, fontWeight: 300,
             fontFamily: "'Poppins', sans-serif",
           }}>
-            Every package builds on the last. Start with what you need — upgrade whenever you&apos;re ready.
+            Every package builds on the last. Start with what you need, and upgrade whenever you&apos;re ready.
           </p>
         </div>
       </section>
@@ -484,7 +484,7 @@ export default function PricingPage() {
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(360px, 1fr))', gap: 32 }}>
             {[
-              { q: 'Can I upgrade my package later?', a: "Yes — you can upgrade at any time. We'll simply apply the difference to your next invoice." },
+              { q: 'Can I upgrade my package later?', a: "Yes, you can upgrade at any time. We'll simply apply the difference to your next invoice." },
               { q: 'Are there any hidden fees?', a: 'No. The price you see is the price you pay. No setup fees, no renewal fees, no surprises.' },
               { q: "What's the difference between Rent Collection and Full Management?", a: 'Rent Collection handles money and statements. Full Management adds hands-on day-to-day property management, maintenance, and compliance.' },
               { q: 'Do I need to sign a long-term contract?', a: 'Our one-time fee packages have no ongoing commitment. Management packages run on a rolling monthly basis.' },
@@ -615,7 +615,7 @@ export default function PricingPage() {
               <p style={{
                 fontFamily: "'Poppins', sans-serif",
                 fontSize: 13, color: '#6b7280', margin: '0 0 20px',
-              }}>Fill in your details and we&apos;ll be in touch within 24–48 hours.</p>
+              }}>Fill in your details and we&apos;ll be in touch within 24-48 hours.</p>
 
               {/* Benefits bar */}
               <div style={{

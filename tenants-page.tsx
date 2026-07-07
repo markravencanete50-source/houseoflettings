@@ -5,7 +5,7 @@ import { useState } from "react";
 const faqs = [
   {
     q: "Is it free to rent through House of Lettings?",
-    a: "Yes — there are no agency fees for tenants. The only payment before moving in is a holding deposit to secure the property, which is deducted from your first month's rent. You're not losing anything.",
+    a: "Yes, there are no agency fees for tenants. The only payment before moving in is a holding deposit to secure the property, which is deducted from your first month's rent. You're not losing anything.",
   },
   {
     q: "What is the holding deposit?",
@@ -13,11 +13,11 @@ const faqs = [
   },
   {
     q: "How quickly can I book a viewing?",
-    a: "Once you send an enquiry and answer a few quick questions, we arrange the viewing as fast as possible — usually within a few days.",
+    a: "Once you send an enquiry and answer a few quick questions, we arrange the viewing as fast as possible, usually within a few days.",
   },
   {
     q: "What checks do you run?",
-    a: "Standard referencing: employment/income checks and a previous landlord reference where applicable. We keep it straightforward — no unnecessary hoops.",
+    a: "Standard referencing: employment/income checks and a previous landlord reference where applicable. We keep it straightforward, no unnecessary hoops.",
   },
   {
     q: "Which areas do you cover?",
@@ -37,7 +37,7 @@ const whyCards = [
       </svg>
     ),
     title: "No agency fees",
-    body: "Renting through us costs you nothing extra. The holding deposit is the only upfront payment — and it comes off your first rent.",
+    body: "Renting through us costs you nothing extra. The holding deposit is the only upfront payment, and it comes off your first rent.",
   },
   {
     icon: (
@@ -59,7 +59,7 @@ const whyCards = [
       </svg>
     ),
     title: "Direct landlord contact",
-    body: "We work closely with our landlords — no middlemen, no miscommunication. Questions get answered quickly.",
+    body: "We work closely with our landlords, no middlemen, no miscommunication. Questions get answered quickly.",
   },
   {
     icon: (
@@ -69,7 +69,7 @@ const whyCards = [
       </svg>
     ),
     title: "Leeds & Manchester",
-    body: "City-centre flats, suburban houses, and everything in between — across two of the UK's most in-demand rental markets.",
+    body: "City-centre flats, suburban houses, and everything in between, across two of the UK's most in-demand rental markets.",
   },
 ];
 
@@ -77,7 +77,7 @@ const steps = [
   {
     num: "01",
     title: "Send an enquiry",
-    body: "Tell us what you're looking for — property type, area, move-in date. No long forms.",
+    body: "Tell us what you're looking for: property type, area, move-in date. No long forms.",
   },
   {
     num: "02",
@@ -92,7 +92,7 @@ const steps = [
   {
     num: "04",
     title: "Secure it with a holding deposit",
-    body: "To take the property off the market, pay a holding deposit — deducted from your first month's rent.",
+    body: "To take the property off the market, pay a holding deposit, deducted from your first month's rent.",
   },
   {
     num: "05",
@@ -169,7 +169,7 @@ export default function TenantsPage() {
           }}
         >
           No agency fees. No endless forms. Send an enquiry, answer a few quick questions,
-          and we'll get you in for a viewing — usually within days.
+          and we'll get you in for a viewing, usually within days.
         </p>
 
         <div style={{ display: "flex", gap: 14, justifyContent: "center", flexWrap: "wrap" }}>
@@ -226,7 +226,7 @@ export default function TenantsPage() {
             letterSpacing: "-0.02em",
           }}
         >
-          From enquiry to keys — five steps.
+          From enquiry to keys in five steps.
         </h2>
 
         <div
@@ -382,8 +382,8 @@ export default function TenantsPage() {
               That deposit is{" "}
               <span style={{ color: "#fff", fontWeight: 600 }}>
                 deducted from your first month's rent
-              </span>{" "}
-              — so you're not paying it on top of anything. It's just paying your rent a little
+              </span>
+              , so you're not paying it on top of anything. It's just paying your rent a little
               early.
             </p>
             <a

@@ -62,7 +62,7 @@ function confirmationHtml(d: any) {
   </style></head><body><div class="wrap">
     <div class="header">
       <h1>🔧 Maintenance Request Received</h1>
-      <p>House of Lettings — ${d.propertyAddress}</p>
+      <p>House of Lettings, ${d.propertyAddress}</p>
     </div>
     <div class="body">
       <p>Dear <strong>${d.fullName}</strong>,</p>
@@ -70,9 +70,9 @@ function confirmationHtml(d: any) {
       <div class="detail-box">
         <div class="detail-row"><span class="detail-label">Property</span><span class="detail-value">${d.propertyAddress}</span></div>
         <div class="detail-row"><span class="detail-label">Reported Issue</span><span class="detail-value">${d.issueDescription}</span></div>
-        <div class="detail-row"><span class="detail-label">When It Happened</span><span class="detail-value">${d.whenHappened || '—'}</span></div>
+        <div class="detail-row"><span class="detail-label">When It Happened</span><span class="detail-value">${d.whenHappened || '-'}</span></div>
         <div class="detail-row"><span class="detail-label">Best Contact Number</span><span class="detail-value">${d.contactNumber}</span></div>
-        <div class="detail-row"><span class="detail-label">Your Availability</span><span class="detail-value">${d.availability || '—'}</span></div>
+        <div class="detail-row"><span class="detail-label">Your Availability</span><span class="detail-value">${d.availability || '-'}</span></div>
       </div>
       <div class="notice">ℹ️ If this is an emergency (gas leak, flooding, no heating in winter, electrical danger), please also call us directly so we can prioritise it.</div>
       <p style="margin-top:20px;">If you have any questions, please reply to this email.</p>
@@ -83,7 +83,7 @@ function confirmationHtml(d: any) {
 
 function adminNotificationHtml(d: any) {
   const row = (label: string, value: string) =>
-    `<tr><td style="font-weight:600;color:#6b7280;width:38%;padding:9px 12px;border-bottom:1px solid #eef0f5;">${label}</td><td style="color:#111;padding:9px 12px;border-bottom:1px solid #eef0f5;">${value || '—'}</td></tr>`;
+    `<tr><td style="font-weight:600;color:#6b7280;width:38%;padding:9px 12px;border-bottom:1px solid #eef0f5;">${label}</td><td style="color:#111;padding:9px 12px;border-bottom:1px solid #eef0f5;">${value || '-'}</td></tr>`;
 
   const fileLinks = (urls: string[], label: string) => {
     if (!urls || urls.length === 0) return row(label, 'None provided');
@@ -163,14 +163,14 @@ export async function POST(request: Request) {
     await Promise.allSettled([
       sendEmail({
         to: data.email,
-        subject: '🔧 Your Maintenance Request — House of Lettings',
+        subject: '🔧 Your Maintenance Request | House of Lettings',
         html: confirmationHtml(data),
         attachments: pdfAttachment,
       }),
       sendEmail({
         // Maintenance goes to the main admin inbox alongside the landlord forms.
         to: process.env.ADMIN_EMAIL || 'admin@houseoflettings.co.uk',
-        subject: `🔧 New Maintenance Request — ${data.fullName} (${data.propertyAddress})`,
+        subject: `🔧 New Maintenance Request: ${data.fullName} (${data.propertyAddress})`,
         html: adminNotificationHtml(data),
         attachments: pdfAttachment,
       }),

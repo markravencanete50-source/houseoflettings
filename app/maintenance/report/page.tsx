@@ -194,7 +194,7 @@ function generateMaintenancePdf(data: Record<string, any>): string {
   };
   const row = (label: string, value?: string) => {
     if (y > 770) { doc.addPage(); y = 40; }
-    const val = value && value.toString().trim() ? value.toString() : '—';
+    const val = value && value.toString().trim() ? value.toString() : '-';
     doc.setFont('helvetica', 'bold'); doc.setFontSize(9.5); doc.setTextColor(gray);
     doc.text(label, margin, y);
     doc.setFont('helvetica', 'normal'); doc.setTextColor(dark);
@@ -448,7 +448,7 @@ export default function MaintenanceReportPage() {
             </div>
             <div>
               <label style={labelStyle}>Describe the Issue <span style={{ color: '#ef4444' }}>*</span></label>
-              <textarea style={{ ...inputStyle, resize: 'vertical' } as React.CSSProperties} rows={4} value={issueDescription} onChange={e => setIssueDescription(e.target.value)} placeholder="e.g. The boiler stopped working — no hot water or heating. No error on the display." />
+              <textarea style={{ ...inputStyle, resize: 'vertical' } as React.CSSProperties} rows={4} value={issueDescription} onChange={e => setIssueDescription(e.target.value)} placeholder="e.g. The boiler stopped working, with no hot water or heating. No error on the display." />
             </div>
             <div>
               <label style={labelStyle}>When Did It Happen? <span style={{ color: '#ef4444' }}>*</span></label>
@@ -483,7 +483,7 @@ export default function MaintenanceReportPage() {
             {/* Evidence */}
             <div>
               <h2 style={sectionHeadingStyle}>Photos &amp; Videos</h2>
-              <p style={sectionSubStyle}>At least 1 photo is required — you can add photos one at a time, and more angles help us diagnose faster.</p>
+              <p style={sectionSubStyle}>At least 1 photo is required. You can add photos one at a time, and more angles help us diagnose faster.</p>
             </div>
             <FileUpload
               label="Photos of the Issue" required minFiles={1} maxFiles={10}

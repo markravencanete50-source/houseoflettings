@@ -51,7 +51,7 @@ function ListingsContent() {
           Browse Properties
         </h1>
         <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: 16, fontWeight: 300 }}>
-          Direct from landlords — no agency fees
+          Direct from landlords, no agency fees
         </p>
       </div>
 

@@ -97,7 +97,7 @@ function TenantDashboardInner() {
             <div>
               <h1 className="dash-section-title">Welcome, {profile?.name?.split(' ')[0]} 👋</h1>
               <p style={{ color: 'var(--gray-600)', marginBottom: 32, fontSize: 15 }}>
-                Find your perfect home — no agency fees, direct from landlords.
+                Find your perfect home, with no agency fees, direct from landlords.
               </p>
 
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(180px,1fr))', gap: 20, marginBottom: 36 }}>

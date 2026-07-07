@@ -14,11 +14,11 @@ const BASE = 'https://www.houseoflettings.uk';
 export const metadata: Metadata = {
   title: 'Our Branches | Letting Agents in Leeds & Manchester | House of Lettings',
   description:
-    'Two local branches — Leeds and Manchester. Find your nearest House of Lettings office, get straight through to the right local team, and browse homes to rent.',
+    'Two local branches, Leeds and Manchester. Find your nearest House of Lettings office, get straight through to the right local team, and browse homes to rent.',
   alternates: { canonical: `${BASE}/branches` },
   openGraph: {
     title: 'Our Branches | Letting Agents in Leeds & Manchester',
-    description: 'Two local branches — Leeds and Manchester. Find your nearest House of Lettings office and browse homes to rent.',
+    description: 'Two local branches, Leeds and Manchester. Find your nearest House of Lettings office and browse homes to rent.',
     url: `${BASE}/branches`,
     siteName: 'House of Lettings',
     images: [{ url: '/images/heropage-og.jpg', width: 1200, height: 630, alt: 'House of Lettings branches' }],

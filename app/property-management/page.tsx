@@ -22,11 +22,11 @@ const colors = {
 const faqs = [
   {
     q: 'How much does full property management cost?',
-    a: 'Our fully managed service is typically 10–14% of monthly rent (inc. VAT). We are transparent — no hidden fees, no renewal charges, and no mark-ups on maintenance.',
+    a: 'Our fully managed service is typically 10-14% of monthly rent (inc. VAT). We are transparent, with no hidden fees, no renewal charges, and no mark-ups on maintenance.',
   },
   {
     q: 'Can I switch to House of Lettings from another agent?',
-    a: 'Yes. We handle the transfer from your current agent, including notifying tenants and updating payment details. Most switches complete within 5–10 working days.',
+    a: 'Yes. We handle the transfer from your current agent, including notifying tenants and updating payment details. Most switches complete within 5-10 working days.',
   },
   {
     q: 'What happens if my property is empty (void period)?',
@@ -38,11 +38,11 @@ const faqs = [
   },
   {
     q: 'Who carries out maintenance and repairs?',
-    a: 'We have a network of vetted local tradespeople across Leeds and Manchester. For works under an agreed threshold (typically £250), we instruct repairs immediately without waiting for approval — keeping your tenants happy and your property in good condition.',
+    a: 'We have a network of vetted local tradespeople across Leeds and Manchester. For works under an agreed threshold (typically £250), we instruct repairs immediately without waiting for approval, keeping your tenants happy and your property in good condition.',
   },
   {
     q: 'How are rental payments handled?',
-    a: 'Rent is collected from tenants and transferred directly to your nominated bank account, usually within 1–3 working days of receipt. You also receive a monthly statement with a full breakdown.',
+    a: 'Rent is collected from tenants and transferred directly to your nominated bank account, usually within 1-3 working days of receipt. You also receive a monthly statement with a full breakdown.',
   },
   {
     q: 'Do you handle deposit protection?',
@@ -63,17 +63,17 @@ const services = [
   {
     icon: '💷',
     title: 'Rent Collection',
-    desc: 'Monthly rent collection with automated reminders, arrears management, and prompt payment to your account — with full monthly statements.',
+    desc: 'Monthly rent collection with automated reminders, arrears management, and prompt payment to your account, with full monthly statements.',
   },
   {
     icon: '🔍',
     title: 'Property Inspections',
-    desc: 'Regular mid-tenancy inspections (typically every 3–6 months) with written reports and photographs, so you always know the condition of your investment.',
+    desc: 'Regular mid-tenancy inspections (typically every 3-6 months) with written reports and photographs, so you always know the condition of your investment.',
   },
   {
     icon: '🔧',
     title: 'Maintenance Coordination',
-    desc: '24/7 tenant maintenance reporting, a trusted network of vetted local tradespeople, and transparent invoicing — no hidden mark-ups on repairs.',
+    desc: '24/7 tenant maintenance reporting, a trusted network of vetted local tradespeople, and transparent invoicing, with no hidden mark-ups on repairs.',
   },
   {
     icon: '📋',
@@ -88,7 +88,7 @@ const services = [
   {
     icon: '⚖️',
     title: 'Section 8 & Possession Proceedings',
-    desc: 'Under the Renters\' Rights Act 2025, Section 21 is abolished. We manage Section 8 notices and possession proceedings correctly, with proper grounds and evidence — protecting your rights as a landlord.',
+    desc: 'Under the Renters\' Rights Act 2025, Section 21 is abolished. We manage Section 8 notices and possession proceedings correctly, with proper grounds and evidence, protecting your rights as a landlord.',
   },
   {
     icon: '🐾',
@@ -113,7 +113,7 @@ const complianceItems = [
   {
     title: 'Energy Performance Certificate (EPC)',
     freq: 'Every 10 years',
-    detail: 'Currently required at EPC rating E or above to legally let a property. Proposed minimum of C in coming years — we advise on improvements.',
+    detail: 'Currently required at EPC rating E or above to legally let a property. Proposed minimum of C in coming years, and we advise on improvements.',
     status: 'Mandatory',
   },
   {
@@ -132,7 +132,7 @@ const complianceItems = [
     title: "Renters' Rights Information Sheet",
     freq: 'Per tenancy',
     detail: "Required under the Renters' Rights Act 2025 (from 1 May 2026). Must be provided to all new tenants before tenancy begins. Fines up to £7,000 for non-compliance.",
-    status: 'New — 2026',
+    status: 'New for 2026',
   },
   {
     title: 'Legionella Risk Assessment',
@@ -200,7 +200,7 @@ export default function PropertyManagementPage() {
             lineHeight: 1.7,
             margin: '0 0 36px',
           }}>
-            From finding your first tenant to navigating the Renters&apos; Rights Act 2025 —
+            From finding your first tenant to navigating the Renters&apos; Rights Act 2025,
             we manage your property so you don&apos;t have to worry about a thing.
           </p>
           <div style={{ display: 'flex', gap: 16, justifyContent: 'center', flexWrap: 'wrap' }}>
@@ -256,7 +256,7 @@ export default function PropertyManagementPage() {
                 Your Property.<br />Our Responsibility.
               </h2>
               <p style={{ color: colors.textMid, lineHeight: 1.8, marginBottom: 16 }}>
-                Property management means we act as your professional representative — handling every aspect of your rental from day one. You retain ownership and receive rent; we handle everything else.
+                Property management means we act as your professional representative, handling every aspect of your rental from day one. You retain ownership and receive rent; we handle everything else.
               </p>
               <p style={{ color: colors.textMid, lineHeight: 1.8 }}>
                 The UK rental market has changed significantly in 2026. The Renters&apos; Rights Act 2025 abolished Section 21 &quot;no fault&quot; evictions, introduced rolling periodic tenancies, new pet rights, and strict documentation requirements. Getting it wrong can result in fines of up to £7,000. We make sure you&apos;re always on the right side of the law.
@@ -294,7 +294,7 @@ export default function PropertyManagementPage() {
               Everything Included. Nothing Extra.
             </h2>
             <p style={{ color: colors.textMid, maxWidth: 560, margin: '0 auto', lineHeight: 1.7 }}>
-              Our fully managed service covers every aspect of your property — one fixed fee, complete peace of mind.
+              Our fully managed service covers every aspect of your property: one fixed fee, complete peace of mind.
             </p>
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 24 }}>
@@ -335,13 +335,13 @@ export default function PropertyManagementPage() {
                 textTransform: 'uppercase',
                 marginBottom: 16,
               }}>
-                In Force — 1 May 2026
+                In Force: 1 May 2026
               </div>
               <h2 style={{ color: colors.white, fontSize: 'clamp(24px, 3.5vw, 36px)', fontWeight: 700, margin: '0 0 14px', lineHeight: 1.25 }}>
                 The Renters&apos; Rights Act 2025
               </h2>
               <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: 15, lineHeight: 1.7, margin: 0 }}>
-                The biggest shake-up to UK renting in 30 years. Here&apos;s what changed — and what we handle so you don&apos;t have to.
+                The biggest shake-up to UK renting in 30 years. Here&apos;s what changed, and what we handle so you don&apos;t have to.
               </p>
             </div>
             {/* Fine callout */}
@@ -369,7 +369,7 @@ export default function PropertyManagementPage() {
                 {
                   num: '01',
                   title: 'Section 21 Gone',
-                  body: 'No-fault evictions are abolished. Possession now requires a valid Section 8 ground — rent arrears, property sale, anti-social behaviour.',
+                  body: 'No-fault evictions are abolished. Possession now requires a valid Section 8 ground: rent arrears, property sale, anti-social behaviour.',
                 },
                 {
                   num: '02',
@@ -470,7 +470,7 @@ export default function PropertyManagementPage() {
               Landlord Compliance Checklist
             </h2>
             <p style={{ color: colors.textMid, maxWidth: 560, margin: '0 auto', lineHeight: 1.7 }}>
-              Every property we manage is kept fully compliant. Here&apos;s what&apos;s legally required — and what we handle for you.
+              Every property we manage is kept fully compliant. Here&apos;s what&apos;s legally required, and what we handle for you.
             </p>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
@@ -488,7 +488,7 @@ export default function PropertyManagementPage() {
                   width: 10,
                   height: 10,
                   borderRadius: '50%',
-                  background: item.status === 'New — 2026' ? colors.red : item.status === 'Best Practice' ? colors.lightBlue : colors.blue,
+                  background: item.status === 'New for 2026' ? colors.red : item.status === 'Best Practice' ? colors.lightBlue : colors.blue,
                   marginTop: 6,
                   flexShrink: 0,
                 }} />
@@ -500,12 +500,12 @@ export default function PropertyManagementPage() {
                       fontWeight: 700,
                       padding: '3px 10px',
                       borderRadius: 20,
-                      background: item.status === 'New — 2026'
+                      background: item.status === 'New for 2026'
                         ? 'rgba(229,62,62,0.1)'
                         : item.status === 'Best Practice'
                           ? 'rgba(74,144,217,0.1)'
                           : 'rgba(37,99,235,0.1)',
-                      color: item.status === 'New — 2026'
+                      color: item.status === 'New for 2026'
                         ? colors.red
                         : item.status === 'Best Practice'
                           ? colors.lightBlue
@@ -537,7 +537,7 @@ export default function PropertyManagementPage() {
               {
                 step: '01',
                 title: 'Free Rental Valuation',
-                body: 'We visit your property, assess the market, and give you an honest rental valuation — including advice on what improvements (if any) could increase your yield.',
+                body: 'We visit your property, assess the market, and give you an honest rental valuation, including advice on what improvements (if any) could increase your yield.',
               },
               {
                 step: '02',
@@ -547,7 +547,7 @@ export default function PropertyManagementPage() {
               {
                 step: '03',
                 title: 'Tenant Finding & Referencing',
-                body: 'We conduct accompanied viewings, receive applications, and carry out full tenant referencing — credit checks, income verification, and previous landlord references.',
+                body: 'We conduct accompanied viewings, receive applications, and carry out full tenant referencing: credit checks, income verification, and previous landlord references.',
               },
               {
                 step: '04',
@@ -557,7 +557,7 @@ export default function PropertyManagementPage() {
               {
                 step: '05',
                 title: 'Ongoing Management',
-                body: 'We collect rent, handle maintenance, conduct regular inspections, manage renewals and rent reviews, and keep you updated — while you simply receive your monthly payment.',
+                body: 'We collect rent, handle maintenance, conduct regular inspections, manage renewals and rent reviews, and keep you updated, while you simply receive your monthly payment.',
               },
               {
                 step: '06',
@@ -606,12 +606,12 @@ export default function PropertyManagementPage() {
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 24 }}>
             {[
-              { icon: '📍', title: 'Leeds & Manchester Specialists', body: 'Deep local knowledge of both markets — we know the areas, the rents, and the demand.' },
+              { icon: '📍', title: 'Leeds & Manchester Specialists', body: 'Deep local knowledge of both markets. We know the areas, the rents, and the demand.' },
               { icon: '💰', title: 'No Hidden Fees', body: 'One transparent monthly fee. No admin charges, no renewal fees, no mark-ups on maintenance.' },
               { icon: '⚡', title: 'Fast Maintenance Response', body: 'Tenant maintenance requests are responded to within 24 hours. Emergencies handled immediately.' },
               { icon: '📚', title: 'Compliance Experts', body: "Fully up to date with the Renters' Rights Act 2025 and all UK landlord legislation." },
               { icon: '📊', title: 'Regular Reporting', body: 'Monthly statements, inspection reports, and complete transparency on your property at all times.' },
-              { icon: '🤝', title: 'Personal Service', body: 'You deal with a dedicated property manager — not a call centre — who knows your property.' },
+              { icon: '🤝', title: 'Personal Service', body: 'You deal with a dedicated property manager (not a call centre) who knows your property.' },
             ].map(item => (
               <div key={item.title} style={{
                 textAlign: 'center',

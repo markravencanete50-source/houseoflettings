@@ -61,17 +61,17 @@ function confirmationHtml(d: any) {
   </style></head><body><div class="wrap">
     <div class="header">
       <h1>✅ Tenancy Application Received</h1>
-      <p>House of Lettings — ${d.propertyAddress}</p>
+      <p>House of Lettings, ${d.propertyAddress}</p>
     </div>
     <div class="body">
       <p>Dear <strong>${d.fullName}</strong>,</p>
-      <p>Thank you for submitting your tenancy application. Our team will review it and be in touch within <strong>24–48 hours</strong>. A PDF copy of your full application is attached to this email for your records.</p>
+      <p>Thank you for submitting your tenancy application. Our team will review it and be in touch within <strong>24-48 hours</strong>. A PDF copy of your full application is attached to this email for your records.</p>
       <div class="detail-box">
         <div class="detail-row"><span class="detail-label">Property</span><span class="detail-value">${d.propertyAddress}</span></div>
         <div class="detail-row"><span class="detail-label">Rent</span><span class="detail-value">${d.rent} pcm</span></div>
         <div class="detail-row"><span class="detail-label">Deposit</span><span class="detail-value">${d.deposit}</span></div>
         <div class="detail-row"><span class="detail-label">Holding Deposit</span><span class="detail-value">${d.holdingDeposit}</span></div>
-        <div class="detail-row"><span class="detail-label">Desired Move-In</span><span class="detail-value">${d.moveInDate ? new Date(d.moveInDate).toLocaleDateString('en-GB', { dateStyle: 'long' }) : '—'}</span></div>
+        <div class="detail-row"><span class="detail-label">Desired Move-In</span><span class="detail-value">${d.moveInDate ? new Date(d.moveInDate).toLocaleDateString('en-GB', { dateStyle: 'long' }) : '-'}</span></div>
         <div class="detail-row"><span class="detail-label">Lease Term</span><span class="detail-value">${d.leaseTerm}</span></div>
         <div class="detail-row"><span class="detail-label">Guarantor</span><span class="detail-value">${d.guarantor}</span></div>
       </div>
@@ -84,7 +84,7 @@ function confirmationHtml(d: any) {
 
 function adminNotificationHtml(d: any) {
   const row = (label: string, value: string) =>
-    `<tr><td style="font-weight:600;color:#6b7280;width:38%;padding:9px 12px;border-bottom:1px solid #eef0f5;">${label}</td><td style="color:#111;padding:9px 12px;border-bottom:1px solid #eef0f5;">${value || '—'}</td></tr>`;
+    `<tr><td style="font-weight:600;color:#6b7280;width:38%;padding:9px 12px;border-bottom:1px solid #eef0f5;">${label}</td><td style="color:#111;padding:9px 12px;border-bottom:1px solid #eef0f5;">${value || '-'}</td></tr>`;
 
   const fileLinks = (urls: string[], label: string) => {
     if (!urls || urls.length === 0) return row(label, 'No files uploaded');
@@ -142,7 +142,7 @@ function adminNotificationHtml(d: any) {
       ${row('Tenancy Start', d.tenancyStart)}
       ${row('Tenancy End', d.tenancyEnd)}
       ${row('Reason for Leaving', d.reasonLeaving)}
-      ${row('Desired Move-In', d.moveInDate ? new Date(d.moveInDate).toLocaleDateString('en-GB') : '—')}
+      ${row('Desired Move-In', d.moveInDate ? new Date(d.moveInDate).toLocaleDateString('en-GB') : '-')}
       ${row('Lease Term', d.leaseTerm)}
       ${row('Pets', d.pets)}
       ${row('Guarantor', d.guarantor)}
@@ -188,14 +188,14 @@ export async function POST(request: Request) {
     await Promise.allSettled([
       sendEmail({
         to: data.email,
-        subject: '✅ Your Tenancy Application — House of Lettings',
+        subject: '✅ Your Tenancy Application | House of Lettings',
         html: confirmationHtml(data),
         attachments: pdfAttachment,
       }),
       sendEmail({
         // Tenant-side notifications go to the Leeds office inbox.
         to: process.env.TENANT_ADMIN_EMAIL || 'houseoflettingsleeds@gmail.com',
-        subject: `📋 New Tenancy Application — ${data.fullName}`,
+        subject: `📋 New Tenancy Application: ${data.fullName}`,
         html: adminNotificationHtml(data),
         attachments: pdfAttachment,
       }),

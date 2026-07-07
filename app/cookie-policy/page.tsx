@@ -151,7 +151,7 @@ export default function CookiePolicyPage() {
                 { label: 'Email', value: 'info@houseoflettingsrent.vercel.app' },
                 { label: 'Address', value: 'Peter House, Oxford Street, Manchester' },
                 { label: 'Telephone', value: '0161 768 1758' },
-                { label: 'Office Hours', value: 'Monday – Friday, 9:00am – 5:30pm' },
+                { label: 'Office Hours', value: 'Monday to Friday, 9:00am to 5:30pm' },
               ].map(item => (
                 <div key={item.label} style={{ display: 'flex', gap: 12, marginBottom: 10, fontSize: 14 }}>
                   <span style={{ fontWeight: 600, color: 'var(--black)', minWidth: 100 }}>{item.label}:</span>

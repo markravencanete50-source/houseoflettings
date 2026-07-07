@@ -59,7 +59,7 @@ function confirmationHtml(d: any) {
   </style></head><body><div class="wrap">
     <div class="header">
       <h1>✅ Guarantor Form Received</h1>
-      <p>House of Lettings — ${d.propertyAddress}</p>
+      <p>House of Lettings, ${d.propertyAddress}</p>
     </div>
     <div class="body">
       <p>Dear <strong>${d.guarantorFullName}</strong>,</p>
@@ -78,7 +78,7 @@ function confirmationHtml(d: any) {
 
 function adminNotificationHtml(d: any) {
   const row = (label: string, value: string) =>
-    `<tr><td style="font-weight:600;color:#6b7280;width:40%;padding:9px 12px;border-bottom:1px solid #eef0f5;">${label}</td><td style="color:#111;padding:9px 12px;border-bottom:1px solid #eef0f5;">${value || '—'}</td></tr>`;
+    `<tr><td style="font-weight:600;color:#6b7280;width:40%;padding:9px 12px;border-bottom:1px solid #eef0f5;">${label}</td><td style="color:#111;padding:9px 12px;border-bottom:1px solid #eef0f5;">${value || '-'}</td></tr>`;
 
   const fileLinks = (urls: string[], label: string) => {
     if (!urls || urls.length === 0) return row(label, 'None provided');
@@ -185,14 +185,14 @@ export async function POST(request: Request) {
     const [guarantorSend, adminSend] = await Promise.allSettled([
       sendEmail({
         to: data.guarantorEmail,
-        subject: '✅ Your Guarantor Form — House of Lettings',
+        subject: '✅ Your Guarantor Form | House of Lettings',
         html: confirmationHtml(data),
         attachments: pdfAttachment,
       }),
       sendEmail({
         // Tenant-side notifications go to the Leeds office inbox.
         to: process.env.TENANT_ADMIN_EMAIL || 'houseoflettingsleeds@gmail.com',
-        subject: `🛡️ New Guarantor Form — ${data.guarantorFullName} (${data.propertyAddress})`,
+        subject: `🛡️ New Guarantor Form: ${data.guarantorFullName} (${data.propertyAddress})`,
         html: adminNotificationHtml(data),
         attachments: pdfAttachment,
       }),

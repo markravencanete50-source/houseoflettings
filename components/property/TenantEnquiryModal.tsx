@@ -60,7 +60,7 @@ function validate(form: typeof EMPTY_FORM, dateBookable: boolean) {
   if (!form.city) errors.city = "Please choose which city the property is in";
   if (!form.date) errors.date = "Please choose a date";
   else if (!dateBookable)
-    errors.date = "No viewing availability on that date — please pick another";
+    errors.date = "No viewing availability on that date. Please pick another";
   if (!form.time) errors.time = "Please choose a viewing time slot";
   if (!form.moveBy) errors.moveBy = "Please select when you want to move";
   if (!form.employmentStatus) errors.employmentStatus = "Please select your employment status";
@@ -365,7 +365,7 @@ export default function TenantEnquiryModal({
         // loading and submitting — clear the choice and refresh the grid.
         setForm(f => ({ ...f, time: "" }));
         setRefreshKey(k => k + 1);
-        setErrorMsg(data.message || "That time was just taken — please pick another.");
+        setErrorMsg(data.message || "That time was just taken. Please pick another.");
         setStatus("error");
         return;
       }
@@ -544,7 +544,7 @@ export default function TenantEnquiryModal({
                           <div className="hol-avail-box">
                             <div className="hol-avail-box__label">
                               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-                              Next available viewings — tap a date
+                              Next available viewings, tap a date
                             </div>
                             <div className="hol-avail-chips">
                               {upcomingDates.map((iso) => (
@@ -561,7 +561,7 @@ export default function TenantEnquiryModal({
                           </div>
                         ) : (
                           <p className="hol-slot-note">
-                            No viewing times set for this property yet — please call us to arrange.
+                            No viewing times set for this property yet. Please call us to arrange.
                           </p>
                         )
                       )
@@ -570,7 +570,7 @@ export default function TenantEnquiryModal({
                           <div className="hol-avail-box">
                             <div className="hol-avail-box__label">
                               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-                              We&apos;re next in {activeCity} — tap a date
+                              We&apos;re next in {activeCity}, tap a date
                             </div>
                             <div className="hol-avail-chips">
                               {upcomingDates.map((iso) => (
@@ -587,7 +587,7 @@ export default function TenantEnquiryModal({
                           </div>
                         ) : (
                           <p className="hol-slot-note">
-                            No {activeCity} viewing days in the next 60 days — please call us to arrange.
+                            No {activeCity} viewing days in the next 60 days. Please call us to arrange.
                           </p>
                         )
                       )}
@@ -632,7 +632,7 @@ export default function TenantEnquiryModal({
                       <p className="hol-err">{slotsError}</p>
                     ) : !hasProperty && lockedCity && lockedCity !== form.city ? (
                       <p className="hol-slot-note hol-slot-note--warn">
-                        This day is already allocated to <strong>{lockedCity}</strong> viewings — our team is travelling there that day. Please pick another date, or switch the city to {lockedCity}.
+                        This day is already allocated to <strong>{lockedCity}</strong> viewings, as our team is travelling there that day. Please pick another date, or switch the city to {lockedCity}.
                       </p>
                     ) : slots.length === 0 ? (
                       <p className="hol-slot-note">No times available for this day.</p>

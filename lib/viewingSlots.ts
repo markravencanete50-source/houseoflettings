@@ -342,7 +342,7 @@ export function bookingRejectionReason(
     minutes > DAY_END_MIN ||
     (minutes - DAY_START_MIN) % SLOT_INTERVAL_MIN !== 0
   ) {
-    return 'That time is outside our viewing hours (09:00–19:30).';
+    return 'That time is outside our viewing hours (09:00-19:30).';
   }
 
   const lockedCity = lockedCityFor(bookings);

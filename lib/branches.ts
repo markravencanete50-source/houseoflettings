@@ -34,7 +34,7 @@ export const OFFICES: Record<City, Office> = {
     phoneDisplay: '0113 868 9212',
     phoneHref: 'tel:+441138689212',
     email: 'info@houseoflettings.co.uk',
-    hours: 'Mon–Fri 9am–6pm · Sat 10am–2pm',
+    hours: 'Mon-Fri 9am-6pm · Sat 10am-2pm',
     mapQuery: '199 Roundhay Road, Harehills, Leeds LS8 5PL',
     geo: { lat: 53.8175, lng: -1.5205 },
   },
@@ -47,7 +47,7 @@ export const OFFICES: Record<City, Office> = {
     phoneDisplay: '0161 768 1758',
     phoneHref: 'tel:+441617681758',
     email: 'info@houseoflettings.co.uk',
-    hours: 'Mon–Fri 9am–6pm · Sat 10am–2pm',
+    hours: 'Mon-Fri 9am-6pm · Sat 10am-2pm',
     mapQuery: 'Peter House, Oxford Street, Manchester M1 5AN',
     geo: { lat: 53.4761, lng: -2.2426 },
   },
@@ -98,7 +98,7 @@ const LEEDS: Branch[] = [
     intro: 'City-centre apartments and professional lets between the Calls, Granary Wharf and the Arena Quarter.',
     about: [
       'Leeds City Centre is the busiest rental market in West Yorkshire, driven by a large professional workforce, two major universities and one of the strongest jobs markets outside London. Demand concentrates on modern one and two-bedroom apartments around Granary Wharf, the Calls, Wellington Place and the Arena Quarter, where tenants pay a premium for a short walk to the office and the station.',
-      'Our Leeds team lets and manages apartments across LS1 and LS2 for landlords who want minimal voids and reliable, referenced tenants. Because so much of this stock is buy-to-let, presentation and pricing matter — we benchmark every property against live comparables so it goes to market at the right rent and lets fast.',
+      'Our Leeds team lets and manages apartments across LS1 and LS2 for landlords who want minimal voids and reliable, referenced tenants. Because so much of this stock is buy-to-let, presentation and pricing matter, so we benchmark every property against live comparables so it goes to market at the right rent and lets fast.',
     ],
     highlights: [
       { label: 'Transport', text: 'Leeds rail station and the A64(M) loop road put tenants minutes from anywhere in the city.' },
@@ -119,7 +119,7 @@ const LEEDS: Branch[] = [
     tagline: 'Leeds’ best-known student and professional suburb',
     intro: 'Shared houses and professional flats a stone’s throw from North Lane and the cricket ground.',
     about: [
-      'Headingley is one of the most sought-after rental areas in Leeds, famous for its cricket and rugby stadium, the bars and independents of North Lane, and a steady stream of students and young professionals from the nearby universities. The housing stock is classic red-brick Victorian terraces — ideal for HMOs and sharers — alongside a growing number of professional flats and refurbished period conversions.',
+      'Headingley is one of the most sought-after rental areas in Leeds, famous for its cricket and rugby stadium, the bars and independents of North Lane, and a steady stream of students and young professionals from the nearby universities. The housing stock is classic red-brick Victorian terraces (ideal for HMOs and sharers) alongside a growing number of professional flats and refurbished period conversions.',
       'We let and manage a wide range of Headingley property, from four and five-bed student houses to one-bed professional apartments. With demand this consistent, well-presented homes at the right rent are typically reserved well before tenancies end, and our team handles the compliance, referencing and renewals that keep LS6 landlords fully let year on year.',
     ],
     highlights: [
@@ -145,7 +145,7 @@ const LEEDS: Branch[] = [
       'Our team lets everything from one-bed conversions above the high street to three and four-bedroom family houses on the tree-lined roads towards Moortown. Tenants here expect quality, so we help landlords present homes well, price them accurately and secure long, stable tenancies with fully referenced applicants.',
     ],
     highlights: [
-      { label: 'Lifestyle', text: 'One of Leeds’ strongest independent high streets — a genuine draw for tenants.' },
+      { label: 'Lifestyle', text: 'One of Leeds’ strongest independent high streets, and a genuine draw for tenants.' },
       { label: 'Tenants', text: 'Professionals, couples and young families seeking longer lets.' },
       { label: 'Property type', text: 'Period conversions, terraces and family semis.' },
     ],
@@ -163,7 +163,7 @@ const LEEDS: Branch[] = [
     tagline: 'Family homes beside Roundhay Park',
     intro: 'Sought-after family houses and apartments around one of Europe’s largest city parks.',
     about: [
-      'Roundhay is prime north Leeds, built around the 700-acre Roundhay Park with its lakes, gardens and open space. It is a premium family rental market — larger detached and semi-detached homes, strong local schools and the independent shops of Oakwood parade all support consistently high demand and low voids across LS8.',
+      'Roundhay is prime north Leeds, built around the 700-acre Roundhay Park with its lakes, gardens and open space. It is a premium family rental market, where larger detached and semi-detached homes, strong local schools and the independent shops of Oakwood parade all support consistently high demand and low voids across LS8.',
       'We manage family houses and quality apartments for Roundhay landlords who value careful tenant selection and hands-off, fully compliant management. Homes near the park and the best school catchments let quickly, and our local knowledge helps landlords set a rent that reflects genuine demand rather than guesswork.',
     ],
     highlights: [
@@ -186,7 +186,7 @@ const LEEDS: Branch[] = [
     intro: 'Affordable shared houses and studios within walking distance of both universities.',
     about: [
       'Hyde Park sits right between the University of Leeds, Leeds Beckett and the city centre, making it the engine room of the Leeds student rental market. The area is dominated by back-to-back and through terraces configured as shared houses, giving landlords some of the strongest gross yields in the city.',
-      'Our team handles the realities of student and young-professional letting in LS6 and LS3 — group viewings, guarantor referencing, HMO licensing and the tight annual letting cycle. We get properties advertised early, filled with referenced sharers and turned around cleanly between tenancies so landlords never miss the peak season.',
+      'Our team handles the realities of student and young-professional letting in LS6 and LS3: group viewings, guarantor referencing, HMO licensing and the tight annual letting cycle. We get properties advertised early, filled with referenced sharers and turned around cleanly between tenancies so landlords never miss the peak season.',
     ],
     highlights: [
       { label: 'Location', text: 'Walking distance to both Leeds universities and Hyde Park itself.' },
@@ -211,7 +211,7 @@ const LEEDS: Branch[] = [
       'We let and manage terraces, apartments and the newer riverside developments across LS4 and LS5. Rents here have grown steadily as the area regenerates, and our team makes sure landlords capture that with accurate pricing, quality photography and thorough tenant referencing.',
     ],
     highlights: [
-      { label: 'Heritage', text: 'Kirkstall Abbey and the Leeds–Liverpool Canal towpath on the doorstep.' },
+      { label: 'Heritage', text: 'Kirkstall Abbey and the Leeds to Liverpool Canal towpath on the doorstep.' },
       { label: 'Tenants', text: 'Commuting professionals and value-conscious couples.' },
       { label: 'Property type', text: 'Terraces, canal-side apartments and modern developments.' },
     ],
@@ -251,7 +251,7 @@ const LEEDS: Branch[] = [
     tagline: 'Affordable commuter-town renting',
     intro: 'Great-value family houses and flats with a fast train into central Leeds.',
     about: [
-      'Morley is a busy market town to the south-west of Leeds with its own high street, a new rail station and quick motorway access, making it a favourite with commuters who want more space for their money. Rental demand is broad — from first-time renters and couples to families needing three-bed houses — and prices remain some of the most affordable in the LS postcodes.',
+      'Morley is a busy market town to the south-west of Leeds with its own high street, a new rail station and quick motorway access, making it a favourite with commuters who want more space for their money. Rental demand is broad, from first-time renters and couples to families needing three-bed houses, and prices remain some of the most affordable in the LS postcodes.',
       'We manage terraces, semis and apartments across LS27 for landlords who want steady, long-term tenancies. Because affordability drives demand here, well-maintained homes at a sensible rent let quickly, and our team keeps them compliant, occupied and generating reliable income.',
     ],
     highlights: [
@@ -274,7 +274,7 @@ const LEEDS: Branch[] = [
     intro: 'Well-connected homes to rent across Pudsey, Farsley and Stanningley.',
     about: [
       'Pudsey sits neatly between Leeds and Bradford, giving tenants a genuine choice of two city commutes plus the independent shops and cafés of neighbouring Farsley. It is a dependable, good-value rental market with a strong mix of stone terraces, semis and newer developments spread across LS28.',
-      'Our team lets and manages homes for a broad tenant base — commuters, families and couples — who value the location and the price point. We handle everything from marketing and referencing to compliance and renewals, keeping Pudsey landlords let and hands-off.',
+      'Our team lets and manages homes for a broad tenant base (commuters, families and couples) who value the location and the price point. We handle everything from marketing and referencing to compliance and renewals, keeping Pudsey landlords let and hands-off.',
     ],
     highlights: [
       { label: 'Location', text: 'Equidistant from Leeds and Bradford with easy ring-road access.' },
@@ -296,7 +296,7 @@ const LEEDS: Branch[] = [
     intro: 'Affordable terraces and flats minutes from Leeds city centre.',
     about: [
       'Armley is one of the closest affordable neighbourhoods to Leeds city centre, which makes it a strong buy-to-let market with attractive yields. The area is largely made up of through and back-to-back terraces alongside newer apartments, and its proximity to the city keeps demand from working tenants and young renters consistently high across LS12.',
-      'Our team specialises in letting and managing this kind of stock efficiently — accurate pricing, thorough referencing and proactive maintenance to protect income. For landlords focused on yield and low voids, Armley remains one of the most dependable postcodes in west Leeds.',
+      'Our team specialises in letting and managing this kind of stock efficiently, with accurate pricing, thorough referencing and proactive maintenance to protect income. For landlords focused on yield and low voids, Armley remains one of the most dependable postcodes in west Leeds.',
     ],
     highlights: [
       { label: 'Location', text: 'A short hop from the city centre via the A647 and A58.' },
@@ -330,8 +330,8 @@ const MANCHESTER: Branch[] = [
       { label: 'Property type', text: 'Purpose-built high-rise and converted apartments.' },
     ],
     popularSearches: ['apartments to rent Manchester city centre', 'flats to rent M1', 'letting agents Manchester city centre', 'city centre apartments to rent'],
-    seoTitle: 'Letting Agents in Manchester City Centre (M1–M4) | House of Lettings',
-    seoDescription: 'Manchester City Centre letting agents. Modern apartments and professional lets to rent across M1–M4, plus full property management for landlords. No hidden fees.',
+    seoTitle: 'Letting Agents in Manchester City Centre (M1-M4) | House of Lettings',
+    seoDescription: 'Manchester City Centre letting agents. Modern apartments and professional lets to rent across M1-M4, plus full property management for landlords. No hidden fees.',
     heroImage: hero(0),
   },
   {
@@ -388,7 +388,7 @@ const MANCHESTER: Branch[] = [
     intro: 'Shared student houses along the Wilmslow Road corridor.',
     about: [
       'Fallowfield is the heart of Manchester’s student rental market, sitting on the Wilmslow Road “curry mile” corridor within easy reach of the universities. The area is dominated by large Victorian and Edwardian terraces let as shared student houses, delivering strong yields for buy-to-let landlords across M14.',
-      'Our team knows the student letting cycle inside out — early marketing, group viewings, guarantor referencing and HMO compliance. We fill houses ahead of the peak, turn them around cleanly between academic years and keep landlords fully let without the hassle.',
+      'Our team knows the student letting cycle inside out: early marketing, group viewings, guarantor referencing and HMO compliance. We fill houses ahead of the peak, turn them around cleanly between academic years and keep landlords fully let without the hassle.',
     ],
     highlights: [
       { label: 'Location', text: 'On the bus corridor straight to the University of Manchester and MMU.' },
@@ -594,7 +594,7 @@ export interface Service {
 // Shared across the office pages and the neighbourhood pages.
 export const SERVICES: Service[] = [
   { icon: '🔎', title: 'Tenant Find', text: 'Marketing, accompanied viewings and full referencing to place quality, vetted tenants fast.' },
-  { icon: '🛠', title: 'Full Management', text: 'Rent collection, maintenance, inspections and compliance — a genuinely hands-off let.' },
+  { icon: '🛠', title: 'Full Management', text: 'Rent collection, maintenance, inspections and compliance: a genuinely hands-off let.' },
   { icon: '📄', title: 'Rent & Legal', text: 'Right to Rent, deposit protection, gas, electrical and EPC compliance handled for you.' },
   { icon: '📈', title: 'Free Valuation', text: 'An accurate, local rental valuation so your property goes to market at the right price.' },
 ];
@@ -612,7 +612,7 @@ export interface InfoCard {
 export const INFO_CARDS: InfoCard[] = [
   {
     category: 'Renters’ Rights',
-    title: 'The Renters’ Rights Act — what’s changing',
+    title: 'The Renters’ Rights Act: what’s changing',
     text: 'The Renters’ Rights Act ends fixed-term assured shorthold tenancies and Section 21 “no-fault” evictions, moving every tenancy to a periodic (rolling) agreement. We keep every let we manage compliant so both landlords and tenants are protected.',
     href: '/landlord-registration',
   },
@@ -625,11 +625,11 @@ export const INFO_CARDS: InfoCard[] = [
   {
     category: 'Tenants',
     title: 'No hidden tenant fees',
-    text: 'Under the Tenant Fees Act we can only charge your rent and a deposit (capped at five weeks’ rent). No admin fees, no renewal fees, no surprises — everything you pay is set out before you sign.',
+    text: 'Under the Tenant Fees Act we can only charge your rent and a deposit (capped at five weeks’ rent). No admin fees, no renewal fees, no surprises. Everything you pay is set out before you sign.',
   },
   {
     category: 'Landlords',
-    title: 'Right to Rent checks — handled',
+    title: 'Right to Rent checks, handled',
     text: 'Landlords must confirm every adult occupier has the legal right to rent in England. We carry out and record these checks on every let, keeping you the right side of the rules without the paperwork.',
     href: '/landlord-registration',
   },
@@ -642,7 +642,7 @@ export const INFO_CARDS: InfoCard[] = [
   {
     category: 'Tenants',
     title: 'The “How to Rent” guide',
-    text: 'Every tenant in England should be given the government’s How to Rent checklist at the start of a tenancy — your key rights and what to check before you move in. We issue it as standard with every tenancy.',
+    text: 'Every tenant in England should be given the government’s How to Rent checklist at the start of a tenancy, setting out your key rights and what to check before you move in. We issue it as standard with every tenancy.',
     href: 'https://www.gov.uk/government/publications/how-to-rent',
     external: true,
   },
@@ -660,12 +660,12 @@ export function faqsForCity(city: City): Faq[] {
   return [
     {
       q: 'How do I apply for a property?',
-      a: `Book a viewing through the property listing or call our ${city} office on ${office.phoneDisplay}. If it’s right for you, we’ll take you through a short application and referencing — usually completed within a few working days.`,
+      a: `Book a viewing through the property listing or call our ${city} office on ${office.phoneDisplay}. If it’s right for you, we’ll take you through a short application and referencing, usually completed within a few working days.`,
     },
     ...FAQS.slice(1, 4),
     {
       q: 'What are your management fees for landlords?',
-      a: `We keep pricing transparent with no hidden fees — Tenant Find, Rent Collection and Full Management tiers. See our pricing page for the full breakdown or call the ${city} team for a tailored quote.`,
+      a: `We keep pricing transparent with no hidden fees, across Tenant Find, Rent Collection and Full Management tiers. See our pricing page for the full breakdown or call the ${city} team for a tailored quote.`,
     },
     {
       q: `How quickly can you let my ${city} property?`,
@@ -677,7 +677,7 @@ export function faqsForCity(city: City): Faq[] {
 export const FAQS: Faq[] = [
   {
     q: 'How do I apply for a property?',
-    a: 'Book a viewing through the property listing or call your local office. If it’s right for you, we’ll take you through a short application and referencing — usually completed within a few working days.',
+    a: 'Book a viewing through the property listing or call your local office. If it’s right for you, we’ll take you through a short application and referencing, usually completed within a few working days.',
   },
   {
     q: 'How much deposit do I need to pay?',
@@ -685,7 +685,7 @@ export const FAQS: Faq[] = [
   },
   {
     q: 'Do I need a guarantor?',
-    a: 'Not always — it depends on your referencing. If your income or credit history means you need one, we’ll tell you up front and guide you and your guarantor through it.',
+    a: 'Not always. It depends on your referencing. If your income or credit history means you need one, we’ll tell you up front and guide you and your guarantor through it.',
   },
   {
     q: 'How do I report a repair?',
@@ -693,7 +693,7 @@ export const FAQS: Faq[] = [
   },
   {
     q: 'What are your management fees for landlords?',
-    a: 'We keep pricing transparent with no hidden fees — Tenant Find, Rent Collection and Full Management tiers. See our pricing page for the full breakdown or ask for a tailored quote.',
+    a: 'We keep pricing transparent with no hidden fees, across Tenant Find, Rent Collection and Full Management tiers. See our pricing page for the full breakdown or ask for a tailored quote.',
   },
   {
     q: 'How quickly can you let my property?',
@@ -727,79 +727,79 @@ export const CITY_CONTENT: Record<City, CityContent> = {
     slug: 'leeds',
     city: 'Leeds',
     heroKicker: 'Your local branch',
-    heroTagline: 'Letting agents in Leeds — homes to rent and hands-off management across West Yorkshire, run from our Harehills office.',
+    heroTagline: 'Letting agents in Leeds: homes to rent and hands-off management across West Yorkshire, run from our Harehills office.',
     blurb: 'Our Leeds office lets and manages homes across the city, from city-centre apartments to family houses in the northern suburbs.',
     whyLive: [
-      'Leeds is the economic capital of the North — the UK’s largest financial, legal and professional-services centre outside London, with major employers in banking, health, digital and media. Add two big universities and one of the youngest populations of any UK city, and you get a place where careers start and stay.',
-      'It’s also a city you can actually afford to enjoy. Rents stretch much further than in the South, and the choice runs from waterfront apartments at Granary Wharf to Victorian terraces in Headingley and family homes beside Roundhay Park — one of the largest city parks in Europe — with the Yorkshire Dales under an hour away.',
+      'Leeds is the economic capital of the North, the UK’s largest financial, legal and professional-services centre outside London, with major employers in banking, health, digital and media. Add two big universities and one of the youngest populations of any UK city, and you get a place where careers start and stay.',
+      'It’s also a city you can actually afford to enjoy. Rents stretch much further than in the South, and the choice runs from waterfront apartments at Granary Wharf to Victorian terraces in Headingley and family homes beside Roundhay Park (one of the largest city parks in Europe), with the Yorkshire Dales under an hour away.',
     ],
     perks: [
       { icon: '💼', label: 'Careers', text: 'The biggest financial and legal jobs market outside London, plus major NHS, digital and media employers.' },
-      { icon: '🏡', label: 'More for your money', text: 'Rents well below southern cities — from LS1 apartments to leafy family suburbs like Horsforth and Roundhay.' },
+      { icon: '🏡', label: 'More for your money', text: 'Rents well below southern cities, from LS1 apartments to leafy family suburbs like Horsforth and Roundhay.' },
       { icon: '🚉', label: 'Connected', text: 'Leeds station runs direct to London in ~2¼ hours, with buses and rail linking every corner of West Yorkshire.' },
-      { icon: '🌳', label: 'Lifestyle', text: 'Roundhay Park, Kirkstall Abbey and the Dales on the doorstep — plus an award-winning food, music and arts scene.' },
+      { icon: '🌳', label: 'Lifestyle', text: 'Roundhay Park, Kirkstall Abbey and the Dales on the doorstep, plus an award-winning food, music and arts scene.' },
     ],
     whyRent: [
-      'Homes at every price point — LS1 city-centre flats, Headingley house-shares, family homes in Horsforth and Roundhay.',
-      'A named local contact at our Harehills office — call 0113 868 9212 and speak to someone who knows your street.',
-      'No hidden tenant fees — just your rent and a deposit capped at five weeks (and protected in a government scheme).',
+      'Homes at every price point: LS1 city-centre flats, Headingley house-shares, family homes in Horsforth and Roundhay.',
+      'A named local contact at our Harehills office. Call 0113 868 9212 and speak to someone who knows your street.',
+      'No hidden tenant fees, just your rent and a deposit capped at five weeks (and protected in a government scheme).',
       'Every home gas, electrical and EPC checked before you get the keys.',
-      'Report a repair any time online — our Leeds team handles it for managed homes.',
+      'Report a repair any time online, and our Leeds team handles it for managed homes.',
     ],
     landlordPitch: [
-      'We know Leeds rents street by street — from Headingley HMOs to Roundhay family lets — so your valuation is accurate, not optimistic.',
+      'We know Leeds rents street by street, from Headingley HMOs to Roundhay family lets, so your valuation is accurate, not optimistic.',
       'Demand from two universities and the North’s biggest professional workforce keeps voids short all year.',
       'Fully referenced, Right-to-Rent-checked tenants placed fast.',
       'Gas, EICR, EPC and deposit compliance tracked and handled for you.',
-      'Transparent pricing, rent collection, inspections and maintenance — genuinely hands-off.',
+      'Transparent pricing, rent collection, inspections and maintenance, genuinely hands-off.',
     ],
     newsCard: {
       category: 'Leeds market',
       title: 'Why Leeds rents keep their value',
-      text: 'Two universities, the largest professional jobs market outside London and a growing city-centre population keep demand for Leeds rentals strong across the LS postcodes — good news for landlords, and a reason for tenants to move quickly on the right home.',
+      text: 'Two universities, the largest professional jobs market outside London and a growing city-centre population keep demand for Leeds rentals strong across the LS postcodes: good news for landlords, and a reason for tenants to move quickly on the right home.',
       href: '/listings',
     },
     seoTitle: 'Leeds Branch | Letting Agents in Leeds | House of Lettings',
-    seoDescription: 'Our Leeds letting agents — based in Harehills — let and manage homes to rent across Leeds and West Yorkshire. Free valuations, full compliance, no hidden fees. Call 0113 868 9212.',
+    seoDescription: 'Our Leeds letting agents, based in Harehills, let and manage homes to rent across Leeds and West Yorkshire. Free valuations, full compliance, no hidden fees. Call 0113 868 9212.',
   },
   Manchester: {
     slug: 'manchester',
     city: 'Manchester',
     heroKicker: 'Your local branch',
-    heroTagline: 'Letting agents in Manchester — homes to rent and hands-off management across Greater Manchester, run from our Oxford Street office.',
+    heroTagline: 'Letting agents in Manchester: homes to rent and hands-off management across Greater Manchester, run from our Oxford Street office.',
     blurb: 'Our Manchester office lets and manages homes across the city, from city-centre apartments to family houses in the southern suburbs.',
     whyLive: [
-      'Manchester is the UK’s fastest-growing major city — home to MediaCityUK, a booming tech and creative sector, two giant universities and a graduate population that increasingly stays put. The skyline tells the story: tens of thousands of new apartments built for people moving here for work and staying for the life.',
-      'And what a life — world-famous music and football, the independents of the Northern Quarter, a Metrolink tram network that makes the whole city easy without a car, an international airport, and the Peak District within an hour. All at rents far below London for a comparable career.',
+      'Manchester is the UK’s fastest-growing major city, home to MediaCityUK, a booming tech and creative sector, two giant universities and a graduate population that increasingly stays put. The skyline tells the story: tens of thousands of new apartments built for people moving here for work and staying for the life.',
+      'And what a life: world-famous music and football, the independents of the Northern Quarter, a Metrolink tram network that makes the whole city easy without a car, an international airport, and the Peak District within an hour. All at rents far below London for a comparable career.',
     ],
     perks: [
-      { icon: '🚀', label: 'Careers', text: 'One of Europe’s fastest-growing tech and media hubs — MediaCityUK, big finance names and 100,000 students.' },
-      { icon: '🏙️', label: 'More for your money', text: 'City-centre living at a fraction of London rents — or space and schools in Didsbury, Chorlton and Sale.' },
+      { icon: '🚀', label: 'Careers', text: 'One of Europe’s fastest-growing tech and media hubs, home to MediaCityUK, big finance names and 100,000 students.' },
+      { icon: '🏙️', label: 'More for your money', text: 'City-centre living at a fraction of London rents, or space and schools in Didsbury, Chorlton and Sale.' },
       { icon: '🚋', label: 'Connected', text: 'Metrolink trams across the city, two mainline stations and a global airport 20 minutes out.' },
-      { icon: '🎸', label: 'Lifestyle', text: 'Music, two football giants, the Northern Quarter’s independents — and the Peak District within the hour.' },
+      { icon: '🎸', label: 'Lifestyle', text: 'Music, two football giants, the Northern Quarter’s independents, and the Peak District within the hour.' },
     ],
     whyRent: [
-      'Homes across Greater Manchester — Northern Quarter and Deansgate apartments, family houses in Didsbury, Chorlton and Sale.',
-      'A named local contact at our Oxford Street office — call 0161 768 1758 and speak to someone who knows the area.',
-      'No hidden tenant fees — your rent and a five-week capped deposit, protected in a government scheme. That’s it.',
+      'Homes across Greater Manchester: Northern Quarter and Deansgate apartments, family houses in Didsbury, Chorlton and Sale.',
+      'A named local contact at our Oxford Street office. Call 0161 768 1758 and speak to someone who knows the area.',
+      'No hidden tenant fees, just your rent and a five-week capped deposit, protected in a government scheme. That’s it.',
       'Gas, electrical and EPC compliance verified on every home before move-in.',
       'Round-the-clock online repair reporting, handled by our Manchester team for managed homes.',
     ],
     landlordPitch: [
-      'We know the Manchester market — from city-centre high-rises to south Manchester suburbs — so you go to market at the right rent.',
+      'We know the Manchester market, from city-centre high-rises to south Manchester suburbs, so you go to market at the right rent.',
       'Demand driven by MediaCityUK, a fast-growing tech scene and 100,000 students keeps quality homes let year-round.',
       'Fully referenced, Right-to-Rent-checked tenants placed fast.',
       'Gas, EICR, EPC and deposit compliance tracked and handled for you.',
-      'Transparent pricing, rent collection, inspections and maintenance — genuinely hands-off.',
+      'Transparent pricing, rent collection, inspections and maintenance, genuinely hands-off.',
     ],
     newsCard: {
       category: 'Manchester market',
       title: 'Manchester’s rental boom, explained',
-      text: 'Tens of thousands of new apartments, MediaCityUK, a thriving tech sector and two major universities have made Manchester one of the UK’s busiest rental markets. Well-priced homes let in days — whichever side of the deal you’re on, local knowledge pays.',
+      text: 'Tens of thousands of new apartments, MediaCityUK, a thriving tech sector and two major universities have made Manchester one of the UK’s busiest rental markets. Well-priced homes let in days, and whichever side of the deal you’re on, local knowledge pays.',
       href: '/listings',
     },
     seoTitle: 'Manchester Branch | Letting Agents in Manchester | House of Lettings',
-    seoDescription: 'Our Manchester letting agents — based on Oxford Street — let and manage homes to rent across Greater Manchester. Free valuations, full compliance, no hidden fees. Call 0161 768 1758.',
+    seoDescription: 'Our Manchester letting agents, based on Oxford Street, let and manage homes to rent across Greater Manchester. Free valuations, full compliance, no hidden fees. Call 0161 768 1758.',
   },
 };
 

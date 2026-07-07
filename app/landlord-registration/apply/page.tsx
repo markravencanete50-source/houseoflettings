@@ -16,7 +16,7 @@ const YES = { value: 'yes', label: 'Yes, I have it' };
 const NO = { value: 'no', label: 'No / arrange it for me' };
 const DOCS = [
   { key: 'epc', label: 'Energy Performance Certificate (EPC)', hint: 'Must be rated E or above to let legally.', options: [YES, NO] },
-  { key: 'electrical', label: 'Electrical Safety Certificate (EICR)', hint: 'Electrical Installation Condition Report — renewed every 5 years.', options: [YES, NO] },
+  { key: 'electrical', label: 'Electrical Safety Certificate (EICR)', hint: 'Electrical Installation Condition Report, renewed every 5 years.', options: [YES, NO] },
   { key: 'gas', label: 'Gas Safety Certificate (CP12)', hint: 'Annual Gas Safety Record for properties with gas appliances.', options: [YES, NO, { value: 'nogas', label: 'No gas supply at this property' }] },
 ] as const;
 const DOC_KEYS = DOCS.map(d => d.key);
@@ -72,14 +72,14 @@ const propertyDetails = (p: Property) => [
   p.condition && `Condition: ${p.condition}`,
   p.occupancy,
   p.occupancy === 'Occupied' && p.currentRent && `Rent £${p.currentRent}/mo`,
-  p.occupancy === 'Occupied' && p.tenancyStart && `Tenancy ${p.tenancyStart}${p.tenancyEnd ? ` – ${p.tenancyEnd}` : ''}`,
+  p.occupancy === 'Occupied' && p.tenancyStart && `Tenancy ${p.tenancyStart}${p.tenancyEnd ? ` - ${p.tenancyEnd}` : ''}`,
   p.availableFrom && `Available ${p.availableFrom}`,
 ].filter(Boolean).join(' · ');
 
 // Human-readable status for a document answer in the confirm summary.
 const docSummary = (st: DocState) => {
-  if (!st || !st.has) return '—';
-  if (st.has === 'yes') return st.url ? 'Yes — uploaded' : 'Yes';
+  if (!st || !st.has) return '-';
+  if (st.has === 'yes') return st.url ? 'Yes, uploaded' : 'Yes';
   if (st.has === 'nogas') return 'No gas supply';
   return 'To arrange';
 };
@@ -244,17 +244,17 @@ export default function LandlordRegistrationApplyPage() {
         else if (!COMPANY_NUMBER_REGEX.test(form.companyNumber.replace(/\s/g, ''))) e.companyNumber = 'Enter a valid Companies House number (e.g. 13506429)';
         if (!form.registeredAddress.trim()) e.registeredAddress = 'Registered office address is required';
         companyPeople.forEach((p, i) => {
-          if (!p.name.trim()) e[`person_${p.id}_name`] = i === 0 ? 'Main contact name is required' : 'Name is required — or remove this person';
+          if (!p.name.trim()) e[`person_${p.id}_name`] = i === 0 ? 'Main contact name is required' : 'Name is required, or remove this person';
           if (i === 0 && !p.role) e[`person_${p.id}_role`] = 'Please select their role';
           if (!p.share.trim()) {
-            e[`person_${p.id}_share`] = 'Please enter their shareholding percentage — enter 0 if they hold no shares';
+            e[`person_${p.id}_share`] = 'Please enter their shareholding percentage. Enter 0 if they hold no shares';
           } else {
             const v = parseFloat(p.share);
             if (isNaN(v) || v < 0 || v > 100) e[`person_${p.id}_share`] = 'Enter a percentage between 0 and 100';
           }
         });
         const totalShare = companyPeople.reduce((sum, p) => sum + (parseFloat(p.share) || 0), 0);
-        if (totalShare > 100) e.companyShareTotal = `The shareholding percentages add up to ${totalShare}% — the total cannot be more than 100%`;
+        if (totalShare > 100) e.companyShareTotal = `The shareholding percentages add up to ${totalShare}%. The total cannot be more than 100%`;
       } else if (!form.fullName.trim()) e.fullName = 'Full name is required';
       if (!form.email.trim()) e.email = 'Email is required';
       else if (!EMAIL_REGEX.test(form.email)) e.email = 'Enter a valid email address';
@@ -352,7 +352,7 @@ export default function LandlordRegistrationApplyPage() {
                 Thank you, {((isCompany ? companyPeople[0].name : form.fullName) || 'there').split(' ')[0]}. We&rsquo;ve received your registration for <strong>{properties[0].street || 'your property'}{properties[0].city ? `, ${properties[0].city}` : ''}</strong>
                 {properties.length > 1 ? ` and ${properties.length - 1} other propert${properties.length - 1 === 1 ? 'y' : 'ies'}` : ''}.
               </p>
-              <p style={{ fontSize: 13, color: '#9ca3af', marginBottom: 28 }}>Our lettings team will be in touch within 24–48 hours with your tailored proposal.</p>
+              <p style={{ fontSize: 13, color: '#9ca3af', marginBottom: 28 }}>Our lettings team will be in touch within 24-48 hours with your tailored proposal.</p>
               <Link href="/" style={{ display: 'inline-block', padding: '13px 28px', background: 'linear-gradient(135deg,#1a3c5e 0%,#2563a8 100%)', color: '#fff', borderRadius: 10, fontSize: 14, fontWeight: 600, textDecoration: 'none' }}>Back to Home</Link>
             </div>
           ) : (
@@ -444,7 +444,7 @@ export default function LandlordRegistrationApplyPage() {
                             {companyPeople.map((p, i) => (
                               <div key={p.id} className="hol-prop-card">
                                 <div className="hol-prop-head">
-                                  <span className="hol-prop-badge">{i === 0 ? 'Person 1 — Main Contact' : `Person ${i + 1}`}</span>
+                                  <span className="hol-prop-badge">{i === 0 ? 'Person 1: Main Contact' : `Person ${i + 1}`}</span>
                                   {i > 0 && <button type="button" className="hol-prop-remove" onClick={() => removePerson(p.id)}>Remove</button>}
                                 </div>
                                 <div className="hol-form-grid">
@@ -478,7 +478,7 @@ export default function LandlordRegistrationApplyPage() {
                             const total = companyPeople.reduce((sum, p) => sum + (parseFloat(p.share) || 0), 0);
                             return (
                               <p style={{ fontSize: 12.5, fontWeight: 600, color: total > 100 ? '#dc2626' : '#6b7280', margin: '8px 0 0' }}>
-                                Total shareholding entered: {total}%{total > 100 ? ' — cannot be more than 100%' : ''}
+                                Total shareholding entered: {total}%{total > 100 ? ', cannot be more than 100%' : ''}
                               </p>
                             );
                           })()}
@@ -518,9 +518,9 @@ export default function LandlordRegistrationApplyPage() {
                       <select className={`hol-input hol-select${errors.propertyCount ? ' hol-input--error' : ''}`} value={form.propertyCount} onChange={set('propertyCount')}>
                         <option value="">Select...</option>
                         <option>1 property</option>
-                        <option>2–3 properties</option>
-                        <option>4–5 properties</option>
-                        <option>6–10 properties</option>
+                        <option>2-3 properties</option>
+                        <option>4-5 properties</option>
+                        <option>6-10 properties</option>
                         <option>10+ properties</option>
                       </select>
                       {errors.propertyCount && <p className="hol-err">{errors.propertyCount}</p>}
@@ -590,7 +590,7 @@ export default function LandlordRegistrationApplyPage() {
                 {/* STEP 4 — SERVICE / BUNDLE */}
                 {step === 3 && (
                   <div>
-                    <p style={{ fontSize: 13, color: '#6b7280', margin: '0 0 16px' }}>Choose a management bundle. Each pairs a one-time tenant-find fee with an ongoing monthly management fee — you can discuss and change this with your agent later.</p>
+                    <p style={{ fontSize: 13, color: '#6b7280', margin: '0 0 16px' }}>Choose a management bundle. Each pairs a one-time tenant-find fee with an ongoing monthly management fee. You can discuss and change this with your agent later.</p>
                     <div className="hol-pkg-list">
                       {BUNDLES.map(b => {
                         const on = form.selectedPackage === b.label;
@@ -609,7 +609,7 @@ export default function LandlordRegistrationApplyPage() {
                               </span>
                             </label>
                             <button type="button" className="hol-readmore" onClick={() => setExpandedBundle(x => (x === b.id ? null : b.id))}>
-                              {expanded ? 'Hide details ▲' : 'Read more — everything included ▼'}
+                              {expanded ? 'Hide details ▲' : 'Read more, everything included ▼'}
                             </button>
                             {expanded && (
                               <div className="hol-pkg-details">
@@ -629,7 +629,7 @@ export default function LandlordRegistrationApplyPage() {
                     </div>
                     {errors.selectedPackage && <p className="hol-err" style={{ marginTop: 10 }}>{errors.selectedPackage}</p>}
                     <p style={{ fontSize: 12, color: '#9ca3af', margin: '14px 0 0' }}>
-                      Not sure? See the full breakdown on our <Link href="/pricing" target="_blank" rel="noopener noreferrer" style={{ color: '#dc2626', fontWeight: 700, textDecoration: 'underline' }}>pricing page</Link> <span style={{ color: '#9ca3af' }}>(opens in a new tab — your answers stay saved here)</span>.
+                      Not sure? See the full breakdown on our <Link href="/pricing" target="_blank" rel="noopener noreferrer" style={{ color: '#dc2626', fontWeight: 700, textDecoration: 'underline' }}>pricing page</Link> <span style={{ color: '#9ca3af' }}>(opens in a new tab, your answers stay saved here)</span>.
                     </p>
                   </div>
                 )}
@@ -638,7 +638,7 @@ export default function LandlordRegistrationApplyPage() {
                 {step === 4 && (
                   <div>
                     <p style={{ fontSize: 13, color: '#6b7280', margin: '0 0 18px' }}>
-                      Do you already have any of the following documents? If so, you can upload them now — or provide them later.
+                      Do you already have any of the following documents? If so, you can upload them now, or provide them later.
                     </p>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
                       {DOCS.map(d => {
@@ -682,7 +682,7 @@ export default function LandlordRegistrationApplyPage() {
                                   </label>
                                 )}
                                 {st.error && <p className="hol-err" style={{ marginTop: 6 }}>{st.error}</p>}
-                                <p style={{ fontSize: 11, color: '#9ca3af', margin: '6px 0 0' }}>Optional — you can also send documents to us later.</p>
+                                <p style={{ fontSize: 11, color: '#9ca3af', margin: '6px 0 0' }}>Optional, you can also send documents to us later.</p>
                               </div>
                             )}
                             {errors[`doc_${d.key}`] && <p className="hol-err" style={{ marginTop: 8 }}>{errors[`doc_${d.key}`]}</p>}
@@ -719,15 +719,15 @@ export default function LandlordRegistrationApplyPage() {
                       <SummaryRow label="Email" value={form.email} />
                       <SummaryRow label="Telephone" value={form.phone} />
                       <SummaryRow label="Contact address" value={form.contactAddress} />
-                      <SummaryRow label={isCompany ? "Director's ID" : 'Landlord ID'} value={idDocs.landlordId.url ? `Uploaded — ${idDocs.landlordId.fileName || 'document'}` : '—'} />
-                      <SummaryRow label="Billing address document" value={idDocs.billingProof.url ? `Uploaded — ${idDocs.billingProof.fileName || 'document'}` : '—'} />
-                      <SummaryRow label="Proof of ownership" value={idDocs.ownershipProof.url ? `Uploaded — ${idDocs.ownershipProof.fileName || 'document'}` : '—'} />
+                      <SummaryRow label={isCompany ? "Director's ID" : 'Landlord ID'} value={idDocs.landlordId.url ? `Uploaded: ${idDocs.landlordId.fileName || 'document'}` : '-'} />
+                      <SummaryRow label="Billing address document" value={idDocs.billingProof.url ? `Uploaded: ${idDocs.billingProof.fileName || 'document'}` : '-'} />
+                      <SummaryRow label="Proof of ownership" value={idDocs.ownershipProof.url ? `Uploaded: ${idDocs.ownershipProof.fileName || 'document'}` : '-'} />
                       <SummaryRow label="Properties owned" value={form.propertyCount} />
                       {properties.map((p, i) => (
                         <div key={p.id} className="hol-summary-row">
                           <span className="hol-summary-label">{properties.length > 1 ? `Property ${i + 1}` : 'Property'}</span>
                           <span className="hol-summary-value">
-                            {formatAddress(p) || '—'}
+                            {formatAddress(p) || '-'}
                             {propertyDetails(p) && <span style={{ display: 'block', fontWeight: 400, color: '#6b7280', fontSize: 12, marginTop: 2 }}>{propertyDetails(p)}</span>}
                           </span>
                         </div>
@@ -787,7 +787,7 @@ function SummaryRow({ label, value }: { label: string; value: string }) {
   return (
     <div className="hol-summary-row">
       <span className="hol-summary-label">{label}</span>
-      <span className="hol-summary-value">{value || '—'}</span>
+      <span className="hol-summary-value">{value || '-'}</span>
     </div>
   );
 }
@@ -824,7 +824,7 @@ function PropertyRow({
     <div className="hol-prop-card">
       {total > 1 && (
         <div className="hol-prop-head">
-          <span className="hol-prop-badge">Property {index + 1}{property.street ? ` — ${property.street}` : ''}</span>
+          <span className="hol-prop-badge">Property {index + 1}{property.street ? `: ${property.street}` : ''}</span>
           <button
             type="button"
             className="hol-prop-remove"
@@ -833,7 +833,7 @@ function PropertyRow({
               // details filled in, ask before deleting them.
               const filled = [property.postcode, property.street, property.propertyType, property.bedrooms].some(Boolean);
               const name = property.street || `Property ${index + 1}`;
-              if (!filled || window.confirm(`Remove ${name}?\n\nOnly this property and its details will be deleted — your other properties are kept.`)) {
+              if (!filled || window.confirm(`Remove ${name}?\n\nOnly this property and its details will be deleted. Your other properties are kept.`)) {
                 onRemove(property.id);
               }
             }}

@@ -445,9 +445,9 @@ export default function AdminDashboard() {
                             {u.role}
                           </span>
                         </td>
-                        <td style={{ fontSize: 13, color: 'var(--gray-400)' }}>{u.phone || '—'}</td>
+                        <td style={{ fontSize: 13, color: 'var(--gray-400)' }}>{u.phone || '-'}</td>
                         <td style={{ fontSize: 13, color: 'var(--gray-400)' }}>
-                          {u.createdAt instanceof Date ? format(u.createdAt, 'd MMM yyyy') : '—'}
+                          {u.createdAt instanceof Date ? format(u.createdAt, 'd MMM yyyy') : '-'}
                         </td>
                         <td>
                           {u.role !== 'admin' && (
@@ -638,7 +638,7 @@ export default function AdminDashboard() {
                           <td style={{ fontSize: 13, color: 'var(--gray-600)' }}>
                             {v.preferredDateTime
                               ? new Date(v.preferredDateTime).toLocaleString('en-GB', { dateStyle: 'medium', timeStyle: 'short' })
-                              : '—'}
+                              : '-'}
                           </td>
                           <td>
                             <span style={{
@@ -758,7 +758,7 @@ export default function AdminDashboard() {
 
                 <div style={{ marginBottom: 20 }}>
                   <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--gray-600)', marginBottom: 6, textTransform: 'uppercase', letterSpacing: 1 }}>
-                    Profile Photo URL <span style={{ fontWeight: 400, textTransform: 'none', letterSpacing: 0 }}>(optional — falls back to initials)</span>
+                    Profile Photo URL <span style={{ fontWeight: 400, textTransform: 'none', letterSpacing: 0 }}>(optional, falls back to initials)</span>
                   </label>
                   <input
                     className="form-input"
@@ -968,7 +968,7 @@ export default function AdminDashboard() {
                                 </span>
                               </div>
                               <div style={{ fontSize: 13, color: 'var(--gray-400)', marginTop: 2 }}>
-                                {a.email} · {a.phone} · Move-in: {a.moveInDate ? new Date(a.moveInDate).toLocaleDateString('en-GB') : '—'}
+                                {a.email} · {a.phone} · Move-in: {a.moveInDate ? new Date(a.moveInDate).toLocaleDateString('en-GB') : '-'}
                               </div>
                             </div>
 
@@ -1010,7 +1010,7 @@ export default function AdminDashboard() {
                                     ['Email', a.email],
                                     ['Phone', a.phone],
                                     ['Right to Rent', a.rightToRent],
-                                    ['Share Code', a.shareCode || '—'],
+                                    ['Share Code', a.shareCode || '-'],
                                   ].map(([label, value]) => (
                                     <div key={label} style={{ display: 'flex', justifyContent: 'space-between', padding: '5px 0', borderBottom: '1px solid #f1f5f9', fontSize: 13 }}>
                                       <span style={{ color: '#6b7280', fontWeight: 500 }}>{label}</span>
@@ -1053,7 +1053,7 @@ export default function AdminDashboard() {
                                     ['Tenancy Start', a.tenancyStart],
                                     ['Tenancy End', a.tenancyEnd],
                                     ['Lease Term', a.leaseTerm],
-                                    ['Move-In Date', a.moveInDate ? new Date(a.moveInDate).toLocaleDateString('en-GB') : '—'],
+                                    ['Move-In Date', a.moveInDate ? new Date(a.moveInDate).toLocaleDateString('en-GB') : '-'],
                                     ['Pets', a.pets],
                                     ['Guarantor', a.guarantor],
                                   ].map(([label, value]) => (
@@ -1109,7 +1109,7 @@ export default function AdminDashboard() {
 
                               {/* Submission date */}
                               <div style={{ marginTop: 16, paddingTop: 16, borderTop: '1px solid #e5e7eb', display: 'flex', justifyContent: 'space-between', fontSize: 12, color: '#9ca3af' }}>
-                                <span>Submitted: {a.submissionDate ? new Date(a.submissionDate).toLocaleDateString('en-GB') : '—'}</span>
+                                <span>Submitted: {a.submissionDate ? new Date(a.submissionDate).toLocaleDateString('en-GB') : '-'}</span>
                                 <span>Application ID: {a.id.slice(0, 8).toUpperCase()}</span>
                               </div>
                             </div>

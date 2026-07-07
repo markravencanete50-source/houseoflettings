@@ -75,7 +75,7 @@ export default function BranchOffice({ city }: { city: City }) {
   const agentSchema = {
     '@context': 'https://schema.org',
     '@type': 'RealEstateAgent',
-    name: `House of Lettings — ${city}`,
+    name: `House of Lettings, ${city}`,
     url,
     image: `${BASE}/images/heropage-og.jpg`,
     telephone: office.phoneDisplay,
@@ -157,7 +157,7 @@ export default function BranchOffice({ city }: { city: City }) {
               <Reveal>
                 <div style={{ background: '#fff', border: '1px solid var(--gray-200)', borderRadius: 16, padding: '30px 28px', boxShadow: '0 2px 14px rgba(15,31,61,0.06)', height: '100%' }}>
                   <div style={{ fontFamily: "'Poppins',sans-serif", fontWeight: 700, fontSize: 18, marginBottom: 18, color: 'var(--navy)' }}>
-                    House of Lettings — {city}
+                    House of Lettings, {city}
                   </div>
                   <ContactRow label="Address">
                     {office.addressLines.join(', ')}, {office.addressCity} {office.postcode}
@@ -265,7 +265,7 @@ export default function BranchOffice({ city }: { city: City }) {
         {/* ── Services ── */}
         <section style={{ background: 'var(--gray-100)', padding: 'clamp(48px,6vw,80px) 5%' }}>
           <div style={{ maxWidth: 1160, margin: '0 auto' }}>
-            <SectionHeading center title={`How we help ${city} landlords & tenants`} sub="A full lettings service with transparent pricing and no hidden fees — run by a team that knows the city." />
+            <SectionHeading center title={`How we help ${city} landlords & tenants`} sub="A full lettings service with transparent pricing and no hidden fees, run by a team that knows the city." />
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(240px,1fr))', gap: 22, marginTop: 34 }}>
               {SERVICES.map((s, i) => (
                 <Reveal key={s.title} delay={(i % 4) * 70}>
@@ -282,7 +282,7 @@ export default function BranchOffice({ city }: { city: City }) {
 
         {/* ── Latest properties ── */}
         <section id="properties" style={{ scrollMarginTop: 80, maxWidth: 1240, margin: '0 auto', padding: 'clamp(48px,6vw,80px) 5%' }}>
-          <SectionHeading title={`Latest properties to rent in ${city}`} sub={`Homes let directly by House of Lettings — updated live as new ${city} properties come to market.`} />
+          <SectionHeading title={`Latest properties to rent in ${city}`} sub={`Homes let directly by House of Lettings, updated live as new ${city} properties come to market.`} />
           <div style={{ marginTop: 30 }}>
             <CityProperties city={city} />
           </div>
@@ -291,7 +291,7 @@ export default function BranchOffice({ city }: { city: City }) {
         {/* ── News & guides ── */}
         <section style={{ background: 'var(--gray-100)', padding: 'clamp(48px,6vw,80px) 5%' }}>
           <div style={{ maxWidth: 1160, margin: '0 auto' }}>
-            <SectionHeading kicker="News & guides" title="What every landlord & tenant should know" sub="Plain-English guidance on the rules that protect you — kept up to date so you don’t have to be." />
+            <SectionHeading kicker="News & guides" title="What every landlord & tenant should know" sub="Plain-English guidance on the rules that protect you, kept up to date so you don’t have to be." />
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(280px,1fr))', gap: 22, marginTop: 34 }}>
               {[content.newsCard, ...INFO_CARDS].map((n, i) => {
                 const inner = (

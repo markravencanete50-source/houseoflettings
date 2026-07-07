@@ -85,10 +85,10 @@ export const BUNDLES: Bundle[] = [
     setupFee: '£499',
     mgmtFee: '8%',
     accent: 'radial-gradient(ellipse at 20% 60%, rgba(37,99,235,0.18) 0%, transparent 55%), radial-gradient(ellipse at 80% 20%, rgba(15,31,61,0.4) 0%, transparent 60%)',
-    blurb: 'Hands-off day-to-day management with online tenant finding — great value for hands-on landlords.',
+    blurb: 'Hands-off day-to-day management with online tenant finding: great value for hands-on landlords.',
     groups: [
-      { heading: 'Virtual Tenant Find — £499 one-time', items: TENANT_FIND_VIRTUAL },
-      { heading: 'Full Management — 8% per month', items: MANAGEMENT_FULL },
+      { heading: 'Virtual Tenant Find: £499 one-time', items: TENANT_FIND_VIRTUAL },
+      { heading: 'Full Management: 8% per month', items: MANAGEMENT_FULL },
     ],
   },
   {
@@ -101,8 +101,8 @@ export const BUNDLES: Bundle[] = [
     accent: 'radial-gradient(ellipse at 70% 30%, rgba(37,99,235,0.22) 0%, transparent 55%), radial-gradient(ellipse at 20% 80%, rgba(37,99,235,0.12) 0%, transparent 50%)',
     blurb: 'Full management plus our agent-led marketing, photography and accompanied viewings.',
     groups: [
-      { heading: 'Expert Tenant Find — £599 one-time', items: TENANT_FIND_EXPERT },
-      { heading: 'Full Management — 8% per month', items: MANAGEMENT_FULL },
+      { heading: 'Expert Tenant Find: £599 one-time', items: TENANT_FIND_EXPERT },
+      { heading: 'Full Management: 8% per month', items: MANAGEMENT_FULL },
     ],
   },
   {
@@ -112,10 +112,10 @@ export const BUNDLES: Bundle[] = [
     setupFee: '£499',
     mgmtFee: '10%',
     accent: 'radial-gradient(ellipse at 10% 40%, rgba(99,37,235,0.16) 0%, transparent 55%), radial-gradient(ellipse at 85% 70%, rgba(37,99,235,0.14) 0%, transparent 50%)',
-    blurb: 'Our most complete management — inventories and dispute support — with online tenant finding.',
+    blurb: 'Our most complete management, with inventories and dispute support, plus online tenant finding.',
     groups: [
-      { heading: 'Virtual Tenant Find — £499 one-time', items: TENANT_FIND_VIRTUAL },
-      { heading: 'Comprehensive Management — 10% per month', items: MANAGEMENT_COMPREHENSIVE },
+      { heading: 'Virtual Tenant Find: £499 one-time', items: TENANT_FIND_VIRTUAL },
+      { heading: 'Comprehensive Management: 10% per month', items: MANAGEMENT_COMPREHENSIVE },
     ],
   },
   {
@@ -126,10 +126,10 @@ export const BUNDLES: Bundle[] = [
     mgmtFee: '10%',
     badge: 'Most Complete',
     accent: 'radial-gradient(ellipse at 60% 20%, rgba(37,99,235,0.25) 0%, transparent 55%), radial-gradient(ellipse at 15% 85%, rgba(37,99,235,0.15) 0%, transparent 50%)',
-    blurb: 'The complete package — agent-led tenant finding with our most thorough end-to-end management.',
+    blurb: 'The complete package: agent-led tenant finding with our most thorough end-to-end management.',
     groups: [
-      { heading: 'Expert Tenant Find — £599 one-time', items: TENANT_FIND_EXPERT },
-      { heading: 'Comprehensive Management — 10% per month', items: MANAGEMENT_COMPREHENSIVE },
+      { heading: 'Expert Tenant Find: £599 one-time', items: TENANT_FIND_EXPERT },
+      { heading: 'Comprehensive Management: 10% per month', items: MANAGEMENT_COMPREHENSIVE },
     ],
   },
 ];

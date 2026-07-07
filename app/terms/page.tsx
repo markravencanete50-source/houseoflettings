@@ -101,7 +101,7 @@ export default function TermsAndConditions() {
       content: (
         <>
           <p className="hol-body">
-            All content on this website — including text, graphics, logos, images, and software — is the
+            All content on this website, including text, graphics, logos, images, and software, is the
             property of House of Lettings or its content suppliers and is protected by UK and international
             copyright laws.
           </p>
@@ -200,7 +200,7 @@ export default function TermsAndConditions() {
               <p>Peter House, Oxford Street, Manchester</p>
               <p>Email: <a href="mailto:info@houseoflettings.co.uk" className="hol-link">info@houseoflettings.co.uk</a></p>
               <p>Phone: <a href="tel:01617681758" className="hol-link">0161 768 1758</a></p>
-              <p>Office Hours: Monday – Friday, 9:00am – 5:30pm</p>
+              <p>Office Hours: Monday-Friday, 9:00am-5:30pm</p>
             </div>
             <div className="hol-card">
               <p className="hol-card-label">Leeds Office</p>

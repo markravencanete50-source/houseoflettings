@@ -57,7 +57,7 @@ const TD_LABEL = 'style="padding:10px 12px;border-bottom:1px solid #eef0f5;font-
 const TD_VALUE = 'style="padding:10px 12px;border-bottom:1px solid #eef0f5;color:#111;"';
 
 function row(label: string, value?: string) {
-  return `<tr><td ${TD_LABEL}>${label}</td><td ${TD_VALUE}>${value || "—"}</td></tr>`;
+  return `<tr><td ${TD_LABEL}>${label}</td><td ${TD_VALUE}>${value || "-"}</td></tr>`;
 }
 
 // The screening answers, in display order, for the emails.
@@ -67,7 +67,7 @@ function screeningRows(d: any): string {
     ["Aligns with advertised availability?", d.alignsWithAvailability],
     ["Currently lives in the same city?", d.sameCity],
     ["People moving in", d.peopleCount],
-    ["Children (and ages)", d.hasChildren === "Yes" ? `Yes${d.childrenAges ? ` — ${d.childrenAges}` : ""}` : d.hasChildren],
+    ["Children (and ages)", d.hasChildren === "Yes" ? `Yes${d.childrenAges ? ` (${d.childrenAges})` : ""}` : d.hasChildren],
     ["Pets", d.hasPets],
     ["Employment status", d.employmentStatus],
     ["Total annual income (all adults)", d.annualIncome],
@@ -77,11 +77,11 @@ function screeningRows(d: any): string {
 }
 
 function clientEmailHtml(d: any) {
-  return `<!DOCTYPE html><html><head><meta charset="utf-8"/></head><body style="font-family:Arial,sans-serif;background:#f4f6f9;margin:0;padding:0;"><div style="max-width:600px;margin:40px auto;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,.08);"><div style="background:linear-gradient(135deg,#1a3c5e,#2563a8);padding:36px 40px;color:#fff;"><h1 style="margin:0 0 6px;font-size:24px;">✅ Viewing Confirmed</h1><p style="margin:0;">House of Lettings — ${d.city}</p></div><div style="padding:36px 40px;color:#374151;font-size:15px;line-height:1.65;"><p>Dear <strong>${d.name}</strong>,</p><p>Your property viewing is booked. Here are the details:</p><div style="background:#f8f9ff;border-radius:12px;padding:20px 24px;margin:24px 0;"><p style="margin:0 0 6px;"><strong>When:</strong> ${prettyDateTime(d.date, d.time)}</p><p style="margin:0 0 6px;"><strong>City:</strong> ${d.city}</p>${d.propertyTitle ? `<p style="margin:0;"><strong>Property:</strong> ${d.propertyTitle}</p>` : ""}</div><p>Our team will be in touch to confirm. If you need to change or cancel, just reply to this email or call us.</p></div><div style="background:#f8f9ff;padding:20px 40px;text-align:center;font-size:12px;color:#9ca3af;">© ${new Date().getFullYear()} House of Lettings Ltd.</div></div></body></html>`;
+  return `<!DOCTYPE html><html><head><meta charset="utf-8"/></head><body style="font-family:Arial,sans-serif;background:#f4f6f9;margin:0;padding:0;"><div style="max-width:600px;margin:40px auto;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,.08);"><div style="background:linear-gradient(135deg,#1a3c5e,#2563a8);padding:36px 40px;color:#fff;"><h1 style="margin:0 0 6px;font-size:24px;">✅ Viewing Confirmed</h1><p style="margin:0;">House of Lettings, ${d.city}</p></div><div style="padding:36px 40px;color:#374151;font-size:15px;line-height:1.65;"><p>Dear <strong>${d.name}</strong>,</p><p>Your property viewing is booked. Here are the details:</p><div style="background:#f8f9ff;border-radius:12px;padding:20px 24px;margin:24px 0;"><p style="margin:0 0 6px;"><strong>When:</strong> ${prettyDateTime(d.date, d.time)}</p><p style="margin:0 0 6px;"><strong>City:</strong> ${d.city}</p>${d.propertyTitle ? `<p style="margin:0;"><strong>Property:</strong> ${d.propertyTitle}</p>` : ""}</div><p>Our team will be in touch to confirm. If you need to change or cancel, just reply to this email or call us.</p></div><div style="background:#f8f9ff;padding:20px 40px;text-align:center;font-size:12px;color:#9ca3af;">© ${new Date().getFullYear()} House of Lettings Ltd.</div></div></body></html>`;
 }
 
 function adminEmailHtml(d: any) {
-  return `<!DOCTYPE html><html><head><meta charset="utf-8"/></head><body style="font-family:Arial,sans-serif;background:#f4f6f9;margin:0;padding:0;"><div style="max-width:600px;margin:32px auto;background:#fff;border-radius:14px;overflow:hidden;"><div style="background:#1a3c5e;padding:24px 32px;color:#fff;"><h2 style="margin:0;font-size:20px;">📅 New Viewing Booked — ${d.city}</h2><p style="margin:4px 0 0;opacity:.8;font-size:13px;">${prettyDateTime(d.date, d.time)}</p></div><div style="padding:28px 32px;"><table style="width:100%;border-collapse:collapse;font-size:14px;">${row("Name", d.name)}${row("Phone", d.phone)}${row("Email", d.email)}${row("City", d.city)}${row("When", prettyDateTime(d.date, d.time))}${d.propertyTitle ? row("Property", d.propertyTitle) : ""}${d.postcode ? row("Postcode", d.postcode) : ""}${screeningRows(d)}</table><p style="font-size:12px;color:#9ca3af;margin:16px 0 0;">A confirmation text was ${d._smsSent ? "sent" : "composed"} for the client and the office line (${BUSINESS_SMS_NUMBER}).</p></div></div></body></html>`;
+  return `<!DOCTYPE html><html><head><meta charset="utf-8"/></head><body style="font-family:Arial,sans-serif;background:#f4f6f9;margin:0;padding:0;"><div style="max-width:600px;margin:32px auto;background:#fff;border-radius:14px;overflow:hidden;"><div style="background:#1a3c5e;padding:24px 32px;color:#fff;"><h2 style="margin:0;font-size:20px;">📅 New Viewing Booked: ${d.city}</h2><p style="margin:4px 0 0;opacity:.8;font-size:13px;">${prettyDateTime(d.date, d.time)}</p></div><div style="padding:28px 32px;"><table style="width:100%;border-collapse:collapse;font-size:14px;">${row("Name", d.name)}${row("Phone", d.phone)}${row("Email", d.email)}${row("City", d.city)}${row("When", prettyDateTime(d.date, d.time))}${d.propertyTitle ? row("Property", d.propertyTitle) : ""}${d.postcode ? row("Postcode", d.postcode) : ""}${screeningRows(d)}</table><p style="font-size:12px;color:#9ca3af;margin:16px 0 0;">A confirmation text was ${d._smsSent ? "sent" : "composed"} for the client and the office line (${BUSINESS_SMS_NUMBER}).</p></div></div></body></html>`;
 }
 
 export async function POST(request: Request) {
@@ -114,7 +114,7 @@ export async function POST(request: Request) {
       if (!cities.includes(city)) {
         const day = WEEKDAY_NAMES[weekdayOf(data.date)];
         return Response.json({
-          message: `Our team isn't in ${city} on a ${day}${cities.length ? ` — that day covers ${cities.join(" & ")}` : ""}. Please pick a day we're in ${city}.`,
+          message: `Our team isn't in ${city} on a ${day}${cities.length ? `. That day covers ${cities.join(" & ")}` : ""}. Please pick a day we're in ${city}.`,
         }, { status: 409 });
       }
     }
@@ -178,12 +178,12 @@ export async function POST(request: Request) {
       sendSms(BUSINESS_SMS_NUMBER, businessSms),
       sendEmail({
         to: data.email,
-        subject: `✅ Your ${city} Viewing — House of Lettings`,
+        subject: `✅ Your ${city} Viewing | House of Lettings`,
         html: clientEmailHtml(data),
       }),
       sendEmail({
         to: process.env.TENANT_ADMIN_EMAIL || "houseoflettingsleeds@gmail.com",
-        subject: `📅 New Viewing — ${data.name} (${city}, ${data.date} ${data.time})`,
+        subject: `📅 New Viewing: ${data.name} (${city}, ${data.date} ${data.time})`,
         html: adminEmailHtml({ ...data, _smsSent: isSmsConfigured() }),
       }),
     ]);

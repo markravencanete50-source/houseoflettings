@@ -53,7 +53,7 @@ export default function BranchPage({ params }: { params: { slug: string } }) {
   const agentSchema = {
     '@context': 'https://schema.org',
     '@type': 'RealEstateAgent',
-    name: `House of Lettings — ${branch.name}`,
+    name: `House of Lettings, ${branch.name}`,
     url,
     image: `${BASE}/images/heropage-og.jpg`,
     telephone: office.phoneDisplay,
@@ -155,7 +155,7 @@ export default function BranchPage({ params }: { params: { slug: string } }) {
             <Reveal delay={80}>
               <div style={{ background: '#fff', border: '1px solid var(--gray-200)', borderRadius: 16, padding: '30px 28px', boxShadow: '0 2px 14px rgba(15,31,61,0.06)' }}>
                 <div style={{ fontFamily: "'Poppins',sans-serif", fontWeight: 700, fontSize: 18, marginBottom: 18, color: 'var(--navy)' }}>
-                  House of Lettings — {branch.city}
+                  House of Lettings, {branch.city}
                 </div>
                 <ContactRow label="Address">
                   {office.addressLines.join(', ')}, {office.addressCity} {office.postcode}
@@ -209,7 +209,7 @@ export default function BranchPage({ params }: { params: { slug: string } }) {
                 How we help {branch.name} landlords &amp; tenants
               </h2>
               <p style={{ textAlign: 'center', color: 'var(--gray-600)', fontSize: 16, maxWidth: 640, margin: '0 auto 40px' }}>
-                A full lettings service with transparent pricing and no hidden fees — run by a team that knows {branch.city}.
+                A full lettings service with transparent pricing and no hidden fees, run by a team that knows {branch.city}.
               </p>
             </Reveal>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(240px,1fr))', gap: 22 }}>
@@ -233,7 +233,7 @@ export default function BranchPage({ params }: { params: { slug: string } }) {
               Properties to rent in {branch.name}
             </h2>
             <p style={{ color: 'var(--gray-600)', fontSize: 16, marginBottom: 30 }}>
-              Homes let directly by House of Lettings — updated live as new {branch.name} properties come to market.
+              Homes let directly by House of Lettings, updated live as new {branch.name} properties come to market.
             </p>
           </Reveal>
           <BranchProperties branch={branch} />

@@ -47,12 +47,12 @@ function confirmationEmailHtml(data: any) {
   </style></head><body><div class="wrap">
     <div class="header">
       <h1>🎉 Registration Received</h1>
-      <p>House of Lettings — Landlord Registration</p>
+      <p>House of Lettings, Landlord Registration</p>
       <div class="package-badge">${data.selectedPackage}</div>
     </div>
     <div class="body">
       <p>Dear <strong>${data.firstName} ${data.lastName}</strong>,</p>
-      <p>Thank you for registering with House of Lettings. We've received your details and a member of our team will be in touch within <strong>24–48 hours</strong> to get you set up.</p>
+      <p>Thank you for registering with House of Lettings. We've received your details and a member of our team will be in touch within <strong>24-48 hours</strong> to get you set up.</p>
       <div class="detail-box">
         <div class="detail-row"><span class="detail-label">Selected Package</span><span class="detail-value">${data.selectedPackage}</span></div>
         <div class="detail-row"><span class="detail-label">Property Address</span><span class="detail-value">${data.propertyAddress}</span></div>
@@ -118,12 +118,12 @@ export async function POST(request: Request) {
     await Promise.allSettled([
       sendEmail({
         to: data.email,
-        subject: "🎉 Registration Received — House of Lettings",
+        subject: "🎉 Registration Received | House of Lettings",
         html: confirmationEmailHtml(data),
       }),
       sendEmail({
         to: process.env.ADMIN_EMAIL || "admin@houseoflettings.co.uk",
-        subject: `🔔 New Landlord Registration — ${data.firstName} ${data.lastName} (${data.selectedPackage})`,
+        subject: `🔔 New Landlord Registration: ${data.firstName} ${data.lastName} (${data.selectedPackage})`,
         html: adminNotificationHtml(data),
       }),
     ]);

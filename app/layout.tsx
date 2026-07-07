@@ -30,7 +30,7 @@ export const metadata: Metadata = {
         url: '/images/heropage-og.jpg',
         width: 1200,
         height: 630,
-        alt: 'House of Lettings – Letting Agents in Leeds & Manchester',
+        alt: 'House of Lettings: Letting Agents in Leeds & Manchester',
       },
     ],
     locale: 'en_GB',

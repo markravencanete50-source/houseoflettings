@@ -9,11 +9,11 @@ import { BUNDLES } from '@/lib/bundles';
 const REGISTRATION_FAQS = [
   {
     q: 'Why register my property with House of Lettings?',
-    a: 'Registering gives our lettings team the details we need to build a tailored management proposal for your property. We handle tenant finding, referencing, rent collection, maintenance and full legal compliance across Leeds and Manchester — so you get a hands-off, fully compliant let and a dedicated local agent for your portfolio.',
+    a: 'Registering gives our lettings team the details we need to build a tailored management proposal for your property. We handle tenant finding, referencing, rent collection, maintenance and full legal compliance across Leeds and Manchester, so you get a hands-off, fully compliant let and a dedicated local agent for your portfolio.',
   },
   {
     q: 'What documents will I need to let my property legally in the UK?',
-    a: 'You will need a valid Energy Performance Certificate (EPC) rated E or above, a Gas Safety Certificate (renewed annually where there are gas appliances) and an Electrical Installation Condition Report (EICR, renewed every 5 years). Working smoke alarms on every floor and a carbon monoxide alarm in any room with a fuel-burning appliance are also legally required. During registration you can tell us which of these you already hold — and upload them — or ask us to arrange them for you.',
+    a: 'You will need a valid Energy Performance Certificate (EPC) rated E or above, a Gas Safety Certificate (renewed annually where there are gas appliances) and an Electrical Installation Condition Report (EICR, renewed every 5 years). Working smoke alarms on every floor and a carbon monoxide alarm in any room with a fuel-burning appliance are also legally required. During registration you can tell us which of these you already hold (and upload them), or ask us to arrange them for you.',
   },
   {
     q: 'Do I have to protect my tenant’s deposit?',
@@ -21,7 +21,7 @@ const REGISTRATION_FAQS = [
   },
   {
     q: 'Is registering a commitment or a contract?',
-    a: 'No. Registering simply starts the conversation — there is no obligation and no fee to register. Once we understand your property and the services you need, we will send a clear proposal. You only proceed if you are happy with it.',
+    a: 'No. Registering simply starts the conversation. There is no obligation and no fee to register. Once we understand your property and the services you need, we will send a clear proposal. You only proceed if you are happy with it.',
   },
   {
     q: 'How many properties can I register?',
@@ -62,13 +62,13 @@ export default function LandlordRegistrationPage() {
           </h1>
           <p style={{ fontSize: 17, color: 'rgba(255,255,255,0.62)', maxWidth: 560, margin: '0 auto 34px', lineHeight: 1.65, fontWeight: 300 }}>
             Tell us about your property and the services you need. It&rsquo;s free, takes a couple of minutes,
-            and there&rsquo;s no obligation — just a tailored management proposal from your local Leeds &amp; Manchester team.
+            and there&rsquo;s no obligation, just a tailored management proposal from your local Leeds &amp; Manchester team.
           </p>
           <Link href="/landlord-registration/apply" className="hol-hero-cta">
             Landlord Registration
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 12h14M12 5l7 7-7 7" /></svg>
           </Link>
-          <p style={{ fontSize: 12.5, color: 'rgba(255,255,255,0.45)', marginTop: 16 }}>Free · No obligation · Response within 24–48 hours</p>
+          <p style={{ fontSize: 12.5, color: 'rgba(255,255,255,0.45)', marginTop: 16 }}>Free · No obligation · Response within 24-48 hours</p>
         </div>
 
         {/* ── WHY REGISTER ── */}
@@ -83,12 +83,12 @@ export default function LandlordRegistrationPage() {
             </div>
             <div className="hol-why-grid">
               {[
-                { icon: '🏠', title: 'Hands-off management', desc: 'Tenant finding, referencing, inspections, maintenance and rent collection — all handled for you.' },
+                { icon: '🏠', title: 'Hands-off management', desc: 'Tenant finding, referencing, inspections, maintenance and rent collection, all handled for you.' },
                 { icon: '📋', title: 'Full UK compliance', desc: 'We arrange and track your EPC, Gas Safety, EICR and deposit protection so your let stays legal.' },
                 { icon: '💷', title: 'Maximise your returns', desc: 'Accurate rental valuations and transparent pricing with no hidden fees, ever.' },
                 { icon: '👤', title: 'A dedicated local agent', desc: 'A real person who knows the Leeds & Manchester market and manages your portfolio.' },
-                { icon: '⚡', title: 'Fast turnaround', desc: 'We respond to every registration within 24–48 hours with a tailored proposal.' },
-                { icon: '🔒', title: 'No obligation', desc: 'Registering is free and commitment-free — you only proceed if the proposal suits you.' },
+                { icon: '⚡', title: 'Fast turnaround', desc: 'We respond to every registration within 24-48 hours with a tailored proposal.' },
+                { icon: '🔒', title: 'No obligation', desc: 'Registering is free and commitment-free. You only proceed if the proposal suits you.' },
               ].map(item => (
                 <div key={item.title} className="hol-why-card">
                   <div style={{ fontSize: 28, marginBottom: 14 }}>{item.icon}</div>
@@ -108,7 +108,7 @@ export default function LandlordRegistrationPage() {
               <div className="hol-eyebrow" style={{ color: '#4a90d9' }}>Our Bundles</div>
               <h2 className="hol-h2" style={{ color: '#fff' }}>Services you can request</h2>
               <p style={{ fontSize: 15, color: 'rgba(255,255,255,0.5)', maxWidth: 580, margin: '14px auto 0', lineHeight: 1.7 }}>
-                Each bundle pairs a one-time tenant-find fee with an ongoing monthly management fee — pick the one that fits your portfolio when you register.
+                Each bundle pairs a one-time tenant-find fee with an ongoing monthly management fee. Pick the one that fits your portfolio when you register.
               </p>
             </div>
             <div className="hol-pkg-grid hol-pkg-grid--2">
@@ -144,7 +144,7 @@ export default function LandlordRegistrationPage() {
             <ol className="hol-terms-list">
               {[
                 ['No obligation to register', 'Registering your details is free and does not create a management agreement. A formal contract is only entered into once you accept a written proposal from us.'],
-                ['Legal compliance', 'As the landlord you remain legally responsible for your property. We will arrange and track required documents — EPC (rated E or above), annual Gas Safety Certificate, EICR (every 5 years), smoke and carbon-monoxide alarms — under any managed package you take.'],
+                ['Legal compliance', 'As the landlord you remain legally responsible for your property. We will arrange and track required documents (EPC rated E or above, annual Gas Safety Certificate, EICR every 5 years, smoke and carbon-monoxide alarms) under any managed package you take.'],
                 ['Deposit protection', 'Where we hold a tenancy deposit, it will be protected in a government-approved scheme (DPS, mydeposits or TDS) within 30 days and the prescribed information served on the tenant.'],
                 ['Fees', 'Any management, tenant-find or certificate fees are set out clearly in your proposal before work begins. We never charge hidden fees.'],
                 ['Your data & documents', 'The information and documents you provide are used solely to prepare your proposal and manage your property. They are stored securely and never sold. See our Terms and Cookie Policy for full details.'],
@@ -186,7 +186,7 @@ export default function LandlordRegistrationPage() {
           <div style={{ position: 'relative', zIndex: 1 }}>
             <h2 style={{ fontSize: 'clamp(26px,3.6vw,46px)', fontWeight: 700, color: '#fff', marginBottom: 16 }}>Ready to register your property?</h2>
             <p style={{ fontSize: 16, color: 'rgba(255,255,255,0.55)', maxWidth: 520, margin: '0 auto 36px', lineHeight: 1.7, fontWeight: 300 }}>
-              Complete the step-by-step registration and we&rsquo;ll be in touch within 24–48 hours.
+              Complete the step-by-step registration and we&rsquo;ll be in touch within 24-48 hours.
             </p>
             <Link href="/landlord-registration/apply" className="hol-hero-cta">
               Start Registration

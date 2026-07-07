@@ -42,7 +42,7 @@ export default function BranchProperties({ branch }: { branch: Branch }) {
         <p style={{ fontSize: 14, color: 'var(--gray-600)', marginBottom: 22, fontWeight: 500 }}>
           {scope === 'area'
             ? `Showing ${list.length} available propert${list.length !== 1 ? 'ies' : 'y'} to rent in ${branch.name}.`
-            : `No live listings in ${branch.name} right now — here’s what’s available to rent across ${branch.city}.`}
+            : `No live listings in ${branch.name} right now. Here’s what’s available to rent across ${branch.city}.`}
         </p>
       )}
 

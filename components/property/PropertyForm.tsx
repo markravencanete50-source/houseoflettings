@@ -355,7 +355,7 @@ export default function PropertyForm({
           placeholder="Describe the property, features, nearby amenities..." required
           style={{ minHeight: 130 }} />
         <div style={{ fontSize: 12, color: 'var(--gray-400)', marginTop: 4, textAlign: 'right' }}>
-          {description.length} chars — aim for 150+
+          {description.length} chars, aim for 150+
         </div>
       </div>
 
@@ -427,7 +427,7 @@ export default function PropertyForm({
           background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: 6,
           fontSize: 13, color: '#1e40af',
         }}>
-          ℹ️ Your exact house number will never be shown publicly — only the area and postcode.
+          ℹ️ Your exact house number will never be shown publicly, only the area and postcode.
         </div>
       </div>
 

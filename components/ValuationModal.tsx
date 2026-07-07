@@ -108,7 +108,7 @@ export default function ValuationModal({ isOpen, onClose }: ValuationModalProps)
             <div>
               <div className="hol-modal__badge">Free Valuation</div>
               <h2 id="hol-modal-title" className="hol-modal__title">Book a Property Valuation</h2>
-              <p className="hol-modal__subtitle">Our local experts will provide an accurate, no-obligation valuation — usually within 48 hours.</p>
+              <p className="hol-modal__subtitle">Our local experts will provide an accurate, no-obligation valuation, usually within 48 hours.</p>
             </div>
             <button className="hol-modal__close" onClick={handleClose} aria-label="Close">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>

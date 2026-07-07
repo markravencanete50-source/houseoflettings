@@ -128,7 +128,7 @@ function generateGuarantorPdf(d: Record<string, any>): string {
   };
   const row = (label: string, value?: string) => {
     if (y > 770) { doc.addPage(); y = 40; }
-    const val = value && value.toString().trim() ? value.toString() : '—';
+    const val = value && value.toString().trim() ? value.toString() : '-';
     doc.setFont('helvetica', 'bold'); doc.setFontSize(9.5); doc.setTextColor(gray); doc.text(label, margin, y);
     doc.setFont('helvetica', 'normal'); doc.setTextColor(dark);
     const valLines = doc.splitTextToSize(val, pageWidth - margin * 2 - 175);
@@ -469,7 +469,7 @@ export default function GuarantorPage() {
               })}
             </div>
             <p style={{ textAlign: 'center', fontSize: 12, color: '#9ca3af', margin: '4px 0 0', fontWeight: 600 }}>
-              Step {step + 1} of {STEPS.length} — {STEPS[step].label}
+              Step {step + 1} of {STEPS.length}: {STEPS[step].label}
             </p>
           </div>
 
@@ -523,7 +523,7 @@ export default function GuarantorPage() {
                     {([
                       ['Property', selectedProperty.location || selectedProperty.title],
                       ['Rent', `${formatGBP(selectedProperty.price)} pcm`],
-                      ['Deposit', selectedProperty.depositAmount ? formatGBP(selectedProperty.depositAmount) : '—'],
+                      ['Deposit', selectedProperty.depositAmount ? formatGBP(selectedProperty.depositAmount) : '-'],
                     ] as [string, string][]).map(([label, value], i, arr) => (
                       <div key={label} style={{ display: 'flex', justifyContent: 'space-between', gap: 12, padding: '8px 0', borderBottom: i < arr.length - 1 ? '1px solid #eef0f5' : 'none', fontSize: 14 }}>
                         <span style={{ color: '#6b7280', fontWeight: 500 }}>{label}</span>
@@ -570,11 +570,11 @@ export default function GuarantorPage() {
             {step === 2 && (
               <>
                 <div><h2 style={sectionHeadingStyle}>Your Documents</h2><p style={sectionSubStyle}>Please upload clear copies. PDFs and photos are accepted.</p></div>
-                <FileUpload label="Valid Identity Document (UK Passport or valid visa front &amp; back, with original nationality passport)" required hint="Passport / visa — front and back" state={idDoc} onChange={setIdDoc} />
+                <FileUpload label="Valid Identity Document (UK Passport or valid visa front &amp; back, with original nationality passport)" required hint="Passport / visa, front and back" state={idDoc} onChange={setIdDoc} />
                 <FileUpload label="Payslips x3 months (most recent) or proof of income" required hint="3 most recent payslips" state={payslips} onChange={setPayslips} />
-                <FileUpload label="Proof of Address (utility bill, bank statement, driving licence)" required hint="Recent — within 3 months" state={proofOfAddress} onChange={setProofOfAddress} />
+                <FileUpload label="Proof of Address (utility bill, bank statement, driving licence)" required hint="Recent, within 3 months" state={proofOfAddress} onChange={setProofOfAddress} />
                 <FileUpload label="Bank Statements x3 months (most recent)" required hint="3 most recent statements" state={bankStatements} onChange={setBankStatements} />
-                <FileUpload label="If a student: course enrolment confirmation (term-time &amp; home address)" hint="Optional — students only" state={studentDoc} onChange={setStudentDoc} />
+                <FileUpload label="If a student: course enrolment confirmation (term-time &amp; home address)" hint="Optional, students only" state={studentDoc} onChange={setStudentDoc} />
               </>
             )}
 

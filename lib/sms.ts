@@ -34,7 +34,7 @@ export function composeClientSms(v: SmsViewing): string {
 
 // Text sent to the office number so staff are notified of a new booking.
 export function composeBusinessSms(v: SmsViewing): string {
-  return `New viewing booked: ${v.name} (${v.phone}) — ${v.city}, ${prettyDate(v.date)} ${v.time}${v.propertyTitle ? ` — ${v.propertyTitle}` : ""}.`;
+  return `New viewing booked: ${v.name} (${v.phone}), ${v.city}, ${prettyDate(v.date)} ${v.time}${v.propertyTitle ? ` (${v.propertyTitle})` : ""}.`;
 }
 
 export function isSmsConfigured(): boolean {

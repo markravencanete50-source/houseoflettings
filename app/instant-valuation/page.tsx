@@ -495,7 +495,7 @@ export default function InstantValuationPage() {
                 ))}
               </div>
               <p className="iv-progress__label">
-                Step <span>{step} of 3</span> —{' '}
+                Step <span>{step} of 3</span>:{' '}
                 {step === 1 && 'Property details'}
                 {step === 2 && 'Features'}
                 {step === 3 && 'Your valuation'}
@@ -696,7 +696,7 @@ export default function InstantValuationPage() {
                     <div className="iv-gate__icon">🏡</div>
                     <p className="iv-gate__title">Would you like to receive your instant valuation?</p>
                     <p className="iv-gate__sub">
-                      We'll email your personalised report straight away — no spam, no obligation.
+                      We'll email your personalised report straight away. No spam, no obligation.
                     </p>
                     <div className="iv-gate__btns">
                       <button className="iv-gate__btn iv-gate__btn--yes" onClick={handleYes}>
@@ -780,7 +780,7 @@ export default function InstantValuationPage() {
             <h2>No problem at all</h2>
             <p>
               If you change your mind or have any questions about your property,
-              our team is always happy to help — no pressure, no obligation.
+              our team is always happy to help, with no pressure and no obligation.
             </p>
             <div className="iv-outcome__links">
               <Link href="/landlords" className="iv-outcome__btn iv-outcome__btn--primary">
@@ -801,7 +801,7 @@ export default function InstantValuationPage() {
             <p>
               We've emailed your personalised valuation report to{' '}
               <strong style={{ color: '#fff' }}>{lead.email}</strong>.
-              Check your inbox — it should arrive within a few minutes.
+              Check your inbox. It should arrive within a few minutes.
             </p>
             <div className="iv-outcome__links">
               <Link href="/landlords" className="iv-outcome__btn iv-outcome__btn--primary">

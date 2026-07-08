@@ -116,7 +116,7 @@ export default function LandlordRegistrationPage() {
                 <div key={b.id} className="hol-pkg-card">
                   {b.badge && <div style={{ display: 'inline-block', fontSize: 10, fontWeight: 800, letterSpacing: 1, textTransform: 'uppercase', color: '#0f1f3d', background: '#4a90d9', padding: '3px 10px', borderRadius: 20, marginBottom: 12 }}>{b.badge}</div>}
                   <div style={{ fontSize: 'clamp(24px,3vw,32px)', fontWeight: 800, color: '#4a90d9', lineHeight: 1, marginBottom: 6 }}>
-                    {b.setupFee} <span style={{ fontSize: 15, fontWeight: 600, color: 'rgba(255,255,255,0.55)' }}>+ {b.mgmtFee}/mo</span>
+                    {b.setupFee} <span style={{ fontSize: 15, fontWeight: 600, color: 'rgba(255,255,255,0.55)' }}>{b.mgmtFee ? `+ ${b.mgmtFee}/mo` : 'one-time'}</span>
                   </div>
                   <div style={{ fontSize: 15, fontWeight: 700, color: '#fff', marginBottom: 8 }}>{b.label}</div>
                   <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.55)', lineHeight: 1.65, margin: 0 }}>{b.blurb}</p>

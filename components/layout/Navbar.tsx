@@ -30,6 +30,7 @@ function NavDropdown({ label, items }: { label: string; items: NavItem[] }) {
 
 const LANDLORD_ITEMS: NavItem[] = [
   { href: '/pricing', label: 'Pricing' },
+  { href: '/additional-services', label: 'Additional Services' },
   { href: '/book-valuation', label: 'Book Valuation' },
   { href: '/instant-valuation', label: 'Instant Valuation' },
   { href: '/landlord-registration', label: 'Landlord Registration' },
@@ -108,6 +109,7 @@ export default function Navbar() {
           <div className={`hol-nav__links ${mobileMenuOpen ? 'hol-nav__links--open' : ''}`}>
             <NavDropdown label="Landlord" items={LANDLORD_ITEMS} />
             <NavDropdown label="Tenant" items={TENANT_ITEMS} />
+            <Link href="/additional-services" className="hol-nav__link">Additional Services</Link>
             <Link href="/branches" className="hol-nav__link">Branches</Link>
             {!loading && profile && (
               <Link href={dashLink} className="hol-nav__link">Dashboard</Link>

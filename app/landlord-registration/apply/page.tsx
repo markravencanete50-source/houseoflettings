@@ -603,7 +603,7 @@ export default function LandlordRegistrationApplyPage() {
                               <span style={{ flex: 1 }}>
                                 <span style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 12 }}>
                                   <span style={{ fontWeight: 700, fontSize: 14.5, color: '#0f1f3d' }}>{b.label}{b.badge && <span className="hol-pkg-badge">{b.badge}</span>}</span>
-                                  <span style={{ fontWeight: 800, fontSize: 14, color: '#dc2626', whiteSpace: 'nowrap' }}>{b.setupFee} <span style={{ fontSize: 11, fontWeight: 500, color: '#dc2626' }}>+ {b.mgmtFee}/mo</span></span>
+                                  <span style={{ fontWeight: 800, fontSize: 14, color: '#dc2626', whiteSpace: 'nowrap' }}>{b.setupFee} <span style={{ fontSize: 11, fontWeight: 500, color: '#dc2626' }}>{b.mgmtFee ? `+ ${b.mgmtFee}/mo` : 'one-time'}</span></span>
                                 </span>
                                 <span style={{ display: 'block', fontSize: 12.5, color: '#6b7280', marginTop: 3, lineHeight: 1.55 }}>{b.blurb}</span>
                               </span>

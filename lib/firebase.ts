@@ -57,10 +57,10 @@
 //    }
 // ============================================================
 
-import { initializeApp, getApps, getApp } from 'firebase/app';
-import { getAuth } from 'firebase/auth';
-import { getFirestore } from 'firebase/firestore';
-import { getStorage } from 'firebase/storage';
+import { initializeApp, getApps, getApp, type FirebaseApp } from 'firebase/app';
+import { getAuth, type Auth } from 'firebase/auth';
+import { getFirestore, type Firestore } from 'firebase/firestore';
+import { getStorage, type FirebaseStorage } from 'firebase/storage';
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -71,10 +71,22 @@ const firebaseConfig = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 };
 
-// Prevent re-initialization in hot reload
-const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
+// The Firebase client config is only present when the NEXT_PUBLIC_FIREBASE_*
+// env vars are set for the current environment. When they are absent (e.g. a
+// Vercel Preview build where those vars are scoped to Production only), calling
+// getAuth() throws `auth/invalid-api-key` at import time, which crashes the
+// static prerender of EVERY page and fails the whole build. Guard init so the
+// public marketing pages still build; auth-backed features stay inert until the
+// config is present. When the config IS present (Production), behaviour is
+// unchanged.
+const hasConfig = Boolean(firebaseConfig.apiKey && firebaseConfig.projectId);
 
-export const auth = getAuth(app);
-export const db = getFirestore(app);
-export const storage = getStorage(app);
+// Prevent re-initialization in hot reload
+const app: FirebaseApp | undefined = hasConfig
+  ? (getApps().length ? getApp() : initializeApp(firebaseConfig))
+  : undefined;
+
+export const auth = (app ? getAuth(app) : undefined) as Auth;
+export const db = (app ? getFirestore(app) : undefined) as Firestore;
+export const storage = (app ? getStorage(app) : undefined) as FirebaseStorage;
 export default app;

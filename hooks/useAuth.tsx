@@ -24,6 +24,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // No Firebase config in this build (e.g. a Preview without the
+    // NEXT_PUBLIC_FIREBASE_* env vars) — stay logged-out instead of crashing.
+    if (!auth) { setLoading(false); return; }
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       setUser(firebaseUser);
       if (firebaseUser) {

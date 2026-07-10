@@ -115,6 +115,7 @@ function DashIcon() {
 
 export default function PricingPage() {
   const [active, setActive] = useState(HOT);
+  const [mobileTab, setMobileTab] = useState(HOT);   // selected package in the mobile compare view
   const [showModal, setShowModal] = useState(false);
   const [expanded, setExpanded] = useState<Record<number, boolean>>({});
   const [formData, setFormData] = useState({
@@ -329,7 +330,44 @@ export default function PricingPage() {
           font-size:12.5px; color:#5b6e74; }
         .pr-legend span { display:inline-flex; align-items:center; gap:7px; }
 
-        @media(max-width:860px){ .pr-scroll-hint{ display:block; } }
+        /* ---------- Compare: desktop table vs mobile per-package view ---------- */
+        .pr-mobile-compare { display:none; }
+        @media(max-width:860px){
+          .pr-desktop-compare { display:none; }
+          .pr-mobile-compare { display:block; }
+        }
+        .pr-mc-help { text-align:center; font-size:13px; color:#6b7280; margin:0 0 14px; }
+        .pr-mc-pills { display:flex; gap:8px; overflow-x:auto; padding:2px 2px 14px; -webkit-overflow-scrolling:touch; scrollbar-width:none; }
+        .pr-mc-pills::-webkit-scrollbar { display:none; }
+        .pr-mc-pill { position:relative; flex:0 0 auto; border:1.5px solid #dbe2ea; background:#fff; color:#374151;
+          border-radius:999px; padding:10px 16px; font-size:13.5px; font-weight:700; cursor:pointer; white-space:nowrap; transition:all .15s ease; }
+        .pr-mc-pill.active { background:#2563eb; border-color:#2563eb; color:#fff; box-shadow:0 8px 18px -8px rgba(37,99,235,.6); }
+        .pr-mc-dot { position:absolute; top:6px; right:9px; width:6px; height:6px; border-radius:50%; background:#f59e0b; }
+        .pr-mc-pill.active .pr-mc-dot { background:#fff; }
+        .pr-mc-card { background:#fff; border:1px solid #e5e7eb; border-radius:16px; overflow:hidden;
+          box-shadow:0 16px 40px -26px rgba(15,31,61,.34); }
+        .pr-mc-head { background:linear-gradient(155deg,#15294c,#0c1a33); color:#fff; padding:22px 20px 20px; }
+        .pr-mc-head--hot { background:linear-gradient(155deg,#2563eb 0%,#12295a 60%,#0c1a33 100%); }
+        .pr-mc-kind { font-size:11px; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:#a9c4ea; }
+        .pr-mc-name { display:block; font-size:21px; font-weight:800; margin:5px 0 14px; line-height:1.15; }
+        .pr-mc-fees { display:flex; gap:12px; }
+        .pr-mc-fees > div { flex:1; background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.14);
+          border-radius:10px; padding:10px 12px; }
+        .pr-mc-fees span { display:block; font-size:10.5px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:#a9c4ea; margin-bottom:3px; }
+        .pr-mc-fees b { font-size:18px; font-weight:800; }
+        .pr-mc-group { border-top:1px solid #eef1f5; }
+        .pr-mc-band { display:flex; align-items:center; justify-content:space-between; background:#f4f7fb; color:#0f1f3d;
+          font-weight:800; font-size:11.5px; letter-spacing:.06em; text-transform:uppercase; padding:11px 18px; }
+        .pr-mc-count { background:#2563eb; color:#fff; border-radius:999px; min-width:22px; height:20px; padding:0 7px;
+          display:inline-flex; align-items:center; justify-content:center; font-size:11px; font-weight:800; }
+        .pr-mc-row { display:flex; gap:11px; align-items:flex-start; padding:11px 18px; border-top:1px solid #f2f5f9;
+          font-size:14px; color:#374151; line-height:1.45; }
+        .pr-mc-row .pr-tick { flex:none; margin-top:1px; }
+        .pr-mc-cta { padding:18px; }
+        .pr-mc-cta button { width:100%; padding:15px; background:#2563eb; color:#fff; border:none; border-radius:9px;
+          font-size:14px; font-weight:700; text-transform:uppercase; letter-spacing:.03em; cursor:pointer; transition:background .18s ease; }
+        .pr-mc-cta button:hover { background:#1d4ed8; }
+        .pr-mc-foot { text-align:center; font-size:12px; color:#9ca3af; margin:14px 4px 0; line-height:1.6; }
 
         /* ---------- Decision guide: alternating copy / spec panel ---------- */
         .pr-guide { max-width:1160px; margin:80px auto 0; padding:0 5%; }
@@ -514,8 +552,8 @@ export default function PricingPage() {
           <p>Two tenant-find options and three management tiers. Every package includes a full tenant-find service, management adds ongoing rent, compliance and maintenance support.</p>
         </div>
 
-        <div className="pr-matrix-card">
-          <p className="pr-scroll-hint">Swipe across to compare all five packages →</p>
+        {/* Desktop: full five-column comparison table */}
+        <div className="pr-matrix-card pr-desktop-compare">
           <div className="pr-scroller" role="region" aria-label="Package comparison table" tabIndex={0}>
             <table className="pr-table">
               <thead>
@@ -597,6 +635,60 @@ export default function PricingPage() {
             <span><i className="pr-tick"><svg viewBox="0 0 24 24"><polyline points="4 13 10 19 20 6" /></svg></i> Included</span>
             <span><i className="pr-dash"><svg viewBox="0 0 24 24"><line x1="6" y1="12" x2="18" y2="12" /></svg></i> Not included</span>
           </div>
+        </div>
+
+        {/* Mobile: pick one package, see everything it includes — no side-scroll */}
+        <div className="pr-mobile-compare">
+          <p className="pr-mc-help">Tap a package to see exactly what it includes.</p>
+          <div className="pr-mc-pills" role="tablist" aria-label="Choose a package to compare">
+            {PACKAGES.map((p, i) => (
+              <button
+                key={p.id}
+                role="tab"
+                aria-selected={mobileTab === i}
+                className={`pr-mc-pill${mobileTab === i ? ' active' : ''}`}
+                onClick={() => setMobileTab(i)}
+              >
+                {p.short}
+                {p.badge && <span className="pr-mc-dot" aria-hidden />}
+              </button>
+            ))}
+          </div>
+
+          <div className="pr-mc-card">
+            <div className={`pr-mc-head${mobileTab === HOT ? ' pr-mc-head--hot' : ''}`}>
+              <span className="pr-mc-kind">{PACKAGES[mobileTab].kind}{PACKAGES[mobileTab].badge ? ' · Most Popular' : ''}</span>
+              <span className="pr-mc-name">{PACKAGES[mobileTab].label}</span>
+              <div className="pr-mc-fees">
+                <div><span>One-time</span><b>{PACKAGES[mobileTab].setupFee}</b></div>
+                <div><span>Ongoing</span><b>{PACKAGES[mobileTab].mgmtFee || 'None'}</b></div>
+              </div>
+            </div>
+
+            {MATRIX_SECTIONS.map((section) => {
+              const included = section.rows.filter((row) => !!row[mobileTab + 1]);
+              if (included.length === 0) return null;
+              return (
+                <div key={section.title} className="pr-mc-group">
+                  <div className="pr-mc-band">
+                    {section.title}
+                    <span className="pr-mc-count">{included.length}</span>
+                  </div>
+                  {included.map((row) => (
+                    <div key={row[0] as string} className="pr-mc-row">
+                      <i className="pr-tick" aria-hidden><svg viewBox="0 0 24 24"><polyline points="4 13 10 19 20 6" /></svg></i>
+                      <span>{row[0]}</span>
+                    </div>
+                  ))}
+                </div>
+              );
+            })}
+
+            <div className="pr-mc-cta">
+              <button onClick={() => openModalFor(mobileTab)}>Get {PACKAGES[mobileTab].short}</button>
+            </div>
+          </div>
+          <p className="pr-mc-foot">All {TOTAL_SERVICES} services are listed in the table on larger screens. Prices inc. VAT.</p>
         </div>
       </section>
 

@@ -44,7 +44,7 @@ export default function AdditionalServicesPage() {
           font-weight: 600;
           letter-spacing: 0.05em;
           text-transform: uppercase;
-          color: var(--gray-600);
+          color: #475569;
           text-decoration: none;
           border-bottom: 2px solid transparent;
           transition: color 0.2s, border-color 0.2s;
@@ -52,7 +52,7 @@ export default function AdditionalServicesPage() {
         }
         .as-jump-link:hover {
           color: var(--navy);
-          border-bottom-color: var(--red);
+          border-bottom-color: var(--blue);
         }
         .as-card {
           background: #fff;
@@ -91,11 +91,11 @@ export default function AdditionalServicesPage() {
           align-items: center;
           justify-content: center;
           font-size: 13px;
-          transition: transform 0.3s ease, background 0.2s ease, color 0.2s ease;
+          transition: transform 0.3s ease;
         }
         .as-card.is-open .as-card__chev {
           transform: rotate(180deg);
-          background: var(--red);
+          background: var(--blue);
           color: #fff;
         }
         .as-card__body { display: none; }
@@ -132,11 +132,17 @@ export default function AdditionalServicesPage() {
           white-space: nowrap;
           padding-left: 16px;
         }
+        .as-card__name { font-size: 17px; font-weight: 700; color: var(--navy); line-height: 1.3; margin-bottom: 4px; }
+        .as-card__tag { font-size: 13px; color: #475569; line-height: 1.5; }
         @media (max-width: 760px) {
           .as-jump-bar { top: 60px; }
-          .as-detail-grid { grid-template-columns: 1fr; gap: 24px; }
-          .as-card__head { padding: 18px 16px; gap: 12px; flex-wrap: wrap; }
-          .as-detail-grid { padding: 6px 16px 24px; }
+          .as-detail-grid { grid-template-columns: 1fr; gap: 22px; padding: 6px 16px 24px; }
+          .as-card__head { padding: 16px 16px; gap: 12px; align-items: flex-start; flex-wrap: nowrap; }
+          .as-card__name { font-size: 15.5px; }
+          .as-card__tag { font-size: 12.5px; }
+          .as-card__price { padding-top: 2px; }
+          .as-card__price > div:first-child { font-size: 18px !important; }
+          .as-card__chev { width: 30px; height: 30px; }
         }
       `}</style>
 
@@ -156,13 +162,6 @@ export default function AdditionalServicesPage() {
         }} />
         <div style={{ position: 'absolute', inset: 0, background: 'rgba(5,12,30,0.88)' }} />
         <div style={{ position: 'relative', zIndex: 1, padding: '0 5%' }}>
-          <div style={{
-            fontSize: 13, fontWeight: 700, letterSpacing: 4,
-            textTransform: 'uppercase', color: '#fff', opacity: 0.85, marginBottom: 16,
-            fontFamily: "'Poppins', sans-serif",
-          }}>
-            A-La-Carte Services
-          </div>
           <h1 style={{
             fontFamily: "'Poppins', sans-serif",
             fontSize: 'clamp(36px, 5.5vw, 68px)',
@@ -172,16 +171,16 @@ export default function AdditionalServicesPage() {
             Additional Services
           </h1>
           <p style={{
-            fontSize: 17, color: 'rgba(255,255,255,0.65)',
+            fontSize: 17, color: 'rgba(255,255,255,0.9)',
             maxWidth: 640, margin: '0 auto',
-            lineHeight: 1.75, fontWeight: 300,
+            lineHeight: 1.75, fontWeight: 400,
             fontFamily: "'Poppins', sans-serif",
           }}>
             Order any of these services individually, whether or not you use one of our
             management packages. Every price includes VAT/IPT where applicable.
           </p>
           <p style={{
-            fontSize: 13, color: 'rgba(255,255,255,0.45)',
+            fontSize: 13.5, color: 'rgba(255,255,255,0.72)',
             maxWidth: 560, margin: '14px auto 0',
             lineHeight: 1.7,
             fontFamily: "'Poppins', sans-serif",
@@ -216,7 +215,7 @@ export default function AdditionalServicesPage() {
                   <span style={{
                     fontFamily: "'Poppins', sans-serif",
                     fontSize: 12, fontWeight: 800, color: '#fff',
-                    background: 'var(--red)', borderRadius: 6,
+                    background: 'var(--blue)', borderRadius: 6,
                     width: 28, height: 28, display: 'inline-flex',
                     alignItems: 'center', justifyContent: 'center', flexShrink: 0,
                   }}>
@@ -232,7 +231,7 @@ export default function AdditionalServicesPage() {
                 </div>
                 <p style={{
                   fontFamily: "'Poppins', sans-serif",
-                  fontSize: 14.5, color: 'var(--gray-600)', margin: 0,
+                  fontSize: 14.5, color: '#475569', margin: 0,
                   paddingLeft: 40, lineHeight: 1.6,
                 }}>
                   {cat.blurb}
@@ -251,25 +250,18 @@ export default function AdditionalServicesPage() {
                         onClick={() => toggle(svc.id)}
                         aria-expanded={isOpen}
                       >
-                        <div style={{ minWidth: 0 }}>
-                          <div style={{
-                            fontFamily: "'Poppins', sans-serif",
-                            fontSize: 17, fontWeight: 700, color: 'var(--navy)',
-                            lineHeight: 1.3, marginBottom: 4,
-                          }}>
+                        <div style={{ minWidth: 0, flex: 1 }}>
+                          <div className="as-card__name" style={{ fontFamily: "'Poppins', sans-serif" }}>
                             {svc.name}
                           </div>
-                          <div style={{
-                            fontFamily: "'Poppins', sans-serif",
-                            fontSize: 13, color: 'var(--gray-600)', lineHeight: 1.5,
-                          }}>
+                          <div className="as-card__tag" style={{ fontFamily: "'Poppins', sans-serif" }}>
                             {svc.tagline}
                           </div>
                         </div>
                         <div className="as-card__price">
                           <div style={{
                             fontFamily: "'Poppins', sans-serif",
-                            fontSize: 20, fontWeight: 800, color: 'var(--red)',
+                            fontSize: 20, fontWeight: 800, color: 'var(--blue)',
                             lineHeight: 1.1, whiteSpace: 'nowrap',
                           }}>
                             {svc.price}
@@ -277,7 +269,7 @@ export default function AdditionalServicesPage() {
                           {svc.priceNote && (
                             <div style={{
                               fontFamily: "'Poppins', sans-serif",
-                              fontSize: 11, fontWeight: 500, color: 'var(--gray-400)',
+                              fontSize: 11, fontWeight: 500, color: '#64748b',
                               textTransform: 'uppercase', letterSpacing: 0.5,
                               marginTop: 2, whiteSpace: 'nowrap',
                             }}>
@@ -295,7 +287,7 @@ export default function AdditionalServicesPage() {
                               <div style={{
                                 fontFamily: "'Poppins', sans-serif",
                                 fontSize: 11, fontWeight: 700, letterSpacing: 2,
-                                textTransform: 'uppercase', color: 'var(--red)',
+                                textTransform: 'uppercase', color: 'var(--blue)',
                                 margin: '18px 0 8px',
                               }}>
                                 What it is
@@ -311,7 +303,7 @@ export default function AdditionalServicesPage() {
                               <div style={{
                                 fontFamily: "'Poppins', sans-serif",
                                 fontSize: 11, fontWeight: 700, letterSpacing: 2,
-                                textTransform: 'uppercase', color: 'var(--red)',
+                                textTransform: 'uppercase', color: 'var(--blue)',
                                 margin: '22px 0 10px',
                               }}>
                                 What&rsquo;s included
@@ -372,7 +364,7 @@ export default function AdditionalServicesPage() {
                               <div style={{
                                 background: '#fff',
                                 border: '1px solid var(--gray-200)',
-                                borderLeft: '3px solid var(--red)',
+                                borderLeft: '3px solid var(--blue)',
                                 borderRadius: 10,
                                 padding: '16px 18px',
                                 marginTop: 14,
@@ -389,10 +381,10 @@ export default function AdditionalServicesPage() {
                                   {svc.goodToKnow.map((note) => (
                                     <li key={note} style={{
                                       fontFamily: "'Poppins', sans-serif",
-                                      fontSize: 12.5, color: 'var(--gray-600)',
+                                      fontSize: 12.5, color: '#475569',
                                       lineHeight: 1.6, display: 'flex', gap: 8,
                                     }}>
-                                      <span style={{ color: 'var(--red)', flexShrink: 0 }}>•</span>
+                                      <span style={{ color: 'var(--blue)', flexShrink: 0 }}>•</span>
                                       {note}
                                     </li>
                                   ))}
@@ -427,7 +419,7 @@ export default function AdditionalServicesPage() {
         </div>
         <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap' }}>
           <Link href="/pricing" style={{
-            padding: '16px 36px', background: 'var(--red)', color: '#fff',
+            padding: '16px 36px', background: 'var(--blue)', color: '#fff',
             borderRadius: 4, fontSize: 14, fontWeight: 700, letterSpacing: '0.5px',
             textTransform: 'uppercase', textDecoration: 'none', fontFamily: "'Poppins', sans-serif", whiteSpace: 'nowrap',
           }}>View Packages</Link>
@@ -444,7 +436,7 @@ export default function AdditionalServicesPage() {
       <footer style={{ background: '#050a12', borderTop: '1px solid rgba(255,255,255,0.06)', padding: '48px 5%' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 20 }}>
           <div style={{ fontFamily: "'Poppins', sans-serif", fontSize: 20, fontWeight: 700, color: '#fff', display: 'flex', alignItems: 'center', gap: 10 }}>
-            <span style={{ width: 7, height: 7, background: 'var(--red)', borderRadius: '50%', display: 'inline-block' }} />
+            <span style={{ width: 7, height: 7, background: 'var(--blue)', borderRadius: '50%', display: 'inline-block' }} />
             House of Lettings
           </div>
           <p style={{ color: 'rgba(255,255,255,0.25)', fontSize: 13, margin: 0, fontFamily: "'Poppins', sans-serif" }}>

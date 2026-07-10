@@ -200,13 +200,15 @@ export default function PricingPage() {
         .pr-scroller { overflow-x:auto; -webkit-overflow-scrolling:touch; }
         .pr-scroller::-webkit-scrollbar { height:9px; }
         .pr-scroller::-webkit-scrollbar-thumb { background:#dbe2ea; border-radius:5px; }
-        /* 240 (services) + 5*128 (packages) = 880 → fits the ~1080px inner width on desktop with room to spare, so no right-scroll. */
-        .pr-table { border-collapse:separate; border-spacing:0; width:100%; min-width:880px; }
+        /* table-layout:fixed makes the columns share the container width exactly, so
+           on desktop all five packages fill the row (never pushing Comprehensive off
+           the edge). min-width is only the mobile scroll floor: 200 + 5*112 = 760. */
+        .pr-table { border-collapse:separate; border-spacing:0; width:100%; min-width:760px; table-layout:fixed; }
         .pr-table th, .pr-table td { padding:0; }
         .pr-svc, .pr-corner { position:sticky; left:0; z-index:3; background:#fff; }
         .pr-table thead th { position:sticky; top:0; z-index:4; background:#0f1f3d; }
         .pr-table thead th.pr-corner { z-index:5; background:#0f1f3d; }
-        .pr-pkg { width:128px; min-width:128px; vertical-align:bottom; padding:16px 8px 15px; text-align:center;
+        .pr-pkg { width:112px; min-width:112px; vertical-align:bottom; padding:16px 8px 15px; text-align:center;
           color:#fff; border-left:1px solid rgba(255,255,255,.08); }
         .pr-badge { display:inline-block; font-size:9.5px; font-weight:800; letter-spacing:.1em; text-transform:uppercase;
           background:#2563eb; color:#fff; border-radius:999px; padding:3px 10px; margin-bottom:8px; }
@@ -218,14 +220,14 @@ export default function PricingPage() {
           border-top:1px solid rgba(255,255,255,.1); }
         .pr-ongoing.pr-rec { color:#7db4f0; }
         .pr-corner { vertical-align:bottom; text-align:left; padding:16px 18px 15px; color:#fff;
-          min-width:240px; width:240px; }
+          min-width:200px; width:200px; }
         .pr-corner-t { font-size:16px; font-weight:700; display:block; }
         .pr-corner-s { font-size:11px; color:#AFC6CC; font-weight:400; }
         /* Fee summary rows */
         .pr-fee-row td { border-top:1px solid #e5e7eb; }
         .pr-fee-label { font-weight:700 !important; color:#0f1f3d !important; font-size:11.5px !important;
           text-transform:uppercase; letter-spacing:.05em; background:#e8f0fb !important; }
-        .pr-fee-cell { width:128px; min-width:128px; text-align:center; font-weight:800; color:#0f1f3d;
+        .pr-fee-cell { width:112px; min-width:112px; text-align:center; font-weight:800; color:#0f1f3d;
           font-size:16px; padding:12px 0; border-left:1px solid #e5e7eb; background:#f0f6ff; }
         .pr-fee-onetime .pr-fee-label { background:#dbe8fb !important; }
         .pr-fee-onetime .pr-fee-cell { background:#e8f0fb; }
@@ -236,9 +238,9 @@ export default function PricingPage() {
         .pr-band td { background:#1a2c49; color:#fff; font-weight:700; font-size:11.5px; letter-spacing:.1em;
           text-transform:uppercase; padding:9px 18px; position:sticky; left:0; }
         .pr-band td span { position:sticky; left:18px; }
-        .pr-svc { font-size:13px; padding:9px 16px; min-width:240px; width:240px; border-top:1px solid #eef1f5; color:#374151; }
+        .pr-svc { font-size:13px; padding:9px 16px; min-width:200px; width:200px; border-top:1px solid #eef1f5; color:#374151; }
         .pr-feat:nth-child(even) .pr-svc { background:#f6f9fc; }
-        .pr-mark { width:128px; min-width:128px; text-align:center; border-top:1px solid #eef1f5;
+        .pr-mark { width:112px; min-width:112px; text-align:center; border-top:1px solid #eef1f5;
           border-left:1px solid #eef1f5; font-size:0; padding:7px 0; }
         .pr-feat:nth-child(even) .pr-mark { background:#fafcfe; }
         .pr-feat:nth-child(even) .pr-mark.pr-hot { background:#e6f0ff !important; }
@@ -267,37 +269,33 @@ export default function PricingPage() {
           font-size:12.5px; color:#5b6e74; }
         .pr-legend span { display:inline-flex; align-items:center; gap:7px; }
 
-        @media(max-width:920px){ .pr-scroll-hint{ display:block; } }
+        @media(max-width:860px){ .pr-scroll-hint{ display:block; } }
 
-        /* ---------- Decision guide: clean text cards ---------- */
-        .pr-guide { max-width:1200px; margin:72px auto 0; padding:0 5%; }
-        .pr-panels { margin-top:40px; display:grid; grid-template-columns:1fr 1fr; gap:22px; }
-        .pr-panel { position:relative; background:#fff; border:1px solid #e5e7eb; border-radius:16px;
-          padding:clamp(26px,3vw,36px); display:flex; flex-direction:column;
-          box-shadow:0 14px 34px -26px rgba(15,31,61,.28); transition:transform .15s ease, box-shadow .15s ease; }
-        .pr-panel:hover { transform:translateY(-3px); box-shadow:0 24px 46px -26px rgba(15,31,61,.36); }
-        .pr-panel::before { content:''; position:absolute; top:0; left:0; right:0; height:4px;
-          background:#dbe2ea; border-radius:16px 16px 0 0; }
-        .pr-panel.pr-panel-featured { border:2px solid #2563eb; box-shadow:0 24px 48px -26px rgba(37,99,235,.4); }
-        .pr-panel.pr-panel-featured::before { background:#2563eb; }
-        .pr-panel-kicker { display:inline-flex; flex-wrap:wrap; gap:8px; align-items:center; font-size:11.5px; font-weight:700;
-          letter-spacing:.1em; text-transform:uppercase; color:#2563eb; margin-bottom:12px; }
-        .pr-panel-kicker .pr-pop { background:#2563eb; color:#fff; border-radius:999px; padding:3px 10px; font-size:9.5px; letter-spacing:.08em; }
-        .pr-panel h3 { font-size:clamp(20px,2.2vw,25px); font-weight:800; color:#0f1f3d; margin:0 0 12px; line-height:1.15; }
-        .pr-panel-lead { font-size:14.5px; font-weight:700; color:#0f1f3d; margin:0 0 10px; line-height:1.5; }
-        .pr-panel-body { font-size:13.8px; color:#6b7280; line-height:1.7; margin:0 0 16px; }
-        .pr-panel-list { list-style:none; margin:0 0 22px; padding:16px 18px; background:#f7f9fc;
-          border:1px solid #eef1f5; border-radius:12px; display:flex; flex-direction:column; gap:10px; flex:1 1 auto; }
-        .pr-panel-list li { display:flex; gap:10px; font-size:13.5px; color:#374151; line-height:1.5; }
-        .pr-panel-list svg { width:15px; height:15px; stroke:#16a34a; stroke-width:2.8; fill:none; flex:none; margin-top:3px; }
-        .pr-panel-btn { align-self:flex-start; padding:13px 28px; background:#2563eb; color:#fff; border:none; border-radius:8px;
-          font-size:13px; font-weight:700; letter-spacing:.03em; text-transform:uppercase; cursor:pointer; transition:background .18s ease; }
-        .pr-panel-btn:hover { background:#1d4ed8; }
-        .pr-panel.pr-panel-wide { grid-column:1 / -1; }
-        @media(max-width:820px){
-          .pr-panels { grid-template-columns:1fr; }
-          .pr-panel.pr-panel-wide { grid-column:auto; }
-          .pr-panel-btn { align-self:stretch; text-align:center; }
+        /* ---------- Decision guide: clean text sections ---------- */
+        .pr-guide { max-width:900px; margin:80px auto 0; padding:0 5%; }
+        .pr-guide .pr-head { text-align:center; }
+        .pr-svcs { margin-top:44px; }
+        .pr-svc-block { padding:40px 0; border-top:1px solid #e9edf3; }
+        .pr-svc-block:first-child { border-top:none; padding-top:8px; }
+        .pr-svc-kicker { display:inline-flex; flex-wrap:wrap; gap:10px; align-items:center; font-size:12px; font-weight:700;
+          letter-spacing:.12em; text-transform:uppercase; color:#2563eb; margin-bottom:12px; }
+        .pr-svc-kicker .pr-pop { background:#2563eb; color:#fff; border-radius:999px; padding:3px 11px; font-size:9.5px; letter-spacing:.08em; }
+        .pr-svc-block h3 { font-size:clamp(23px,3vw,30px); font-weight:800; color:#0f1f3d; margin:0 0 14px; line-height:1.18; }
+        .pr-svc-lead { font-size:16.5px; font-weight:700; color:#0f1f3d; margin:0 0 12px; line-height:1.55; max-width:720px; }
+        .pr-svc-body { font-size:15px; color:#5b6472; line-height:1.85; margin:0 0 20px; max-width:720px; }
+        .pr-svc-points { list-style:none; margin:0 0 26px; padding:0; display:grid; grid-template-columns:1fr 1fr;
+          gap:12px 32px; max-width:760px; }
+        .pr-svc-points li { display:flex; gap:10px; font-size:14.5px; color:#374151; line-height:1.5; }
+        .pr-svc-points svg { width:16px; height:16px; stroke:#16a34a; stroke-width:2.8; fill:none; flex:none; margin-top:2px; }
+        .pr-svc-btn { display:inline-block; padding:13px 30px; border-radius:8px; border:1.5px solid #2563eb;
+          background:transparent; color:#2563eb; font-size:13.5px; font-weight:700; letter-spacing:.02em;
+          text-transform:uppercase; cursor:pointer; transition:all .16s ease; }
+        .pr-svc-btn:hover { background:#2563eb; color:#fff; }
+        .pr-svc-btn.pr-svc-btn--solid { background:#2563eb; color:#fff; }
+        .pr-svc-btn.pr-svc-btn--solid:hover { background:#1d4ed8; border-color:#1d4ed8; }
+        @media(max-width:620px){
+          .pr-svc-points { grid-template-columns:1fr; }
+          .pr-svc-btn { display:block; width:100%; text-align:center; }
         }
 
         /* ---------- How fees work ---------- */
@@ -472,24 +470,20 @@ export default function PricingPage() {
           <p>It comes down to one thing: how much do you want to handle yourself? Here is when to choose each package, from finding a tenant to fully protecting your income.</p>
         </div>
 
-        <div className="pr-panels">
+        <div className="pr-svcs">
           {EXPLAINERS.map((ex, i) => {
             const p = PACKAGES[i];
             const featured = i === HOT;
-            const wide = i === EXPLAINERS.length - 1; // odd count: last card spans the row
             return (
-              <article
-                key={p.id}
-                className={`pr-panel${featured ? ' pr-panel-featured' : ''}${wide ? ' pr-panel-wide' : ''}`}
-              >
-                <span className="pr-panel-kicker">
+              <div key={p.id} className="pr-svc-block">
+                <span className="pr-svc-kicker">
                   {ex.kicker}
                   {p.badge && <span className="pr-pop">Most Popular</span>}
                 </span>
                 <h3>{p.label}</h3>
-                <p className="pr-panel-lead">{ex.lead}</p>
-                <p className="pr-panel-body">{ex.body}</p>
-                <ul className="pr-panel-list">
+                <p className="pr-svc-lead">{ex.lead}</p>
+                <p className="pr-svc-body">{ex.body}</p>
+                <ul className="pr-svc-points">
                   {ex.points.map((pt) => (
                     <li key={pt}>
                       <svg viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5" /></svg>
@@ -497,10 +491,14 @@ export default function PricingPage() {
                     </li>
                   ))}
                 </ul>
-                <button type="button" className="pr-panel-btn" onClick={() => openModalFor(i)}>
+                <button
+                  type="button"
+                  className={`pr-svc-btn${featured ? ' pr-svc-btn--solid' : ''}`}
+                  onClick={() => openModalFor(i)}
+                >
                   Choose {p.short}
                 </button>
-              </article>
+              </div>
             );
           })}
         </div>

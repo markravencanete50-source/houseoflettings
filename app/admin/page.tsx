@@ -217,24 +217,27 @@ export default function AdminDashboard() {
 
   useEffect(() => {
     if (!profile || profile.role !== 'admin') return;
+    // Load each collection independently: if one read is denied (e.g. a new
+    // collection without a matching Firestore rule) it must not blank the rest.
+    const safe = <T,>(p: Promise<T>): Promise<T | null> => p.catch(() => null);
     Promise.all([
-      getAllUsers(),
-      getAllProperties(),
-      getAnalytics(),
-      getDocs(query(collection(db, 'valuationRequests'), orderBy('createdAt', 'desc'))),
-      getDocs(query(collection(db, 'google_reviews'), orderBy('createdAt', 'desc'))),
-      getDocs(query(collection(db, 'tenantApplications'), orderBy('createdAt', 'desc'))),
-      getDocs(query(collection(db, 'serviceOrders'), orderBy('createdAt', 'desc'))),
+      safe(getAllUsers()),
+      safe(getAllProperties()),
+      safe(getAnalytics()),
+      safe(getDocs(query(collection(db, 'valuationRequests'), orderBy('createdAt', 'desc')))),
+      safe(getDocs(query(collection(db, 'google_reviews'), orderBy('createdAt', 'desc')))),
+      safe(getDocs(query(collection(db, 'tenantApplications'), orderBy('createdAt', 'desc')))),
+      safe(getDocs(query(collection(db, 'serviceOrders'), orderBy('createdAt', 'desc')))),
     ]).then(([u, p, a, valSnap, revSnap, appSnap, orderSnap]) => {
-      setUsers(u);
-      setProperties(p);
-      setAnalytics(a);
-      setValuations(valSnap.docs.map(d => ({ id: d.id, ...d.data() } as Valuation)));
-      setReviews(revSnap.docs.map(d => ({ id: d.id, ...d.data() } as GoogleReview)));
-      setApplications(appSnap.docs.map(d => ({ id: d.id, ...d.data() } as TenantApplication)));
-      setOrders(orderSnap.docs.map(d => ({ id: d.id, ...d.data() } as ServiceOrder)));
+      if (u) setUsers(u);
+      if (p) setProperties(p);
+      if (a) setAnalytics(a);
+      if (valSnap) setValuations(valSnap.docs.map(d => ({ id: d.id, ...d.data() } as Valuation)));
+      if (revSnap) setReviews(revSnap.docs.map(d => ({ id: d.id, ...d.data() } as GoogleReview)));
+      if (appSnap) setApplications(appSnap.docs.map(d => ({ id: d.id, ...d.data() } as TenantApplication)));
+      if (orderSnap) setOrders(orderSnap.docs.map(d => ({ id: d.id, ...d.data() } as ServiceOrder)));
       setLoading(false);
-    }).catch(() => setLoading(false));
+    });
   }, [profile]);
 
   // ── Review handlers ──────────────────────────────────────────────────────────

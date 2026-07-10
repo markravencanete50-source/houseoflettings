@@ -167,13 +167,13 @@ export function subscribeToProperties(
       properties = properties.filter(p => p.price <= Number(filters.maxPrice));
     }
     if (filters.bedrooms !== '') {
-      properties = properties.filter(p => p.bedrooms >= Number(filters.bedrooms));
-    }
-    if (filters.bedroomsMax !== '' && filters.bedroomsMax !== undefined) {
-      properties = properties.filter(p => p.bedrooms <= Number(filters.bedroomsMax));
+      // Exact match, except 6 acts as "6 or more" (Leeds HMOs run to 6-8 beds).
+      const b = Number(filters.bedrooms);
+      properties = properties.filter(p => (b >= 6 ? p.bedrooms >= 6 : p.bedrooms === b));
     }
     if (filters.bathrooms !== '' && filters.bathrooms !== undefined) {
-      properties = properties.filter(p => (p.bathrooms ?? 0) >= Number(filters.bathrooms));
+      const b = Number(filters.bathrooms);
+      properties = properties.filter(p => (b >= 6 ? (p.bathrooms ?? 0) >= 6 : (p.bathrooms ?? 0) === b));
     }
     if (filters.propertyType) {
       // Older listings without an explicit type are treated as "whole".

@@ -73,9 +73,8 @@ export interface SearchFilters {
   location: string;
   minPrice: number | '';
   maxPrice: number | '';
-  bedrooms: number | '';          // minimum bedrooms
-  bedroomsMax?: number | '';      // maximum bedrooms
-  bathrooms?: number | '';        // minimum bathrooms
+  bedrooms: number | '';          // exact bedroom count (6 = "6 or more"; 0 = studio)
+  bathrooms?: number | '';        // exact bathroom count (6 = "6 or more")
   propertyType?: '' | 'whole' | 'room';
   furnished?: '' | 'furnished' | 'unfurnished' | 'part-furnished';
   // Radius search (Rightmove/Zoopla style): when a location is picked from the

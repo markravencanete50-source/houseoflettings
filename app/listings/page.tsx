@@ -20,7 +20,6 @@ function ListingsContent() {
     minPrice: searchParams.get('minPrice') ? Number(searchParams.get('minPrice')) : '',
     maxPrice: searchParams.get('maxPrice') ? Number(searchParams.get('maxPrice')) : '',
     bedrooms: searchParams.get('bedrooms') ? Number(searchParams.get('bedrooms')) : '',
-    bedroomsMax: searchParams.get('bedroomsMax') ? Number(searchParams.get('bedroomsMax')) : '',
     bathrooms: searchParams.get('bathrooms') ? Number(searchParams.get('bathrooms')) : '',
     propertyType: (searchParams.get('propertyType') as SearchFilters['propertyType']) || '',
     furnished: (searchParams.get('furnished') as SearchFilters['furnished']) || '',
@@ -161,7 +160,7 @@ function ListingsContent() {
 
   const clearFilters = () => {
     const empty: SearchFilters = {
-      location: '', minPrice: '', maxPrice: '', bedrooms: '', bedroomsMax: '',
+      location: '', minPrice: '', maxPrice: '', bedrooms: '',
       bathrooms: '', propertyType: '', furnished: '', radiusMiles: '', lat: null, lng: null,
     };
     setFilters(empty);
@@ -174,7 +173,7 @@ function ListingsContent() {
 
   const hasActiveFilters =
     !!filters.location || filters.minPrice !== '' || filters.maxPrice !== '' ||
-    filters.bedrooms !== '' || filters.bedroomsMax !== '' || filters.bathrooms !== '' ||
+    filters.bedrooms !== '' || filters.bathrooms !== '' ||
     !!filters.propertyType || !!filters.furnished || filters.radiusMiles !== '';
 
   const radiusActive =
@@ -280,24 +279,26 @@ function ListingsContent() {
             </select>
           </div>
 
-          {/* Bedrooms + bathrooms */}
+          {/* Bedrooms + bathrooms (exact count) */}
           <div className="lst-field">
-            <label className="form-label">Bedrooms (min)</label>
+            <label className="form-label">Bedrooms</label>
             <select className="form-select"
               value={filters.bedrooms as any}
               onChange={e => set({ bedrooms: num(e.target.value) })}>
               <option value="">Any</option>
               <option value="0">Studio</option>
-              {[1, 2, 3, 4, 5].map(v => <option key={v} value={v}>{v}+</option>)}
+              {[1, 2, 3, 4, 5].map(v => <option key={v} value={v}>{v}</option>)}
+              <option value="6">6+</option>
             </select>
           </div>
           <div className="lst-field">
-            <label className="form-label">Bathrooms (min)</label>
+            <label className="form-label">Bathrooms</label>
             <select className="form-select"
               value={filters.bathrooms as any}
               onChange={e => set({ bathrooms: num(e.target.value) })}>
               <option value="">Any</option>
-              {[1, 2, 3].map(v => <option key={v} value={v}>{v}+</option>)}
+              {[1, 2, 3, 4, 5].map(v => <option key={v} value={v}>{v}</option>)}
+              <option value="6">6+</option>
             </select>
           </div>
         </div>
@@ -305,15 +306,6 @@ function ListingsContent() {
         {/* More filters */}
         {showMore && (
           <div className="lst-grid" style={{ marginTop: 12 }}>
-            <div className="lst-field">
-              <label className="form-label">Bedrooms (max)</label>
-              <select className="form-select"
-                value={filters.bedroomsMax as any}
-                onChange={e => set({ bedroomsMax: num(e.target.value) })}>
-                <option value="">Any</option>
-                {[1, 2, 3, 4, 5].map(v => <option key={v} value={v}>{v}</option>)}
-              </select>
-            </div>
             <div className="lst-field">
               <label className="form-label">Property type</label>
               <select className="form-select"

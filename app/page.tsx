@@ -1642,7 +1642,7 @@ export default function HomePage() {
         <div className="cta-banner reveal" style={{ position: 'relative' }}>
           <div>
             <h2 style={{ fontFamily: "'Poppins', sans-serif", fontSize: 'clamp(28px,3.5vw,48px)', fontWeight: 700, color: '#fff', marginBottom: 12 }}>
-              Ready to find your<br /><span style={{ color: '#4a90d9' }}>perfect home?</span>
+              Ready to find your<br /><span style={{ color: '#60a5fa' }}>perfect home?</span>
             </h2>
             <p style={{ color: 'rgba(255,255,255,0.55)', fontSize: 16, fontWeight: 300 }}>
               Join thousands of landlords and tenants already using House of Lettings.

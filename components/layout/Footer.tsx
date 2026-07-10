@@ -48,12 +48,8 @@ export default function Footer() {
         {/* Brand + tagline + contact */}
         <div className="hol-ft__brand">
           <div className="hol-ft__logo">
-            <span className="hol-ft__mark" aria-hidden>
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M3 10.5 12 3l9 7.5" />
-                <path d="M5 9.5V21h14V9.5" />
-                <path d="M10 21v-6h4v6" />
-              </svg>
+            <span className="hol-ft__mark">
+              <img src="/images/logo_HOL_tight.png" alt="House of Lettings" width={46} height={46} />
             </span>
             <span className="hol-ft__word">
               House of Lettings
@@ -143,12 +139,14 @@ export default function Footer() {
 
         .hol-ft__logo { display: flex; align-items: center; gap: 13px; }
         .hol-ft__mark {
-          width: 42px; height: 42px; flex-shrink: 0;
+          width: 46px; height: 46px; flex-shrink: 0;
           display: inline-flex; align-items: center; justify-content: center;
           border-radius: 12px;
-          background: linear-gradient(145deg, #2563eb, #1d4ed8);
+          background: #fff;
+          overflow: hidden;
           box-shadow: 0 8px 20px rgba(37,99,235,0.38);
         }
+        .hol-ft__mark img { width: 100%; height: 100%; object-fit: cover; display: block; }
         .hol-ft__word {
           display: flex; flex-direction: column; line-height: 1.15;
           font-size: 20px; font-weight: 800; color: #fff; letter-spacing: -0.2px;

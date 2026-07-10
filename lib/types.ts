@@ -73,5 +73,16 @@ export interface SearchFilters {
   location: string;
   minPrice: number | '';
   maxPrice: number | '';
-  bedrooms: number | '';
+  bedrooms: number | '';          // minimum bedrooms
+  bedroomsMax?: number | '';      // maximum bedrooms
+  bathrooms?: number | '';        // minimum bathrooms
+  propertyType?: '' | 'whole' | 'room';
+  furnished?: '' | 'furnished' | 'unfurnished' | 'part-furnished';
+  // Radius search (Rightmove/Zoopla style): when a location is picked from the
+  // autocomplete we capture its coordinates; radiusMiles then limits results to
+  // properties within that distance. Without coordinates the location falls back
+  // to a plain text match.
+  radiusMiles?: number | '';
+  lat?: number | null;
+  lng?: number | null;
 }

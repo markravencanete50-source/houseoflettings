@@ -158,7 +158,8 @@ export function subscribeToProperties(
     // Sort client-side to avoid composite index
     properties.sort((a: any, b: any) => (b.createdAt?.seconds ?? 0) - (a.createdAt?.seconds ?? 0));
 
-    // Client-side filters
+    // Synchronous client-side filters. (The radius filter is applied in the
+    // listings page after geocoding, since it needs async coordinate lookups.)
     if (filters.minPrice !== '') {
       properties = properties.filter(p => p.price >= Number(filters.minPrice));
     }
@@ -168,7 +169,27 @@ export function subscribeToProperties(
     if (filters.bedrooms !== '') {
       properties = properties.filter(p => p.bedrooms >= Number(filters.bedrooms));
     }
-    if (filters.location) {
+    if (filters.bedroomsMax !== '' && filters.bedroomsMax !== undefined) {
+      properties = properties.filter(p => p.bedrooms <= Number(filters.bedroomsMax));
+    }
+    if (filters.bathrooms !== '' && filters.bathrooms !== undefined) {
+      properties = properties.filter(p => (p.bathrooms ?? 0) >= Number(filters.bathrooms));
+    }
+    if (filters.propertyType) {
+      // Older listings without an explicit type are treated as "whole".
+      properties = properties.filter(p => (p.propertyType ?? 'whole') === filters.propertyType);
+    }
+    if (filters.furnished) {
+      properties = properties.filter(p => p.furnished === filters.furnished);
+    }
+
+    // Text location match only when NOT doing a radius search (a radius search
+    // is geographic, so a property near the point shouldn't be excluded just
+    // because its location string doesn't contain the typed area name).
+    const usingRadius =
+      filters.radiusMiles !== '' && filters.radiusMiles !== undefined &&
+      filters.lat != null && filters.lng != null;
+    if (filters.location && !usingRadius) {
       const loc = filters.location.toLowerCase();
       properties = properties.filter(p =>
         p.location.toLowerCase().includes(loc) ||

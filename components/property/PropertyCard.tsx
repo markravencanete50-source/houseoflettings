@@ -4,13 +4,16 @@ import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { Property } from '@/lib/types';
 import { optimizedImage } from '@/lib/imageUrl';
+import { formatMiles } from '@/lib/geo';
 import LetAgreedRibbon from '@/components/property/LetAgreedRibbon';
 
 interface PropertyCardProps {
   property: Property;
+  /** Distance from the searched location, in miles (shown when radius search is active). */
+  distanceMiles?: number;
 }
 
-export default function PropertyCard({ property }: PropertyCardProps) {
+export default function PropertyCard({ property, distanceMiles }: PropertyCardProps) {
   const router = useRouter();
   const [hovered, setHovered] = useState(false);
   const [btnHovered, setBtnHovered] = useState(false);
@@ -98,8 +101,16 @@ export default function PropertyCard({ property }: PropertyCardProps) {
         </div>
 
         {/* Location */}
-        <div style={{ fontSize: 13, color: '#5a6a80', fontFamily: "'Poppins', sans-serif" }}>
-          📍 {property.location}
+        <div style={{ fontSize: 13, color: '#5a6a80', fontFamily: "'Poppins', sans-serif", display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+          <span>📍 {property.location}</span>
+          {distanceMiles != null && (
+            <span style={{
+              fontSize: 11.5, fontWeight: 700, color: '#0f1f3d', background: '#e8f0fb',
+              borderRadius: 999, padding: '2px 9px', whiteSpace: 'nowrap',
+            }}>
+              {formatMiles(distanceMiles)} away
+            </span>
+          )}
         </div>
 
         {/* Features */}

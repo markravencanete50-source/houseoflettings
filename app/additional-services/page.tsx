@@ -4,6 +4,9 @@ import { useState } from 'react';
 import Link from 'next/link';
 import Navbar from '@/components/layout/Navbar';
 import { SERVICE_CATEGORIES } from '@/lib/additionalServices';
+import { isOrderable } from '@/lib/serviceCart';
+import OrderControls from '@/components/services/OrderControls';
+import CartBar from '@/components/services/CartBar';
 
 export default function AdditionalServicesPage() {
   const [open, setOpen] = useState<string | null>(null);
@@ -134,9 +137,11 @@ export default function AdditionalServicesPage() {
         }
         .as-card__name { font-size: 17px; font-weight: 700; color: var(--navy); line-height: 1.3; margin-bottom: 4px; }
         .as-card__tag { font-size: 13px; color: #475569; line-height: 1.5; }
+        .as-order-wrap { padding: 0 24px 26px; }
         @media (max-width: 760px) {
           .as-jump-bar { top: 60px; }
           .as-detail-grid { grid-template-columns: 1fr; gap: 22px; padding: 6px 16px 24px; }
+          .as-order-wrap { padding: 0 16px 22px; }
           .as-card__head { padding: 16px 16px; gap: 12px; align-items: flex-start; flex-wrap: nowrap; }
           .as-card__name { font-size: 15.5px; }
           .as-card__tag { font-size: 12.5px; }
@@ -392,6 +397,19 @@ export default function AdditionalServicesPage() {
                               </div>
                             </div>
                           </div>
+                          <div className="as-order-wrap">
+                            {isOrderable(svc.id) ? (
+                              <OrderControls serviceId={svc.id} />
+                            ) : (
+                              <div style={{
+                                marginTop: 4, border: '1px dashed #d3dae4', borderRadius: 12,
+                                padding: '14px 18px', background: '#f7f9fc', fontFamily: "'Poppins', sans-serif",
+                                fontSize: 13.5, color: '#475569', lineHeight: 1.6,
+                              }}>
+                                This service is priced on request. Speak to our team and we&rsquo;ll prepare a tailored quote.
+                              </div>
+                            )}
+                          </div>
                         </div>
                       </div>
                   );
@@ -449,6 +467,10 @@ export default function AdditionalServicesPage() {
           </div>
         </div>
       </footer>
+
+      {/* Spacer so the fixed cart bar never hides the footer, then the bar itself */}
+      <div aria-hidden style={{ height: 96 }} />
+      <CartBar />
     </>
   );
 }

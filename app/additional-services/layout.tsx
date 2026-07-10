@@ -4,6 +4,7 @@
 // and JSON-LD — lives here.
 import type { Metadata } from 'next';
 import { SERVICE_CATEGORIES } from '@/lib/additionalServices';
+import { CartProvider } from '@/components/services/CartProvider';
 
 export const metadata: Metadata = {
   title: 'Additional Landlord Services & Prices | House of Lettings',
@@ -62,7 +63,7 @@ export default function AdditionalServicesLayout({ children }: { children: React
   return (
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(offerCatalogSchema) }} />
-      {children}
+      <CartProvider>{children}</CartProvider>
     </>
   );
 }

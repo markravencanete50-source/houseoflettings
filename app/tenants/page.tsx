@@ -251,7 +251,7 @@ export default function TenantsPage() {
               Book a Viewing
             </a>
             <a
-              href="/properties"
+              href="/listings"
               style={{
                 background: "#2563eb",
                 color: "#fff",

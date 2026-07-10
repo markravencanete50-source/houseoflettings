@@ -11,6 +11,20 @@ const nextConfig = {
     formats: ['image/webp', 'image/avif'],
     minimumCacheTTL: 60 * 60 * 24 * 7,
   },
+  async redirects() {
+    return [
+      {
+        source: '/properties',
+        destination: '/listings',
+        permanent: true,
+      },
+      {
+        source: '/properties/:path*',
+        destination: '/listings',
+        permanent: true,
+      },
+    ];
+  },
 };
 
 module.exports = nextConfig;

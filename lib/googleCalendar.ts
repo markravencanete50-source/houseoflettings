@@ -118,6 +118,62 @@ export async function pushViewingToCalendar(v: CalendarViewing): Promise<string 
   }
 }
 
+export interface CalendarInspection {
+  date: string;    // YYYY-MM-DD
+  time: string;    // HH:mm
+  endTime: string; // HH:mm
+  name: string;
+  phone: string;
+  email: string;
+  ref?: string;
+  property?: string;   // address / postcode
+  services?: string;   // comma-separated service names
+}
+
+// One-way push of a confirmed inspection appointment. The summary starts with
+// "Inspection —" so lib/inspectionSchedule.ts treats it as a booking (capacity),
+// never as an availability window. Never throws; returns the event id or null.
+export async function pushInspectionToCalendar(v: CalendarInspection): Promise<string | null> {
+  if (!isCalendarConfigured()) return null;
+  try {
+    const token = await getCalendarAccessToken();
+    const calendarId = encodeURIComponent(process.env.GOOGLE_CALENDAR_ID as string);
+    const summary = `Inspection — ${v.name}`;
+    const descriptionLines = [
+      v.ref ? `Order ref: ${v.ref}` : "",
+      `Client: ${v.name}`,
+      `Phone: ${v.phone}`,
+      `Email: ${v.email}`,
+      v.services ? `Services: ${v.services}` : "",
+      v.property ? `Property: ${v.property}` : "",
+    ].filter(Boolean);
+
+    const res = await fetch(
+      `https://www.googleapis.com/calendar/v3/calendars/${calendarId}/events`,
+      {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+        body: JSON.stringify({
+          summary,
+          description: descriptionLines.join("\n"),
+          location: v.property || "",
+          start: { dateTime: `${v.date}T${v.time}:00`, timeZone: "Europe/London" },
+          end: { dateTime: `${v.date}T${v.endTime}:00`, timeZone: "Europe/London" },
+        }),
+      }
+    );
+    if (!res.ok) {
+      console.error("Google Calendar inspection insert failed:", res.status, await res.text().catch(() => ""));
+      return null;
+    }
+    const json = await res.json();
+    return (json.id as string) || null;
+  } catch (err) {
+    console.error("pushInspectionToCalendar error:", err);
+    return null;
+  }
+}
+
 export interface CalendarEvent {
   summary?: string;
   start?: { date?: string; dateTime?: string };

@@ -1,5 +1,5 @@
 // lib/additionalServices.ts
-// A-la-carte landlord services shown on /additional-services.
+// Individual landlord services shown on /additional-services.
 // Source: HouseOfLettings_Services_Pricing (July 2026) + client pricing brief.
 
 export type PricingLine = { label: string; value: string };

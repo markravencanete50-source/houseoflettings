@@ -6,6 +6,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import Navbar from '@/components/layout/Navbar';
+import Footer from '@/components/layout/Footer';
 import Reveal from '@/components/branches/Reveal';
 import { OFFICES, CITY_CONTENT, CITY_BRANCHES, branchesByCity, City } from '@/lib/branches';
 
@@ -171,16 +172,7 @@ export default function BranchesIndexPage() {
       </main>
 
       {/* Footer */}
-      <footer style={{ background: '#050a12', padding: 'clamp(32px,5vw,48px) 5%', color: 'rgba(255,255,255,0.7)' }}>
-        <div style={{ maxWidth: 1240, margin: '0 auto', display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: 16, fontSize: 13 }}>
-          <span>© {new Date().getFullYear()} House of Lettings Ltd. All rights reserved.</span>
-          <div style={{ display: 'flex', gap: 22 }}>
-            <Link href="/branches" style={{ color: 'inherit' }}>Branches</Link>
-            <Link href="/listings" style={{ color: 'inherit' }}>Properties</Link>
-            <Link href="/terms" style={{ color: 'inherit' }}>Terms</Link>
-          </div>
-        </div>
-      </footer>
+      <Footer />
 
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(itemListSchema) }} />
     </>

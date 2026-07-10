@@ -9,6 +9,7 @@ import PropertyCard from '@/components/property/PropertyCard';
 import { getProperties } from '@/services/property';
 import { Property } from '@/lib/types';
 import GoogleReviews from '@/components/GoogleReviews';
+import Footer from '@/components/layout/Footer';
 
 // ── SCROLL REVEAL HOOK ────────────────────────────────────────────────────────
 function useScrollReveal() {
@@ -1669,34 +1670,7 @@ export default function HomePage() {
 
 
       {/* ── FOOTER ───────────────────────────────────────────── */}
-      <footer style={{
-        background: '#050a12', borderTop: '1px solid rgba(255,255,255,0.06)',
-        padding: 'clamp(32px, 5vw, 48px) clamp(20px, 5%, 5%)',
-      }}>
-        <style>{`
-          @media (max-width: 600px) {
-            .hol-footer-inner { flex-direction: column !important; align-items: flex-start !important; gap: 20px !important; }
-          }
-        `}</style>
-        <div className="hol-footer-inner" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 16 }}>
-          <div style={{
-            fontFamily: "'Poppins', sans-serif", fontSize: 20, fontWeight: 700,
-            color: '#fff', display: 'flex', alignItems: 'center', gap: 10,
-          }}>
-            <span style={{ width: 7, height: 7, background: '#2563eb', borderRadius: '50%', display: 'inline-block' }} />
-            House of Lettings
-          </div>
-          <p style={{ color: 'rgba(255,255,255,0.65)', fontSize: 13 }}>
-            © {new Date().getFullYear()} House of Lettings Ltd. All rights reserved.
-          </p>
-          <div style={{ display: 'flex', gap: 24 }}>
-            <Link href="/branches" style={{ color: 'rgba(255,255,255,0.65)', fontSize: 13, textDecoration: 'none' }}>Branches</Link>
-            <Link href="/cookie-policy" style={{ color: 'rgba(255,255,255,0.65)', fontSize: 13, textDecoration: 'none' }}>Cookie Policy</Link>
-            <Link href="/terms" style={{ color: 'rgba(255,255,255,0.65)', fontSize: 13, textDecoration: 'none' }}>Terms</Link>
-            <Link href="/contact" style={{ color: 'rgba(255,255,255,0.65)', fontSize: 13, textDecoration: 'none' }}>Contact</Link>
-          </div>
-        </div>
-      </footer>
+      <Footer />
 
     </>
   );

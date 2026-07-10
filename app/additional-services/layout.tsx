@@ -44,7 +44,7 @@ const offerCatalogSchema = {
   },
   hasOfferCatalog: {
     '@type': 'OfferCatalog',
-    name: 'A la carte services',
+    name: 'Individual landlord services',
     itemListElement: SERVICE_CATEGORIES.flatMap((cat) =>
       cat.services.map((s) => ({
         '@type': 'Offer',

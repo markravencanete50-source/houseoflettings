@@ -1,6 +1,6 @@
 'use client';
-import Link from 'next/link';
 import Navbar from '@/components/layout/Navbar';
+import Footer from '@/components/layout/Footer';
 
 const FUNCTIONAL_COOKIES = [
   { title: 'Cookie Consent', name: 'cookie_consent', desc: 'Tracks your cookie preferences so we know what we can and cannot use. This is a persistent cookie.' },
@@ -174,22 +174,7 @@ export default function CookiePolicyPage() {
       </div>
 
       {/* Footer */}
-      <footer style={{ background: '#050505', borderTop: '1px solid rgba(255,255,255,0.06)', padding: '48px 5%' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 20 }}>
-          <div style={{ fontFamily: 'var(--font-serif)', fontSize: 20, fontWeight: 700, color: '#fff', display: 'flex', alignItems: 'center', gap: 10 }}>
-            <span style={{ width: 7, height: 7, background: 'var(--red)', borderRadius: '50%', display: 'inline-block' }} />
-            House of Lettings
-          </div>
-          <p style={{ color: 'rgba(255,255,255,0.25)', fontSize: 13 }}>
-            © {new Date().getFullYear()} House of Lettings Ltd. All rights reserved.
-          </p>
-          <div style={{ display: 'flex', gap: 24 }}>
-            <Link href="/cookie-policy" style={{ color: 'var(--red)', fontSize: 13, fontWeight: 600 }}>Cookie Policy</Link>
-            <Link href="/terms" style={{ color: 'rgba(255,255,255,0.35)', fontSize: 13 }}>Terms</Link>
-            <span style={{ color: 'rgba(255,255,255,0.35)', fontSize: 13, cursor: 'pointer' }}>Contact</span>
-          </div>
-        </div>
-      </footer>
+      <Footer />
     </>
   );
 }

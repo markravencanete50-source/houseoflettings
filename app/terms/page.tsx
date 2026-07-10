@@ -1,6 +1,7 @@
 'use client';
 import Link from 'next/link';
 import Navbar from '@/components/layout/Navbar';
+import Footer from '@/components/layout/Footer';
 
 export default function TermsAndConditions() {
   const sections = [
@@ -577,6 +578,7 @@ export default function TermsAndConditions() {
 
         </div>
       </main>
+      <Footer />
     </>
   );
 }

@@ -7,6 +7,7 @@ import { SERVICE_CATEGORIES } from '@/lib/additionalServices';
 import { isOrderable } from '@/lib/serviceCart';
 import OrderControls from '@/components/services/OrderControls';
 import CartBar from '@/components/services/CartBar';
+import Footer from '@/components/layout/Footer';
 
 export default function AdditionalServicesPage() {
   const [open, setOpen] = useState<string | null>(null);
@@ -451,22 +452,7 @@ export default function AdditionalServicesPage() {
       </section>
 
       {/* ── FOOTER ───────────────────────────────────────────── */}
-      <footer style={{ background: '#050a12', borderTop: '1px solid rgba(255,255,255,0.06)', padding: '48px 5%' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 20 }}>
-          <div style={{ fontFamily: "'Poppins', sans-serif", fontSize: 20, fontWeight: 700, color: '#fff', display: 'flex', alignItems: 'center', gap: 10 }}>
-            <span style={{ width: 7, height: 7, background: 'var(--blue)', borderRadius: '50%', display: 'inline-block' }} />
-            House of Lettings
-          </div>
-          <p style={{ color: 'rgba(255,255,255,0.25)', fontSize: 13, margin: 0, fontFamily: "'Poppins', sans-serif" }}>
-            © {new Date().getFullYear()} House of Lettings Ltd. All rights reserved.
-          </p>
-          <div style={{ display: 'flex', gap: 24 }}>
-            <Link href="/cookie-policy" style={{ color: 'rgba(255,255,255,0.35)', fontSize: 13, textDecoration: 'none' }}>Cookie Policy</Link>
-            <Link href="/terms" style={{ color: 'rgba(255,255,255,0.35)', fontSize: 13, textDecoration: 'none' }}>Terms</Link>
-            <Link href="/" style={{ color: 'rgba(255,255,255,0.35)', fontSize: 13, textDecoration: 'none' }}>Home</Link>
-          </div>
-        </div>
-      </footer>
+      <Footer />
 
       {/* Spacer so the fixed cart bar never hides the footer, then the bar itself */}
       <div aria-hidden style={{ height: 96 }} />

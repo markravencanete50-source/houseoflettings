@@ -9,6 +9,7 @@ import { MATRIX_SECTIONS, TOTAL_SERVICES, PRICING_FAQ } from '@/lib/pricingMatri
 import { useCart } from '@/components/services/CartProvider';
 import { newSelection } from '@/lib/serviceCart';
 import CartBar from '@/components/services/CartBar';
+import Footer from '@/components/layout/Footer';
 
 const PACKAGES = BUNDLES;
 const VISIBLE_ROWS = 7;   // rows shown per matrix section before "Show more"
@@ -805,8 +806,8 @@ export default function PricingPage() {
         <div className="pr-addl-in">
           <div>
             <span className="pr-eyebrow">More than just packages</span>
-            <h2>Need something à la carte?</h2>
-            <p>Gas &amp; electrical certificates, inventories &amp; handovers, professional photography, referencing, mid-tenancy inspections and rent protection — order any service individually, with or without a package.</p>
+            <h2>Need just one or two services?</h2>
+            <p>Gas and electrical certificates, inventories and handovers, professional photography, referencing, mid-tenancy inspections and rent protection. Order any service individually, with or without a package.</p>
           </div>
           <Link href="/additional-services" className="pr-addl-btn">Browse Additional Services →</Link>
         </div>
@@ -863,23 +864,7 @@ export default function PricingPage() {
       </section>
 
       {/* ── FOOTER ──────────────────────────────────────────── */}
-      <footer style={{ background: '#050a12', borderTop: '1px solid rgba(255,255,255,0.06)', padding: '48px 5%' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 20 }}>
-          <div style={{ fontFamily: "'Poppins', sans-serif", fontSize: 20, fontWeight: 700, color: '#fff', display: 'flex', alignItems: 'center', gap: 10 }}>
-            <span style={{ width: 7, height: 7, background: '#2563eb', borderRadius: '50%', display: 'inline-block' }} />
-            House of Lettings
-          </div>
-          <p style={{ color: 'rgba(255,255,255,0.25)', fontSize: 13, margin: 0, fontFamily: "'Poppins', sans-serif" }}>
-            © {new Date().getFullYear()} House of Lettings Ltd. All rights reserved.
-          </p>
-          <div style={{ display: 'flex', gap: 24 }}>
-            <Link href="/additional-services" style={{ color: 'rgba(255,255,255,0.35)', fontSize: 13, textDecoration: 'none' }}>Additional Services</Link>
-            <Link href="/cookie-policy" style={{ color: 'rgba(255,255,255,0.35)', fontSize: 13, textDecoration: 'none' }}>Cookie Policy</Link>
-            <Link href="/terms" style={{ color: 'rgba(255,255,255,0.35)', fontSize: 13, textDecoration: 'none' }}>Terms</Link>
-            <Link href="/" style={{ color: 'rgba(255,255,255,0.35)', fontSize: 13, textDecoration: 'none' }}>Home</Link>
-          </div>
-        </div>
-      </footer>
+      <Footer />
 
       </div>{/* /pr-scope */}
 

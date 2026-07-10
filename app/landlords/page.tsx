@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import Navbar from '@/components/layout/Navbar';
+import Footer from '@/components/layout/Footer';
 
 const landlordFaqs = [
   {
@@ -551,33 +552,7 @@ export default function LandlordsPage() {
 
 
       {/* ── FOOTER ──────────────────────────────────────────── */}
-      <footer style={{
-        background: '#050a12', borderTop: '1px solid rgba(255,255,255,0.06)',
-        padding: 'clamp(32px, 5vw, 48px) clamp(24px, 7%, 100px)',
-      }}>
-        <style>{`
-          @media (max-width: 600px) {
-            .ll-footer { flex-direction: column !important; align-items: flex-start !important; gap: 20px !important; }
-          }
-        `}</style>
-        <div className="ll-footer" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 16 }}>
-          <div style={{
-            fontFamily: "'Poppins', sans-serif", fontSize: 20, fontWeight: 700,
-            color: '#fff', display: 'flex', alignItems: 'center', gap: 10,
-          }}>
-            <span style={{ width: 7, height: 7, background: '#2563eb', borderRadius: '50%', display: 'inline-block' }} />
-            House of Lettings
-          </div>
-          <p style={{ color: 'rgba(255,255,255,0.25)', fontSize: 13, fontFamily: "'Poppins', sans-serif" }}>
-            © {new Date().getFullYear()} House of Lettings Ltd. All rights reserved.
-          </p>
-          <div style={{ display: 'flex', gap: 24 }}>
-            <Link href="/cookie-policy" style={{ color: 'rgba(255,255,255,0.35)', fontSize: 13, textDecoration: 'none' }}>Cookie Policy</Link>
-            <Link href="/terms" style={{ color: 'rgba(255,255,255,0.35)', fontSize: 13, textDecoration: 'none' }}>Terms</Link>
-            <Link href="/" style={{ color: 'rgba(255,255,255,0.35)', fontSize: 13, textDecoration: 'none' }}>Home</Link>
-          </div>
-        </div>
-      </footer>
+      <Footer />
 
     </>
   );

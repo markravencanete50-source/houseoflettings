@@ -2,6 +2,7 @@
 // app/pricing/page.tsx
 import { useState, useEffect, useCallback, Fragment } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import Navbar from '@/components/layout/Navbar';
 import PostcodeLookup, { type AddressResult } from '@/components/PostcodeLookup';
 import { BUNDLES } from '@/lib/bundles';
@@ -10,6 +11,68 @@ import { MATRIX_SECTIONS, TOTAL_SERVICES, PRICING_FAQ } from '@/lib/pricingMatri
 const PACKAGES = BUNDLES;
 const VISIBLE_ROWS = 7;   // rows shown per matrix section before "Show more"
 const HOT = 3;            // Full Management column index (Most Popular)
+
+// Decision guide shown AFTER the comparison table. One split panel per package
+// (styled like the homepage "Book a valuation / Book a viewing" sections) that
+// explains, in plain terms, who the service is for and when to choose it. Index
+// matches BUNDLES order. Copy avoids em/en dashes per the site copy rule.
+const EXPLAINERS: { image: string; kicker: string; lead: string; body: string; points: string[] }[] = [
+  {
+    image: '/images/agent-photo.webp',
+    kicker: 'Tenant Find · £399 one-time',
+    lead: 'Choose this if you have the time to run the tenancy and handle maintenance yourself.',
+    body: 'You live near the property and are happy to be the point of contact once a tenant moves in. We do the hard part remotely: market the property, vet applicants and reference them fully, then hand you a signed tenancy agreement. One fixed fee, no ongoing cost.',
+    points: [
+      'You live close by and can deal with day to day issues',
+      'You are comfortable arranging your own repairs',
+      'You want a fully referenced tenant found fast, for one fixed fee',
+    ],
+  },
+  {
+    image: '/images/service-compare.webp',
+    kicker: 'Tenant Find · £699 one-time',
+    lead: 'Choose this if you want the strongest tenant at the best rent, but still want to self manage.',
+    body: 'Everything in Virtual, plus professional photography, a floor plan, accompanied viewings and a full in person handover. The complete marketing push to attract better applicants and achieve a higher rent. You keep control of the tenancy once it starts.',
+    points: [
+      'You want your property to stand out with pro photos and viewings',
+      'You are happy to manage the tenancy yourself',
+      'You want to maximise rent with expert marketing',
+    ],
+  },
+  {
+    image: '/images/landlord-app.webp',
+    kicker: 'Management · £199 then 6% of rent',
+    lead: 'Choose this if you want the rent handled for you, but are happy to look after maintenance.',
+    body: 'We collect the rent, monitor payments, chase any arrears and take care of the monthly admin, so the money side runs itself. You stay in control of repairs and choosing your own contractors. A light touch option for confident landlords.',
+    points: [
+      'You want rent collection and arrears chasing done for you',
+      'You are happy to arrange your own repairs and contractors',
+      'You want the admin off your plate without full management',
+    ],
+  },
+  {
+    image: '/images/brand-desk.webp',
+    kicker: 'Management · £399 then 8% of rent',
+    lead: 'Choose this if you want the whole tenancy off your plate.',
+    body: 'Rent, tenant communication, maintenance, contractor coordination and compliance, all managed by your local team. You do nothing day to day. This is the truly hands off choice and by far our most popular package.',
+    points: [
+      'You do not have the time, or do not live nearby',
+      'You want maintenance and contractors handled for you',
+      'You want compliance tracked so nothing is missed',
+    ],
+  },
+  {
+    image: '/images/compliance.webp',
+    kicker: 'Management · £399 then 10% of rent',
+    lead: 'Choose this if you want maximum protection for your rental income.',
+    body: 'Everything in Full, plus rent guarantee cover, legal and eviction protection, priority contractor response and enhanced inspections. Complete peace of mind, with your income protected even if a tenant stops paying.',
+    points: [
+      'You want your rent guaranteed even during arrears',
+      'You want legal and eviction costs covered',
+      'You want priority repairs and enhanced inspections',
+    ],
+  },
+];
 
 function TickIcon() {
   return (
@@ -28,6 +91,7 @@ function DashIcon() {
 
 export default function PricingPage() {
   const [active, setActive] = useState(HOT);
+  const [mobileTab, setMobileTab] = useState(HOT);   // selected package in the mobile compare view
   const [showModal, setShowModal] = useState(false);
   const [expanded, setExpanded] = useState<Record<number, boolean>>({});
   const [formData, setFormData] = useState({
@@ -135,56 +199,20 @@ export default function PricingPage() {
           .pr-trust-in div:nth-child(3),.pr-trust-in div:nth-child(4){ border-top:1px solid #eef1f5; }
         }
 
-        /* ---------- Chooser cards ---------- */
-        .pr-chooser { max-width:1200px; margin:56px auto 0; padding:0 5%; }
-        .pr-chooser-grid { display:grid; grid-template-columns:repeat(5,1fr); gap:16px; align-items:stretch; }
-        .pr-pick { position:relative; background:#fff; border:1px solid #e5e7eb; border-radius:14px;
-          padding:24px 20px 22px; display:flex; flex-direction:column;
-          box-shadow:0 12px 30px -24px rgba(15,31,61,.3); transition:transform .15s ease, box-shadow .15s ease; }
-        .pr-pick:hover { transform:translateY(-3px); box-shadow:0 22px 42px -24px rgba(15,31,61,.38); }
-        .pr-pick.pr-featured { border:2px solid #2563eb; box-shadow:0 22px 46px -22px rgba(37,99,235,.5); }
-        .pr-flag { position:absolute; top:-11px; left:50%; transform:translateX(-50%);
-          background:#2563eb; color:#fff; font-size:10px; font-weight:800; letter-spacing:.1em;
-          text-transform:uppercase; padding:4px 12px; border-radius:999px; white-space:nowrap; }
-        .pr-kind { font-size:10.5px; font-weight:700; letter-spacing:.12em; text-transform:uppercase;
-          color:#4a90d9; margin-bottom:8px; }
-        .pr-pname { font-size:19px; font-weight:800; line-height:1.15; color:#0f1f3d; margin-bottom:10px; min-height:44px; }
-        .pr-pprice { font-size:24px; font-weight:800; color:#2563eb; line-height:1; }
-        .pr-pprice span { font-size:12.5px; font-weight:500; color:#9ca3af; }
-        .pr-pongoing { font-size:12.5px; font-weight:700; color:#4a90d9; margin:4px 0 14px; }
-        .pr-pongoing.pr-none { color:#9ca3af; font-weight:600; }
-        .pr-best { font-size:12.5px; font-weight:600; color:#374151; padding:10px 12px; background:#f2f5fb;
-          border-radius:9px; margin-bottom:12px; line-height:1.4; }
-        .pr-best b { color:#2563eb; font-weight:800; }
-        .pr-desc { font-size:12.8px; color:#6b7280; line-height:1.55; flex:1 1 auto; margin-bottom:14px; }
-        .pr-tag { display:inline-flex; align-items:center; gap:7px; font-size:11.5px; font-weight:600;
-          color:#0f1f3d; background:#e7f6ee; border-radius:8px; padding:6px 10px; align-self:flex-start; margin-bottom:16px; }
-        .pr-tag svg { width:13px; height:13px; stroke:#16a34a; stroke-width:2.6; fill:none; flex:none; }
-        .pr-pick-btn { display:block; width:100%; text-align:center; padding:12px 14px; border-radius:8px;
-          background:#2563eb; color:#fff; border:none; cursor:pointer; font-size:13px; font-weight:700;
-          letter-spacing:.03em; text-transform:uppercase; transition:background .18s ease; }
-        .pr-pick-btn:hover { background:#1e40af; }
-        .pr-pick.pr-featured .pr-pick-btn { background:#2563eb; }
-        .pr-pick-link { margin-top:10px; text-align:center; font-size:12px; font-weight:700; color:#2563eb;
-          text-decoration:none; }
-        .pr-pick-link:hover { text-decoration:underline; }
-        @media(max-width:1000px){ .pr-chooser-grid{ grid-template-columns:repeat(2,1fr);} .pr-pick.pr-featured{ order:-1;} .pr-pname{min-height:0;} }
-        @media(max-width:540px){ .pr-chooser-grid{ grid-template-columns:1fr;} }
-
         /* ---------- Comparison matrix ---------- */
-        .pr-wrap { max-width:1120px; margin:64px auto 0; padding:0 5%; }
+        .pr-wrap { max-width:1200px; margin:64px auto 0; padding:0 5%; }
         .pr-matrix-card { background:#fff; border:1px solid #e5e7eb; border-radius:14px;
           box-shadow:0 18px 40px -22px rgba(15,31,61,.3); overflow:hidden; }
-        .pr-scroll-hint { display:none; font-size:12px; color:#6b7280; text-align:center; padding:10px 16px 0; }
         .pr-scroller { overflow-x:auto; -webkit-overflow-scrolling:touch; }
         .pr-scroller::-webkit-scrollbar { height:9px; }
         .pr-scroller::-webkit-scrollbar-thumb { background:#dbe2ea; border-radius:5px; }
-        .pr-table { border-collapse:separate; border-spacing:0; width:100%; min-width:calc(300px + 5*150px); }
+        /* 240 (services) + 5*128 (packages) = 880 → fits the ~1080px inner width on desktop with room to spare, so no right-scroll. */
+        .pr-table { border-collapse:separate; border-spacing:0; width:100%; min-width:880px; }
         .pr-table th, .pr-table td { padding:0; }
         .pr-svc, .pr-corner { position:sticky; left:0; z-index:3; background:#fff; }
         .pr-table thead th { position:sticky; top:0; z-index:4; background:#0f1f3d; }
         .pr-table thead th.pr-corner { z-index:5; background:#0f1f3d; }
-        .pr-pkg { width:150px; min-width:150px; vertical-align:bottom; padding:16px 10px 15px; text-align:center;
+        .pr-pkg { width:128px; min-width:128px; vertical-align:bottom; padding:16px 8px 15px; text-align:center;
           color:#fff; border-left:1px solid rgba(255,255,255,.08); }
         .pr-badge { display:inline-block; font-size:9.5px; font-weight:800; letter-spacing:.1em; text-transform:uppercase;
           background:#2563eb; color:#fff; border-radius:999px; padding:3px 10px; margin-bottom:8px; }
@@ -196,14 +224,14 @@ export default function PricingPage() {
           border-top:1px solid rgba(255,255,255,.1); }
         .pr-ongoing.pr-rec { color:#7db4f0; }
         .pr-corner { vertical-align:bottom; text-align:left; padding:16px 18px 15px; color:#fff;
-          min-width:300px; width:300px; }
+          min-width:240px; width:240px; }
         .pr-corner-t { font-size:16px; font-weight:700; display:block; }
         .pr-corner-s { font-size:11px; color:#AFC6CC; font-weight:400; }
         /* Fee summary rows */
         .pr-fee-row td { border-top:1px solid #e5e7eb; }
         .pr-fee-label { font-weight:700 !important; color:#0f1f3d !important; font-size:11.5px !important;
           text-transform:uppercase; letter-spacing:.05em; background:#e8f0fb !important; }
-        .pr-fee-cell { width:150px; min-width:150px; text-align:center; font-weight:800; color:#0f1f3d;
+        .pr-fee-cell { width:128px; min-width:128px; text-align:center; font-weight:800; color:#0f1f3d;
           font-size:16px; padding:12px 0; border-left:1px solid #e5e7eb; background:#f0f6ff; }
         .pr-fee-onetime .pr-fee-label { background:#dbe8fb !important; }
         .pr-fee-onetime .pr-fee-cell { background:#e8f0fb; }
@@ -214,9 +242,9 @@ export default function PricingPage() {
         .pr-band td { background:#1a2c49; color:#fff; font-weight:700; font-size:11.5px; letter-spacing:.1em;
           text-transform:uppercase; padding:9px 18px; position:sticky; left:0; }
         .pr-band td span { position:sticky; left:18px; }
-        .pr-svc { font-size:13px; padding:9px 18px; min-width:300px; width:300px; border-top:1px solid #eef1f5; color:#374151; }
+        .pr-svc { font-size:13px; padding:9px 16px; min-width:240px; width:240px; border-top:1px solid #eef1f5; color:#374151; }
         .pr-feat:nth-child(even) .pr-svc { background:#f6f9fc; }
-        .pr-mark { width:150px; min-width:150px; text-align:center; border-top:1px solid #eef1f5;
+        .pr-mark { width:128px; min-width:128px; text-align:center; border-top:1px solid #eef1f5;
           border-left:1px solid #eef1f5; font-size:0; padding:7px 0; }
         .pr-feat:nth-child(even) .pr-mark { background:#fafcfe; }
         .pr-feat:nth-child(even) .pr-mark.pr-hot { background:#e6f0ff !important; }
@@ -244,7 +272,68 @@ export default function PricingPage() {
         .pr-legend { display:flex; gap:22px; justify-content:center; flex-wrap:wrap; padding:16px 16px 6px;
           font-size:12.5px; color:#5b6e74; }
         .pr-legend span { display:inline-flex; align-items:center; gap:7px; }
-        @media(max-width:720px){ .pr-scroll-hint{ display:block; } }
+
+        /* ---------- Desktop table vs mobile tabbed view ---------- */
+        .pr-mobile-compare { display:none; }
+        @media(max-width:1024px){
+          .pr-desktop-compare { display:none; }
+          .pr-mobile-compare { display:block; }
+        }
+        .pr-mt-pills { display:flex; gap:8px; overflow-x:auto; padding:2px 0 16px; -webkit-overflow-scrolling:touch; }
+        .pr-mt-pills::-webkit-scrollbar { display:none; }
+        .pr-mt-pill { flex:0 0 auto; border:1.5px solid #dbe2ea; background:#fff; color:#374151; border-radius:999px;
+          padding:9px 16px; font-size:13px; font-weight:700; cursor:pointer; white-space:nowrap; position:relative; transition:all .15s ease; }
+        .pr-mt-pill.active { background:#2563eb; border-color:#2563eb; color:#fff; }
+        .pr-mt-pop { position:absolute; top:-8px; right:6px; background:#0f1f3d; color:#fff; font-size:8px; font-weight:800;
+          letter-spacing:.06em; padding:2px 6px; border-radius:999px; text-transform:uppercase; }
+        .pr-mt-pill.active .pr-mt-pop { background:#fff; color:#2563eb; }
+        .pr-mt-card { background:#fff; border:1px solid #e5e7eb; border-radius:14px; overflow:hidden;
+          box-shadow:0 14px 34px -24px rgba(15,31,61,.3); }
+        .pr-mt-head { background:#0f1f3d; color:#fff; padding:20px 20px 18px; }
+        .pr-mt-head .k { font-size:11px; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:#AFC6CC; }
+        .pr-mt-head .n { font-size:20px; font-weight:800; display:block; margin:4px 0 12px; line-height:1.15; }
+        .pr-mt-fees { display:flex; gap:26px; }
+        .pr-mt-fees div { font-size:11px; color:#AFC6CC; text-transform:uppercase; letter-spacing:.06em; }
+        .pr-mt-fees b { display:block; font-size:17px; color:#fff; font-weight:800; margin-top:2px; text-transform:none; letter-spacing:0; }
+        .pr-mt-band { background:#1a2c49; color:#fff; font-weight:700; font-size:11px; letter-spacing:.08em;
+          text-transform:uppercase; padding:9px 18px; }
+        .pr-mt-row { display:flex; justify-content:space-between; align-items:center; gap:14px; padding:11px 18px;
+          border-top:1px solid #eef1f5; font-size:13.5px; color:#374151; line-height:1.4; }
+        .pr-mt-row.pr-off { color:#9ca3af; }
+        .pr-mt-row .pr-tick, .pr-mt-row .pr-dash { flex:none; }
+        .pr-mt-cta { padding:18px; }
+        .pr-mt-cta button { width:100%; padding:14px; background:#2563eb; color:#fff; border:none; border-radius:8px;
+          font-size:14px; font-weight:700; text-transform:uppercase; letter-spacing:.03em; cursor:pointer; transition:background .18s ease; }
+        .pr-mt-cta button:hover { background:#1d4ed8; }
+
+        /* ---------- Decision guide: split panels ---------- */
+        .pr-guide { max-width:1200px; margin:72px auto 0; padding:0 5%; }
+        .pr-panels { margin-top:40px; display:flex; flex-direction:column; gap:28px; }
+        .pr-panel { display:grid; grid-template-columns:1fr 1fr; background:#fff; border:1px solid #e5e7eb;
+          border-radius:18px; overflow:hidden; box-shadow:0 18px 40px -26px rgba(15,31,61,.3); min-height:360px; }
+        .pr-panel.pr-panel-featured { border:2px solid #2563eb; box-shadow:0 26px 52px -24px rgba(37,99,235,.42); }
+        .pr-panel-img { position:relative; min-height:300px; }
+        .pr-panel.pr-rev .pr-panel-img { order:2; }
+        .pr-panel.pr-rev .pr-panel-text { order:1; }
+        .pr-panel-text { padding:clamp(32px,4vw,52px); display:flex; flex-direction:column; justify-content:center; }
+        .pr-panel-kicker { display:inline-flex; flex-wrap:wrap; gap:8px; align-items:center; font-size:12px; font-weight:700;
+          letter-spacing:.1em; text-transform:uppercase; color:#2563eb; margin-bottom:14px; }
+        .pr-panel-kicker .pr-pop { background:#2563eb; color:#fff; border-radius:999px; padding:3px 10px; font-size:9.5px; letter-spacing:.08em; }
+        .pr-panel-text h3 { font-size:clamp(22px,2.4vw,30px); font-weight:800; color:#0f1f3d; margin:0 0 14px; line-height:1.15; }
+        .pr-panel-lead { font-size:15.5px; font-weight:700; color:#0f1f3d; margin:0 0 12px; line-height:1.5; }
+        .pr-panel-body { font-size:14.5px; color:#6b7280; line-height:1.7; margin:0 0 18px; }
+        .pr-panel-list { list-style:none; margin:0 0 26px; padding:0; display:flex; flex-direction:column; gap:10px; }
+        .pr-panel-list li { display:flex; gap:10px; font-size:14px; color:#374151; line-height:1.5; }
+        .pr-panel-list svg { width:15px; height:15px; stroke:#16a34a; stroke-width:2.8; fill:none; flex:none; margin-top:3px; }
+        .pr-panel-btn { align-self:flex-start; padding:14px 30px; background:#2563eb; color:#fff; border:none; border-radius:8px;
+          font-size:14px; font-weight:700; letter-spacing:.03em; text-transform:uppercase; cursor:pointer; transition:background .18s ease; }
+        .pr-panel-btn:hover { background:#1d4ed8; }
+        @media(max-width:860px){
+          .pr-panel, .pr-panel.pr-rev { grid-template-columns:1fr; }
+          .pr-panel-img, .pr-panel.pr-rev .pr-panel-img { order:0; min-height:220px; }
+          .pr-panel.pr-rev .pr-panel-text { order:1; }
+          .pr-panel-btn { align-self:stretch; text-align:center; }
+        }
 
         /* ---------- How fees work ---------- */
         .pr-fees { max-width:1120px; margin:44px auto 0; padding:0 5%; }
@@ -316,43 +405,16 @@ export default function PricingPage() {
         </div>
       </section>
 
-      {/* ── CHOOSER: which package is right for you? ─────────── */}
-      <section className="pr-chooser" aria-label="Which package is right for you">
-        <div className="pr-head">
-          <span className="pr-eyebrow">Where do you fit?</span>
-          <h2>Which package is right for you?</h2>
-          <p>It comes down to one question: how much do you want to handle yourself? The more you take on, the less you pay us. Here&apos;s who each package is built for.</p>
-        </div>
-        <div className="pr-chooser-grid">
-          {PACKAGES.map((p, i) => (
-            <article key={p.id} className={`pr-pick${i === HOT ? ' pr-featured' : ''}`}>
-              {p.badge && <span className="pr-flag">{p.badge}</span>}
-              <span className="pr-kind">{p.kind}</span>
-              <div className="pr-pname">{p.label}</div>
-              <div className="pr-pprice">{p.setupFee} <span>one-time</span></div>
-              <div className={`pr-pongoing${p.mgmtFee ? '' : ' pr-none'}`}>{p.ongoing}</div>
-              <div className="pr-best">For <b>{p.bestForLead}</b> {p.bestForRest}</div>
-              <p className="pr-desc">{p.blurb}</p>
-              <span className="pr-tag">
-                <svg viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5" /></svg> {p.youWe}
-              </span>
-              <button type="button" className="pr-pick-btn" onClick={() => openModalFor(i)}>Get Started</button>
-              <a className="pr-pick-link" href="#compare">See what&apos;s included ↓</a>
-            </article>
-          ))}
-        </div>
-      </section>
-
       {/* ── COMPARISON MATRIX ───────────────────────────────── */}
       <section className="pr-wrap" id="compare">
         <div className="pr-head">
           <span className="pr-eyebrow">Compare Packages</span>
           <h2>Every service, side by side</h2>
-          <p>Two tenant-find options and three management tiers. Every package includes a full tenant-find service — management adds ongoing rent, compliance and maintenance support.</p>
+          <p>Two tenant-find options and three management tiers. Every package includes a full tenant-find service, management adds ongoing rent, compliance and maintenance support.</p>
         </div>
 
-        <div className="pr-matrix-card">
-          <p className="pr-scroll-hint">Swipe across to compare all five packages →</p>
+        {/* Desktop: full five-column table (fits without horizontal scroll) */}
+        <div className="pr-matrix-card pr-desktop-compare">
           <div className="pr-scroller" role="region" aria-label="Package comparison table" tabIndex={0}>
             <table className="pr-table">
               <thead>
@@ -380,7 +442,7 @@ export default function PricingPage() {
                 <tr className="pr-fee-row pr-fee-ongoing">
                   <td className="pr-svc pr-fee-label">Ongoing Fee</td>
                   {PACKAGES.map((p, i) => (
-                    <td key={p.id} className={`pr-fee-cell${i === HOT ? ' pr-hot' : ''}`}>{p.mgmtFee || '—'}</td>
+                    <td key={p.id} className={`pr-fee-cell${i === HOT ? ' pr-hot' : ''}`}>{p.mgmtFee || 'None'}</td>
                   ))}
                 </tr>
                 {MATRIX_SECTIONS.map((section, s) => {
@@ -434,6 +496,105 @@ export default function PricingPage() {
             <span><i className="pr-tick"><svg viewBox="0 0 24 24"><polyline points="4 13 10 19 20 6" /></svg></i> Included</span>
             <span><i className="pr-dash"><svg viewBox="0 0 24 24"><line x1="6" y1="12" x2="18" y2="12" /></svg></i> Not included</span>
           </div>
+        </div>
+
+        {/* Mobile: tabbed single-package view (no horizontal scroll) */}
+        <div className="pr-mobile-compare">
+          <div className="pr-mt-pills" role="tablist" aria-label="Choose a package to compare">
+            {PACKAGES.map((p, i) => (
+              <button
+                key={p.id}
+                role="tab"
+                aria-selected={mobileTab === i}
+                className={`pr-mt-pill${mobileTab === i ? ' active' : ''}`}
+                onClick={() => setMobileTab(i)}
+              >
+                {p.short}
+                {p.badge && <span className="pr-mt-pop">Popular</span>}
+              </button>
+            ))}
+          </div>
+
+          <div className="pr-mt-card">
+            <div className="pr-mt-head">
+              <span className="k">{PACKAGES[mobileTab].kind}</span>
+              <span className="n">{PACKAGES[mobileTab].label}</span>
+              <div className="pr-mt-fees">
+                <div>One-time<b>{PACKAGES[mobileTab].setupFee}</b></div>
+                <div>Ongoing<b>{PACKAGES[mobileTab].mgmtFee || 'None'}</b></div>
+              </div>
+            </div>
+
+            {MATRIX_SECTIONS.map((section) => (
+              <Fragment key={section.title}>
+                <div className="pr-mt-band">{section.title}</div>
+                {section.rows.map((row) => {
+                  const included = !!row[mobileTab + 1];
+                  return (
+                    <div key={row[0] as string} className={`pr-mt-row${included ? '' : ' pr-off'}`}>
+                      <span>{row[0]}</span>
+                      {included ? <TickIcon /> : <DashIcon />}
+                    </div>
+                  );
+                })}
+              </Fragment>
+            ))}
+
+            <div className="pr-mt-cta">
+              <button onClick={() => openModalFor(mobileTab)}>Get {PACKAGES[mobileTab].short} →</button>
+            </div>
+          </div>
+
+          <div className="pr-legend">
+            <span><i className="pr-tick"><svg viewBox="0 0 24 24"><polyline points="4 13 10 19 20 6" /></svg></i> Included</span>
+            <span><i className="pr-dash"><svg viewBox="0 0 24 24"><line x1="6" y1="12" x2="18" y2="12" /></svg></i> Not included</span>
+          </div>
+        </div>
+      </section>
+
+      {/* ── DECISION GUIDE: which service is right for you? ──── */}
+      <section className="pr-guide" aria-label="Which service is right for you">
+        <div className="pr-head">
+          <span className="pr-eyebrow">Not sure which to pick?</span>
+          <h2>Find the right service for you</h2>
+          <p>It comes down to one thing: how much do you want to handle yourself? Here is when to choose each package, from finding a tenant to fully protecting your income.</p>
+        </div>
+
+        <div className="pr-panels">
+          {EXPLAINERS.map((ex, i) => {
+            const p = PACKAGES[i];
+            const featured = i === HOT;
+            return (
+              <article
+                key={p.id}
+                className={`pr-panel${i % 2 === 1 ? ' pr-rev' : ''}${featured ? ' pr-panel-featured' : ''}`}
+              >
+                <div className="pr-panel-img">
+                  <Image src={ex.image} alt={p.label} fill sizes="(max-width: 860px) 100vw, 50vw" style={{ objectFit: 'cover' }} />
+                </div>
+                <div className="pr-panel-text">
+                  <span className="pr-panel-kicker">
+                    {ex.kicker}
+                    {p.badge && <span className="pr-pop">Most Popular</span>}
+                  </span>
+                  <h3>{p.label}</h3>
+                  <p className="pr-panel-lead">{ex.lead}</p>
+                  <p className="pr-panel-body">{ex.body}</p>
+                  <ul className="pr-panel-list">
+                    {ex.points.map((pt) => (
+                      <li key={pt}>
+                        <svg viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5" /></svg>
+                        <span>{pt}</span>
+                      </li>
+                    ))}
+                  </ul>
+                  <button type="button" className="pr-panel-btn" onClick={() => openModalFor(i)}>
+                    Choose {p.short}
+                  </button>
+                </div>
+              </article>
+            );
+          })}
         </div>
       </section>
 

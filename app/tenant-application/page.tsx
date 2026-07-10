@@ -238,34 +238,52 @@ type UploadState = {
 };
 
 function FileUpload({
-  label, required, maxFiles = 5, state, onChange,
+  label, required, hint, minFiles, maxFiles = 5, state, onChange,
 }: {
-  label: string; required?: boolean; maxFiles?: number;
+  label: string; required?: boolean; hint?: string; minFiles?: number; maxFiles?: number;
   state: UploadState; onChange: (s: UploadState) => void;
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
 
+  // New selections are ADDED to what's already uploaded (mobile pickers often
+  // return one file at a time), so people can build up e.g. 3 payslips one by
+  // one instead of having to pick all of them in a single go.
   const handleFiles = async (files: FileList | null) => {
     if (!files || files.length === 0) return;
-    const arr = Array.from(files).slice(0, maxFiles);
-    onChange({ ...state, files: arr, uploading: true, error: '' });
-    const urls: string[] = [];
-    for (const file of arr) {
-      const formData = new FormData();
-      formData.append('file', file);
-      try {
+    const room = Math.max(0, maxFiles - state.urls.length);
+    const newFiles = Array.from(files).slice(0, room);
+    if (newFiles.length === 0) return;
+    const baseFiles = state.files.slice(0, state.urls.length);
+    const baseUrls = [...state.urls];
+    onChange({ files: [...baseFiles, ...newFiles], urls: baseUrls, uploading: true, error: '' });
+    const added: string[] = [];
+    try {
+      for (const file of newFiles) {
+        const formData = new FormData();
+        formData.append('file', file);
         const res = await fetch('/api/upload', { method: 'POST', body: formData });
         const data = await res.json();
-        if (data.url) urls.push(data.url);
-        else throw new Error('Upload failed');
-      } catch {
-        onChange({ files: arr, uploading: false, urls: [], error: `Failed to upload ${file.name}` });
-        return;
+        if (!data.url) throw new Error(`Failed to upload ${file.name}`);
+        added.push(data.url);
       }
+      onChange({ files: [...baseFiles, ...newFiles], urls: [...baseUrls, ...added], uploading: false, error: '' });
+    } catch (e: any) {
+      // keep whatever did upload; drop only the files that failed
+      onChange({
+        files: [...baseFiles, ...newFiles.slice(0, added.length)],
+        urls: [...baseUrls, ...added],
+        uploading: false,
+        error: e.message || 'Upload failed. Please try again.',
+      });
     }
-    onChange({ files: arr, uploading: false, urls, error: '' });
   };
 
+  const removeFile = (i: number) => {
+    onChange({ ...state, files: state.files.filter((_, x) => x !== i), urls: state.urls.filter((_, x) => x !== i) });
+  };
+
+  const done = state.urls.length > 0;
+  const full = state.urls.length >= maxFiles;
   return (
     <div>
       <label style={labelStyle}>
@@ -278,27 +296,36 @@ function FileUpload({
         style={{
           border: '2px dashed #d1d5db', borderRadius: 10, padding: '20px 16px',
           textAlign: 'center', cursor: 'pointer',
-          background: state.urls.length > 0 ? '#f0fdf4' : '#f9fafb',
-          borderColor: state.urls.length > 0 ? '#86efac' : state.error ? '#fca5a5' : '#d1d5db',
+          background: done ? '#f0fdf4' : '#f9fafb',
+          borderColor: done ? '#86efac' : state.error ? '#fca5a5' : '#d1d5db',
           transition: 'all 0.2s',
         }}
       >
-        <input ref={inputRef} type="file" multiple={maxFiles > 1} style={{ display: 'none' }} onChange={e => handleFiles(e.target.files)} />
+        <input ref={inputRef} type="file" multiple={maxFiles > 1} style={{ display: 'none' }} onChange={e => { handleFiles(e.target.files); e.target.value = ''; }} />
         {state.uploading ? (
           <p style={{ color: '#6b7280', fontSize: 14, margin: 0 }}>⏳ Uploading…</p>
-        ) : state.urls.length > 0 ? (
+        ) : done ? (
           <div>
-            <p style={{ color: '#16a34a', fontWeight: 600, fontSize: 14, margin: '0 0 6px' }}>✅ {state.files.length} file{state.files.length > 1 ? 's' : ''} uploaded</p>
-            {state.files.map((f, i) => (<p key={i} style={{ color: '#6b7280', fontSize: 12, margin: '2px 0' }}>{f.name}</p>))}
+            <p style={{ color: '#16a34a', fontWeight: 600, fontSize: 14, margin: '0 0 6px' }}>✅ {state.urls.length} file{state.urls.length > 1 ? 's' : ''} uploaded</p>
+            {state.files.map((f, i) => (
+              <p key={i} style={{ color: '#6b7280', fontSize: 12, margin: '2px 0', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+                <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '80%' }}>{f.name}</span>
+                <button type="button" onClick={e => { e.stopPropagation(); removeFile(i); }} style={{ background: 'none', border: 'none', color: '#dc2626', fontWeight: 700, fontSize: 12, cursor: 'pointer', padding: 0 }}>✕ remove</button>
+              </p>
+            ))}
+            {!full && <p style={{ color: '#2563eb', fontSize: 12.5, fontWeight: 700, marginTop: 6 }}>➕ Add another document{maxFiles > 1 ? ` (up to ${maxFiles})` : ''}</p>}
           </div>
         ) : (
           <div>
             <div style={{ fontSize: 24, marginBottom: 8 }}>📎</div>
-            <p style={{ color: '#374151', fontWeight: 600, fontSize: 14, margin: '0 0 4px' }}>Tap to upload or drag & drop</p>
-            <p style={{ color: '#9ca3af', fontSize: 12, margin: 0 }}>Up to {maxFiles} file{maxFiles > 1 ? 's' : ''} · Max 100MB each</p>
+            <p style={{ color: '#374151', fontWeight: 600, fontSize: 14, margin: '0 0 4px' }}>Tap to upload or drag &amp; drop</p>
+            <p style={{ color: '#9ca3af', fontSize: 12, margin: 0 }}>{hint || `Up to ${maxFiles} file${maxFiles > 1 ? 's' : ''} · Max 100MB each`}</p>
           </div>
         )}
       </div>
+      {minFiles && !state.uploading && state.urls.length > 0 && state.urls.length < minFiles && (
+        <p style={{ color: '#d97706', fontSize: 12, marginTop: 4 }}>Please upload at least {minFiles} (you have {state.urls.length}). Tap the box above to add more.</p>
+      )}
       {state.error && <p style={{ color: '#ef4444', fontSize: 12, marginTop: 4 }}>{state.error}</p>}
     </div>
   );
@@ -963,8 +990,8 @@ export default function TenantApplicationPage() {
                   </div>
                 </div>
                 <hr style={dividerStyle} />
-                <FileUpload label="Last 3 Payslips or Proof of Income" required state={payslips} onChange={setPayslips} />
-                <FileUpload label="Last 3 Months Bank Statements" required state={bankStatements} onChange={setBankStatements} />
+                <FileUpload label="Last 3 Payslips or Proof of Income" required minFiles={3} hint="Add all 3 payslips, one at a time or together" state={payslips} onChange={setPayslips} />
+                <FileUpload label="Last 3 Months Bank Statements" required minFiles={3} hint="Add all 3 statements, one at a time or together" state={bankStatements} onChange={setBankStatements} />
                 <hr style={dividerStyle} />
                 <div>
                   <label style={labelStyle}>Do you have any County Court Judgements (CCJs)? <span style={{ color: '#ef4444' }}>*</span></label>

@@ -48,7 +48,11 @@ const EMPTY_FORM = {
   message: "",
 };
 
-function validate(form: typeof EMPTY_FORM, dateBookable: boolean) {
+function validate(
+  form: typeof EMPTY_FORM,
+  dateBookable: boolean,
+  opts: { suggestOwn: boolean; availabilityText: string },
+) {
   const errors: Record<string, string> = {};
   if (!form.firstName.trim()) errors.firstName = "First name is required";
   if (!form.lastName.trim()) errors.lastName = "Last name is required";
@@ -58,10 +62,16 @@ function validate(form: typeof EMPTY_FORM, dateBookable: boolean) {
   else if (!UK_PHONE_REGEX.test(form.phone.replace(/\s/g, "")))
     errors.phone = "Enter a valid UK phone number";
   if (!form.city) errors.city = "Please choose which city the property is in";
-  if (!form.date) errors.date = "Please choose a date";
-  else if (!dateBookable)
-    errors.date = "No viewing availability on that date. Please pick another";
-  if (!form.time) errors.time = "Please choose a viewing time slot";
+  if (opts.suggestOwn) {
+    // Own-availability path: no fixed slot, but we need to know when they're free.
+    if (!opts.availabilityText.trim())
+      errors.availability = "Please tell us the days or times you're available";
+  } else {
+    if (!form.date) errors.date = "Please choose a date";
+    else if (!dateBookable)
+      errors.date = "No viewing availability on that date. Please pick another";
+    if (!form.time) errors.time = "Please choose a viewing time slot";
+  }
   if (!form.moveBy) errors.moveBy = "Please select when you want to move";
   if (!form.employmentStatus) errors.employmentStatus = "Please select your employment status";
   return errors;
@@ -115,6 +125,33 @@ function RadioGroup({ options, value, onChange, columns = 2 }: RadioGroupProps) 
           {opt}
         </label>
       ))}
+    </div>
+  );
+}
+
+interface MultiChipProps {
+  options: string[];
+  values: string[];
+  onToggle: (v: string) => void;
+  columns?: number;
+}
+
+function MultiChip({ options, values, onToggle, columns = 3 }: MultiChipProps) {
+  return (
+    <div style={{ display: "grid", gridTemplateColumns: `repeat(${columns}, 1fr)`, gap: 8 }}>
+      {options.map((opt) => {
+        const on = values.includes(opt);
+        return (
+          <button
+            key={opt}
+            type="button"
+            onClick={() => onToggle(opt)}
+            className={`hol-multichip${on ? " hol-multichip--on" : ""}`}
+          >
+            {opt}
+          </button>
+        );
+      })}
     </div>
   );
 }
@@ -194,6 +231,15 @@ export default function TenantEnquiryModal({
   const [schedule, setSchedule] = useState<ScheduleMap | null>(null);
   // Per-property mode: the dates this property has viewing availability on.
   const [availDates, setAvailDates] = useState<string[] | null>(null);
+
+  // "None of these suit me" path — the tenant proposes their own availability
+  // instead of picking a fixed slot. These requests skip the slot-booking API
+  // (which requires a concrete date/time) and go to the enquiry endpoint so the
+  // team can arrange a viewing manually.
+  const [suggestOwn, setSuggestOwn] = useState(false);
+  const [availDays, setAvailDays] = useState<string[]>([]);
+  const [availTimes, setAvailTimes] = useState<string[]>([]);
+  const [availNotes, setAvailNotes] = useState("");
 
   useEffect(() => { setMounted(true); }, []);
 
@@ -307,6 +353,19 @@ export default function TenantEnquiryModal({
     return !!form.city && isCityScheduledIn(schedule, form.city as City, date);
   };
 
+  // A single readable string summarising the tenant's own availability, sent to
+  // the enquiry endpoint (which renders it under "Viewing availability").
+  const availabilityText = [
+    availDays.length ? `Days: ${availDays.join(", ")}` : "",
+    availTimes.length ? `Times: ${availTimes.join(", ")}` : "",
+    availNotes.trim() ? `Notes: ${availNotes.trim()}` : "",
+  ].filter(Boolean).join(" | ");
+
+  const toggleFromArray = (setter: React.Dispatch<React.SetStateAction<string[]>>) => (v: string) => {
+    setErrors(er => ({ ...er, availability: "" }));
+    setter(prev => (prev.includes(v) ? prev.filter(x => x !== v) : [...prev, v]));
+  };
+
   const handleClose = () => {
     if (status === "loading") return;
     setForm(EMPTY_FORM);
@@ -314,6 +373,10 @@ export default function TenantEnquiryModal({
     setStatus("idle");
     setErrorMsg("");
     setCharCount(0);
+    setSuggestOwn(false);
+    setAvailDays([]);
+    setAvailTimes([]);
+    setAvailNotes("");
     onClose();
   };
 
@@ -323,9 +386,63 @@ export default function TenantEnquiryModal({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const errs = validate(form, isDateBookable(form.date));
-    if (Object.keys(errs).length) { setErrors(errs); return; }
+    const errs = validate(form, isDateBookable(form.date), { suggestOwn, availabilityText });
+    if (Object.keys(errs).length) {
+      setErrors(errs);
+      // If the only reason we can't submit is a missing slot but they meant to
+      // suggest their own availability, keep the panel in view.
+      return;
+    }
     setStatus("loading");
+
+    // Own-availability path → enquiry endpoint (no fixed slot to book).
+    if (suggestOwn) {
+      try {
+        const res = await fetch("/api/tenant-enquiry", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            firstName: form.firstName,
+            lastName: form.lastName,
+            email: form.email,
+            phone: form.phone,
+            postcode: form.postcode,
+            city: form.city,
+            propertyTitle,
+            propertyAddress: propertyAddress || "",
+            // The tenant's proposed availability, shown as "Viewing availability".
+            viewingAvailability: availabilityText,
+            // Screening answers (same field names the enquiry email expects).
+            moveBy: form.moveBy === "Other" ? form.moveByOther : form.moveBy,
+            stayDuration: form.stayDuration === "Other" ? form.stayDurationOther : form.stayDuration,
+            whoMovingIn: form.whoMovingIn,
+            sameCity: form.sameCity,
+            peopleCount: form.peopleCount,
+            firstTimeRenting: form.firstTimeRenting,
+            employmentStatus: form.employmentStatus,
+            hasPets: form.hasPets,
+            hasSmokers: form.hasSmokers,
+            totalAnnualIncome: form.totalAnnualIncome,
+            numberOfChildren: form.numberOfChildren,
+            child1Age: form.child1Age,
+            child2Age: form.child2Age,
+            child3Age: form.child3Age,
+            adverseCredit: form.adverseCredit,
+            alignsWithAvailability: form.alignsWithAvailability,
+            message: form.message,
+            source: "book-viewing-own-availability",
+          }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.message || "Submission failed");
+        setStatus("success");
+      } catch (err: any) {
+        setErrorMsg(err.message || "Something went wrong. Please try again.");
+        setStatus("error");
+      }
+      return;
+    }
+
     try {
       const res = await fetch("/api/book-viewing", {
         method: "POST",
@@ -527,6 +644,20 @@ export default function TenantEnquiryModal({
                     {errors.city && <p className="hol-err">{errors.city}</p>}
                   </div>
                 )}
+                {/* Toggle: pick a fixed slot, or propose your own availability */}
+                <div className="hol-field hol-field--mb">
+                  <button
+                    type="button"
+                    className="hol-own-toggle"
+                    onClick={() => { setSuggestOwn(s => !s); setErrors(er => ({ ...er, date: "", time: "", availability: "" })); }}
+                  >
+                    {suggestOwn
+                      ? "‹ Back to choosing a viewing time"
+                      : "None of these times suit you? Suggest your own availability →"}
+                  </button>
+                </div>
+
+                {!suggestOwn && (<>
                 <div className="hol-field hol-field--mb">
                   <label className="hol-label">Date<span className="hol-req">*</span></label>
                   <input
@@ -664,6 +795,49 @@ export default function TenantEnquiryModal({
                       </>
                     )}
                     {errors.time && <p className="hol-err">{errors.time}</p>}
+                  </div>
+                )}
+                </>)}
+
+                {suggestOwn && (
+                  <div className="hol-field hol-field--mb">
+                    <div className="hol-own-panel">
+                      <p className="hol-slot-note" style={{ margin: 0 }}>
+                        Tell us the days and times you&apos;re free and our team will arrange a viewing around you. No need to pick a slot above.
+                      </p>
+                      <div>
+                        <label className="hol-label" style={{ display: "block", marginBottom: 8 }}>Preferred days</label>
+                        <MultiChip
+                          options={["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]}
+                          values={availDays}
+                          onToggle={toggleFromArray(setAvailDays)}
+                          columns={7}
+                        />
+                      </div>
+                      <div>
+                        <label className="hol-label" style={{ display: "block", marginBottom: 8 }}>Preferred times</label>
+                        <MultiChip
+                          options={["Morning", "Afternoon", "Evening"]}
+                          values={availTimes}
+                          onToggle={toggleFromArray(setAvailTimes)}
+                          columns={3}
+                        />
+                      </div>
+                      <div>
+                        <label className="hol-label" style={{ display: "block", marginBottom: 8 }}>
+                          Anything specific? <span style={{ color: "#9ca3af", fontWeight: 400 }}>(optional)</span>
+                        </label>
+                        <textarea
+                          className="hol-input hol-textarea"
+                          rows={2}
+                          maxLength={300}
+                          placeholder="e.g. weekday evenings after 6pm, or Saturday mornings"
+                          value={availNotes}
+                          onChange={(e) => { setAvailNotes(e.target.value); setErrors(er => ({ ...er, availability: "" })); }}
+                        />
+                      </div>
+                      {errors.availability && <p className="hol-err">{errors.availability}</p>}
+                    </div>
                   </div>
                 )}
 
@@ -946,6 +1120,12 @@ const MODAL_CSS = `
   .hol-avail-chip{padding:9px 14px;border:1.5px solid #2563a8;border-radius:999px;background:#fff;color:#1a3c5e;font-family:'Poppins',sans-serif;font-size:13px;font-weight:600;cursor:pointer;transition:all .15s;white-space:nowrap;}
   .hol-avail-chip:hover{background:#2563a8;color:#fff;transform:translateY(-1px);box-shadow:0 3px 10px rgba(37,99,168,.3);}
   .hol-avail-chip--on{background:#2563a8;color:#fff;box-shadow:0 3px 10px rgba(37,99,168,.3);}
+  .hol-own-toggle{display:inline-block;background:none;border:none;padding:0;margin:0;color:#2563a8;font-family:'Poppins',sans-serif;font-size:13px;font-weight:600;cursor:pointer;text-align:left;text-decoration:underline;text-underline-offset:2px;}
+  .hol-own-toggle:hover{color:#1a3c5e;}
+  .hol-own-panel{background:#f8f9ff;border:1.5px solid #dbeafe;border-radius:12px;padding:16px 16px 18px;display:flex;flex-direction:column;gap:14px;}
+  .hol-multichip{padding:9px 6px;border:1.5px solid #d7dce6;border-radius:9px;background:#fff;color:#1a3c5e;font-family:'Poppins',sans-serif;font-size:13px;font-weight:600;cursor:pointer;transition:all .15s;}
+  .hol-multichip:hover{border-color:#2563a8;background:#f0f4ff;}
+  .hol-multichip--on{background:#2563a8;border-color:#2563a8;color:#fff;}
   .hol-form-footer{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-top:8px;padding-top:20px;border-top:1px solid #f1f3f7;}
   .hol-privacy{display:flex;align-items:center;gap:6px;font-size:12px;color:#9ca3af;margin:0;}
   .hol-submit{display:inline-flex;align-items:center;gap:8px;background:linear-gradient(135deg,#1a3c5e 0%,#2563a8 100%);color:#fff;border:none;border-radius:10px;font-family:'Poppins',sans-serif;font-size:14px;font-weight:600;padding:13px 24px;cursor:pointer;transition:opacity .15s,transform .15s,box-shadow .15s;box-shadow:0 4px 16px rgba(37,99,168,.35);white-space:nowrap;}

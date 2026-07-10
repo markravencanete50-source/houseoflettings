@@ -55,22 +55,36 @@ type UploadState = { files: File[]; uploading: boolean; urls: string[]; error: s
 const emptyUpload = (): UploadState => ({ files: [], uploading: false, urls: [], error: '' });
 
 function FileUpload({
-  label, hint, required, maxFiles = 6, state, onChange,
-}: { label: string; hint?: string; required?: boolean; maxFiles?: number; state: UploadState; onChange: (s: UploadState) => void }) {
+  label, hint, required, minFiles, maxFiles = 6, state, onChange,
+}: { label: string; hint?: string; required?: boolean; minFiles?: number; maxFiles?: number; state: UploadState; onChange: (s: UploadState) => void }) {
   const inputRef = useRef<HTMLInputElement>(null);
+
+  // New selections are ADDED to what's already uploaded (mobile pickers often
+  // return one file at a time), so people can build up e.g. 3 payslips one by
+  // one instead of having to select all of them in a single go.
   const handleFiles = async (files: FileList | null) => {
     if (!files || files.length === 0) return;
-    const arr = Array.from(files).slice(0, maxFiles);
-    onChange({ ...state, files: arr, uploading: true, error: '' });
-    const urls: string[] = [];
+    const room = Math.max(0, maxFiles - state.urls.length);
+    const newFiles = Array.from(files).slice(0, room);
+    if (newFiles.length === 0) return;
+    const baseFiles = state.files.slice(0, state.urls.length);
+    const baseUrls = [...state.urls];
+    onChange({ files: [...baseFiles, ...newFiles], urls: baseUrls, uploading: true, error: '' });
+    const added: string[] = [];
     try {
-      for (const file of arr) urls.push(await uploadToCloudinary(file));
-      onChange({ files: arr, uploading: false, urls, error: '' });
+      for (const file of newFiles) added.push(await uploadToCloudinary(file));
+      onChange({ files: [...baseFiles, ...newFiles], urls: [...baseUrls, ...added], uploading: false, error: '' });
     } catch (e: any) {
-      onChange({ files: arr, uploading: false, urls: [], error: e.message || 'Upload failed. Please try again.' });
+      onChange({ files: [...baseFiles, ...newFiles.slice(0, added.length)], urls: [...baseUrls, ...added], uploading: false, error: e.message || 'Upload failed. Please try again.' });
     }
   };
+
+  const removeFile = (i: number) => {
+    onChange({ ...state, files: state.files.filter((_, x) => x !== i), urls: state.urls.filter((_, x) => x !== i) });
+  };
+
   const done = state.urls.length > 0;
+  const full = state.urls.length >= maxFiles;
   return (
     <div>
       <label style={labelStyle}>{label} {required && <span style={{ color: '#ef4444' }}>*</span>}</label>
@@ -83,14 +97,19 @@ function FileUpload({
           background: done ? '#f0fdf4' : '#f9fafb', borderColor: done ? '#86efac' : state.error ? '#fca5a5' : '#d1d5db', transition: 'all 0.2s',
         }}
       >
-        <input ref={inputRef} type="file" accept="image/*,application/pdf" multiple={maxFiles > 1} style={{ display: 'none' }} onChange={e => handleFiles(e.target.files)} />
+        <input ref={inputRef} type="file" accept="image/*,application/pdf" multiple={maxFiles > 1} style={{ display: 'none' }} onChange={e => { handleFiles(e.target.files); e.target.value = ''; }} />
         {state.uploading ? (
           <p style={{ color: '#6b7280', fontSize: 14, margin: 0 }}>⏳ Uploading…</p>
         ) : done ? (
           <div>
-            <p style={{ color: '#16a34a', fontWeight: 600, fontSize: 14, margin: '0 0 4px' }}>✅ {state.urls.length} file{state.urls.length > 1 ? 's' : ''} uploaded</p>
-            {state.files.map((f, i) => (<p key={i} style={{ color: '#6b7280', fontSize: 12, margin: '2px 0' }}>{f.name}</p>))}
-            <p style={{ color: '#2563eb', fontSize: 12, marginTop: 4 }}>Tap to replace</p>
+            <p style={{ color: '#16a34a', fontWeight: 600, fontSize: 14, margin: '0 0 6px' }}>✅ {state.urls.length} file{state.urls.length > 1 ? 's' : ''} uploaded</p>
+            {state.files.map((f, i) => (
+              <p key={i} style={{ color: '#6b7280', fontSize: 12, margin: '2px 0', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+                <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '80%' }}>{f.name}</span>
+                <button type="button" onClick={e => { e.stopPropagation(); removeFile(i); }} style={{ background: 'none', border: 'none', color: '#dc2626', fontWeight: 700, fontSize: 12, cursor: 'pointer', padding: 0 }}>✕ remove</button>
+              </p>
+            ))}
+            {!full && <p style={{ color: '#2563eb', fontSize: 12.5, fontWeight: 700, marginTop: 6 }}>➕ Add another document{maxFiles > 1 ? ` (up to ${maxFiles})` : ''}</p>}
           </div>
         ) : (
           <div>
@@ -100,6 +119,9 @@ function FileUpload({
           </div>
         )}
       </div>
+      {minFiles && !state.uploading && state.urls.length > 0 && state.urls.length < minFiles && (
+        <p style={{ color: '#d97706', fontSize: 12, marginTop: 4 }}>Please upload at least {minFiles} (you have {state.urls.length}). Tap the box above to add more.</p>
+      )}
       {state.error && <p style={{ color: '#ef4444', fontSize: 12, marginTop: 4 }}>{state.error}</p>}
     </div>
   );
@@ -571,9 +593,9 @@ export default function GuarantorPage() {
               <>
                 <div><h2 style={sectionHeadingStyle}>Your Documents</h2><p style={sectionSubStyle}>Please upload clear copies. PDFs and photos are accepted.</p></div>
                 <FileUpload label="Valid Identity Document (UK Passport or valid visa front &amp; back, with original nationality passport)" required hint="Passport / visa, front and back" state={idDoc} onChange={setIdDoc} />
-                <FileUpload label="Payslips x3 months (most recent) or proof of income" required hint="3 most recent payslips" state={payslips} onChange={setPayslips} />
+                <FileUpload label="Payslips x3 months (most recent) or proof of income" required minFiles={3} hint="Add all 3 payslips, one at a time or together" state={payslips} onChange={setPayslips} />
                 <FileUpload label="Proof of Address (utility bill, bank statement, driving licence)" required hint="Recent, within 3 months" state={proofOfAddress} onChange={setProofOfAddress} />
-                <FileUpload label="Bank Statements x3 months (most recent)" required hint="3 most recent statements" state={bankStatements} onChange={setBankStatements} />
+                <FileUpload label="Bank Statements x3 months (most recent)" required minFiles={3} hint="Add all 3 statements, one at a time or together" state={bankStatements} onChange={setBankStatements} />
                 <FileUpload label="If a student: course enrolment confirmation (term-time &amp; home address)" hint="Optional, students only" state={studentDoc} onChange={setStudentDoc} />
               </>
             )}

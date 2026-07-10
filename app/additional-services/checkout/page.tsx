@@ -84,6 +84,11 @@ export default function CheckoutPage() {
                           {line.addOns.map(a => (
                             <div key={a.id} style={{ fontSize: 13, color: '#475569' }}>+ {a.label}{a.count ? ` ×${a.count}` : ''} — {formatGBP(a.amount)}</div>
                           ))}
+                          {line.kind === 'package' && (
+                            <div style={{ fontSize: 12.5, color: '#64748b', marginTop: 4 }}>
+                              One-time setup fee{line.ongoingNote ? `, ${line.ongoingNote}` : ''}
+                            </div>
+                          )}
                         </div>
                         <div style={{ textAlign: 'right', flexShrink: 0 }}>
                           <div style={{ fontSize: 17, fontWeight: 800, color: '#0a162f' }}>{line.from ? <span style={{ fontSize: 12, color: '#64748b', fontWeight: 700 }}>from </span> : null}{formatGBP(line.total)}</div>

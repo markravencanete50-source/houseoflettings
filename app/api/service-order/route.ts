@@ -39,11 +39,12 @@ function linesTableHtml(lines: LineBreakdown[]): string {
   return lines.map(l => {
     const addOns = l.addOns.map(a => `<div style="color:#6b7280;font-size:12.5px">+ ${a.label}${a.count ? ` ×${a.count}` : ''} — ${formatGBP(a.amount)}</div>`).join('');
     const variant = l.variantLabel ? `<div style="color:#6b7280;font-size:12.5px">${l.variantLabel} — ${l.from ? 'from ' : ''}${formatGBP(l.base)}</div>` : '';
+    const pkg = l.kind === 'package' ? `<div style="color:#6b7280;font-size:12px">One-time setup fee${l.ongoingNote ? `, ${l.ongoingNote}` : ''}</div>` : '';
     return `<tr>
       <td style="padding:12px;border-bottom:1px solid #eef0f5">
         <div style="font-weight:700;color:#111">${l.name}</div>
         <div style="color:#9ca3af;font-size:12px">${l.categoryTitle}${l.quantity > 1 ? ` · ×${l.quantity}` : ''}</div>
-        ${variant}${addOns}
+        ${variant}${addOns}${pkg}
       </td>
       <td style="padding:12px;border-bottom:1px solid #eef0f5;text-align:right;font-weight:700;color:#111;white-space:nowrap">${l.from ? 'from ' : ''}${formatGBP(l.total)}</td>
     </tr>`;

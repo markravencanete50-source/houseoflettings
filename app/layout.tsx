@@ -4,6 +4,7 @@ import ReactDOM from 'react-dom';
 import { AuthProvider } from '@/hooks/useAuth';
 import CookieBanner from '@/components/CookieBanner';
 import VisitorTracker from '@/components/analytics/VisitorTracker';
+import { CartProvider } from '@/components/services/CartProvider';
 import { Suspense } from 'react';
 import './globals.css';
 
@@ -89,7 +90,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en">
       <body style={{ paddingTop: '72px' }}>
         <AuthProvider>
-          {children}
+          <CartProvider>
+            {children}
+          </CartProvider>
         </AuthProvider>
         <CookieBanner />
         <Suspense fallback={null}>

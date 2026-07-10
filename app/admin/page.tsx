@@ -22,7 +22,29 @@ import {
   updateDoc, addDoc, deleteDoc, serverTimestamp, Timestamp,
 } from 'firebase/firestore';
 
-type Tab = 'analytics' | 'users' | 'properties' | 'post' | 'edit' | 'valuations' | 'reviews' | 'applications';
+type Tab = 'analytics' | 'users' | 'properties' | 'post' | 'edit' | 'valuations' | 'reviews' | 'applications' | 'orders';
+
+interface ServiceOrderLine {
+  serviceId: string;
+  name: string;
+  categoryTitle: string;
+  variantLabel?: string | null;
+  base: number;
+  from?: boolean;
+  addOns: { id: string; label: string; count?: number; amount: number }[];
+  quantity: number;
+  total: number;
+}
+interface ServiceOrder {
+  id: string;
+  ref: string;
+  customer: { fullName: string; email: string; phone: string; postcode?: string; address?: string; notes?: string };
+  lines: ServiceOrderLine[];
+  total: number;
+  hasFrom?: boolean;
+  status: 'pending' | 'contacted' | 'paid' | 'completed' | 'cancelled';
+  createdAt: any;
+}
 
 interface WebStats {
   totalViews: number;
@@ -43,6 +65,14 @@ const COUNTRY_NAMES: Record<string, string> = {
 function countryName(code: string): string {
   return COUNTRY_NAMES[code] || code;
 }
+
+const ORDER_STATUS_COLOR: Record<string, { bg: string; color: string }> = {
+  pending:   { bg: '#fff8e1', color: '#f57f17' },
+  contacted: { bg: '#e3f2fd', color: '#1565c0' },
+  paid:      { bg: '#e8f5e9', color: '#2e7d32' },
+  completed: { bg: '#ede7f6', color: '#6a1b9a' },
+  cancelled: { bg: '#fdecea', color: '#c62828' },
+};
 function countryFlag(code: string): string {
   if (!/^[A-Z]{2}$/.test(code) || code === 'ZZ') return '🌐';
   return String.fromCodePoint(...code.split('').map(c => 127397 + c.charCodeAt(0)));
@@ -161,6 +191,8 @@ export default function AdminDashboard() {
   const [appFilter, setAppFilter] = useState<'all' | 'pending' | 'reviewing' | 'approved' | 'rejected'>('all');
   const [expandedApp, setExpandedApp] = useState<string | null>(null);
   const [webStats, setWebStats] = useState<WebStats | null>(null);
+  const [orders, setOrders] = useState<ServiceOrder[]>([]);
+  const [expandedOrder, setExpandedOrder] = useState<string | null>(null);
 
   // Website visitor analytics (first-party, from /api/track).
   useEffect(() => {
@@ -186,13 +218,15 @@ export default function AdminDashboard() {
       getDocs(query(collection(db, 'valuationRequests'), orderBy('createdAt', 'desc'))),
       getDocs(query(collection(db, 'google_reviews'), orderBy('createdAt', 'desc'))),
       getDocs(query(collection(db, 'tenantApplications'), orderBy('createdAt', 'desc'))),
-    ]).then(([u, p, a, valSnap, revSnap, appSnap]) => {
+      getDocs(query(collection(db, 'serviceOrders'), orderBy('createdAt', 'desc'))),
+    ]).then(([u, p, a, valSnap, revSnap, appSnap, orderSnap]) => {
       setUsers(u);
       setProperties(p);
       setAnalytics(a);
       setValuations(valSnap.docs.map(d => ({ id: d.id, ...d.data() } as Valuation)));
       setReviews(revSnap.docs.map(d => ({ id: d.id, ...d.data() } as GoogleReview)));
       setApplications(appSnap.docs.map(d => ({ id: d.id, ...d.data() } as TenantApplication)));
+      setOrders(orderSnap.docs.map(d => ({ id: d.id, ...d.data() } as ServiceOrder)));
       setLoading(false);
     }).catch(() => setLoading(false));
   }, [profile]);
@@ -291,6 +325,11 @@ export default function AdminDashboard() {
     setApplications(prev => prev.map(a => a.id === id ? { ...a, status } : a));
   };
 
+  const handleOrderStatus = async (id: string, status: ServiceOrder['status']) => {
+    await updateDoc(doc(db, 'serviceOrders', id), { status, updatedAt: serverTimestamp() });
+    setOrders(prev => prev.map(o => o.id === id ? { ...o, status } : o));
+  };
+
   const filteredUsers = users.filter(u =>
     u.name.toLowerCase().includes(searchUser.toLowerCase()) ||
     u.email.toLowerCase().includes(searchUser.toLowerCase())
@@ -318,6 +357,7 @@ export default function AdminDashboard() {
     { id: 'valuations', icon: '📋', label: `Valuations (${valuations.length})` },
     { id: 'reviews',    icon: '⭐', label: `Reviews (${reviews.length})` },
     { id: 'applications', icon: '📝', label: `Applications (${applications.length})` },
+    { id: 'orders',     icon: '🛒', label: `Orders (${orders.length})` },
     { id: 'post',       icon: '➕', label: 'Post Property' },
     ...(editingProperty ? [{ id: 'edit' as Tab, icon: '✏️', label: 'Edit Property' }] : []),
   ];
@@ -1256,6 +1296,73 @@ export default function AdminDashboard() {
                         </div>
                       );
                     })}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* ── Service Orders ── */}
+          {tab === 'orders' && (
+            <div>
+              <h1 className="dash-section-title">Service Orders</h1>
+              <p style={{ color: 'var(--gray-600)', marginBottom: 24, fontSize: 15 }}>
+                Orders placed through Additional Services and the pricing packages.
+              </p>
+              {orders.length === 0 ? (
+                <div className="dash-card" style={{ textAlign: 'center', color: 'var(--gray-400)', fontSize: 15, padding: '56px 24px' }}>
+                  No orders yet. They&rsquo;ll appear here as customers check out.
+                </div>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                  {orders.map(o => {
+                    const isOpen = expandedOrder === o.id;
+                    const when = o.createdAt?.seconds ? new Date(o.createdAt.seconds * 1000).toLocaleString('en-GB') : '';
+                    const badge = ORDER_STATUS_COLOR[o.status] || ORDER_STATUS_COLOR.pending;
+                    return (
+                      <div key={o.id} className="dash-card" style={{ padding: 0, overflow: 'hidden' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '16px 20px', flexWrap: 'wrap' }}>
+                          <div style={{ minWidth: 0, flex: 1 }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+                              <strong style={{ fontSize: 15, color: 'var(--navy)' }}>{o.customer?.fullName || '—'}</strong>
+                              <span style={{ fontFamily: 'monospace', fontSize: 12, color: 'var(--gray-400)' }}>{o.ref}</span>
+                              <span style={{ display: 'inline-block', padding: '3px 10px', borderRadius: 20, fontSize: 11, fontWeight: 700, textTransform: 'uppercase', background: badge.bg, color: badge.color }}>{o.status}</span>
+                            </div>
+                            <div style={{ fontSize: 12.5, color: 'var(--gray-400)', marginTop: 3 }}>
+                              {o.customer?.email} · {o.customer?.phone} · {o.lines?.length || 0} item{(o.lines?.length || 0) !== 1 ? 's' : ''} · {when}
+                            </div>
+                          </div>
+                          <div style={{ fontSize: 20, fontWeight: 800, color: 'var(--navy)' }}>{o.hasFrom ? <span style={{ fontSize: 12, color: 'var(--gray-400)', fontWeight: 700 }}>from </span> : null}£{o.total}</div>
+                          <select value={o.status} onChange={e => handleOrderStatus(o.id, e.target.value as ServiceOrder['status'])} className="form-select" style={{ width: 140 }}
+                            onClick={e => e.stopPropagation()}>
+                            {(['pending', 'contacted', 'paid', 'completed', 'cancelled'] as const).map(s => <option key={s} value={s}>{s[0].toUpperCase() + s.slice(1)}</option>)}
+                          </select>
+                          <button onClick={() => setExpandedOrder(isOpen ? null : o.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--gray-600)', fontSize: 13, fontWeight: 600 }}>
+                            {isOpen ? 'Hide ▲' : 'Details ▼'}
+                          </button>
+                        </div>
+                        {isOpen && (
+                          <div style={{ borderTop: '1px solid var(--gray-100)', padding: '16px 20px', background: '#fafbfc' }}>
+                            {o.lines?.map((l, li) => (
+                              <div key={li} style={{ display: 'flex', justifyContent: 'space-between', gap: 12, padding: '8px 0', borderBottom: '1px solid var(--gray-100)' }}>
+                                <div>
+                                  <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--navy)' }}>{l.name}{l.quantity > 1 ? ` ×${l.quantity}` : ''}</div>
+                                  <div style={{ fontSize: 12, color: 'var(--gray-400)' }}>{l.categoryTitle}</div>
+                                  {l.variantLabel && <div style={{ fontSize: 12, color: 'var(--gray-600)' }}>{l.variantLabel}</div>}
+                                  {l.addOns?.map((a, ai) => <div key={ai} style={{ fontSize: 12, color: 'var(--gray-600)' }}>+ {a.label}{a.count ? ` ×${a.count}` : ''} — £{a.amount}</div>)}
+                                </div>
+                                <div style={{ fontWeight: 700, color: 'var(--navy)', whiteSpace: 'nowrap' }}>{l.from ? 'from ' : ''}£{l.total}</div>
+                              </div>
+                            ))}
+                            <div style={{ display: 'flex', gap: 24, flexWrap: 'wrap', marginTop: 14, fontSize: 13, color: 'var(--gray-600)' }}>
+                              <div><strong style={{ color: 'var(--navy)' }}>Postcode:</strong> {o.customer?.postcode || '—'}</div>
+                              <div><strong style={{ color: 'var(--navy)' }}>Address:</strong> {o.customer?.address || '—'}</div>
+                            </div>
+                            {o.customer?.notes && <div style={{ marginTop: 8, fontSize: 13, color: 'var(--gray-600)' }}><strong style={{ color: 'var(--navy)' }}>Notes:</strong> {o.customer.notes}</div>}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
               )}
             </div>

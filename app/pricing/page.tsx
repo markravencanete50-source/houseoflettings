@@ -6,6 +6,9 @@ import Navbar from '@/components/layout/Navbar';
 import PostcodeLookup, { type AddressResult } from '@/components/PostcodeLookup';
 import { BUNDLES } from '@/lib/bundles';
 import { MATRIX_SECTIONS, TOTAL_SERVICES, PRICING_FAQ } from '@/lib/pricingMatrix';
+import { useCart } from '@/components/services/CartProvider';
+import { newSelection } from '@/lib/serviceCart';
+import CartBar from '@/components/services/CartBar';
 
 const PACKAGES = BUNDLES;
 const VISIBLE_ROWS = 7;   // rows shown per matrix section before "Show more"
@@ -127,6 +130,18 @@ export default function PricingPage() {
   const [error, setError] = useState('');
 
   const pkg = PACKAGES[active];
+
+  const { addItem } = useCart();
+  const [justAdded, setJustAdded] = useState<number | null>(null);
+
+  // Add a package to the basket (charged as its one-time setup fee; the ongoing
+  // % is arranged by the account team). Shoppers proceed to the shared checkout.
+  const addPackage = (i: number) => {
+    const p = PACKAGES[i];
+    addItem(newSelection(p.id, `${p.id}-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`));
+    setJustAdded(i);
+    setTimeout(() => setJustAdded(cur => (cur === i ? null : cur)), 2200);
+  };
 
   // Lock body scroll when modal open
   useEffect(() => {
@@ -622,8 +637,8 @@ export default function PricingPage() {
                   <td></td>
                   {PACKAGES.map((p, i) => (
                     <td key={p.id} className={i === HOT ? 'pr-hot' : ''}>
-                      <button className={`pr-btn${i === HOT ? ' pr-solid' : ''}`} onClick={() => openModalFor(i)}>
-                        {i === HOT ? 'Choose Full' : 'Get Started'}
+                      <button className={`pr-btn${i === HOT ? ' pr-solid' : ''}`} onClick={() => addPackage(i)}>
+                        {justAdded === i ? 'Added ✓' : 'Add to order'}
                       </button>
                     </td>
                   ))}
@@ -685,7 +700,7 @@ export default function PricingPage() {
             })}
 
             <div className="pr-mc-cta">
-              <button onClick={() => openModalFor(mobileTab)}>Get {PACKAGES[mobileTab].short}</button>
+              <button onClick={() => addPackage(mobileTab)}>{justAdded === mobileTab ? 'Added to order ✓' : `Add ${PACKAGES[mobileTab].short} to order`}</button>
             </div>
           </div>
           <p className="pr-mc-foot">All {TOTAL_SERVICES} services are listed in the table on larger screens. Prices inc. VAT.</p>
@@ -727,9 +742,9 @@ export default function PricingPage() {
                   <button
                     type="button"
                     className={`pr-svc-btn${featured ? ' pr-svc-btn--solid' : ''}`}
-                    onClick={() => openModalFor(i)}
+                    onClick={() => addPackage(i)}
                   >
-                    Choose {p.short}
+                    {justAdded === i ? 'Added to order ✓' : `Add ${p.short} to order`}
                     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
                   </button>
                 </div>
@@ -1031,6 +1046,10 @@ export default function PricingPage() {
           </div>
         </div>
       )}
+
+      {/* Spacer so the fixed cart bar never hides the footer, then the bar */}
+      <div aria-hidden style={{ height: 96 }} />
+      <CartBar />
     </>
   );
 }

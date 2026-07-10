@@ -7,6 +7,7 @@
 // services (eviction, legal, insurance) are intentionally absent and show an
 // "Enquire" button instead of "Add to order".
 import { SERVICE_CATEGORIES } from '@/lib/additionalServices';
+import { BUNDLES } from '@/lib/bundles';
 
 export type AddOn = {
   id: string;
@@ -24,6 +25,8 @@ export type ServiceOrderConfig = {
   defaultVariant?: string;
   addOns?: AddOn[];
   unit?: string;                 // line quantity means this (e.g. 'applicant'); default one-off
+  kind?: 'service' | 'package';  // packages = landlord tiers charged as a one-time setup fee
+  ongoingNote?: string;          // for packages: the ongoing fee arranged during onboarding
 };
 
 export const SERVICE_ORDERS: Record<string, ServiceOrderConfig> = {
@@ -89,6 +92,27 @@ export const SERVICE_INDEX: Record<string, ServiceMeta> = (() => {
   return idx;
 })();
 
+// ── Register the landlord packages as orderable items. They're charged as their
+//    one-time setup fee (the "first payment" to register the landlord); the
+//    ongoing % is arranged by the account team during onboarding. ──
+for (const b of BUNDLES) {
+  const setup = parseInt(b.setupFee.replace(/[^\d]/g, ''), 10) || 0;
+  SERVICE_ORDERS[b.id] = {
+    basePrice: setup,
+    kind: 'package',
+    ongoingNote: b.mgmtFee ? `then ${b.mgmtFee} of monthly rent, arranged by our account team` : 'No ongoing fee',
+  };
+  SERVICE_INDEX[b.id] = {
+    name: b.label,
+    categoryTitle: b.kind === 'Management' ? 'Management package' : 'Tenant-find package',
+    tagline: b.blurb,
+  };
+}
+
+export function isPackage(serviceId: string): boolean {
+  return SERVICE_ORDERS[serviceId]?.kind === 'package';
+}
+
 export function isOrderable(serviceId: string): boolean {
   return !!SERVICE_ORDERS[serviceId];
 }
@@ -115,6 +139,8 @@ export type LineBreakdown = {
   unit?: string;                  // 'applicant' etc; undefined = one-off
   unitTotal: number;              // base + add-ons (per unit)
   total: number;                  // unitTotal * quantity
+  kind: 'service' | 'package';
+  ongoingNote?: string;           // packages only
 };
 
 export function baseFor(cfg: ServiceOrderConfig, variantId?: string): { price: number; label?: string } {
@@ -160,6 +186,8 @@ export function priceLine(sel: OrderSelection): LineBreakdown | null {
     unit: cfg.unit,
     unitTotal,
     total: unitTotal * quantity,
+    kind: cfg.kind || 'service',
+    ongoingNote: cfg.ongoingNote,
   };
 }
 

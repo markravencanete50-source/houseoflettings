@@ -3,6 +3,8 @@ import type { Metadata } from 'next';
 import ReactDOM from 'react-dom';
 import { AuthProvider } from '@/hooks/useAuth';
 import CookieBanner from '@/components/CookieBanner';
+import VisitorTracker from '@/components/analytics/VisitorTracker';
+import { Suspense } from 'react';
 import './globals.css';
 
 // The whole codebase references the literal family names 'Poppins' and
@@ -90,6 +92,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           {children}
         </AuthProvider>
         <CookieBanner />
+        <Suspense fallback={null}>
+          <VisitorTracker />
+        </Suspense>
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationSchema) }}

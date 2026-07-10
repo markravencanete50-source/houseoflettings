@@ -36,6 +36,8 @@ function ListingsContent() {
   const [geocoding, setGeocoding] = useState(false);
   const [showMore, setShowMore] = useState(false);
   const [mapsReady, setMapsReady] = useState(false);
+  const [geoError, setGeoError] = useState('');
+  const [resolving, setResolving] = useState(false);
 
   const locInputRef = useRef<HTMLInputElement>(null);
 
@@ -130,7 +132,32 @@ function ListingsContent() {
     return () => { cancelled = true; };
   }, [rawProperties, appliedFilters]);
 
-  const applyFilters = () => setAppliedFilters({ ...filters });
+  // Applying a radius needs a centre point. If the shopper picked a suggestion
+  // we already have coordinates; otherwise we geocode whatever postcode/town they
+  // typed so the distance is accurate. An empty box prompts for their postcode.
+  const applyFilters = async () => {
+    setGeoError('');
+    const wantsRadius = filters.radiusMiles !== '' && filters.radiusMiles != null;
+    if (wantsRadius && filters.lat == null) {
+      const q = filters.location.trim();
+      if (!q) {
+        setGeoError('Enter your postcode to search within a set distance.');
+        locInputRef.current?.focus();
+        return;
+      }
+      setResolving(true);
+      const c = await geocodeQuery(q);
+      setResolving(false);
+      if (c) {
+        const next = { ...filters, lat: c.lat, lng: c.lng };
+        setFilters(next);
+        setAppliedFilters(next);
+        return;
+      }
+      setGeoError('We could not find that postcode, so we searched by name instead.');
+    }
+    setAppliedFilters({ ...filters });
+  };
 
   const clearFilters = () => {
     const empty: SearchFilters = {
@@ -139,6 +166,7 @@ function ListingsContent() {
     };
     setFilters(empty);
     setAppliedFilters(empty);
+    setGeoError('');
   };
 
   const num = (v: string) => (v ? Number(v) : '');
@@ -152,8 +180,8 @@ function ListingsContent() {
   const radiusActive =
     appliedFilters.radiusMiles !== '' && appliedFilters.radiusMiles != null &&
     appliedFilters.lat != null && appliedFilters.lng != null;
-  const radiusChosenNoCoords =
-    filters.radiusMiles !== '' && filters.radiusMiles != null && filters.lat == null;
+  const radiusSelected =
+    filters.radiusMiles !== '' && filters.radiusMiles != null;
 
   const busy = loading || geocoding;
   const count = displayProperties.length;
@@ -196,25 +224,37 @@ function ListingsContent() {
         <div className="lst-grid">
           {/* Location + radius */}
           <div className="lst-field lst-field--wide">
-            <label className="form-label">Location</label>
+            <label className="form-label">{radiusSelected ? 'Your postcode' : 'Location'}</label>
             <input
               ref={locInputRef}
               className="form-input"
               value={filters.location}
-              onChange={e => set({ location: e.target.value, lat: null, lng: null })}
-              placeholder={mapsReady ? 'City, area or postcode…' : 'City, area or postcode…'}
+              onChange={e => { set({ location: e.target.value, lat: null, lng: null }); setGeoError(''); }}
+              placeholder={radiusSelected ? 'Enter your postcode, e.g. LS10' : 'City, area or postcode…'}
               autoComplete="off"
               onKeyDown={e => { if (e.key === 'Enter') applyFilters(); }}
             />
-            {radiusChosenNoCoords && (
-              <span className="lst-hint">Pick a suggestion from the list to search by distance.</span>
-            )}
+            {geoError
+              ? <span className="lst-hint" style={{ color: '#b45309' }}>{geoError}</span>
+              : radiusSelected && (
+                <span className="lst-hint">
+                  {filters.lat != null
+                    ? 'Distance is measured from this postcode.'
+                    : 'We use your postcode as the centre of the radius for accurate results.'}
+                </span>
+              )}
           </div>
           <div className="lst-field">
             <label className="form-label">Search radius</label>
             <select className="form-select"
               value={filters.radiusMiles as any}
-              onChange={e => set({ radiusMiles: num(e.target.value) })}>
+              onChange={e => {
+                const v = num(e.target.value);
+                set({ radiusMiles: v });
+                setGeoError('');
+                // Prompt for the postcode as soon as a distance is chosen.
+                if (v !== '' && !filters.location.trim()) setTimeout(() => locInputRef.current?.focus(), 0);
+              }}>
               <option value="">This area only</option>
               {RADIUS_OPTIONS.map(m => <option key={m} value={m}>Within {m} mile{m > 1 ? 's' : ''}</option>)}
             </select>
@@ -299,7 +339,9 @@ function ListingsContent() {
         )}
 
         <div className="lst-actions">
-          <button className="lst-btn lst-btn--apply" onClick={applyFilters}>Apply Filters</button>
+          <button className="lst-btn lst-btn--apply" onClick={applyFilters} disabled={resolving}>
+            {resolving ? 'Locating…' : 'Apply Filters'}
+          </button>
           <button className="lst-more" onClick={() => setShowMore(s => !s)}>
             {showMore ? 'Fewer filters' : 'More filters'}
             <span style={{ display: 'inline-block', transform: showMore ? 'rotate(180deg)' : 'none', transition: 'transform .15s' }}>▾</span>

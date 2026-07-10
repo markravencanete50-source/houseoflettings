@@ -24,6 +24,42 @@ import {
 
 type Tab = 'analytics' | 'users' | 'properties' | 'post' | 'edit' | 'valuations' | 'reviews' | 'applications';
 
+interface WebStats {
+  totalViews: number;
+  uniqueVisitors: number;
+  byCountry: Record<string, number>;
+  byPath: Record<string, number>;
+  byDay: Record<string, number>;
+  updatedAt: number | null;
+}
+
+// ── Visitor-analytics display helpers ──────────────────────────────────────────
+const COUNTRY_NAMES: Record<string, string> = {
+  GB: 'United Kingdom', US: 'United States', IE: 'Ireland', IN: 'India', PK: 'Pakistan',
+  FR: 'France', DE: 'Germany', ES: 'Spain', IT: 'Italy', NL: 'Netherlands', PL: 'Poland',
+  CA: 'Canada', AU: 'Australia', NG: 'Nigeria', ZA: 'South Africa', AE: 'UAE', RO: 'Romania',
+  PT: 'Portugal', BR: 'Brazil', CN: 'China', ZZ: 'Unknown',
+};
+function countryName(code: string): string {
+  return COUNTRY_NAMES[code] || code;
+}
+function countryFlag(code: string): string {
+  if (!/^[A-Z]{2}$/.test(code) || code === 'ZZ') return '🌐';
+  return String.fromCodePoint(...code.split('').map(c => 127397 + c.charCodeAt(0)));
+}
+// Turn a { key: count } map into a sorted, top-N list.
+function topEntries(map: Record<string, number> | undefined, n = 6): [string, number][] {
+  return Object.entries(map || {}).sort((a, b) => b[1] - a[1]).slice(0, n);
+}
+// The last `days` calendar days as YYYY-MM-DD (oldest first), from a base millis.
+function lastDays(nowMs: number, days: number): string[] {
+  const out: string[] = [];
+  for (let i = days - 1; i >= 0; i--) {
+    out.push(new Date(nowMs - i * 86400000).toISOString().slice(0, 10));
+  }
+  return out;
+}
+
 interface Valuation {
   id: string;
   fullName: string;
@@ -124,6 +160,16 @@ export default function AdminDashboard() {
   const [applications, setApplications] = useState<TenantApplication[]>([]);
   const [appFilter, setAppFilter] = useState<'all' | 'pending' | 'reviewing' | 'approved' | 'rejected'>('all');
   const [expandedApp, setExpandedApp] = useState<string | null>(null);
+  const [webStats, setWebStats] = useState<WebStats | null>(null);
+
+  // Website visitor analytics (first-party, from /api/track).
+  useEffect(() => {
+    if (!profile || profile.role !== 'admin') return;
+    fetch('/api/track')
+      .then(r => (r.ok ? r.json() : null))
+      .then(d => { if (d) setWebStats(d); })
+      .catch(() => {});
+  }, [profile]);
 
   useEffect(() => {
     if (!authLoading && (!profile || profile.role !== 'admin')) {
@@ -329,6 +375,99 @@ export default function AdminDashboard() {
               <p style={{ color: 'var(--gray-600)', marginBottom: 32, fontSize: 15 }}>
                 Overview of all platform activity.
               </p>
+
+              {/* ── Website visitors (first-party analytics) ── */}
+              <div style={{ marginBottom: 40 }}>
+                <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', marginBottom: 16 }}>
+                  <h2 style={{ fontSize: 18, fontWeight: 800, color: 'var(--navy)', margin: 0 }}>Website Visitors</h2>
+                  <span style={{ fontSize: 12, color: 'var(--gray-400)' }}>
+                    {webStats?.updatedAt ? `Updated ${new Date(webStats.updatedAt).toLocaleString('en-GB')}` : 'Live'}
+                  </span>
+                </div>
+
+                {!webStats || webStats.totalViews === 0 ? (
+                  <div className="dash-card" style={{ textAlign: 'center', color: 'var(--gray-400)', fontSize: 14, padding: 28 }}>
+                    No visitor data yet. Page views, unique visitors and their countries appear here as people browse the live site.
+                  </div>
+                ) : (
+                  <>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(190px,1fr))', gap: 20, marginBottom: 22 }}>
+                      {[
+                        { label: 'Page Views', value: webStats.totalViews, icon: '👁️', color: '#2563eb' },
+                        { label: 'Unique Visitors', value: webStats.uniqueVisitors, icon: '🧑', color: '#0369a1' },
+                        { label: 'Countries', value: Object.keys(webStats.byCountry || {}).length, icon: '🌍', color: '#00695C' },
+                        { label: 'Pages Visited', value: Object.keys(webStats.byPath || {}).length, icon: '📄', color: '#6A1B9A' },
+                      ].map(s => (
+                        <div key={s.label} className="dash-card" style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+                          <div style={{ width: 44, height: 44, background: `${s.color}15`, borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22 }}>{s.icon}</div>
+                          <div>
+                            <div style={{ fontFamily: 'var(--font-serif)', fontSize: 28, fontWeight: 700, color: s.color }}>{s.value.toLocaleString()}</div>
+                            <div style={{ fontSize: 12, color: 'var(--gray-400)', marginTop: 2 }}>{s.label}</div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(290px,1fr))', gap: 24, marginBottom: 22 }}>
+                      {/* Top countries */}
+                      <div className="dash-card">
+                        <h3 style={{ fontSize: 15, fontWeight: 700, marginBottom: 14 }}>Visitors by Country</h3>
+                        {topEntries(webStats.byCountry, 6).map(([code, count]) => {
+                          const pct = Math.round((count / webStats.totalViews) * 100);
+                          return (
+                            <div key={code} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '9px 0', borderBottom: '1px solid var(--gray-100)' }}>
+                              <span style={{ fontSize: 18, flexShrink: 0 }}>{countryFlag(code)}</span>
+                              <span style={{ fontSize: 13.5, fontWeight: 600, color: 'var(--navy)', flex: '0 0 120px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{countryName(code)}</span>
+                              <div style={{ flex: 1, height: 8, background: 'var(--gray-100)', borderRadius: 99, overflow: 'hidden' }}>
+                                <div style={{ width: `${pct}%`, height: '100%', background: '#2563eb' }} />
+                              </div>
+                              <span style={{ fontSize: 12.5, fontWeight: 700, color: 'var(--gray-600)', minWidth: 62, textAlign: 'right' }}>{count.toLocaleString()} · {pct}%</span>
+                            </div>
+                          );
+                        })}
+                      </div>
+
+                      {/* Top pages */}
+                      <div className="dash-card">
+                        <h3 style={{ fontSize: 15, fontWeight: 700, marginBottom: 14 }}>Most Visited Pages</h3>
+                        {topEntries(webStats.byPath, 6).map(([path, count]) => {
+                          const pct = Math.round((count / webStats.totalViews) * 100);
+                          return (
+                            <div key={path} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '9px 0', borderBottom: '1px solid var(--gray-100)' }}>
+                              <span style={{ fontSize: 13.5, fontWeight: 600, color: 'var(--navy)', flex: '0 0 130px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{path}</span>
+                              <div style={{ flex: 1, height: 8, background: 'var(--gray-100)', borderRadius: 99, overflow: 'hidden' }}>
+                                <div style={{ width: `${pct}%`, height: '100%', background: '#00695C' }} />
+                              </div>
+                              <span style={{ fontSize: 12.5, fontWeight: 700, color: 'var(--gray-600)', minWidth: 62, textAlign: 'right' }}>{count.toLocaleString()} · {pct}%</span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    {/* 14-day trend */}
+                    <div className="dash-card">
+                      <h3 style={{ fontSize: 15, fontWeight: 700, marginBottom: 4 }}>Page Views · Last 14 Days</h3>
+                      {(() => {
+                        const days = lastDays(Date.now(), 14);
+                        const vals = days.map(d => webStats.byDay?.[d] || 0);
+                        const max = Math.max(1, ...vals);
+                        return (
+                          <div style={{ display: 'flex', alignItems: 'flex-end', gap: 5, height: 120, marginTop: 14 }}>
+                            {days.map((d, i) => (
+                              <div key={d} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, height: '100%', justifyContent: 'flex-end' }}>
+                                <span style={{ fontSize: 10, fontWeight: 700, color: vals[i] ? 'var(--gray-600)' : 'transparent' }}>{vals[i]}</span>
+                                <div title={`${d}: ${vals[i]} views`} style={{ width: '100%', height: `${Math.max(4, (vals[i] / max) * 82)}px`, background: vals[i] ? '#2563eb' : '#e8ebf0', borderRadius: '4px 4px 0 0', transition: 'height .2s' }} />
+                                <span style={{ fontSize: 9, color: 'var(--gray-400)' }}>{d.slice(8)}/{d.slice(5, 7)}</span>
+                              </div>
+                            ))}
+                          </div>
+                        );
+                      })()}
+                    </div>
+                  </>
+                )}
+              </div>
               <div style={{
                 display: 'grid',
                 gridTemplateColumns: 'repeat(auto-fill,minmax(200px,1fr))',

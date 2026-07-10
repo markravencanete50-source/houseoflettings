@@ -409,10 +409,28 @@ export default function PricingPage() {
           .pr-svc-row.pr-rev.is-in .pr-svc-copy { animation-name: pr-in-right; }
           .pr-svc-row.pr-rev.is-in .pr-svc-visual { animation-name: pr-in-left; }
         }
+        /* mobile: fold each row into one clean card — dark price header on top,
+           decision copy + full-width CTA below. Redundant name/fee/feature-list
+           are trimmed (features live in the comparison table above). */
         @media(max-width:860px){
-          .pr-svc-row { grid-template-columns:1fr; gap:26px; }
-          .pr-svc-row.is-in { animation: pr-rise .6s cubic-bezier(.22,1,.36,1) backwards; }
-          .pr-svc-btn { align-self:flex-start; }
+          .pr-svcs { gap:24px; }
+          .pr-svc-row { grid-template-columns:1fr; gap:0; background:#fff;
+            border:1px solid #e5e7eb; border-radius:16px; overflow:hidden;
+            box-shadow:0 16px 36px -28px rgba(15,31,61,.32); }
+          .pr-svc-row.is-in { animation: pr-rise .55s cubic-bezier(.22,1,.36,1) backwards; }
+          .pr-svc-row.pr-featured { border:2px solid #2563eb; box-shadow:0 22px 44px -26px rgba(37,99,235,.42); }
+          .pr-svc-visual { order:-1; }
+          .pr-vis { border:0; border-radius:0; box-shadow:none; padding:22px 22px 24px; }
+          .pr-svc-row .pr-vis { transform:none !important; box-shadow:none !important; }
+          .pr-vis-div, .pr-vis-label, .pr-vis-list { display:none; }
+          .pr-vis-ongoing { margin-bottom:0; }
+          .pr-svc-copy { padding:22px 22px 24px; }
+          .pr-svc-kicker { display:none; }
+          .pr-svc-copy h3 { position:absolute; width:1px; height:1px; padding:0; margin:-1px;
+            overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0; }
+          .pr-svc-lead { font-size:16px; margin-top:0; }
+          .pr-svc-body { font-size:14.5px; }
+          .pr-svc-btn { width:100%; justify-content:center; margin-top:2px; }
         }
         @media(prefers-reduced-motion:reduce){
           .pr-svc-row, .pr-svc-copy, .pr-svc-visual, .pr-vis-item, .pr-orb { animation:none !important; }
@@ -596,7 +614,7 @@ export default function PricingPage() {
             const featured = i === HOT;
             const reversed = i % 2 === 1; // alternate: even = copy left, odd = copy right
             return (
-              <div key={p.id} className={`pr-svc-row${reversed ? ' pr-rev' : ''}`}>
+              <div key={p.id} className={`pr-svc-row${reversed ? ' pr-rev' : ''}${featured ? ' pr-featured' : ''}`}>
                 {/* Copy side */}
                 <div className="pr-svc-copy">
                   <span className="pr-svc-kicker">

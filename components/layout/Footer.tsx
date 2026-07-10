@@ -122,9 +122,9 @@ export default function Footer() {
           font-family: 'Poppins', sans-serif;
         }
         .hol-ft__glow {
-          position: absolute; left: -160px; top: -120px;
+          position: absolute; left: -200px; top: -160px;
           width: 460px; height: 460px; border-radius: 50%;
-          background: radial-gradient(circle, rgba(37,99,235,0.14), transparent 70%);
+          background: radial-gradient(circle, rgba(37,99,235,0.07), transparent 70%);
           pointer-events: none;
         }
         .hol-ft__inner {
@@ -141,12 +141,13 @@ export default function Footer() {
         .hol-ft__mark {
           width: 46px; height: 46px; flex-shrink: 0;
           display: inline-flex; align-items: center; justify-content: center;
-          border-radius: 12px;
-          background: #fff;
-          overflow: hidden;
-          box-shadow: 0 8px 20px rgba(37,99,235,0.38);
         }
-        .hol-ft__mark img { width: 100%; height: 100%; object-fit: cover; display: block; }
+        /* The logo carries its own white plate, so no tile behind it — just a
+           soft, dark shadow that hugs the mark (no bright bloom). */
+        .hol-ft__mark img {
+          width: 100%; height: 100%; object-fit: contain; display: block;
+          filter: drop-shadow(0 4px 10px rgba(4,10,22,0.55));
+        }
         .hol-ft__word {
           display: flex; flex-direction: column; line-height: 1.15;
           font-size: 20px; font-weight: 800; color: #fff; letter-spacing: -0.2px;

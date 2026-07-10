@@ -74,7 +74,7 @@ export default function PropertyCard({ property, distanceMiles }: PropertyCardPr
           </span>
         )}
         {propertyAvailability(property) === 'let-agreed' && <LetAgreedRibbon fontSize={16} />}
-        {propertyAvailability(property) === 'pending' && <LetAgreedRibbon fontSize={16} label="Under Offer" color="#ef6c00" />}
+        {propertyAvailability(property) === 'pending' && <LetAgreedRibbon fontSize={16} label="Pending" color="#ef6c00" />}
       </div>
 
       {/* Body */}

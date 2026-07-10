@@ -529,7 +529,7 @@ export default function PropertyDetailClient() {
             )}
 
             {propertyAvailability(property) === 'let-agreed' && <LetAgreedRibbon fontSize={28} />}
-            {propertyAvailability(property) === 'pending' && <LetAgreedRibbon fontSize={28} label="Under Offer" color="#ef6c00" />}
+            {propertyAvailability(property) === 'pending' && <LetAgreedRibbon fontSize={28} label="Pending" color="#ef6c00" />}
 
             {images.length > 0 && (
               <div className="hol-gallery-counter">

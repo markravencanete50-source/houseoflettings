@@ -11,11 +11,11 @@ const PACKAGES = BUNDLES;
 const VISIBLE_ROWS = 7;   // rows shown per matrix section before "Show more"
 const HOT = 3;            // Full Management column index (Most Popular)
 
-// Decision guide shown AFTER the comparison table. One clean text card per
-// package explaining, in plain terms, who the service is for and when to
-// choose it. Index matches BUNDLES order. Copy avoids em/en dashes per the
-// site copy rule.
-const EXPLAINERS: { kicker: string; lead: string; body: string; points: string[] }[] = [
+// Decision guide shown AFTER the comparison table. An alternating left/right
+// layout: plain-English "who it's for" copy on one side, a designed spec panel
+// (price + what's included) on the other. Index matches BUNDLES order. Copy
+// avoids em/en dashes per the site copy rule.
+const EXPLAINERS: { kicker: string; lead: string; body: string; points: string[]; highlights: string[] }[] = [
   {
     kicker: 'Tenant Find · £399 one-time',
     lead: 'Choose this if you have the time to run the tenancy and handle maintenance yourself.',
@@ -24,6 +24,12 @@ const EXPLAINERS: { kicker: string; lead: string; body: string; points: string[]
       'You live close by and can deal with day to day issues',
       'You are comfortable arranging your own repairs',
       'You want a fully referenced tenant found fast, for one fixed fee',
+    ],
+    highlights: [
+      'Advertising on major property portals',
+      'Full applicant referencing and Right to Rent checks',
+      'Tenancy agreement and deposit registration',
+      'First month’s rent and deposit collected',
     ],
   },
   {
@@ -35,6 +41,12 @@ const EXPLAINERS: { kicker: string; lead: string; body: string; points: string[]
       'You are happy to manage the tenancy yourself',
       'You want to maximise rent with expert marketing',
     ],
+    highlights: [
+      'Everything in Virtual Tenant Find',
+      'Professional photography and floor plan',
+      'Agent-led accompanied viewings',
+      'In-person tenant handover',
+    ],
   },
   {
     kicker: 'Management · £199 then 6% of rent',
@@ -44,6 +56,12 @@ const EXPLAINERS: { kicker: string; lead: string; body: string; points: string[]
       'You want rent collection and arrears chasing done for you',
       'You are happy to arrange your own repairs and contractors',
       'You want the admin off your plate without full management',
+    ],
+    highlights: [
+      'Includes a full tenant find',
+      'Monthly rent collection and monitoring',
+      'Arrears chasing and reminders',
+      'Key holding and annual income summary',
     ],
   },
   {
@@ -55,6 +73,12 @@ const EXPLAINERS: { kicker: string; lead: string; body: string; points: string[]
       'You want maintenance and contractors handled for you',
       'You want compliance tracked so nothing is missed',
     ],
+    highlights: [
+      'Dedicated day-to-day management team',
+      'Maintenance and contractor coordination',
+      'Compliance monitoring (Gas, EICR, EPC)',
+      'Monthly landlord statements',
+    ],
   },
   {
     kicker: 'Management · £399 then 10% of rent',
@@ -64,6 +88,12 @@ const EXPLAINERS: { kicker: string; lead: string; body: string; points: string[]
       'You want your rent guaranteed even during arrears',
       'You want legal and eviction costs covered',
       'You want priority repairs and enhanced inspections',
+    ],
+    highlights: [
+      'Everything in Full Management',
+      'Rent guarantee cover',
+      'Legal and eviction protection',
+      'Priority contractors and enhanced inspections',
     ],
   },
 ];
@@ -102,6 +132,36 @@ export default function PricingPage() {
     document.body.style.overflow = showModal ? 'hidden' : '';
     return () => { document.body.style.overflow = ''; };
   }, [showModal]);
+
+  // Scroll-reveal for the decision-guide rows. Rows are visible by default; when
+  // one scrolls into view we add `is-in`, which plays a one-shot entrance
+  // animation. Because the resting state is visible, content can never be left
+  // stuck hidden if scripting is slow or fails.
+  useEffect(() => {
+    const rows = Array.from(document.querySelectorAll<HTMLElement>('.pr-svc-row'));
+    if (!rows.length) return;
+    let raf = 0;
+    const cleanup = () => {
+      window.removeEventListener('scroll', onScroll);
+      window.removeEventListener('resize', onScroll);
+    };
+    const reveal = () => {
+      raf = 0;
+      const trigger = window.innerHeight * 0.88;
+      let remaining = false;
+      rows.forEach(r => {
+        if (r.classList.contains('is-in')) return;
+        if (r.getBoundingClientRect().top < trigger) r.classList.add('is-in');
+        else remaining = true;
+      });
+      if (!remaining) cleanup();
+    };
+    const onScroll = () => { if (!raf) raf = requestAnimationFrame(reveal); };
+    reveal(); // reveal anything already in view on mount
+    window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('resize', onScroll);
+    return () => { cleanup(); if (raf) cancelAnimationFrame(raf); };
+  }, []);
 
   const openModalFor = (i: number) => { setActive(i); setShowModal(true); };
 
@@ -271,31 +331,91 @@ export default function PricingPage() {
 
         @media(max-width:860px){ .pr-scroll-hint{ display:block; } }
 
-        /* ---------- Decision guide: clean text sections ---------- */
-        .pr-guide { max-width:900px; margin:80px auto 0; padding:0 5%; }
+        /* ---------- Decision guide: alternating copy / spec panel ---------- */
+        .pr-guide { max-width:1160px; margin:80px auto 0; padding:0 5%; }
         .pr-guide .pr-head { text-align:center; }
-        .pr-svcs { margin-top:44px; }
-        .pr-svc-block { padding:40px 0; border-top:1px solid #e9edf3; }
-        .pr-svc-block:first-child { border-top:none; padding-top:8px; }
+        .pr-svcs { margin-top:52px; display:flex; flex-direction:column; gap:clamp(40px,6vw,72px); }
+        .pr-svc-row { display:grid; grid-template-columns:1fr 1fr; gap:clamp(28px,4.5vw,68px); align-items:center; }
+        /* Motion: elements are visible by default; is-in plays a one-shot entrance. */
+        @keyframes pr-rise { from{ opacity:0; transform:translateY(30px);} to{ opacity:1; transform:none;} }
+        @keyframes pr-in-left { from{ opacity:0; transform:translateX(-30px);} to{ opacity:1; transform:none;} }
+        @keyframes pr-in-right { from{ opacity:0; transform:translateX(30px);} to{ opacity:1; transform:none;} }
+        @keyframes pr-rise-sm { from{ opacity:0; transform:translateY(10px);} to{ opacity:1; transform:none;} }
+
+        /* copy side */
         .pr-svc-kicker { display:inline-flex; flex-wrap:wrap; gap:10px; align-items:center; font-size:12px; font-weight:700;
-          letter-spacing:.12em; text-transform:uppercase; color:#2563eb; margin-bottom:12px; }
+          letter-spacing:.12em; text-transform:uppercase; color:#2563eb; margin-bottom:14px; }
         .pr-svc-kicker .pr-pop { background:#2563eb; color:#fff; border-radius:999px; padding:3px 11px; font-size:9.5px; letter-spacing:.08em; }
-        .pr-svc-block h3 { font-size:clamp(23px,3vw,30px); font-weight:800; color:#0f1f3d; margin:0 0 14px; line-height:1.18; }
-        .pr-svc-lead { font-size:16.5px; font-weight:700; color:#0f1f3d; margin:0 0 12px; line-height:1.55; max-width:720px; }
-        .pr-svc-body { font-size:15px; color:#5b6472; line-height:1.85; margin:0 0 20px; max-width:720px; }
-        .pr-svc-points { list-style:none; margin:0 0 26px; padding:0; display:grid; grid-template-columns:1fr 1fr;
-          gap:12px 32px; max-width:760px; }
-        .pr-svc-points li { display:flex; gap:10px; font-size:14.5px; color:#374151; line-height:1.5; }
-        .pr-svc-points svg { width:16px; height:16px; stroke:#16a34a; stroke-width:2.8; fill:none; flex:none; margin-top:2px; }
-        .pr-svc-btn { display:inline-block; padding:13px 30px; border-radius:8px; border:1.5px solid #2563eb;
+        .pr-svc-copy h3 { font-size:clamp(24px,2.7vw,32px); font-weight:800; color:#0f1f3d; margin:0 0 14px; line-height:1.16; letter-spacing:-.01em; }
+        .pr-svc-lead { font-size:16.5px; font-weight:700; color:#0f1f3d; margin:0 0 12px; line-height:1.55; }
+        .pr-svc-body { font-size:15px; color:#5b6472; line-height:1.85; margin:0 0 20px; }
+        .pr-svc-points { list-style:none; margin:0 0 28px; padding:0; display:flex; flex-direction:column; gap:11px; }
+        .pr-svc-points li { display:flex; gap:11px; font-size:14.5px; color:#374151; line-height:1.5; }
+        .pr-svc-points .pr-ptick { flex:none; width:20px; height:20px; border-radius:50%; background:#e7f6ee;
+          display:inline-flex; align-items:center; justify-content:center; margin-top:1px; }
+        .pr-svc-points .pr-ptick svg { width:11px; height:11px; stroke:#16a34a; stroke-width:3; fill:none; stroke-linecap:round; stroke-linejoin:round; }
+        .pr-svc-btn { display:inline-flex; align-items:center; gap:9px; padding:14px 30px; border-radius:9px; border:1.5px solid #2563eb;
           background:transparent; color:#2563eb; font-size:13.5px; font-weight:700; letter-spacing:.02em;
-          text-transform:uppercase; cursor:pointer; transition:all .16s ease; }
-        .pr-svc-btn:hover { background:#2563eb; color:#fff; }
+          text-transform:uppercase; cursor:pointer; transition:all .18s ease; }
+        .pr-svc-btn svg { transition:transform .2s ease; }
+        .pr-svc-btn:hover { background:#2563eb; color:#fff; box-shadow:0 10px 22px -10px rgba(37,99,235,.55); }
+        .pr-svc-btn:hover svg { transform:translateX(3px); }
         .pr-svc-btn.pr-svc-btn--solid { background:#2563eb; color:#fff; }
         .pr-svc-btn.pr-svc-btn--solid:hover { background:#1d4ed8; border-color:#1d4ed8; }
-        @media(max-width:620px){
-          .pr-svc-points { grid-template-columns:1fr; }
-          .pr-svc-btn { display:block; width:100%; text-align:center; }
+
+        /* spec panel (the designed "image" side, no photo) */
+        .pr-vis { position:relative; overflow:hidden; border-radius:20px; padding:clamp(26px,3vw,38px);
+          background:linear-gradient(155deg,#15294c 0%,#0c1a33 100%); color:#fff;
+          box-shadow:0 30px 60px -30px rgba(9,18,40,.7); border:1px solid rgba(255,255,255,.06);
+          transition:transform .25s ease, box-shadow .25s ease; }
+        .pr-svc-row:hover .pr-vis { transform:translateY(-5px); box-shadow:0 40px 72px -30px rgba(9,18,40,.8); }
+        .pr-vis--hot { background:linear-gradient(155deg,#2563eb 0%,#122a5c 55%,#0c1a33 100%);
+          border-color:rgba(120,170,255,.35); box-shadow:0 34px 66px -28px rgba(37,99,235,.55); }
+        .pr-orb { position:absolute; border-radius:50%; pointer-events:none; filter:blur(2px); }
+        .pr-orb-a { width:230px; height:230px; top:-70px; right:-50px;
+          background:radial-gradient(circle, rgba(74,144,217,.4) 0%, transparent 70%); animation:pr-float-a 16s ease-in-out infinite; }
+        .pr-orb-b { width:180px; height:180px; bottom:-60px; left:-40px;
+          background:radial-gradient(circle, rgba(37,99,235,.32) 0%, transparent 70%); animation:pr-float-b 20s ease-in-out infinite; }
+        .pr-vis--hot .pr-orb-a { background:radial-gradient(circle, rgba(147,197,255,.5) 0%, transparent 70%); }
+        @keyframes pr-float-a { 0%,100%{ transform:translate(0,0) scale(1);} 50%{ transform:translate(-24px,20px) scale(1.08);} }
+        @keyframes pr-float-b { 0%,100%{ transform:translate(0,0) scale(1);} 50%{ transform:translate(20px,-18px) scale(1.06);} }
+        .pr-vis-top { position:relative; display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:14px; }
+        .pr-vis-kind { font-size:11px; font-weight:700; letter-spacing:.14em; text-transform:uppercase; color:#a9c4ea; }
+        .pr-vis-badge { font-size:9.5px; font-weight:800; letter-spacing:.08em; text-transform:uppercase; color:#0c1a33;
+          background:#fff; border-radius:999px; padding:4px 11px; }
+        .pr-vis-name { position:relative; font-size:clamp(20px,2.2vw,25px); font-weight:800; line-height:1.15; margin-bottom:16px; }
+        .pr-vis-price { position:relative; display:flex; align-items:baseline; gap:9px; }
+        .pr-vis-fee { font-size:clamp(34px,4.4vw,44px); font-weight:800; letter-spacing:-.02em; line-height:1; }
+        .pr-vis-per { font-size:12.5px; font-weight:500; color:#a9c4ea; }
+        .pr-vis-ongoing { position:relative; font-size:13px; font-weight:700; color:#7db4f0; margin-top:8px; }
+        .pr-vis-ongoing.pr-vis-none { color:#8fa6c9; font-weight:600; }
+        .pr-vis-div { position:relative; height:1px; background:rgba(255,255,255,.12); margin:20px 0 16px; }
+        .pr-vis-label { position:relative; font-size:10.5px; font-weight:700; letter-spacing:.12em; text-transform:uppercase;
+          color:#8fa6c9; margin-bottom:12px; }
+        .pr-vis-list { position:relative; list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:11px; }
+        .pr-vis-item { display:flex; gap:11px; align-items:flex-start; font-size:13.8px; line-height:1.45; color:#e7eefb; }
+        .pr-svc-row.is-in .pr-vis-item { animation: pr-rise-sm .5s ease backwards; }
+        .pr-vis-tick { flex:none; width:20px; height:20px; border-radius:50%; background:rgba(74,222,128,.16);
+          display:inline-flex; align-items:center; justify-content:center; margin-top:1px; }
+        .pr-vis-tick svg { width:11px; height:11px; stroke:#4ade80; stroke-width:3; fill:none; stroke-linecap:round; stroke-linejoin:round; }
+        .pr-vis--hot .pr-vis-tick { background:rgba(255,255,255,.18); }
+        .pr-vis--hot .pr-vis-tick svg { stroke:#fff; }
+
+        /* desktop: alternate sides + directional slide-in from each side */
+        @media(min-width:861px){
+          .pr-svc-row.pr-rev .pr-svc-visual { order:-1; }
+          .pr-svc-row.is-in .pr-svc-copy { animation: pr-in-left .7s .05s cubic-bezier(.22,1,.36,1) backwards; }
+          .pr-svc-row.is-in .pr-svc-visual { animation: pr-in-right .7s .12s cubic-bezier(.22,1,.36,1) backwards; }
+          .pr-svc-row.pr-rev.is-in .pr-svc-copy { animation-name: pr-in-right; }
+          .pr-svc-row.pr-rev.is-in .pr-svc-visual { animation-name: pr-in-left; }
+        }
+        @media(max-width:860px){
+          .pr-svc-row { grid-template-columns:1fr; gap:26px; }
+          .pr-svc-row.is-in { animation: pr-rise .6s cubic-bezier(.22,1,.36,1) backwards; }
+          .pr-svc-btn { align-self:flex-start; }
+        }
+        @media(prefers-reduced-motion:reduce){
+          .pr-svc-row, .pr-svc-copy, .pr-svc-visual, .pr-vis-item, .pr-orb { animation:none !important; }
         }
 
         /* ---------- How fees work ---------- */
@@ -474,30 +594,63 @@ export default function PricingPage() {
           {EXPLAINERS.map((ex, i) => {
             const p = PACKAGES[i];
             const featured = i === HOT;
+            const reversed = i % 2 === 1; // alternate: even = copy left, odd = copy right
             return (
-              <div key={p.id} className="pr-svc-block">
-                <span className="pr-svc-kicker">
-                  {ex.kicker}
-                  {p.badge && <span className="pr-pop">Most Popular</span>}
-                </span>
-                <h3>{p.label}</h3>
-                <p className="pr-svc-lead">{ex.lead}</p>
-                <p className="pr-svc-body">{ex.body}</p>
-                <ul className="pr-svc-points">
-                  {ex.points.map((pt) => (
-                    <li key={pt}>
-                      <svg viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5" /></svg>
-                      <span>{pt}</span>
-                    </li>
-                  ))}
-                </ul>
-                <button
-                  type="button"
-                  className={`pr-svc-btn${featured ? ' pr-svc-btn--solid' : ''}`}
-                  onClick={() => openModalFor(i)}
-                >
-                  Choose {p.short}
-                </button>
+              <div key={p.id} className={`pr-svc-row${reversed ? ' pr-rev' : ''}`}>
+                {/* Copy side */}
+                <div className="pr-svc-copy">
+                  <span className="pr-svc-kicker">
+                    {ex.kicker}
+                    {p.badge && <span className="pr-pop">Most Popular</span>}
+                  </span>
+                  <h3>{p.label}</h3>
+                  <p className="pr-svc-lead">{ex.lead}</p>
+                  <p className="pr-svc-body">{ex.body}</p>
+                  <ul className="pr-svc-points">
+                    {ex.points.map((pt) => (
+                      <li key={pt}>
+                        <i className="pr-ptick" aria-hidden><svg viewBox="0 0 24 24"><polyline points="4 13 10 19 20 6" /></svg></i>
+                        <span>{pt}</span>
+                      </li>
+                    ))}
+                  </ul>
+                  <button
+                    type="button"
+                    className={`pr-svc-btn${featured ? ' pr-svc-btn--solid' : ''}`}
+                    onClick={() => openModalFor(i)}
+                  >
+                    Choose {p.short}
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
+                  </button>
+                </div>
+
+                {/* Designed spec panel (no photo) */}
+                <div className="pr-svc-visual">
+                  <div className={`pr-vis${featured ? ' pr-vis--hot' : ''}`}>
+                    <span className="pr-orb pr-orb-a" aria-hidden />
+                    <span className="pr-orb pr-orb-b" aria-hidden />
+                    <div className="pr-vis-top">
+                      <span className="pr-vis-kind">{p.kind}</span>
+                      {p.badge && <span className="pr-vis-badge">Most Popular</span>}
+                    </div>
+                    <div className="pr-vis-name">{p.label}</div>
+                    <div className="pr-vis-price">
+                      <span className="pr-vis-fee">{p.setupFee}</span>
+                      <span className="pr-vis-per">one-time</span>
+                    </div>
+                    <div className={`pr-vis-ongoing${p.mgmtFee ? '' : ' pr-vis-none'}`}>{p.ongoing}</div>
+                    <div className="pr-vis-div" />
+                    <div className="pr-vis-label">What&apos;s included</div>
+                    <ul className="pr-vis-list">
+                      {ex.highlights.map((h, hi) => (
+                        <li key={h} className="pr-vis-item" style={{ animationDelay: `${0.24 + hi * 0.09}s` }}>
+                          <i className="pr-vis-tick" aria-hidden><svg viewBox="0 0 24 24"><polyline points="4 13 10 19 20 6" /></svg></i>
+                          <span>{h}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
               </div>
             );
           })}

@@ -27,7 +27,8 @@ export interface Property {
   status: 'active' | 'inactive' | 'pending';
   badge?: string;         // 'Featured' | 'New' | 'Popular' | etc.
   featured?: boolean;
-  letAgreed?: boolean;    // true = offer accepted: show "LET AGREED" banner + hide from tenant applications
+  letAgreed?: boolean;    // legacy flag, kept in sync with `availability` for the public site
+  availability?: 'available' | 'pending' | 'let-agreed'; // listing state the admin controls
   furnished?: 'furnished' | 'unfurnished' | 'part-furnished';
   availableFrom?: string;
 
@@ -67,6 +68,14 @@ export interface Message {
   senderName: string;
   text: string;
   timestamp: Date;
+}
+
+// Resolve a listing's availability, defaulting legacy docs (which only have the
+// `letAgreed` boolean) so nothing needs a backfill.
+export function propertyAvailability(
+  p: Pick<Property, 'availability' | 'letAgreed'>
+): 'available' | 'pending' | 'let-agreed' {
+  return p.availability ?? (p.letAgreed ? 'let-agreed' : 'available');
 }
 
 export interface SearchFilters {

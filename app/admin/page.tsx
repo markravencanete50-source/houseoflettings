@@ -11,10 +11,16 @@ import {
   deleteUserRecord,
   adminDeleteProperty,
   adminSetPropertyStatus,
-  adminSetPropertyLetAgreed,
+  adminSetPropertyAvailability,
   getAnalytics,
 } from '@/services/admin';
-import { AppUser, Property } from '@/lib/types';
+import { AppUser, Property, propertyAvailability } from '@/lib/types';
+
+const AVAILABILITY_META: Record<'available' | 'pending' | 'let-agreed', { label: string; bg: string; color: string }> = {
+  'available':  { label: 'Available',  bg: '#e8f5e9', color: '#2e7d32' },
+  'pending':    { label: 'Pending',    bg: '#fff3e0', color: '#ef6c00' },
+  'let-agreed': { label: 'Let Agreed', bg: '#fdecea', color: '#c62828' },
+};
 import { format } from 'date-fns';
 import { db } from '@/lib/firebase';
 import {
@@ -286,11 +292,10 @@ export default function AdminDashboard() {
     );
   };
 
-  const handleToggleLetAgreed = async (prop: Property) => {
-    const newVal = !prop.letAgreed;
-    await adminSetPropertyLetAgreed(prop.id!, newVal);
+  const handleSetAvailability = async (prop: Property, availability: 'available' | 'pending' | 'let-agreed') => {
+    await adminSetPropertyAvailability(prop.id!, availability);
     setProperties(prev =>
-      prev.map(p => p.id === prop.id ? { ...p, letAgreed: newVal } : p)
+      prev.map(p => p.id === prop.id ? { ...p, availability, letAgreed: availability === 'let-agreed' } : p)
     );
   };
 
@@ -713,15 +718,19 @@ export default function AdminDashboard() {
                         <td style={{ fontWeight: 700, color: 'var(--red)' }}>£{p.price.toLocaleString()}</td>
                         <td>
                           <span className={`status-badge ${p.status}`}>{p.status}</span>
-                          {p.letAgreed && (
-                            <span style={{
-                              display: 'inline-block', marginTop: 4, fontSize: 10, fontWeight: 700,
-                              background: 'var(--red)', color: '#fff', borderRadius: 3,
-                              padding: '2px 7px', textTransform: 'uppercase', letterSpacing: 0.5,
-                            }}>
-                              Let Agreed
-                            </span>
-                          )}
+                          {(() => {
+                            const av = propertyAvailability(p);
+                            const meta = AVAILABILITY_META[av];
+                            return (
+                              <span style={{
+                                display: 'inline-block', marginTop: 4, fontSize: 10, fontWeight: 700,
+                                background: meta.bg, color: meta.color, borderRadius: 3,
+                                padding: '2px 7px', textTransform: 'uppercase', letterSpacing: 0.5,
+                              }}>
+                                {meta.label}
+                              </span>
+                            );
+                          })()}
                         </td>
                         <td style={{ fontSize: 13 }}>{p.bedrooms === 0 ? 'Studio' : `${p.bedrooms}`}</td>
                         <td>
@@ -747,18 +756,22 @@ export default function AdminDashboard() {
                             >
                               {p.status === 'active' ? 'Deactivate' : 'Approve'}
                             </button>
-                            <button
-                              onClick={() => handleToggleLetAgreed(p)}
+                            <select
+                              value={propertyAvailability(p)}
+                              onChange={e => handleSetAvailability(p, e.target.value as 'available' | 'pending' | 'let-agreed')}
+                              title="Set listing availability"
                               style={{
-                                padding: '5px 10px',
-                                background: p.letAgreed ? 'var(--red)' : 'transparent',
-                                border: '1px solid var(--red)',
-                                color: p.letAgreed ? '#fff' : 'var(--red)',
-                                borderRadius: 4, fontSize: 11, cursor: 'pointer', whiteSpace: 'nowrap',
+                                padding: '5px 8px', borderRadius: 4, fontSize: 11, cursor: 'pointer',
+                                border: `1px solid ${AVAILABILITY_META[propertyAvailability(p)].color}`,
+                                color: AVAILABILITY_META[propertyAvailability(p)].color,
+                                background: AVAILABILITY_META[propertyAvailability(p)].bg,
+                                fontWeight: 700,
                               }}
                             >
-                              {p.letAgreed ? 'Set Available' : 'Let Agreed'}
-                            </button>
+                              <option value="available">Available</option>
+                              <option value="pending">Pending</option>
+                              <option value="let-agreed">Let Agreed</option>
+                            </select>
                             <button className="btn-danger" onClick={() => handleDeleteProperty(p.id!)}>
                               Delete
                             </button>

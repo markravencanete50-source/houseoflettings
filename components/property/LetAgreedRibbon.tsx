@@ -1,8 +1,12 @@
 // components/property/LetAgreedRibbon.tsx
-// Red "LET AGREED" band overlaid across a property's cover image. Purely an
-// overlay (pointer-events: none) so it never blocks clicks on the image/gallery
-// beneath it. Rendered by the caller only when property.letAgreed is true.
-export default function LetAgreedRibbon({ fontSize = 18 }: { fontSize?: number }) {
+// Status band overlaid across a property's cover image (default red "LET AGREED",
+// or e.g. orange "UNDER OFFER" for pending). Purely an overlay
+// (pointer-events: none) so it never blocks clicks on the image/gallery beneath.
+export default function LetAgreedRibbon({
+  fontSize = 18,
+  label = 'Let Agreed',
+  color = 'var(--red)',
+}: { fontSize?: number; label?: string; color?: string }) {
   return (
     <div
       style={{
@@ -18,7 +22,7 @@ export default function LetAgreedRibbon({ fontSize = 18 }: { fontSize?: number }
       <div
         style={{
           width: '100%',
-          background: 'var(--red)',
+          background: color,
           color: '#fff',
           textAlign: 'center',
           fontFamily: "'Poppins', sans-serif",
@@ -30,7 +34,7 @@ export default function LetAgreedRibbon({ fontSize = 18 }: { fontSize?: number }
           boxShadow: '0 6px 22px rgba(0,0,0,0.35)',
         }}
       >
-        Let Agreed
+        {label}
       </div>
     </div>
   );

@@ -60,6 +60,18 @@ export async function adminSetPropertyLetAgreed(
   await updateDoc(doc(db, 'properties', id), { letAgreed });
 }
 
+// ── Set listing availability (available / pending / let-agreed) ─
+// Keeps the legacy `letAgreed` flag in sync so the public site keeps working.
+export async function adminSetPropertyAvailability(
+  id: string,
+  availability: 'available' | 'pending' | 'let-agreed'
+): Promise<void> {
+  await updateDoc(doc(db, 'properties', id), {
+    availability,
+    letAgreed: availability === 'let-agreed',
+  });
+}
+
 // ── Analytics ────────────────────────────────────────────────
 export async function getAnalytics() {
   const safeCount = async (col: string) => {

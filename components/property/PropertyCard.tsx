@@ -2,7 +2,7 @@
 // components/property/PropertyCard.tsx
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
-import { Property } from '@/lib/types';
+import { Property, propertyAvailability } from '@/lib/types';
 import { optimizedImage } from '@/lib/imageUrl';
 import { formatMiles } from '@/lib/geo';
 import LetAgreedRibbon from '@/components/property/LetAgreedRibbon';
@@ -73,7 +73,8 @@ export default function PropertyCard({ property, distanceMiles }: PropertyCardPr
             {property.badge}
           </span>
         )}
-        {property.letAgreed && <LetAgreedRibbon fontSize={16} />}
+        {propertyAvailability(property) === 'let-agreed' && <LetAgreedRibbon fontSize={16} />}
+        {propertyAvailability(property) === 'pending' && <LetAgreedRibbon fontSize={16} label="Under Offer" color="#ef6c00" />}
       </div>
 
       {/* Body */}

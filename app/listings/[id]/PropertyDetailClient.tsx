@@ -8,7 +8,7 @@ import { getProperty } from '@/services/property';
 import { getOrCreateChat } from '@/services/chat';
 import { getUserProfile } from '@/services/auth';
 import { useAuth } from '@/hooks/useAuth';
-import { Property } from '@/lib/types';
+import { Property, propertyAvailability } from '@/lib/types';
 import TenantEnquiryModal from '@/components/property/TenantEnquiryModal';
 import LetAgreedRibbon from '@/components/property/LetAgreedRibbon';
 import { cityFromText } from '@/lib/viewingSlots';
@@ -528,7 +528,8 @@ export default function PropertyDetailClient() {
               </div>
             )}
 
-            {property.letAgreed && <LetAgreedRibbon fontSize={28} />}
+            {propertyAvailability(property) === 'let-agreed' && <LetAgreedRibbon fontSize={28} />}
+            {propertyAvailability(property) === 'pending' && <LetAgreedRibbon fontSize={28} label="Under Offer" color="#ef6c00" />}
 
             {images.length > 0 && (
               <div className="hol-gallery-counter">

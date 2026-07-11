@@ -132,6 +132,83 @@ function BookViewingInlineButton() {
 }
 
 
+// ── SERVICE ROW (pricing-style: copy + designed navy spec panel) ──────────────
+type HpPanel = {
+  kind: string;
+  badge?: string;
+  headline: string;
+  per?: string;
+  note?: string;
+  listLabel: string;
+  items: string[];
+};
+function ServiceRow({
+  eyebrow, title, lead, body, points, cta, panel, reversed, featured,
+}: {
+  eyebrow: string;
+  title: string;
+  lead: string;
+  body: string;
+  points: string[];
+  cta: React.ReactNode;
+  panel: HpPanel;
+  reversed?: boolean;
+  featured?: boolean;
+}) {
+  return (
+    <div className={`hp-svc-row${reversed ? ' hp-rev' : ''}${featured ? ' hp-featured' : ''}`}>
+      {/* Copy side */}
+      <div className="hp-svc-copy">
+        <span className="hp-svc-kicker">{eyebrow}</span>
+        <h2 className="hp-svc-title">{title}</h2>
+        <p className="hp-svc-lead">{lead}</p>
+        <p className="hp-svc-body">{body}</p>
+        <ul className="hp-svc-points">
+          {points.map((pt) => (
+            <li key={pt}>
+              <i className="hp-ptick" aria-hidden>
+                <svg viewBox="0 0 24 24"><polyline points="4 13 10 19 20 6" /></svg>
+              </i>
+              <span>{pt}</span>
+            </li>
+          ))}
+        </ul>
+        <div className="hp-svc-cta">{cta}</div>
+      </div>
+
+      {/* Designed navy spec panel (no photo) */}
+      <div className="hp-svc-visual">
+        <div className={`hp-vis${featured ? ' hp-vis--hot' : ''}`}>
+          <span className="hp-orb hp-orb-a" aria-hidden />
+          <span className="hp-orb hp-orb-b" aria-hidden />
+          <div className="hp-vis-top">
+            <span className="hp-vis-kind">{panel.kind}</span>
+            {panel.badge && <span className="hp-vis-badge">{panel.badge}</span>}
+          </div>
+          <div className="hp-vis-price">
+            <span className="hp-vis-fee">{panel.headline}</span>
+            {panel.per && <span className="hp-vis-per">{panel.per}</span>}
+          </div>
+          {panel.note && <div className="hp-vis-note">{panel.note}</div>}
+          <div className="hp-vis-div" />
+          <div className="hp-vis-label">{panel.listLabel}</div>
+          <ul className="hp-vis-list">
+            {panel.items.map((h, hi) => (
+              <li key={h} className="hp-vis-item" style={{ animationDelay: `${0.24 + hi * 0.09}s` }}>
+                <i className="hp-vis-tick" aria-hidden>
+                  <svg viewBox="0 0 24 24"><polyline points="4 13 10 19 20 6" /></svg>
+                </i>
+                <span>{h}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+
 // ── GALLERY DATA ─────────────────────────────────────────────────────────────
 const GALLERY_ITEMS = [
   {
@@ -407,9 +484,45 @@ function MobileFAB() {
   );
 }
 
+// ── SERVICE-ROW SCROLL REVEAL ─────────────────────────────────────────────────
+// Rows are visible by default; when a row scrolls into view we add `is-in`, which
+// plays a one-shot directional entrance (copy from one side, panel from the other).
+// Resting state is visible, so content is never left stuck if scripting is slow.
+//
+// A window scroll listener that re-queries `.hp-svc-row` on each frame (rather than
+// a one-shot IntersectionObserver) is deliberate: the homepage has a pre-existing
+// hydration mismatch that swaps the document's DOM after mount, which would leave an
+// observer bound to stale, detached nodes. The window survives the swap, so querying
+// live nodes on each scroll always targets the current elements.
+function useServiceRowReveal() {
+  useEffect(() => {
+    let raf = 0;
+    const reveal = () => {
+      raf = 0;
+      const trigger = window.innerHeight * 0.86;
+      document.querySelectorAll('.hp-svc-row').forEach((r) => {
+        if (r.classList.contains('is-in')) return;
+        if (r.getBoundingClientRect().top < trigger) r.classList.add('is-in');
+      });
+    };
+    const onScroll = () => { if (!raf) raf = requestAnimationFrame(reveal); };
+    reveal();                       // reveal anything already in view on mount
+    const settle = setTimeout(reveal, 150);   // re-check after hydration settles
+    window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('resize', onScroll);
+    return () => {
+      clearTimeout(settle);
+      window.removeEventListener('scroll', onScroll);
+      window.removeEventListener('resize', onScroll);
+      if (raf) cancelAnimationFrame(raf);
+    };
+  }, []);
+}
+
 // ── PAGE ──────────────────────────────────────────────────────────────────────
 export default function HomePage() {
   useScrollReveal();
+  useServiceRowReveal();
   const router = useRouter();
   const [featured, setFeatured] = useState<Property[]>([]);
   const [location, setLocation] = useState('');
@@ -667,107 +780,144 @@ export default function HomePage() {
       </section>
 
 
-      {/* ── BOOK A VALUATION ─────────────────────────────────── */}
+      {/* ── SERVICE ROWS (pricing-style copy + navy spec panel) ─ */}
       <style>{`
-        .bav-grid {
-          display: grid;
-          grid-template-columns: 1fr 1fr;
-          min-height: 560px;
+        /* ---------- Home service rows: alternating copy / spec panel ---------- */
+        .hp-guide { max-width: 1160px; margin: 0 auto; padding: clamp(60px, 8vw, 100px) clamp(20px, 5%, 5%); }
+        .hp-svc-row { display: grid; grid-template-columns: 1fr 1fr; gap: clamp(28px, 4.5vw, 68px); align-items: center; }
+        .hp-svc-row + .hp-svc-row { margin-top: clamp(48px, 7vw, 88px); }
+
+        /* Motion: elements are visible by default; is-in plays a one-shot entrance. */
+        @keyframes hp-rise { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: none; } }
+        @keyframes hp-in-left { from { opacity: 0; transform: translateX(-34px); } to { opacity: 1; transform: none; } }
+        @keyframes hp-in-right { from { opacity: 0; transform: translateX(34px); } to { opacity: 1; transform: none; } }
+        @keyframes hp-rise-sm { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+        @keyframes hp-float-a { 0%,100% { transform: translate(0,0) scale(1); } 50% { transform: translate(-24px,20px) scale(1.08); } }
+        @keyframes hp-float-b { 0%,100% { transform: translate(0,0) scale(1); } 50% { transform: translate(20px,-18px) scale(1.06); } }
+
+        /* copy side */
+        .hp-svc-kicker { display: inline-block; font-family: 'Poppins', sans-serif; font-size: 12px; font-weight: 700;
+          letter-spacing: .14em; text-transform: uppercase; color: #2563eb; margin-bottom: 14px; }
+        .hp-svc-title { font-family: 'Poppins', sans-serif; font-size: clamp(26px, 3.4vw, 42px); font-weight: 700;
+          color: #0f1f3d; margin: 0 0 16px; line-height: 1.16; letter-spacing: -.01em; }
+        .hp-svc-lead { font-family: 'Poppins', sans-serif; font-size: 17px; font-weight: 600; color: #0f1f3d;
+          margin: 0 0 14px; line-height: 1.55; }
+        .hp-svc-body { font-family: 'Poppins', sans-serif; font-size: 15px; color: #5b6472; line-height: 1.85;
+          margin: 0 0 22px; max-width: 460px; }
+        .hp-svc-points { list-style: none; margin: 0 0 30px; padding: 0; display: flex; flex-direction: column; gap: 12px; }
+        .hp-svc-points li { display: flex; gap: 11px; font-family: 'Poppins', sans-serif; font-size: 14.5px; color: #374151; line-height: 1.5; }
+        .hp-ptick { flex: none; width: 20px; height: 20px; border-radius: 50%; background: #e7f6ee;
+          display: inline-flex; align-items: center; justify-content: center; margin-top: 1px; }
+        .hp-ptick svg { width: 11px; height: 11px; stroke: #16a34a; stroke-width: 3; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+        .hp-svc-cta { display: flex; }
+
+        /* spec panel (the designed "image" side, no photo) */
+        .hp-vis { position: relative; overflow: hidden; border-radius: 20px; padding: clamp(28px, 3vw, 40px);
+          background: linear-gradient(155deg, #15294c 0%, #0c1a33 100%); color: #fff;
+          box-shadow: 0 30px 60px -30px rgba(9,18,40,.7); border: 1px solid rgba(255,255,255,.06);
+          transition: transform .25s ease, box-shadow .25s ease; }
+        .hp-svc-row:hover .hp-vis { transform: translateY(-5px); box-shadow: 0 40px 72px -30px rgba(9,18,40,.8); }
+        .hp-vis--hot { background: linear-gradient(155deg, #2563eb 0%, #122a5c 55%, #0c1a33 100%);
+          border-color: rgba(120,170,255,.35); box-shadow: 0 34px 66px -28px rgba(37,99,235,.55); }
+        .hp-orb { position: absolute; border-radius: 50%; pointer-events: none; filter: blur(2px); }
+        .hp-orb-a { width: 230px; height: 230px; top: -70px; right: -50px;
+          background: radial-gradient(circle, rgba(74,144,217,.4) 0%, transparent 70%); animation: hp-float-a 16s ease-in-out infinite; }
+        .hp-orb-b { width: 180px; height: 180px; bottom: -60px; left: -40px;
+          background: radial-gradient(circle, rgba(37,99,235,.32) 0%, transparent 70%); animation: hp-float-b 20s ease-in-out infinite; }
+        .hp-vis--hot .hp-orb-a { background: radial-gradient(circle, rgba(147,197,255,.5) 0%, transparent 70%); }
+        .hp-vis-top { position: relative; display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 18px; }
+        .hp-vis-kind { font-family: 'Poppins', sans-serif; font-size: 11px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: #a9c4ea; }
+        .hp-vis-badge { font-family: 'Poppins', sans-serif; font-size: 9.5px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase;
+          color: #0c1a33; background: #fff; border-radius: 999px; padding: 4px 11px; }
+        .hp-vis-price { position: relative; display: flex; align-items: baseline; gap: 10px; }
+        .hp-vis-fee { font-family: 'Poppins', sans-serif; font-size: clamp(34px, 4.4vw, 46px); font-weight: 800; letter-spacing: -.02em; line-height: 1; }
+        .hp-vis-per { font-family: 'Poppins', sans-serif; font-size: 12.5px; font-weight: 500; color: #a9c4ea; }
+        .hp-vis-note { position: relative; font-family: 'Poppins', sans-serif; font-size: 13px; font-weight: 600; color: #8fa6c9; margin-top: 9px; }
+        .hp-vis-div { position: relative; height: 1px; background: rgba(255,255,255,.12); margin: 22px 0 16px; }
+        .hp-vis-label { position: relative; font-family: 'Poppins', sans-serif; font-size: 10.5px; font-weight: 700; letter-spacing: .12em;
+          text-transform: uppercase; color: #8fa6c9; margin-bottom: 14px; }
+        .hp-vis-list { position: relative; list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 12px; }
+        .hp-vis-item { display: flex; gap: 11px; align-items: flex-start; font-family: 'Poppins', sans-serif; font-size: 13.8px; line-height: 1.45; color: #e7eefb; }
+        .hp-svc-row.is-in .hp-vis-item { animation: hp-rise-sm .5s ease backwards; }
+        .hp-vis-tick { flex: none; width: 20px; height: 20px; border-radius: 50%; background: rgba(74,222,128,.16);
+          display: inline-flex; align-items: center; justify-content: center; margin-top: 1px; }
+        .hp-vis-tick svg { width: 11px; height: 11px; stroke: #4ade80; stroke-width: 3; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+        .hp-vis--hot .hp-vis-tick { background: rgba(255,255,255,.18); }
+        .hp-vis--hot .hp-vis-tick svg { stroke: #fff; }
+
+        /* desktop: alternate sides + directional slide-in from each side */
+        @media (min-width: 861px) {
+          .hp-svc-row.hp-rev .hp-svc-visual { order: -1; }
+          .hp-svc-row.is-in .hp-svc-copy { animation: hp-in-left .7s .05s cubic-bezier(.22,1,.36,1) backwards; }
+          .hp-svc-row.is-in .hp-svc-visual { animation: hp-in-right .7s .12s cubic-bezier(.22,1,.36,1) backwards; }
+          .hp-svc-row.hp-rev.is-in .hp-svc-copy { animation-name: hp-in-right; }
+          .hp-svc-row.hp-rev.is-in .hp-svc-visual { animation-name: hp-in-left; }
         }
-        .bav-text {
-          padding: clamp(56px, 7vw, 100px) clamp(32px, 5vw, 80px);
-          display: flex; flex-direction: column; justify-content: center;
-          background: #f3f4f6;
+        /* mobile: stack — panel on top, copy below, full-width CTA */
+        @media (max-width: 860px) {
+          .hp-svc-row { grid-template-columns: 1fr; gap: 30px; }
+          .hp-svc-visual { order: -1; }
+          .hp-svc-row.is-in { animation: hp-rise .55s cubic-bezier(.22,1,.36,1) backwards; }
+          .hp-svc-body { max-width: 100%; }
+          .hp-svc-cta { justify-content: center; }
         }
-        .bav-photo {
-          position: relative; overflow: hidden; min-height: 560px;
-        }
-        .bav-photo img {
-          width: 100%; height: 100%;
-          object-fit: cover; object-position: center;
-          display: block;
-        }
-        @media (max-width: 768px) {
-          .bav-grid { grid-template-columns: 1fr; }
-          .bav-photo { min-height: 300px; }
-          .bav-photo img { min-height: 300px; }
-          .bav-text { padding: 48px 24px; }
-          .inline-btn-wrap { display: flex; justify-content: center; }
+        @media (prefers-reduced-motion: reduce) {
+          .hp-svc-row, .hp-svc-copy, .hp-svc-visual, .hp-vis-item, .hp-orb { animation: none !important; }
         }
       `}</style>
-      <section style={{ overflow: 'hidden', background: '#f3f4f6' }}>
-        <div className="bav-grid">
-          <div className="bav-text reveal">
-            <h2 style={{
-              fontFamily: "'Poppins', sans-serif",
-              fontSize: 'clamp(28px,4vw,48px)', fontWeight: 700,
-              color: '#0f1f3d', lineHeight: 1.2, marginBottom: 24,
-            }}>
-              Are you ready to sell or let your property?
-            </h2>
-            <p style={{
-              fontSize: 17, color: '#4b5563', lineHeight: 1.8,
-              marginBottom: 44, fontWeight: 300,
-            }}>
-              Book a free sales or lettings valuation with your local agent, and they will use their local knowledge and expertise to give you the most accurate sales or lettings valuation.
-            </p>
-            <div className="inline-btn-wrap"><ValuationInlineButton /></div>
-          </div>
-          <div className="bav-photo">
-            <Image src="/images/Background_Book_Valuation.webp" alt="Book a Valuation" fill sizes="(max-width: 768px) 100vw, 50vw" style={{ objectFit: 'cover' }} />
-          </div>
-        </div>
-      </section>
-
-
-      {/* ── BOOK A VIEWING ───────────────────────────────────── */}
-      <style>{`
-        .bvw-grid {
-          display: grid;
-          grid-template-columns: 1fr 1fr;
-          min-height: 560px;
-        }
-        .bvw-photo {
-          position: relative; overflow: hidden; min-height: 560px;
-        }
-        .bvw-photo img {
-          width: 100%; height: 100%;
-          object-fit: cover; object-position: center right;
-          display: block;
-        }
-        .bvw-text {
-          padding: clamp(56px, 7vw, 100px) clamp(32px, 5vw, 80px);
-          display: flex; flex-direction: column; justify-content: center;
-          background: #f3f4f6;
-        }
-        @media (max-width: 768px) {
-          .bvw-grid { grid-template-columns: 1fr; }
-          .bvw-photo { min-height: 300px; order: 1; }
-          .bvw-photo img { min-height: 300px; }
-          .bvw-text { padding: 48px 24px; order: 0; }
-        }
-      `}</style>
-      <section style={{ overflow: 'hidden', background: '#f3f4f6' }}>
-        <div className="bvw-grid">
-          <div className="bvw-photo">
-            <Image src="/images/agent-photo.webp" alt="Book a Viewing" fill sizes="(max-width: 768px) 100vw, 50vw" style={{ objectFit: 'cover' }} />
-          </div>
-          <div className="bvw-text reveal">
-            <h2 style={{
-              fontFamily: "'Poppins', sans-serif",
-              fontSize: 'clamp(28px,4vw,48px)', fontWeight: 700,
-              color: '#0f1f3d', lineHeight: 1.2, marginBottom: 24,
-            }}>
-              Looking to rent a property?
-            </h2>
-            <p style={{
-              fontSize: 17, color: '#4b5563', lineHeight: 1.8,
-              marginBottom: 44, fontWeight: 300,
-            }}>
-              Register your requirements and we&apos;ll match you with suitable properties before they hit the market.
-            </p>
-            <div className="inline-btn-wrap"><BookViewingInlineButton /></div>
-          </div>
+      <section style={{ background: 'linear-gradient(180deg, #ffffff 0%, #f3f4f6 100%)', overflow: 'hidden' }}>
+        <div className="hp-guide">
+          <ServiceRow
+            eyebrow="For Landlords"
+            title="Are you ready to sell or let your property?"
+            lead="Book a free sales or lettings valuation with your local agent."
+            body="They use their local knowledge and expertise to give you the most accurate sales or lettings figure, so you can plan your next move with total confidence."
+            points={[
+              'Free, no obligation appraisal',
+              'Backed by live local market data',
+              'Honest advice to maximise your return',
+            ]}
+            cta={<ValuationInlineButton />}
+            panel={{
+              kind: 'Free Valuation',
+              headline: 'Free',
+              per: 'no obligation',
+              note: 'Booked around you, in person or virtual',
+              listLabel: "What's included",
+              items: [
+                'Sales or lettings valuation',
+                'Local agent who knows your area',
+                'Accurate, data-driven figures',
+                'Clear next steps, zero pressure',
+              ],
+            }}
+          />
+          <ServiceRow
+            reversed
+            eyebrow="For Tenants"
+            title="Looking to rent a property?"
+            lead="Register your requirements and we'll match you to the right homes."
+            body="We take the pressure off your search and connect you with suitable properties before they hit the open market, guiding you every step of the way."
+            points={[
+              'Early access to new listings',
+              'A dedicated agent on your side',
+              'No hidden fees for tenants',
+            ]}
+            cta={<BookViewingInlineButton />}
+            panel={{
+              kind: 'For Tenants',
+              headline: '£0',
+              per: 'tenant fees',
+              note: 'Matched before homes go public',
+              listLabel: 'What you get',
+              items: [
+                'Priority access before the open market',
+                'One dedicated point of contact',
+                'Viewings arranged around you',
+                'A clear, no pressure process',
+              ],
+            }}
+          />
         </div>
       </section>
 
@@ -1310,26 +1460,36 @@ export default function HomePage() {
       </section>
 
 
-      {/* Viewing - photo left, text right */}
-      <section className="split-section" style={{ background: '#ffffff' }}>
-        <div className="split-grid" style={{ alignItems: 'stretch', minHeight: 560 }}>
-          <div
-            className="split-photo"
-            style={{ backgroundImage: 'url(/images/Tenants_Book_viewing_background.webp)', backgroundPosition: 'center center', alignSelf: 'stretch', minHeight: 560 }}
+      {/* Find your perfect home - pricing-style copy + featured navy panel */}
+      <section style={{ background: '#ffffff', overflow: 'hidden' }}>
+        <div className="hp-guide">
+          <ServiceRow
+            featured
+            eyebrow="For Tenants"
+            title="Find your perfect home with House of Lettings"
+            lead="Booking a viewing with us is quick, easy, and puts you first."
+            body="We take the pressure off your search, matching you with the right properties and guiding you every step of the way."
+            points={[
+              'View properties before they hit the open market',
+              'Dedicated agent to handle all enquiries and negotiations',
+              'Transparent process with no hidden fees for tenants',
+            ]}
+            cta={<BookViewingInlineButton />}
+            panel={{
+              kind: 'For Tenants',
+              badge: 'Free to register',
+              headline: 'Free',
+              per: 'to register',
+              note: 'Off-market homes, first',
+              listLabel: "What's included",
+              items: [
+                'Early access to off-market homes',
+                'One point of contact throughout',
+                'Honest advice at every step',
+                'No fees, no pressure',
+              ],
+            }}
           />
-          <div className="split-text" style={{ background: '#ffffff', justifyContent: 'center' }}>
-            <p className="split-eyebrow">For Tenants</p>
-            <h2 className="split-title">Find your perfect home with House of Lettings</h2>
-            <p className="split-body">
-              Booking a viewing with us is quick, easy, and puts you first. We take the pressure off your search, matching you with the right properties and guiding you every step of the way.
-            </p>
-            <ul className="split-list">
-              <li><span className="split-check" style={{color:"#2563eb",fontWeight:700}}>&#10003;</span>View properties before they hit the open market</li>
-              <li><span className="split-check" style={{color:"#2563eb",fontWeight:700}}>&#10003;</span>Dedicated agent to handle all enquiries and negotiations</li>
-              <li><span className="split-check" style={{color:"#2563eb",fontWeight:700}}>&#10003;</span>Transparent process with no hidden fees for tenants</li>
-            </ul>
-            <div className="inline-btn-wrap"><BookViewingInlineButton /></div>
-          </div>
         </div>
       </section>
 

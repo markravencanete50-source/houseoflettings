@@ -17,6 +17,12 @@ import './globals.css';
 const GOOGLE_FONTS_HREF =
   'https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&family=Barlow+Condensed:wght@700&display=swap';
 
+// The nonce-based CSP (middleware.ts) requires every page to be rendered per
+// request — a statically prerendered page can't carry that request's nonce on
+// its inline scripts and they would be blocked. If the CSP ever moves back to
+// a static header, remove this too.
+export const dynamic = 'force-dynamic';
+
 export const metadata: Metadata = {
   title: 'House of Lettings | Letting Agents in Leeds & Manchester',
   description:

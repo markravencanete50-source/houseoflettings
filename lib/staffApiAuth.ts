@@ -39,14 +39,20 @@ export async function requireStaff(request: Request, feature?: StaffFeature): Pr
   if (!authHeader?.startsWith('Bearer ') && !cookie) {
     return Response.json({ message: 'Unauthorized' }, { status: 401 });
   }
-  let uid: string;
-  try {
-    getAdminDb(); // ensure the admin app is initialised before getAuth()
-    uid = authHeader?.startsWith('Bearer ')
-      ? (await getAuth().verifyIdToken(authHeader.substring(7))).uid
-      : (await getAuth().verifySessionCookie(cookie as string, true)).uid;
-  } catch {
-    return Response.json({ message: 'Invalid token' }, { status: 401 });
+
+  // Try the Bearer ID token first; if it's missing/expired/invalid, fall back
+  // to the session cookie — so a stale client token never blocks a request that
+  // has a valid cookie.
+  getAdminDb(); // ensure the admin app is initialised before getAuth()
+  let uid: string | null = null;
+  if (authHeader?.startsWith('Bearer ')) {
+    try { uid = (await getAuth().verifyIdToken(authHeader.substring(7))).uid; } catch { /* try cookie */ }
+  }
+  if (!uid && cookie) {
+    try { uid = (await getAuth().verifySessionCookie(cookie, true)).uid; } catch { /* invalid cookie */ }
+  }
+  if (!uid) {
+    return Response.json({ message: 'Unauthorized' }, { status: 401 });
   }
 
   const snap = await getAdminDb().collection('users').doc(uid).get();

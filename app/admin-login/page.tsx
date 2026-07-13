@@ -17,42 +17,29 @@ export default function AdminLoginPage() {
     setError('');
     setLoading(true);
     try {
-      const user = await signIn(email, password);
-      if (user.role !== 'admin' && user.role !== 'staff') {
-        setError('Access denied. This login is for House of Lettings staff and administrators only.');
+      // Always authenticate on our server first: this sets the HttpOnly session
+      // cookie and works even when the browser can't reach Google's servers.
+      const res = await fetch('/api/team-login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setError(data.message || 'Sign in failed.');
         setLoading(false);
         return;
       }
-      router.push(getDashboardPath(user.role));
-    } catch (err: any) {
-      // If the browser can't reach Google's login servers (blocked network,
-      // strict firewall/DNS), fall back to server-side login: our server does
-      // the auth and sets a session cookie the dashboard understands.
-      const networkFail = err?.code === 'auth/network-request-failed'
-        || err?.code === 'auth/internal-error'
-        || /network/i.test(err?.message || '');
-      if (networkFail) {
-        try {
-          const res = await fetch('/api/team-login', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email, password }),
-          });
-          const data = await res.json().catch(() => ({}));
-          if (!res.ok) { setError(data.message || 'Sign in failed.'); setLoading(false); return; }
-          router.push(getDashboardPath(data.role));
-          return;
-        } catch {
-          setError('Could not reach the login service. Please check the internet connection and try again.');
-          setLoading(false);
-          return;
-        }
+      // Admins also need the Firebase client SDK signed in, because the admin
+      // dashboard reads Firestore directly in the browser. Staff don't (their
+      // dashboard runs entirely off the session cookie), so we skip it for them
+      // — that also avoids a long hang on networks that block Google.
+      if (data.role === 'admin') {
+        try { await signIn(email, password); } catch { /* cookie session still works */ }
       }
-      setError(
-        err.code === 'auth/invalid-credential' || err.code === 'auth/wrong-password'
-          ? 'Invalid email or password.'
-          : err.message || 'Login failed.'
-      );
+      router.push(getDashboardPath(data.role));
+    } catch {
+      setError('Could not reach the login service. Please check the internet connection and try again.');
       setLoading(false);
     }
   };

@@ -20,7 +20,7 @@ interface TenantApplication {
 
 function StaffDashboardInner() {
   const router = useRouter();
-  const { profile, loading: authLoading } = useAuth();
+  const { user, profile, loading: authLoading } = useAuth();
   const [tab, setTab] = useState<Tab>('applications');
   const [applications, setApplications] = useState<TenantApplication[]>([]);
   const [properties, setProperties] = useState<Property[]>([]);
@@ -36,27 +36,29 @@ function StaffDashboardInner() {
 
   // Load applications
   useEffect(() => {
-    if (tab === 'applications' && profile) {
+    if (tab === 'applications' && profile && user) {
       setAppLoading(true);
-      fetch('/api/staff/applications')
+      user.getIdToken()
+        .then(token => fetch('/api/staff/applications', { headers: { Authorization: `Bearer ${token}` } }))
         .then(r => r.json())
         .then(data => setApplications(data.applications || []))
         .catch(e => console.error('Failed to load applications:', e))
         .finally(() => setAppLoading(false));
     }
-  }, [tab, profile]);
+  }, [tab, profile, user]);
 
   // Load properties
   useEffect(() => {
-    if ((tab === 'properties' || tab === 'post-property') && profile) {
+    if ((tab === 'properties' || tab === 'post-property') && profile && user) {
       setPropLoading(true);
-      fetch('/api/staff/properties')
+      user.getIdToken()
+        .then(token => fetch('/api/staff/properties', { headers: { Authorization: `Bearer ${token}` } }))
         .then(r => r.json())
         .then(data => setProperties(data.properties || []))
         .catch(e => console.error('Failed to load properties:', e))
         .finally(() => setPropLoading(false));
     }
-  }, [tab, profile]);
+  }, [tab, profile, user]);
 
   if (authLoading) return <div style={{ padding: '2rem', textAlign: 'center' }}>Loading...</div>;
 

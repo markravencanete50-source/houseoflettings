@@ -88,6 +88,7 @@ export function getDashboardPath(role: UserRole): string {
   switch (role) {
     case 'landlord': return '/dashboard/landlord';
     case 'tenant':   return '/dashboard/tenant';
+    case 'staff':    return '/dashboard/staff';
     case 'admin':    return '/admin';
     default:         return '/';
   }

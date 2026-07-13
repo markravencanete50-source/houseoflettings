@@ -4,6 +4,8 @@ import { useState } from 'react';
 import Link from 'next/link';
 import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
+import { BUNDLES } from '@/lib/bundles';
+import { SERVICE_CATEGORIES } from '@/lib/additionalServices';
 
 const landlordFaqs = [
   {
@@ -92,25 +94,40 @@ export default function LandlordsPage() {
           </div>
           <h1 style={{
             fontFamily: "'Poppins', sans-serif",
-            fontSize: 'clamp(34px,5.5vw,68px)',
+            fontSize: 'clamp(40px,7vw,78px)',
             fontWeight: 800, color: '#fff',
-            lineHeight: 1.12, letterSpacing: '-0.5px',
-            marginBottom: 22,
+            lineHeight: 1.04, letterSpacing: '-1px',
+            textTransform: 'uppercase',
+            marginBottom: 24,
           }}>
-            We handle the management.<br />
-            You enjoy the returns.
+            Better management.<br />
+            Better tenants.<br />
+            <span style={{ color: '#4a90d9' }}>Better returns.</span>
           </h1>
           <p style={{
             fontFamily: "'Poppins', sans-serif",
             fontSize: 'clamp(15px,1.3vw,18px)',
-            color: 'rgba(255,255,255,0.68)',
-            lineHeight: 1.75, marginBottom: 40,
+            color: 'rgba(255,255,255,0.7)',
+            lineHeight: 1.75, marginBottom: 28,
             fontWeight: 300,
-            maxWidth: 560, margin: '0 auto 40px',
+            maxWidth: 580, margin: '0 auto 28px',
           }}>
-            Local experts who let your property faster, keep it compliant and
-            protect your rental income — across Leeds &amp; Manchester.
+            Professional lettings and property management that protects your
+            investment and maximises your returns, across Leeds and Manchester.
           </p>
+          <div style={{
+            display: 'flex', gap: 10, flexWrap: 'wrap', justifyContent: 'center', marginBottom: 40,
+          }}>
+            {['Inclusive of VAT', 'No hidden fees', 'Fully compliant', 'Local expert teams'].map(chip => (
+              <span key={chip} style={{
+                fontFamily: "'Poppins', sans-serif",
+                fontSize: 12.5, fontWeight: 600, color: '#dbe8fb',
+                background: 'rgba(255,255,255,0.06)',
+                border: '1px solid rgba(255,255,255,0.14)',
+                borderRadius: 999, padding: '7px 14px',
+              }}>{chip}</span>
+            ))}
+          </div>
           <div className="hero-btns" style={{ display: 'flex', gap: 14, flexWrap: 'wrap', justifyContent: 'center' }}>
             <Link href="/book-valuation"
               className="hero-btn"
@@ -159,7 +176,36 @@ export default function LandlordsPage() {
           }
           @media (max-width: 768px) {
             .ll-intro-grid { grid-template-columns: 1fr; gap: 40px; }
+            .ll-price-panel { position: static !important; }
           }
+          /* Pricing-at-a-glance panel (replaces the old hero image) */
+          .ll-price-panel {
+            background: linear-gradient(160deg,#15294c 0%,#0c1a33 100%);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 16px; padding: 26px 24px;
+            box-shadow: 0 26px 54px -30px rgba(9,18,40,0.75);
+            position: sticky; top: 96px;
+          }
+          .ll-price-eyebrow { font-family:'Poppins',sans-serif; font-size:11px; font-weight:700;
+            letter-spacing:.14em; text-transform:uppercase; color:#4a90d9; }
+          .ll-price-title { font-family:'Poppins',sans-serif; font-size:22px; font-weight:800; color:#fff; margin:7px 0 4px; }
+          .ll-price-sub { font-family:'Poppins',sans-serif; font-size:12.5px; color:#a9c4ea; }
+          .ll-price-list { list-style:none; margin:20px 0 0; padding:0; }
+          .ll-price-row { display:flex; align-items:center; justify-content:space-between; gap:14px;
+            padding:14px 12px; border-radius:10px; border-top:1px solid rgba(255,255,255,0.07); }
+          .ll-price-row:first-child { border-top:0; }
+          .ll-price-row.ll-hot { background:rgba(37,99,235,0.16); border-top-color:transparent; }
+          .ll-price-nm { display:flex; align-items:center; gap:8px; font-family:'Poppins',sans-serif;
+            font-size:14.5px; font-weight:700; color:#fff; }
+          .ll-price-nm em { font-style:normal; font-size:9px; font-weight:800; letter-spacing:.08em;
+            text-transform:uppercase; background:#2563eb; color:#fff; border-radius:999px; padding:2px 8px; }
+          .ll-price-kd { display:block; font-family:'Poppins',sans-serif; font-size:11.5px; color:#8fa6c9; margin-top:3px; }
+          .ll-price-fig { text-align:right; flex:none; }
+          .ll-price-fig b { display:block; font-family:'Poppins',sans-serif; font-size:18px; font-weight:800; color:#fff; }
+          .ll-price-fig span { font-family:'Poppins',sans-serif; font-size:11px; color:#a9c4ea; }
+          .ll-price-cta { display:inline-block; margin-top:20px; font-family:'Poppins',sans-serif;
+            font-size:13px; font-weight:700; color:#4a90d9; text-decoration:none; }
+          .ll-price-cta:hover { color:#fff; }
         `}</style>
         <div className="ll-intro-grid">
           <div>
@@ -217,17 +263,27 @@ export default function LandlordsPage() {
               Get a Free Valuation
             </Link>
           </div>
-          <img
-            src="/images/Landlord_Book_valuation_background.webp"
-            alt="Better Management. Better Tenants. Better Returns."
-            className="ll-intro-img"
-            style={{
-              width: '100%', height: 'auto',
-              borderRadius: 12, display: 'block',
-              objectFit: 'cover',
-              marginTop: 4,
-            }}
-          />
+          {/* Pricing snapshot (title + price only) in place of the old flyer image */}
+          <div className="ll-price-panel">
+            <span className="ll-price-eyebrow">Our Packages</span>
+            <h3 className="ll-price-title">Pricing at a glance</h3>
+            <span className="ll-price-sub">Inclusive of VAT. No hidden fees, ever.</span>
+            <ul className="ll-price-list">
+              {BUNDLES.map(b => (
+                <li key={b.id} className={`ll-price-row${b.badge ? ' ll-hot' : ''}`}>
+                  <div>
+                    <span className="ll-price-nm">{b.short}{b.badge && <em>Popular</em>}</span>
+                    <span className="ll-price-kd">{b.kind}</span>
+                  </div>
+                  <div className="ll-price-fig">
+                    <b>{b.setupFee}</b>
+                    <span>{b.mgmtFee ? `+ ${b.mgmtFee} of rent` : 'one-time'}</span>
+                  </div>
+                </li>
+              ))}
+            </ul>
+            <Link href="/pricing" className="ll-price-cta">See what&apos;s included in each &rarr;</Link>
+          </div>
         </div>
       </section>
 
@@ -281,37 +337,42 @@ export default function LandlordsPage() {
             {/* Prices mirror lib/bundles.ts — keep in sync with the pricing page. */}
             {[
               {
+                slug: 'virtual-tenant-find',
                 price: '£399', name: 'Virtual Tenant Find', type: 'One-time fee',
                 desc: 'Advertise your property, handle enquiries, and secure a tenant, all managed online.',
                 features: ['Professional listing creation', 'Multi portal advertising', 'Enquiry management', 'Full tenant referencing'],
                 popular: false,
               },
               {
+                slug: 'expert-tenant-find',
                 price: '£699', name: 'Expert Tenant Find', type: 'One-time fee',
                 desc: 'The full marketing push: professional photography, accompanied viewings, and in-person tenancy setup.',
                 features: ['Everything in Virtual', 'Photography & floor plan', 'Accompanied viewings', 'In-person tenant handover'],
                 popular: false,
               },
               {
+                slug: 'essential-management',
                 price: '6%', name: 'Essential Management', type: '£199 setup · monthly',
                 desc: 'We collect rent, chase arrears, and transfer funds, so you never have to chase a tenant.',
                 features: ['Includes a full tenant find', 'Monthly rent collection', 'Arrears management', 'Monthly statements'],
                 popular: false,
               },
               {
+                slug: 'full-management',
                 price: '8%', name: 'Full Management', type: '£399 setup · monthly',
                 desc: 'Comprehensive management covering maintenance, inspections, and compliance.',
                 features: ['Everything in Essential', 'Maintenance coordination', 'Regular inspections', 'Compliance monitoring'],
                 popular: true,
               },
               {
+                slug: 'comprehensive-management',
                 price: '10%', name: 'Comprehensive Management', type: '£399 setup · monthly',
                 desc: 'Our complete hands off package with rent guarantee insurance and dedicated support.',
                 features: ['Everything in Full Management', 'Rent guarantee cover', 'Legal & eviction protection', 'Priority contractor response'],
                 popular: false,
               },
             ].map(pkg => (
-              <Link key={pkg.name} href="/pricing" style={{
+              <Link key={pkg.name} href={`/pricing/${pkg.slug}`} style={{
                 background: pkg.popular ? '#162849' : '#162849',
                 border: '2px solid #2563eb',
                 borderRadius: 10, padding: '32px 28px',
@@ -377,6 +438,14 @@ export default function LandlordsPage() {
               </Link>
             ))}
           </div>
+          <p style={{
+            fontFamily: "'Poppins', sans-serif", textAlign: 'center',
+            fontSize: 13, color: 'rgba(255,255,255,0.5)', lineHeight: 1.7,
+            maxWidth: 640, margin: '0 auto 28px',
+          }}>
+            All prices inclusive of VAT. Every management tier includes a full tenant find, and
+            management runs on a rolling monthly basis, so you can upgrade or cancel any time.
+          </p>
           <div style={{ textAlign: 'center' }}>
             <Link href="/pricing" style={{
               display: 'inline-block', padding: '16px 48px',
@@ -391,6 +460,93 @@ export default function LandlordsPage() {
               Compare All Packages
             </Link>
           </div>
+        </div>
+      </section>
+
+
+      {/* ── ADDITIONAL SERVICES ─────────────────────────────── */}
+      <section style={{
+        padding: 'clamp(60px, 8vw, 100px) clamp(24px, 7%, 100px)',
+        background: '#f7f8fa',
+      }}>
+        <div style={{ textAlign: 'center', marginBottom: 52, maxWidth: 620, marginLeft: 'auto', marginRight: 'auto' }}>
+          <div style={{
+            fontSize: 11, fontWeight: 700, letterSpacing: 3,
+            textTransform: 'uppercase', color: '#2563eb', marginBottom: 14,
+            fontFamily: "'Poppins', sans-serif",
+          }}>
+            Pay As You Go
+          </div>
+          <h2 style={{
+            fontFamily: "'Poppins', sans-serif",
+            fontSize: 'clamp(28px,4vw,44px)', fontWeight: 700,
+            color: '#0f1f3d', margin: '0 0 16px',
+          }}>
+            Additional services, whenever you need them
+          </h2>
+          <p style={{
+            fontFamily: "'Poppins', sans-serif",
+            fontSize: 15, color: '#6b7280', lineHeight: 1.7, margin: 0,
+          }}>
+            Certificates, inventories, photography, referencing and rent protection. Order any
+            service on its own, with or without a package, all inclusive of VAT.
+          </p>
+        </div>
+        <style>{`
+          .ll-as-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            max-width: 1100px;
+            margin: 0 auto 44px;
+          }
+          .ll-as-card {
+            background: #fff; border: 1px solid #e5e7eb; border-radius: 14px;
+            padding: 26px 24px; text-decoration: none; display: flex; flex-direction: column;
+            transition: transform .2s ease, border-color .2s ease, box-shadow .2s ease;
+          }
+          .ll-as-card:hover {
+            transform: translateY(-4px); border-color: #2563eb;
+            box-shadow: 0 20px 40px -26px rgba(15,31,61,.4);
+          }
+          .ll-as-title { font-family:'Poppins',sans-serif; font-size:16px; font-weight:700;
+            color:#0f1f3d; margin:0 0 16px; line-height:1.3; }
+          .ll-as-list { list-style:none; margin:0 0 18px; padding:0; display:flex; flex-direction:column; gap:11px; flex:1; }
+          .ll-as-item { display:flex; align-items:baseline; justify-content:space-between; gap:12px; }
+          .ll-as-item span { font-family:'Poppins',sans-serif; font-size:13.5px; color:#4b5563; line-height:1.4; }
+          .ll-as-item b { flex:none; font-family:'Poppins',sans-serif; font-size:13.5px; font-weight:800; color:#2563eb; white-space:nowrap; }
+          .ll-as-more { font-family:'Poppins',sans-serif; font-size:12px; font-weight:700;
+            letter-spacing:.4px; text-transform:uppercase; color:#2563eb; }
+        `}</style>
+        <div className="ll-as-grid">
+          {SERVICE_CATEGORIES.map(cat => (
+            <Link key={cat.id} href="/additional-services" className="ll-as-card">
+              <h3 className="ll-as-title">{cat.title}</h3>
+              <ul className="ll-as-list">
+                {cat.services.slice(0, 3).map(s => (
+                  <li key={s.id} className="ll-as-item">
+                    <span>{s.name}</span>
+                    <b>{s.price}</b>
+                  </li>
+                ))}
+              </ul>
+              <span className="ll-as-more">View all &rarr;</span>
+            </Link>
+          ))}
+        </div>
+        <div style={{ textAlign: 'center' }}>
+          <Link href="/additional-services" style={{
+            display: 'inline-block', padding: '16px 48px',
+            background: '#0f1f3d', color: '#fff', borderRadius: 6,
+            fontSize: 14, fontWeight: 700, letterSpacing: '0.5px',
+            textTransform: 'uppercase', textDecoration: 'none',
+            fontFamily: "'Poppins', sans-serif", transition: 'background 0.2s',
+          }}
+            onMouseEnter={e => (e.currentTarget.style.background = '#162849')}
+            onMouseLeave={e => (e.currentTarget.style.background = '#0f1f3d')}
+          >
+            Browse All Additional Services
+          </Link>
         </div>
       </section>
 

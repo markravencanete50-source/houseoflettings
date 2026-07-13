@@ -1,6 +1,6 @@
 // lib/types.ts
 
-export type UserRole = 'landlord' | 'tenant' | 'admin';
+export type UserRole = 'landlord' | 'tenant' | 'admin' | 'staff';
 
 export interface AppUser {
   uid: string;

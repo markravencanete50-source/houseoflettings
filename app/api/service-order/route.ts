@@ -1,8 +1,9 @@
 // app/api/service-order/route.ts
 // Places an additional-services order: re-prices every line from the canonical
 // SERVICE_ORDERS data (never trusts client totals), stores the order in
-// Firestore, emails the customer a confirmation and the office a notification,
-// and — when Stripe is configured — returns a hosted Checkout URL for payment.
+// Firestore, and emails the customer a confirmation and the office a
+// notification. Payment is by up-front bank transfer: the customer must attach
+// proof of payment (screenshot/photo/PDF), which the office verifies.
 import { initializeApp, getApps, cert } from 'firebase-admin/app';
 import { getFirestore, FieldValue } from 'firebase-admin/firestore';
 import { priceLine, formatGBP, type OrderSelection, type LineBreakdown } from '@/lib/serviceCart';
@@ -29,6 +30,15 @@ function propertiesHtml(properties: PropertyAssignment[]): string {
   return `<div style="margin-bottom:16px">
     <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:#0a162f;margin:0 0 6px">Property / properties</div>
     <table style="width:100%;border-collapse:collapse;font-size:14px">${rows}</table>
+  </div>`;
+}
+
+function proofHtml(urls: string[]): string {
+  if (!urls.length) return '';
+  const links = urls.map((u, i) => `<a href="${u}" style="color:#2563eb;font-weight:600;margin-right:14px">Proof ${i + 1}</a>`).join('');
+  return `<div style="margin-bottom:16px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:10px 14px">
+    <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:#15803d;margin:0 0 6px">Proof of payment (verify before starting work)</div>
+    <div style="font-size:14px">${links}</div>
   </div>`;
 }
 
@@ -95,7 +105,7 @@ function customerEmailHtml(ref: string, name: string, lines: LineBreakdown[], to
       </div>
       <div style="padding:32px 40px">
         <p style="font-size:15px;color:#374151">Dear <strong>${name}</strong>,</p>
-        <p style="font-size:15px;color:#374151;line-height:1.6">Thank you for your order (ref <strong>${ref}</strong>). Here's a summary. Our team will be in touch shortly to arrange everything and confirm any &ldquo;from&rdquo; pricing.</p>
+        <p style="font-size:15px;color:#374151;line-height:1.6">Thank you for your order (ref <strong>${ref}</strong>) and for sending your proof of payment. Here's a summary. Once we have confirmed your bank transfer, our team will be in touch to arrange everything and confirm any &ldquo;from&rdquo; pricing.</p>
         <table style="width:100%;border-collapse:collapse;font-size:14px;margin:18px 0">${linesTableHtml(lines)}
           <tr><td style="padding:14px 12px;font-weight:800;color:#0a162f">${hasFrom ? 'Estimated total' : 'Total'} (inc. VAT)</td>
           <td style="padding:14px 12px;text-align:right;font-weight:800;color:#0a162f">${formatGBP(total)}</td></tr>
@@ -107,7 +117,7 @@ function customerEmailHtml(ref: string, name: string, lines: LineBreakdown[], to
   </body></html>`;
 }
 
-function adminEmailHtml(ref: string, customer: any, lines: LineBreakdown[], total: number, hasFrom: boolean, properties: PropertyAssignment[], inspection: { date?: string; time?: string } | null) {
+function adminEmailHtml(ref: string, customer: any, lines: LineBreakdown[], total: number, hasFrom: boolean, properties: PropertyAssignment[], inspection: { date?: string; time?: string } | null, proofUrls: string[]) {
   return `<!DOCTYPE html><html><head><meta charset="utf-8"/></head>
   <body style="font-family:Arial,sans-serif;background:#f4f6f9;margin:0;padding:0">
     <div style="max-width:600px;margin:28px auto;background:#fff;border-radius:14px;overflow:hidden">
@@ -119,6 +129,7 @@ function adminEmailHtml(ref: string, customer: any, lines: LineBreakdown[], tota
           <tr><td style="padding:8px 10px;color:#6b7280;font-weight:600">Phone</td><td style="padding:8px 10px">${customer.phone}</td></tr>
           <tr><td style="padding:8px 10px;color:#6b7280;font-weight:600">Notes</td><td style="padding:8px 10px">${customer.notes || '-'}</td></tr>
         </table>
+        ${proofHtml(proofUrls)}
         ${propertiesHtml(properties)}
         ${inspectionHtml(inspection)}
         <table style="width:100%;border-collapse:collapse;font-size:14px">${linesTableHtml(lines)}
@@ -128,36 +139,6 @@ function adminEmailHtml(ref: string, customer: any, lines: LineBreakdown[], tota
       </div>
     </div>
   </body></html>`;
-}
-
-async function createStripeSession(lines: LineBreakdown[], email: string, ref: string, origin: string): Promise<string | null> {
-  const key = process.env.STRIPE_SECRET_KEY;
-  if (!key) return null;
-  try {
-    const params = new URLSearchParams();
-    params.append('mode', 'payment');
-    params.append('success_url', `${origin}/additional-services/success?ref=${ref}`);
-    params.append('cancel_url', `${origin}/additional-services/checkout`);
-    params.append('customer_email', email);
-    params.append('client_reference_id', ref);
-    lines.forEach((l, i) => {
-      params.append(`line_items[${i}][price_data][currency]`, 'gbp');
-      params.append(`line_items[${i}][price_data][product_data][name]`, l.name.slice(0, 120));
-      params.append(`line_items[${i}][price_data][unit_amount]`, String(Math.round(l.unitTotal * 100)));
-      params.append(`line_items[${i}][quantity]`, String(l.quantity));
-    });
-    const res = await fetch('https://api.stripe.com/v1/checkout/sessions', {
-      method: 'POST',
-      headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: params.toString(),
-    });
-    if (!res.ok) { console.error('Stripe session failed:', await res.text()); return null; }
-    const data = await res.json();
-    return data.url || null;
-  } catch (e) {
-    console.error('Stripe error:', e);
-    return null;
-  }
 }
 
 export async function POST(request: Request) {
@@ -190,6 +171,15 @@ export async function POST(request: Request) {
       ? { date: body.inspection.date as string, time: /^\d{2}:\d{2}$/.test(body.inspection.time || '') ? body.inspection.time as string : '' }
       : null;
 
+    // Proof of the up-front bank transfer. Required: an order cannot be placed
+    // without it (the client also enforces this before submitting).
+    const proofUrls: string[] = Array.isArray(body.proofOfPaymentUrls)
+      ? body.proofOfPaymentUrls.filter((u: any) => typeof u === 'string' && u.trim()).slice(0, 5)
+      : [];
+    if (proofUrls.length === 0) {
+      return Response.json({ message: 'Proof of payment is required to place your order.' }, { status: 400 });
+    }
+
     // Re-price from canonical data — the client total is ignored.
     const lines = items.map(priceLine).filter((l): l is LineBreakdown => !!l);
     if (lines.length === 0) return Response.json({ message: 'Your order is empty.' }, { status: 400 });
@@ -197,7 +187,6 @@ export async function POST(request: Request) {
     const total = lines.reduce((s, l) => s + l.total, 0);
     const hasFrom = lines.some(l => l.from);
     const ref = makeRef();
-    const origin = new URL(request.url).origin;
 
     // Store the order (best-effort; never block the response on Firestore).
     try {
@@ -209,6 +198,7 @@ export async function POST(request: Request) {
         },
         properties,
         inspection,
+        proofOfPaymentUrls: proofUrls,
         lines: lines.map(l => ({
           serviceId: l.serviceId, name: l.name, categoryTitle: l.categoryTitle,
           variantLabel: l.variantLabel || null, base: l.base, from: l.from,
@@ -224,7 +214,7 @@ export async function POST(request: Request) {
     // Notify customer + office.
     await Promise.allSettled([
       sendEmail({ to: customer.email, subject: `Order received (${ref}) | House of Lettings`, html: customerEmailHtml(ref, customer.fullName, lines, total, hasFrom) }),
-      sendEmail({ to: process.env.ADMIN_EMAIL || 'admin@houseoflettings.co.uk', subject: `🔔 New service order: ${ref} · ${formatGBP(total)}`, html: adminEmailHtml(ref, customer, lines, total, hasFrom, properties, inspection) }),
+      sendEmail({ to: process.env.ADMIN_EMAIL || 'admin@houseoflettings.co.uk', subject: `🔔 New service order: ${ref} · ${formatGBP(total)}`, html: adminEmailHtml(ref, customer, lines, total, hasFrom, properties, inspection, proofUrls) }),
     ]);
 
     // If the landlord picked an inspection time, push it to the office calendar
@@ -244,10 +234,7 @@ export async function POST(request: Request) {
       }).catch((e) => console.error('inspection calendar push failed:', e));
     }
 
-    // Payment: Stripe hosted checkout when configured, otherwise invoice mode.
-    const checkoutUrl = await createStripeSession(lines, customer.email, ref, origin);
-
-    return Response.json({ ok: true, ref, total, checkoutUrl }, { status: 201 });
+    return Response.json({ ok: true, ref, total }, { status: 201 });
   } catch (e) {
     console.error('service-order error:', e);
     return Response.json({ message: 'Internal server error. Please try again.' }, { status: 500 });

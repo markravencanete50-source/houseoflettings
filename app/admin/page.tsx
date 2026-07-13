@@ -28,7 +28,7 @@ import {
   updateDoc, addDoc, deleteDoc, serverTimestamp, Timestamp,
 } from 'firebase/firestore';
 
-type Tab = 'analytics' | 'users' | 'properties' | 'post' | 'edit' | 'valuations' | 'reviews' | 'applications' | 'orders';
+type Tab = 'analytics' | 'users' | 'properties' | 'post' | 'edit' | 'valuations' | 'reviews' | 'applications' | 'orders' | 'maintenance';
 
 interface ServiceOrderLine {
   serviceId: string;
@@ -166,6 +166,23 @@ interface TenantApplication {
   createdAt: any;
 }
 
+interface MaintenanceRequest {
+  id: string;
+  fullName: string;
+  email: string;
+  contactNumber: string;
+  propertyAddress: string;
+  issueDescription: string;
+  whenHappened?: string;
+  availability?: string;
+  experiencedBefore?: string;
+  cause?: string;
+  photoUrls?: string[];
+  videoUrls?: string[];
+  status: 'open' | 'in-progress' | 'resolved' | 'cancelled';
+  createdAt: any;
+}
+
 const EMPTY_REVIEW = {
   author_name: '',
   rating: 5,
@@ -199,6 +216,8 @@ export default function AdminDashboard() {
   const [webStats, setWebStats] = useState<WebStats | null>(null);
   const [orders, setOrders] = useState<ServiceOrder[]>([]);
   const [expandedOrder, setExpandedOrder] = useState<string | null>(null);
+  const [maintenance, setMaintenance] = useState<MaintenanceRequest[]>([]);
+  const [expandedMaint, setExpandedMaint] = useState<string | null>(null);
 
   // Website visitor analytics (first-party, from /api/track).
   useEffect(() => {
@@ -228,7 +247,8 @@ export default function AdminDashboard() {
       safe(getDocs(query(collection(db, 'google_reviews'), orderBy('createdAt', 'desc')))),
       safe(getDocs(query(collection(db, 'tenantApplications'), orderBy('createdAt', 'desc')))),
       safe(getDocs(query(collection(db, 'serviceOrders'), orderBy('createdAt', 'desc')))),
-    ]).then(([u, p, a, valSnap, revSnap, appSnap, orderSnap]) => {
+      safe(getDocs(query(collection(db, 'maintenanceRequests'), orderBy('createdAt', 'desc')))),
+    ]).then(([u, p, a, valSnap, revSnap, appSnap, orderSnap, maintSnap]) => {
       if (u) setUsers(u);
       if (p) setProperties(p);
       if (a) setAnalytics(a);
@@ -236,6 +256,7 @@ export default function AdminDashboard() {
       if (revSnap) setReviews(revSnap.docs.map(d => ({ id: d.id, ...d.data() } as GoogleReview)));
       if (appSnap) setApplications(appSnap.docs.map(d => ({ id: d.id, ...d.data() } as TenantApplication)));
       if (orderSnap) setOrders(orderSnap.docs.map(d => ({ id: d.id, ...d.data() } as ServiceOrder)));
+      if (maintSnap) setMaintenance(maintSnap.docs.map(d => ({ id: d.id, ...d.data() } as MaintenanceRequest)));
       setLoading(false);
     });
   }, [profile]);
@@ -338,6 +359,11 @@ export default function AdminDashboard() {
     setOrders(prev => prev.map(o => o.id === id ? { ...o, status } : o));
   };
 
+  const handleMaintenanceStatus = async (id: string, status: MaintenanceRequest['status']) => {
+    await updateDoc(doc(db, 'maintenanceRequests', id), { status, updatedAt: serverTimestamp() });
+    setMaintenance(prev => prev.map(m => m.id === id ? { ...m, status } : m));
+  };
+
   const filteredUsers = users.filter(u =>
     u.name.toLowerCase().includes(searchUser.toLowerCase()) ||
     u.email.toLowerCase().includes(searchUser.toLowerCase())
@@ -366,6 +392,7 @@ export default function AdminDashboard() {
     { id: 'reviews',    icon: '⭐', label: `Reviews (${reviews.length})` },
     { id: 'applications', icon: '📝', label: `Applications (${applications.length})` },
     { id: 'orders',     icon: '🛒', label: `Orders (${orders.length})` },
+    { id: 'maintenance', icon: '🔧', label: `Maintenance (${maintenance.length})` },
     { id: 'post',       icon: '➕', label: 'Post Property' },
     ...(editingProperty ? [{ id: 'edit' as Tab, icon: '✏️', label: 'Edit Property' }] : []),
   ];
@@ -1374,6 +1401,87 @@ export default function AdminDashboard() {
                               <div><strong style={{ color: 'var(--navy)' }}>Address:</strong> {o.customer?.address || '—'}</div>
                             </div>
                             {o.customer?.notes && <div style={{ marginTop: 8, fontSize: 13, color: 'var(--gray-600)' }}><strong style={{ color: 'var(--navy)' }}>Notes:</strong> {o.customer.notes}</div>}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* ── Maintenance ── */}
+          {tab === 'maintenance' && (
+            <div>
+              <h1 className="dash-section-title">Maintenance Requests</h1>
+              <p style={{ color: 'var(--gray-600)', marginBottom: 24, fontSize: 15 }}>
+                Repair and maintenance issues reported through the website form.
+              </p>
+              {maintenance.length === 0 ? (
+                <div className="dash-card" style={{ textAlign: 'center', padding: 60 }}>
+                  <div style={{ fontSize: 52, marginBottom: 16 }}>🔧</div>
+                  <h3 style={{ fontFamily: 'var(--font-serif)', fontSize: 24, marginBottom: 12 }}>No maintenance requests yet</h3>
+                  <p style={{ color: 'var(--gray-400)', fontSize: 15 }}>Reports will appear here when tenants submit the maintenance form.</p>
+                </div>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                  {maintenance.map(m => {
+                    const isOpen = expandedMaint === m.id;
+                    const when = m.createdAt?.seconds ? new Date(m.createdAt.seconds * 1000).toLocaleString('en-GB') : '';
+                    const mColors: Record<string, { bg: string; color: string }> = {
+                      'open':        { bg: '#fff8e1', color: '#f57f17' },
+                      'in-progress': { bg: '#e3f2fd', color: '#1565c0' },
+                      'resolved':    { bg: '#e8f5e9', color: '#2e7d32' },
+                      'cancelled':   { bg: '#fce4ec', color: '#c62828' },
+                    };
+                    const mc = mColors[m.status] || mColors.open;
+                    return (
+                      <div key={m.id} className="dash-card" style={{ padding: 0, overflow: 'hidden' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '16px 20px', flexWrap: 'wrap' }}>
+                          <div style={{ minWidth: 0, flex: 1 }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+                              <strong style={{ fontSize: 15, color: 'var(--navy)' }}>{m.fullName}</strong>
+                              <span style={{ display: 'inline-block', padding: '3px 10px', borderRadius: 20, fontSize: 11, fontWeight: 700, textTransform: 'uppercase', background: mc.bg, color: mc.color }}>{m.status}</span>
+                            </div>
+                            <div style={{ fontSize: 12.5, color: 'var(--gray-400)', marginTop: 3 }}>
+                              {m.propertyAddress} · {m.email} · {m.contactNumber}{when ? ` · ${when}` : ''}
+                            </div>
+                          </div>
+                          <select value={m.status} onChange={e => handleMaintenanceStatus(m.id, e.target.value as MaintenanceRequest['status'])} className="form-select" style={{ width: 150 }} onClick={e => e.stopPropagation()}>
+                            {(['open', 'in-progress', 'resolved', 'cancelled'] as const).map(s => <option key={s} value={s}>{s[0].toUpperCase() + s.slice(1)}</option>)}
+                          </select>
+                          <button onClick={() => setExpandedMaint(isOpen ? null : m.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--gray-600)', fontSize: 13, fontWeight: 600 }}>
+                            {isOpen ? 'Hide ▲' : 'Details ▼'}
+                          </button>
+                        </div>
+                        {isOpen && (
+                          <div style={{ borderTop: '1px solid var(--gray-100)', padding: '16px 20px', background: '#fafbfc' }}>
+                            {[
+                              ['Issue', m.issueDescription],
+                              ['When it happened', m.whenHappened],
+                              ['Access / availability', m.availability],
+                              ['Happened before', m.experiencedBefore],
+                              ['Likely cause', m.cause],
+                            ].map(([label, value]) => (
+                              <div key={label as string} style={{ padding: '6px 0', borderBottom: '1px solid var(--gray-100)' }}>
+                                <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--gray-600)' }}>{label}</div>
+                                <div style={{ fontSize: 13.5, color: 'var(--navy)', marginTop: 2 }}>{value || '-'}</div>
+                              </div>
+                            ))}
+                            {(m.photoUrls?.length || m.videoUrls?.length) ? (
+                              <div style={{ marginTop: 12 }}>
+                                <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--gray-600)', marginBottom: 6 }}>Evidence</div>
+                                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                                  {(m.photoUrls || []).map((url, i) => (
+                                    <a key={`p${i}`} href={url} target="_blank" rel="noopener noreferrer" style={{ padding: '4px 10px', background: '#eff6ff', color: '#2563eb', borderRadius: 4, fontSize: 12, fontWeight: 600, textDecoration: 'none', border: '1px solid #bfdbfe' }}>📷 Photo {i + 1}</a>
+                                  ))}
+                                  {(m.videoUrls || []).map((url, i) => (
+                                    <a key={`v${i}`} href={url} target="_blank" rel="noopener noreferrer" style={{ padding: '4px 10px', background: '#f0fdf4', color: '#15803d', borderRadius: 4, fontSize: 12, fontWeight: 600, textDecoration: 'none', border: '1px solid #bbf7d0' }}>🎬 Video {i + 1}</a>
+                                  ))}
+                                </div>
+                              </div>
+                            ) : null}
                           </div>
                         )}
                       </div>

@@ -1,224 +1,326 @@
 'use client';
+// app/dashboard/staff/page.tsx
+// Staff dashboard — mirrors the admin dark-sidebar layout (shared global
+// .dash-* classes) but limited to Properties, Applications, Maintenance and
+// Post Property. All data is read through the Admin-SDK /api/staff/* routes
+// (which enforce the staff/admin role), so it works without any Firestore
+// client-read rules.
 import { useState, useEffect, Suspense } from 'react';
 import { useRouter } from 'next/navigation';
 import Navbar from '@/components/layout/Navbar';
+import PropertyForm from '@/components/property/PropertyForm';
 import { useAuth } from '@/hooks/useAuth';
 import { Property } from '@/lib/types';
 
-type Tab = 'applications' | 'properties' | 'post-property';
+type Tab = 'properties' | 'applications' | 'maintenance' | 'post';
 
 interface TenantApplication {
   id: string;
-  propertyId: string;
-  propertyAddress: string;
   fullName: string;
   email: string;
   phone: string;
-  status: 'pending' | 'approved' | 'rejected';
-  submittedAt: Date;
+  propertyAddress: string;
+  status: string;
+  submittedAt: string | null;
+}
+
+interface MaintenanceRequest {
+  id: string;
+  fullName: string;
+  email: string;
+  contactNumber: string;
+  propertyAddress: string;
+  issueDescription: string;
+  status: string;
+  photoUrls?: string[];
+  submittedAt: string | null;
+}
+
+const badge = (status: string): { bg: string; color: string } => {
+  const map: Record<string, { bg: string; color: string }> = {
+    pending:   { bg: '#fff8e1', color: '#f57f17' },
+    open:      { bg: '#fff8e1', color: '#f57f17' },
+    reviewing: { bg: '#e3f2fd', color: '#1565c0' },
+    approved:  { bg: '#e8f5e9', color: '#2e7d32' },
+    resolved:  { bg: '#e8f5e9', color: '#2e7d32' },
+    rejected:  { bg: '#fce4ec', color: '#c62828' },
+    active:    { bg: '#e8f5e9', color: '#2e7d32' },
+    inactive:  { bg: '#fce4ec', color: '#c62828' },
+  };
+  return map[status] || { bg: '#f1f5f9', color: '#374151' };
+};
+
+function StatusBadge({ status }: { status: string }) {
+  const c = badge(status);
+  return (
+    <span style={{
+      display: 'inline-block', padding: '4px 10px', borderRadius: 20, fontSize: 11,
+      fontWeight: 700, textTransform: 'uppercase', background: c.bg, color: c.color,
+    }}>
+      {status || '-'}
+    </span>
+  );
+}
+
+function fmtDate(iso: string | null): string {
+  if (!iso) return '-';
+  const d = new Date(iso);
+  return isNaN(d.getTime()) ? '-' : d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
 }
 
 function StaffDashboardInner() {
   const router = useRouter();
   const { user, profile, loading: authLoading } = useAuth();
-  const [tab, setTab] = useState<Tab>('applications');
-  const [applications, setApplications] = useState<TenantApplication[]>([]);
+  const [tab, setTab] = useState<Tab>('properties');
   const [properties, setProperties] = useState<Property[]>([]);
-  const [appLoading, setAppLoading] = useState(false);
-  const [propLoading, setPropLoading] = useState(false);
+  const [applications, setApplications] = useState<TenantApplication[]>([]);
+  const [maintenance, setMaintenance] = useState<MaintenanceRequest[]>([]);
+  const [loaded, setLoaded] = useState({ properties: false, applications: false, maintenance: false });
+  const [searchProp, setSearchProp] = useState('');
 
-  // Auth guard
+  // Auth guard — staff only.
   useEffect(() => {
     if (!authLoading && (!profile || profile.role !== 'staff')) {
       router.push('/admin-login');
     }
   }, [profile, authLoading, router]);
 
-  // Load applications
-  useEffect(() => {
-    if (tab === 'applications' && profile && user) {
-      setAppLoading(true);
-      user.getIdToken()
-        .then(token => fetch('/api/staff/applications', { headers: { Authorization: `Bearer ${token}` } }))
-        .then(r => r.json())
-        .then(data => setApplications(data.applications || []))
-        .catch(e => console.error('Failed to load applications:', e))
-        .finally(() => setAppLoading(false));
-    }
-  }, [tab, profile, user]);
+  // Fetch a staff API endpoint with the Firebase ID token attached.
+  const authedFetch = async (path: string) => {
+    if (!user) return null;
+    const token = await user.getIdToken();
+    const res = await fetch(path, { headers: { Authorization: `Bearer ${token}` } });
+    if (!res.ok) throw new Error(`${path} -> ${res.status}`);
+    return res.json();
+  };
 
-  // Load properties
   useEffect(() => {
-    if ((tab === 'properties' || tab === 'post-property') && profile && user) {
-      setPropLoading(true);
-      user.getIdToken()
-        .then(token => fetch('/api/staff/properties', { headers: { Authorization: `Bearer ${token}` } }))
-        .then(r => r.json())
-        .then(data => setProperties(data.properties || []))
-        .catch(e => console.error('Failed to load properties:', e))
-        .finally(() => setPropLoading(false));
+    if (!profile || !user) return;
+    if (tab === 'properties' && !loaded.properties) {
+      authedFetch('/api/staff/properties')
+        .then(d => { if (d) setProperties(d.properties || []); setLoaded(l => ({ ...l, properties: true })); })
+        .catch(e => console.error(e));
     }
-  }, [tab, profile, user]);
+    if (tab === 'applications' && !loaded.applications) {
+      authedFetch('/api/staff/applications')
+        .then(d => { if (d) setApplications(d.applications || []); setLoaded(l => ({ ...l, applications: true })); })
+        .catch(e => console.error(e));
+    }
+    if (tab === 'maintenance' && !loaded.maintenance) {
+      authedFetch('/api/staff/maintenance')
+        .then(d => { if (d) setMaintenance(d.requests || []); setLoaded(l => ({ ...l, maintenance: true })); })
+        .catch(e => console.error(e));
+    }
+  }, [tab, profile, user]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  if (authLoading) return <div style={{ padding: '2rem', textAlign: 'center' }}>Loading...</div>;
+  const reloadProperties = () => {
+    setLoaded(l => ({ ...l, properties: false }));
+    setTab('properties');
+  };
+
+  if (authLoading || !profile) {
+    return (
+      <div style={{ display: 'flex', justifyContent: 'center', padding: '120px 0' }}>
+        <div className="spinner" />
+      </div>
+    );
+  }
+
+  const filteredProps = properties.filter(p =>
+    p.title?.toLowerCase().includes(searchProp.toLowerCase()) ||
+    p.location?.toLowerCase().includes(searchProp.toLowerCase())
+  );
+
+  const navItems: Array<{ id: Tab; icon: string; label: string }> = [
+    { id: 'properties',   icon: '🏠', label: `Properties (${properties.length})` },
+    { id: 'applications', icon: '📝', label: `Applications (${applications.length})` },
+    { id: 'maintenance',  icon: '🔧', label: `Maintenance (${maintenance.length})` },
+    { id: 'post',         icon: '➕', label: 'Post Property' },
+  ];
 
   return (
-    <main style={{ background: '#f3f4f6', minHeight: '100vh' }}>
+    <>
       <Navbar />
-      <div style={{ paddingTop: 96, paddingBottom: 60, padding: '96px 5% 60px' }}>
-        <div style={{ maxWidth: 1200, margin: '0 auto' }}>
-          <h1 style={{ fontSize: 32, fontWeight: 800, color: '#0f172a', marginBottom: 8 }}>Staff Dashboard</h1>
-          <p style={{ fontSize: 15, color: '#475569', marginBottom: 32 }}>
-            Welcome, {profile?.name}. You can view applications, manage properties, and post new listings.
-          </p>
+      <div className="dash-layout">
 
-          {/* Tab navigation */}
-          <div style={{ display: 'flex', gap: 12, marginBottom: 32, borderBottom: '1px solid #e5e7eb', paddingBottom: 16 }}>
-            {(['applications', 'properties', 'post-property'] as const).map(t => (
-              <button
-                key={t}
-                onClick={() => setTab(t)}
-                style={{
-                  padding: '8px 16px',
-                  fontSize: 14,
-                  fontWeight: tab === t ? 700 : 500,
-                  color: tab === t ? '#2563eb' : '#6b7280',
-                  background: 'none',
-                  border: 'none',
-                  borderBottom: tab === t ? '2px solid #2563eb' : 'none',
-                  cursor: 'pointer',
-                  marginBottom: -17,
-                }}
-              >
-                {t === 'applications' && 'Applications'}
-                {t === 'properties' && 'Properties'}
-                {t === 'post-property' && 'Post Property'}
-              </button>
-            ))}
+        {/* ── Sidebar ── */}
+        <aside className="dash-sidebar">
+          <div style={{ padding: '0 28px 28px', borderBottom: '1px solid rgba(255,255,255,0.06)', marginBottom: 12 }}>
+            <div style={{
+              display: 'inline-flex', alignItems: 'center', gap: 6,
+              background: 'rgba(37,99,235,0.2)', border: '1px solid rgba(37,99,235,0.4)',
+              color: '#93c5fd', borderRadius: 4, padding: '4px 10px', fontSize: 11,
+              fontWeight: 700, letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 14,
+            }}>
+              👤 Staff
+            </div>
+            <div style={{ color: '#fff', fontWeight: 600, fontSize: 14 }}>{profile.name}</div>
+            <div style={{ color: 'rgba(255,255,255,0.35)', fontSize: 12, marginTop: 2 }}>{profile.email}</div>
           </div>
 
-          {/* Applications tab */}
-          {tab === 'applications' && (
-            <div style={{ background: '#fff', borderRadius: 14, border: '1px solid #e5e7eb', padding: 24 }}>
-              <h2 style={{ fontSize: 18, fontWeight: 700, color: '#0f172a', marginBottom: 16 }}>Tenant Applications</h2>
-              {appLoading ? (
-                <p style={{ color: '#6b7280' }}>Loading applications...</p>
-              ) : applications.length === 0 ? (
-                <p style={{ color: '#6b7280' }}>No applications at this time.</p>
-              ) : (
-                <div style={{ overflowX: 'auto' }}>
-                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 14 }}>
-                    <thead>
-                      <tr style={{ borderBottom: '2px solid #e5e7eb' }}>
-                        <th style={{ padding: '12px 8px', textAlign: 'left', fontWeight: 700, color: '#374151' }}>Applicant</th>
-                        <th style={{ padding: '12px 8px', textAlign: 'left', fontWeight: 700, color: '#374151' }}>Property</th>
-                        <th style={{ padding: '12px 8px', textAlign: 'left', fontWeight: 700, color: '#374151' }}>Email</th>
-                        <th style={{ padding: '12px 8px', textAlign: 'left', fontWeight: 700, color: '#374151' }}>Phone</th>
-                        <th style={{ padding: '12px 8px', textAlign: 'left', fontWeight: 700, color: '#374151' }}>Status</th>
-                        <th style={{ padding: '12px 8px', textAlign: 'left', fontWeight: 700, color: '#374151' }}>Submitted</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {applications.map(app => (
-                        <tr key={app.id} style={{ borderBottom: '1px solid #eef0f5' }}>
-                          <td style={{ padding: '12px 8px', color: '#111827' }}>{app.fullName}</td>
-                          <td style={{ padding: '12px 8px', color: '#111827' }}>{app.propertyAddress}</td>
-                          <td style={{ padding: '12px 8px', color: '#111827' }}>{app.email}</td>
-                          <td style={{ padding: '12px 8px', color: '#111827' }}>{app.phone}</td>
-                          <td style={{ padding: '12px 8px' }}>
-                            <span style={{
-                              padding: '4px 12px',
-                              borderRadius: 6,
-                              fontSize: 12,
-                              fontWeight: 600,
-                              background: app.status === 'pending' ? '#fef3c7' : app.status === 'approved' ? '#d1fae5' : '#fee2e2',
-                              color: app.status === 'pending' ? '#92400e' : app.status === 'approved' ? '#065f46' : '#991b1b',
-                            }}>
-                              {app.status}
-                            </span>
-                          </td>
-                          <td style={{ padding: '12px 8px', color: '#6b7280', fontSize: 13 }}>
-                            {new Date(app.submittedAt).toLocaleDateString('en-GB')}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-            </div>
-          )}
+          {navItems.map(item => (
+            <button
+              key={item.id}
+              className={`dash-nav-item ${tab === item.id ? 'active' : ''}`}
+              onClick={() => setTab(item.id)}
+            >
+              <span>{item.icon}</span>
+              {item.label}
+            </button>
+          ))}
+        </aside>
 
-          {/* Properties tab */}
+        {/* ── Main Content ── */}
+        <main className="dash-content">
+
+          {/* ── Properties ── */}
           {tab === 'properties' && (
-            <div style={{ background: '#fff', borderRadius: 14, border: '1px solid #e5e7eb', padding: 24 }}>
-              <h2 style={{ fontSize: 18, fontWeight: 700, color: '#0f172a', marginBottom: 16 }}>All Properties</h2>
-              {propLoading ? (
-                <p style={{ color: '#6b7280' }}>Loading properties...</p>
-              ) : properties.length === 0 ? (
-                <p style={{ color: '#6b7280' }}>No properties available.</p>
-              ) : (
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 16 }}>
-                  {properties.map(prop => (
-                    <div key={prop.id} style={{
-                      border: '1px solid #e5e7eb',
-                      borderRadius: 12,
-                      overflow: 'hidden',
-                      background: '#f9fafb',
-                    }}>
-                      {prop.images?.[0] && (
-                        <img src={prop.images[0]} alt={prop.title} style={{ width: '100%', height: 180, objectFit: 'cover' }} />
-                      )}
-                      <div style={{ padding: 12 }}>
-                        <h3 style={{ fontSize: 15, fontWeight: 700, color: '#0f172a', margin: '0 0 4px' }}>{prop.title}</h3>
-                        <p style={{ fontSize: 12, color: '#6b7280', margin: '0 0 8px' }}>{prop.location}</p>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                          <span style={{ fontSize: 16, fontWeight: 700, color: '#0f172a' }}>£{prop.price}/mo</span>
-                          <span style={{
-                            fontSize: 11,
-                            fontWeight: 600,
-                            padding: '4px 8px',
-                            borderRadius: 4,
-                            background: prop.status === 'active' ? '#d1fae5' : '#fee2e2',
-                            color: prop.status === 'active' ? '#065f46' : '#991b1b',
-                          }}>
-                            {prop.status}
-                          </span>
-                        </div>
-                        <p style={{ fontSize: 12, color: '#6b7280', margin: '8px 0 0' }}>
-                          {prop.bedrooms === 0 ? 'Studio' : `${prop.bedrooms} bed`} · {prop.bathrooms} bath
-                        </p>
-                      </div>
-                    </div>
-                  ))}
+            <div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24, gap: 12, flexWrap: 'wrap' }}>
+                <h1 className="dash-section-title">Properties</h1>
+                <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+                  <input
+                    className="form-input"
+                    style={{ width: 240 }}
+                    placeholder="Search by title or location…"
+                    value={searchProp}
+                    onChange={e => setSearchProp(e.target.value)}
+                  />
+                  <button
+                    onClick={() => setTab('post')}
+                    style={{ padding: '10px 18px', background: '#2563eb', color: '#fff', border: 'none', borderRadius: 6, fontSize: 13, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap' }}
+                  >
+                    ➕ Post Property
+                  </button>
                 </div>
-              )}
-            </div>
-          )}
-
-          {/* Post Property tab */}
-          {tab === 'post-property' && (
-            <div style={{ background: '#fff', borderRadius: 14, border: '1px solid #e5e7eb', padding: 24 }}>
-              <h2 style={{ fontSize: 18, fontWeight: 700, color: '#0f172a', marginBottom: 8 }}>Post a New Property</h2>
-              <p style={{ fontSize: 14, color: '#6b7280', marginBottom: 24 }}>
-                Use this form to add a new property listing to the platform.
-              </p>
-              <div style={{ background: '#f3f4f6', border: '2px dashed #d1d5db', borderRadius: 10, padding: 40, textAlign: 'center' }}>
-                <p style={{ fontSize: 14, color: '#6b7280', margin: 0 }}>
-                  Property posting interface coming soon. Contact admin for access to the full property management system.
-                </p>
+              </div>
+              <div className="dash-card" style={{ padding: 0, overflow: 'hidden' }}>
+                <table className="data-table">
+                  <thead>
+                    <tr><th>Property</th><th>Location</th><th>Rent</th><th>Status</th><th>Beds</th></tr>
+                  </thead>
+                  <tbody>
+                    {filteredProps.map(p => (
+                      <tr key={p.id}>
+                        <td>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                            {p.images?.[0] && <img src={p.images[0]} alt="" style={{ width: 44, height: 32, objectFit: 'cover', borderRadius: 4 }} />}
+                            <div style={{ fontWeight: 600, fontSize: 14 }}>{p.title}</div>
+                          </div>
+                        </td>
+                        <td style={{ fontSize: 13, color: 'var(--gray-600)' }}>{p.location}</td>
+                        <td style={{ fontWeight: 700, color: 'var(--red)' }}>£{p.price?.toLocaleString()}</td>
+                        <td><StatusBadge status={p.status} /></td>
+                        <td style={{ fontSize: 13 }}>{p.bedrooms === 0 ? 'Studio' : p.bedrooms}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+                {!loaded.properties ? (
+                  <div style={{ padding: 40, textAlign: 'center', color: 'var(--gray-400)' }}>Loading properties…</div>
+                ) : filteredProps.length === 0 ? (
+                  <div style={{ padding: 40, textAlign: 'center', color: 'var(--gray-400)' }}>No properties found.</div>
+                ) : null}
               </div>
             </div>
           )}
-        </div>
+
+          {/* ── Applications ── */}
+          {tab === 'applications' && (
+            <div>
+              <h1 className="dash-section-title">Tenancy Applications</h1>
+              <p style={{ color: 'var(--gray-600)', marginBottom: 24, fontSize: 15 }}>All tenancy applications submitted via the website.</p>
+              <div className="dash-card" style={{ padding: 0, overflow: 'hidden' }}>
+                <table className="data-table">
+                  <thead>
+                    <tr><th>Applicant</th><th>Property</th><th>Email</th><th>Phone</th><th>Status</th><th>Submitted</th></tr>
+                  </thead>
+                  <tbody>
+                    {applications.map(a => (
+                      <tr key={a.id}>
+                        <td style={{ fontWeight: 600, fontSize: 14 }}>{a.fullName}</td>
+                        <td style={{ fontSize: 13, color: 'var(--gray-600)', maxWidth: 220 }}>{a.propertyAddress}</td>
+                        <td style={{ fontSize: 13, color: 'var(--gray-600)' }}>{a.email}</td>
+                        <td style={{ fontSize: 13, color: 'var(--gray-600)' }}>{a.phone}</td>
+                        <td><StatusBadge status={a.status} /></td>
+                        <td style={{ fontSize: 13, color: 'var(--gray-400)' }}>{fmtDate(a.submittedAt)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+                {!loaded.applications ? (
+                  <div style={{ padding: 40, textAlign: 'center', color: 'var(--gray-400)' }}>Loading applications…</div>
+                ) : applications.length === 0 ? (
+                  <div style={{ padding: 40, textAlign: 'center', color: 'var(--gray-400)' }}>No applications yet.</div>
+                ) : null}
+              </div>
+            </div>
+          )}
+
+          {/* ── Maintenance ── */}
+          {tab === 'maintenance' && (
+            <div>
+              <h1 className="dash-section-title">Maintenance Requests</h1>
+              <p style={{ color: 'var(--gray-600)', marginBottom: 24, fontSize: 15 }}>Repair and maintenance issues reported through the website form.</p>
+              <div className="dash-card" style={{ padding: 0, overflow: 'hidden' }}>
+                <table className="data-table">
+                  <thead>
+                    <tr><th>Reported by</th><th>Property</th><th>Issue</th><th>Contact</th><th>Photos</th><th>Status</th><th>Submitted</th></tr>
+                  </thead>
+                  <tbody>
+                    {maintenance.map(m => (
+                      <tr key={m.id}>
+                        <td style={{ fontWeight: 600, fontSize: 14 }}>{m.fullName}</td>
+                        <td style={{ fontSize: 13, color: 'var(--gray-600)', maxWidth: 200 }}>{m.propertyAddress}</td>
+                        <td style={{ fontSize: 13, color: 'var(--gray-600)', maxWidth: 260 }}>{m.issueDescription}</td>
+                        <td style={{ fontSize: 12, color: 'var(--gray-400)' }}>
+                          <div>{m.email}</div>
+                          <div>{m.contactNumber}</div>
+                        </td>
+                        <td style={{ fontSize: 13 }}>
+                          {m.photoUrls?.length
+                            ? <a href={m.photoUrls[0]} target="_blank" rel="noreferrer" style={{ color: '#2563eb', fontWeight: 600 }}>{m.photoUrls.length} photo{m.photoUrls.length > 1 ? 's' : ''}</a>
+                            : <span style={{ color: 'var(--gray-400)' }}>-</span>}
+                        </td>
+                        <td><StatusBadge status={m.status} /></td>
+                        <td style={{ fontSize: 13, color: 'var(--gray-400)' }}>{fmtDate(m.submittedAt)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+                {!loaded.maintenance ? (
+                  <div style={{ padding: 40, textAlign: 'center', color: 'var(--gray-400)' }}>Loading maintenance requests…</div>
+                ) : maintenance.length === 0 ? (
+                  <div style={{ padding: 40, textAlign: 'center', color: 'var(--gray-400)' }}>No maintenance requests yet.</div>
+                ) : null}
+              </div>
+            </div>
+          )}
+
+          {/* ── Post Property ── */}
+          {tab === 'post' && (
+            <div>
+              <h1 className="dash-section-title">Post a Property</h1>
+              <p style={{ color: 'var(--gray-600)', marginBottom: 24, fontSize: 15 }}>Add a new property listing to the website.</p>
+              <div className="dash-card">
+                <PropertyForm
+                  landlordId={profile.uid}
+                  landlordName={profile.name}
+                  onSuccess={reloadProperties}
+                  onCancel={() => setTab('properties')}
+                />
+              </div>
+            </div>
+          )}
+        </main>
       </div>
-    </main>
+    </>
   );
 }
 
 export default function StaffDashboardPage() {
   return (
-    <Suspense fallback={<div style={{ padding: '2rem', textAlign: 'center' }}>Loading...</div>}>
+    <Suspense fallback={<div style={{ padding: '2rem', textAlign: 'center' }}>Loading…</div>}>
       <StaffDashboardInner />
     </Suspense>
   );

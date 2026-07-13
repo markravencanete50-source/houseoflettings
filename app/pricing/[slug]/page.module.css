@@ -1,0 +1,186 @@
+/* app/pricing/[slug]/page.module.css
+   Styles for the individual package detail page. A CSS Module (not an inline
+   <style>) so the styling survives the production build in a Server Component.
+   Mobile-first; scales up at the breakpoints below. Copy/colours match the
+   rest of the site (navy #0f1f3d, brand blue #2563eb, Poppins). */
+
+.page {
+  font-family: 'Poppins', sans-serif;
+  color: #0f1f3d;
+  background: #fff;
+}
+.page * { box-sizing: border-box; }
+
+.container {
+  width: 100%;
+  max-width: 920px;
+  margin: 0 auto;
+  padding-left: clamp(18px, 5%, 40px);
+  padding-right: clamp(18px, 5%, 40px);
+}
+
+/* ── Hero ─────────────────────────────────────────────── */
+.hero {
+  position: relative;
+  overflow: hidden;
+  color: #fff;
+  background: linear-gradient(160deg, #15294c 0%, #0c1a33 62%, #0f1f3d 100%);
+  padding: clamp(104px, 14vw, 156px) 0 clamp(58px, 9vw, 90px);
+}
+.heroHot {
+  background: linear-gradient(160deg, #2563eb 0%, #12295a 55%, #0c1a33 100%);
+}
+.orb {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+  filter: blur(2px);
+  width: 300px; height: 300px;
+  top: -100px; right: -80px;
+  background: radial-gradient(circle, rgba(74,144,217,.35) 0%, transparent 70%);
+}
+.heroInner { position: relative; z-index: 1; text-align: center; }
+
+.crumbs {
+  display: flex; align-items: center; justify-content: center;
+  gap: 7px; flex-wrap: wrap;
+  font-size: 12.5px; color: rgba(255,255,255,.55); margin-bottom: 22px;
+}
+.crumbs a { color: rgba(255,255,255,.7); text-decoration: none; }
+.crumbs a:hover { color: #fff; }
+.crumbs .sep { opacity: .5; }
+.crumbs .here { color: #fff; }
+
+.eyebrow {
+  display: inline-block;
+  font-size: 12px; font-weight: 700; letter-spacing: .14em;
+  text-transform: uppercase; color: #a9c4ea; margin-bottom: 12px;
+}
+.title {
+  font-size: clamp(29px, 5.2vw, 50px);
+  font-weight: 800; line-height: 1.1; letter-spacing: -.01em;
+  margin: 0 0 14px;
+}
+.best {
+  font-size: clamp(14.5px, 2vw, 16px);
+  color: #c7d7f2; line-height: 1.6; margin: 0 auto 26px; max-width: 520px;
+}
+
+/* Price presented as a compact 2-cell card for structure */
+.priceCard {
+  display: inline-flex;
+  border: 1px solid rgba(255,255,255,.18);
+  border-radius: 14px;
+  overflow: hidden;
+  background: rgba(255,255,255,.06);
+}
+.priceCell { padding: 14px 22px; text-align: center; }
+.priceCell + .priceCell { border-left: 1px solid rgba(255,255,255,.16); }
+.priceLabel {
+  display: block; font-size: 10.5px; font-weight: 700; letter-spacing: .08em;
+  text-transform: uppercase; color: #a9c4ea; margin-bottom: 5px;
+}
+.priceVal { font-size: clamp(22px, 4vw, 30px); font-weight: 800; line-height: 1; }
+
+.cta {
+  display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; margin-top: 30px;
+}
+.btn {
+  display: inline-block; padding: 14px 30px; border-radius: 9px;
+  font-size: 13.5px; font-weight: 700; letter-spacing: .02em;
+  text-transform: uppercase; text-decoration: none; transition: all .18s ease;
+}
+.btnSolid { background: #fff; color: #0f1f3d; }
+.btnSolid:hover { background: #e8f0fb; }
+.btnGhost { background: transparent; color: #fff; border: 1.5px solid rgba(255,255,255,.4); }
+.btnGhost:hover { border-color: #fff; background: rgba(255,255,255,.06); }
+
+/* ── Coverage band (overlaps hero) ────────────────────── */
+.coverWrap { position: relative; z-index: 2; margin-top: -34px; }
+.cover {
+  background: #fff; border: 1px solid #e5e7eb; border-radius: 16px;
+  box-shadow: 0 20px 44px -26px rgba(15,31,61,.34);
+  padding: 20px 22px;
+}
+.coverTop {
+  display: flex; align-items: baseline; justify-content: space-between;
+  gap: 12px; flex-wrap: wrap; margin-bottom: 14px;
+}
+.coverTop b { font-size: 16px; font-weight: 800; color: #0f1f3d; }
+.coverTop span { font-size: 12.5px; color: #6b7280; }
+.coverChips { display: flex; flex-wrap: wrap; gap: 8px; }
+.coverChip {
+  display: inline-flex; align-items: center; gap: 7px;
+  font-size: 12px; font-weight: 600; color: #374151;
+  background: #f4f7fb; border: 1px solid #e9edf2; border-radius: 999px;
+  padding: 6px 12px;
+}
+.coverChip b { color: #2563eb; font-weight: 800; }
+.coverChip.zero { color: #9aa4b2; }
+.coverChip.zero b { color: #9aa4b2; }
+
+/* ── Body / sections ──────────────────────────────────── */
+.body { padding: clamp(38px, 6vw, 60px) 0 0; }
+.blurb {
+  font-size: clamp(15px, 2vw, 16.5px); color: #4b5563; line-height: 1.8;
+  text-align: center; max-width: 680px; margin: 0 auto clamp(34px, 5vw, 50px);
+}
+
+.section { margin-bottom: clamp(32px, 5vw, 46px); }
+.sectionHead { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
+.sectionNum {
+  flex: none; width: 30px; height: 30px; border-radius: 9px;
+  background: #e8f0fb; color: #2563eb; font-size: 13px; font-weight: 800;
+  display: inline-flex; align-items: center; justify-content: center;
+}
+.sectionTitle { flex: 1; font-size: clamp(18px, 2.4vw, 23px); font-weight: 800; color: #0f1f3d; margin: 0; line-height: 1.25; }
+.sectionCount { flex: none; font-size: 12px; font-weight: 700; color: #6b7280; white-space: nowrap; }
+
+.list { display: grid; grid-template-columns: 1fr; gap: 12px; }
+
+.item {
+  display: flex; gap: 13px;
+  background: #fff; border: 1px solid #eef1f5; border-radius: 12px;
+  padding: 15px 16px; transition: border-color .18s ease, box-shadow .18s ease;
+}
+.item:hover { border-color: #cfe0f7; box-shadow: 0 12px 26px -20px rgba(15,31,61,.4); }
+.tick {
+  flex: none; width: 25px; height: 25px; border-radius: 50%;
+  background: #e7f6ee; margin-top: 1px;
+  display: inline-flex; align-items: center; justify-content: center;
+}
+.tick svg { width: 13px; height: 13px; stroke: #16a34a; stroke-width: 3; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+.itemTitle { font-size: 14.5px; font-weight: 700; color: #0f1f3d; margin: 0 0 4px; line-height: 1.35; }
+.itemDesc { font-size: 13.5px; color: #6b7280; line-height: 1.62; margin: 0; }
+
+/* ── Not included ─────────────────────────────────────── */
+.notWrap { padding-top: clamp(16px, 3vw, 26px); }
+.not { background: #f7f8fa; border: 1px solid #e9edf2; border-radius: 16px; padding: 24px 22px; }
+.notHead { font-size: 15px; font-weight: 800; color: #0f1f3d; margin: 0 0 6px; }
+.notSub { font-size: 13px; color: #6b7280; margin: 0 0 16px; line-height: 1.6; }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip { font-size: 12.5px; color: #8a94a3; background: #fff; border: 1px solid #e5e9f0; border-radius: 999px; padding: 6px 12px; }
+.upgrade { display: inline-block; margin-top: 18px; font-size: 13.5px; font-weight: 700; color: #2563eb; text-decoration: none; }
+.upgrade:hover { text-decoration: underline; }
+
+/* ── Other packages ───────────────────────────────────── */
+.others { padding: clamp(46px, 7vw, 72px) 0 clamp(60px, 9vw, 92px); }
+.othersHead { text-align: center; font-size: clamp(20px, 3vw, 28px); font-weight: 800; color: #0f1f3d; margin: 0 0 26px; }
+.othersGrid { display: grid; grid-template-columns: 1fr; gap: 12px; }
+.other {
+  display: block; text-decoration: none;
+  background: #fff; border: 1.5px solid #e5e7eb; border-radius: 12px;
+  padding: 18px; transition: border-color .18s ease, transform .18s ease;
+}
+.other:hover { border-color: #2563eb; transform: translateY(-3px); }
+.otherKind { font-size: 10.5px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: #8b96a5; }
+.otherName { display: block; font-size: 16px; font-weight: 800; color: #0f1f3d; margin: 5px 0 8px; line-height: 1.25; }
+.otherFee { font-size: 13.5px; font-weight: 700; color: #2563eb; }
+.otherCurrent { border-color: #2563eb; background: #f4f8ff; }
+.otherBadge { display: inline-block; margin-top: 8px; font-size: 10.5px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: #2563eb; }
+
+/* ── Larger screens ───────────────────────────────────── */
+@media (min-width: 700px) {
+  .list { grid-template-columns: 1fr 1fr; }
+  .othersGrid { grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); }
+}

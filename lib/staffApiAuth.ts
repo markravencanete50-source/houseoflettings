@@ -23,16 +23,28 @@ export function getAdminDb() {
 
 export type StaffAuth = { uid: string; role: 'staff' | 'admin'; permissions: string[] };
 
-// Returns the caller's identity, or a ready-to-return error Response.
+function sessionCookie(request: Request): string | null {
+  const cookie = request.headers.get('cookie') || '';
+  const m = cookie.match(/(?:^|;\s*)hol_session=([^;]+)/);
+  return m ? decodeURIComponent(m[1]) : null;
+}
+
+// Returns the caller's identity, or a ready-to-return error Response. Accepts
+// EITHER a Firebase ID token (Authorization: Bearer) OR the HttpOnly session
+// cookie set by /api/team-login — the latter lets staff on networks that block
+// googleapis.com use the dashboard, since only our server calls Google.
 export async function requireStaff(request: Request, feature?: StaffFeature): Promise<StaffAuth | Response> {
   const authHeader = request.headers.get('authorization');
-  if (!authHeader?.startsWith('Bearer ')) {
+  const cookie = sessionCookie(request);
+  if (!authHeader?.startsWith('Bearer ') && !cookie) {
     return Response.json({ message: 'Unauthorized' }, { status: 401 });
   }
   let uid: string;
   try {
     getAdminDb(); // ensure the admin app is initialised before getAuth()
-    uid = (await getAuth().verifyIdToken(authHeader.substring(7))).uid;
+    uid = authHeader?.startsWith('Bearer ')
+      ? (await getAuth().verifyIdToken(authHeader.substring(7))).uid
+      : (await getAuth().verifySessionCookie(cookie as string, true)).uid;
   } catch {
     return Response.json({ message: 'Invalid token' }, { status: 401 });
   }

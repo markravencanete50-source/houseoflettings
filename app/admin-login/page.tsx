@@ -20,16 +20,39 @@ export default function AdminLoginPage() {
       const user = await signIn(email, password);
       if (user.role !== 'admin' && user.role !== 'staff') {
         setError('Access denied. This login is for House of Lettings staff and administrators only.');
+        setLoading(false);
         return;
       }
       router.push(getDashboardPath(user.role));
     } catch (err: any) {
+      // If the browser can't reach Google's login servers (blocked network,
+      // strict firewall/DNS), fall back to server-side login: our server does
+      // the auth and sets a session cookie the dashboard understands.
+      const networkFail = err?.code === 'auth/network-request-failed'
+        || err?.code === 'auth/internal-error'
+        || /network/i.test(err?.message || '');
+      if (networkFail) {
+        try {
+          const res = await fetch('/api/team-login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, password }),
+          });
+          const data = await res.json().catch(() => ({}));
+          if (!res.ok) { setError(data.message || 'Sign in failed.'); setLoading(false); return; }
+          router.push(getDashboardPath(data.role));
+          return;
+        } catch {
+          setError('Could not reach the login service. Please check the internet connection and try again.');
+          setLoading(false);
+          return;
+        }
+      }
       setError(
-        err.code === 'auth/invalid-credential'
-          ? 'Invalid credentials.'
+        err.code === 'auth/invalid-credential' || err.code === 'auth/wrong-password'
+          ? 'Invalid email or password.'
           : err.message || 'Login failed.'
       );
-    } finally {
       setLoading(false);
     }
   };

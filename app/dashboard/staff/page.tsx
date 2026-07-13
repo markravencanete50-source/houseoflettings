@@ -10,6 +10,7 @@ import { useRouter } from 'next/navigation';
 import Navbar from '@/components/layout/Navbar';
 import PropertyForm from '@/components/property/PropertyForm';
 import { useAuth } from '@/hooks/useAuth';
+import { signOut } from '@/services/auth';
 import { Property } from '@/lib/types';
 import { STAFF_FEATURES, staffPermissions, type StaffFeature } from '@/lib/staffAccess';
 
@@ -127,7 +128,14 @@ const EMPTY_REVIEW_FORM = {
 
 function StaffDashboardInner() {
   const router = useRouter();
-  const { user, profile, loading: authLoading } = useAuth();
+  const { user, profile: clientProfile, loading: authLoading } = useAuth();
+  // Session-cookie fallback: when the Firebase client SDK has no user (the
+  // browser can't reach Google, so login went through our server) we identify
+  // the member from the HttpOnly session cookie via /api/me.
+  const [sessionProfile, setSessionProfile] = useState<{ uid: string; name: string; email: string; role: string; permissions?: string[] } | null>(null);
+  const [sessionChecked, setSessionChecked] = useState(false);
+  const profile = clientProfile || sessionProfile;
+  const ready = !authLoading && (clientProfile ? true : sessionChecked);
   const perms = staffPermissions(profile);
 
   const [tab, setTab] = useState<Tab>('properties');
@@ -146,29 +154,50 @@ function StaffDashboardInner() {
   const [reviewSaving, setReviewSaving] = useState(false);
   const [reviewMsg, setReviewMsg] = useState<{ kind: 'ok' | 'err'; text: string } | null>(null);
 
-  // Auth guard — staff only.
+  // Load the cookie-session profile if the client SDK has no user.
   useEffect(() => {
-    if (!authLoading && (!profile || profile.role !== 'staff')) {
+    if (authLoading) return;
+    if (clientProfile) { setSessionChecked(true); return; }
+    let cancelled = false;
+    fetch('/api/me')
+      .then(r => r.json())
+      .then(d => { if (!cancelled) setSessionProfile(d.user || null); })
+      .catch(() => { if (!cancelled) setSessionProfile(null); })
+      .finally(() => { if (!cancelled) setSessionChecked(true); });
+    return () => { cancelled = true; };
+  }, [authLoading, clientProfile]);
+
+  // Auth guard — staff/admin only, once we've resolved client + cookie sessions.
+  useEffect(() => {
+    if (!ready) return;
+    if (!profile || (profile.role !== 'staff' && profile.role !== 'admin')) {
       router.push('/admin-login');
     }
-  }, [profile, authLoading, router]);
+  }, [ready, profile, router]);
+
+  const handleSignOut = async () => {
+    try { await fetch('/api/team-logout', { method: 'POST' }); } catch { /* ignore */ }
+    try { await signOut(); } catch { /* ignore (cookie-only session) */ }
+    router.push('/admin-login');
+  };
 
   // Keep the active tab within the permitted set.
   useEffect(() => {
     if (perms.length > 0 && !perms.includes(tab)) setTab(perms[0]);
   }, [perms, tab]);
 
+  // Use the Firebase ID token when signed in via the client SDK; otherwise the
+  // same-origin session cookie authenticates the request on the server.
   const authedFetch = async (path: string, init?: RequestInit) => {
-    if (!user) throw new Error('Not signed in');
-    const token = await user.getIdToken();
-    return fetch(path, {
-      ...init,
-      headers: { ...(init?.headers || {}), Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-    });
+    const headers: Record<string, string> = { ...(init?.headers as Record<string, string> || {}), 'Content-Type': 'application/json' };
+    if (user) {
+      try { headers['Authorization'] = `Bearer ${await user.getIdToken()}`; } catch { /* fall back to cookie */ }
+    }
+    return fetch(path, { ...init, headers, credentials: 'same-origin' });
   };
 
   useEffect(() => {
-    if (!profile || !user || !perms.includes(tab)) return;
+    if (!profile || !perms.includes(tab)) return;
     const load = async (path: string, key: string, apply: (j: any) => void) => {
       try {
         const res = await authedFetch(path);
@@ -240,7 +269,7 @@ function StaffDashboardInner() {
     }
   };
 
-  if (authLoading || !profile) {
+  if (!ready || !profile) {
     return (
       <div style={{ display: 'flex', justifyContent: 'center', padding: '120px 0' }}>
         <div className="spinner" />
@@ -308,6 +337,10 @@ function StaffDashboardInner() {
               {item.label}
             </button>
           ))}
+
+          <button className="dash-nav-item" onClick={handleSignOut} style={{ marginTop: 18 }}>
+            <span>🚪</span> Sign Out
+          </button>
         </aside>
 
         {/* ── Main Content ── */}

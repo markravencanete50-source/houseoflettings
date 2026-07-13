@@ -1,6 +1,7 @@
 // app/sitemap.ts
 import { MetadataRoute } from 'next';
 import { BRANCHES } from '@/lib/branches';
+import { BUNDLES } from '@/lib/bundles';
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const baseUrl = 'https://www.houseoflettings.uk';
@@ -9,6 +10,14 @@ export default function sitemap(): MetadataRoute.Sitemap {
     url: `${baseUrl}/branches/${b.slug}`,
     lastModified: new Date(),
     changeFrequency: 'weekly',
+    priority: 0.7,
+  }));
+
+  // Individual landlord package detail pages.
+  const packageUrls: MetadataRoute.Sitemap = BUNDLES.map((b) => ({
+    url: `${baseUrl}/pricing/${b.id}`,
+    lastModified: new Date(),
+    changeFrequency: 'monthly',
     priority: 0.7,
   }));
 
@@ -38,6 +47,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: 'monthly',
       priority: 0.8,
     },
+    ...packageUrls,
     {
       url: `${baseUrl}/additional-services`,
       lastModified: new Date(),

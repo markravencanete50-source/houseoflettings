@@ -408,6 +408,11 @@ export default function PricingPage() {
         .pr-mc-bar { height:6px; border-radius:999px; background:#e8eef7; overflow:hidden; }
         .pr-mc-bar i { display:block; height:100%; border-radius:999px;
           background:linear-gradient(90deg,#2563eb,#4a90d9); transition:width .35s ease; }
+        .pr-mc-all { display:flex; align-items:center; justify-content:center; gap:8px; margin:20px 0 4px;
+          padding:13px 16px; border:1.5px solid #2563eb; border-radius:9px; color:#2563eb;
+          font-size:13.5px; font-weight:700; text-decoration:none; text-align:center; line-height:1.3; }
+        .pr-mc-all svg { flex:none; }
+        .pr-mc-all:hover { background:#2563eb; color:#fff; }
         .pr-mc-cta { padding:18px; }
         .pr-mc-cta button { width:100%; padding:15px; background:#2563eb; color:#fff; border:none; border-radius:9px;
           font-size:14px; font-weight:700; text-transform:uppercase; letter-spacing:.03em; cursor:pointer; transition:background .18s ease; }
@@ -761,13 +766,18 @@ export default function PricingPage() {
                   );
                 })}
               </div>
+
+              <Link href={`/pricing/${PACKAGES[mobileTab].id}`} className="pr-mc-all">
+                See all {mcIncluded} services included, explained
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
+              </Link>
             </div>
 
             <div className="pr-mc-cta">
               <button onClick={() => addPackage(mobileTab)}>{justAdded === mobileTab ? 'Added to order ✓' : `Add ${PACKAGES[mobileTab].short} to order`}</button>
             </div>
           </div>
-          <p className="pr-mc-foot">All {TOTAL_SERVICES} services are compared line by line in the desktop view. Prices inc. VAT.</p>
+          <p className="pr-mc-foot">Tap a package above to see everything it includes, explained in full. Prices inc. VAT.</p>
         </div>
       </section>
 

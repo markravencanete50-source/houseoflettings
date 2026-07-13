@@ -267,7 +267,7 @@ export default function AdditionalServicesPage() {
                         <div className="as-card__price">
                           <div style={{
                             fontFamily: "'Poppins', sans-serif",
-                            fontSize: 20, fontWeight: 800, color: 'var(--blue)',
+                            fontSize: 20, fontWeight: 800, color: '#16a34a',
                             lineHeight: 1.1, whiteSpace: 'nowrap',
                           }}>
                             {svc.price}
@@ -358,7 +358,7 @@ export default function AdditionalServicesPage() {
                                         <td style={{ color: 'rgba(255,255,255,0.85)', borderBottomColor: 'rgba(255,255,255,0.1)' }}>
                                           {line.label}
                                         </td>
-                                        <td style={{ color: '#fff', borderBottomColor: 'rgba(255,255,255,0.1)' }}>
+                                        <td style={{ color: '#4ade80', fontWeight: 700, borderBottomColor: 'rgba(255,255,255,0.1)' }}>
                                           {line.value}
                                         </td>
                                       </tr>

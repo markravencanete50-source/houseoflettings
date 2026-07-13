@@ -7,8 +7,12 @@ import { useCart } from '@/components/services/CartProvider';
 import { anyFrom, formatGBP } from '@/lib/serviceCart';
 
 export default function CartBar() {
-  const { items, count, total, ready } = useCart();
+  const { items, count, total, ready, clear } = useCart();
   if (!ready || count === 0) return null;
+
+  const cancel = () => {
+    if (window.confirm('Cancel your order and remove all services?')) clear();
+  };
 
   return (
     <div style={{
@@ -33,13 +37,23 @@ export default function CartBar() {
             </div>
           </div>
         </div>
-        <Link href="/additional-services/checkout" style={{
-          flexShrink: 0, background: '#16a34a', color: '#fff', textDecoration: 'none',
-          padding: '14px 30px', borderRadius: 9, fontSize: 14.5, fontWeight: 700, letterSpacing: '0.02em',
-          whiteSpace: 'nowrap',
-        }}>
-          Proceed to checkout →
-        </Link>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexShrink: 0 }}>
+          <button type="button" onClick={cancel} style={{
+            background: 'transparent', color: '#fff', cursor: 'pointer',
+            border: '1.5px solid rgba(255,255,255,0.35)', borderRadius: 9,
+            padding: '13px 20px', fontSize: 14, fontWeight: 600, letterSpacing: '0.02em',
+            whiteSpace: 'nowrap', fontFamily: "'Poppins', sans-serif",
+          }}>
+            Cancel order
+          </button>
+          <Link href="/additional-services/checkout" style={{
+            background: '#16a34a', color: '#fff', textDecoration: 'none',
+            padding: '14px 30px', borderRadius: 9, fontSize: 14.5, fontWeight: 700, letterSpacing: '0.02em',
+            whiteSpace: 'nowrap',
+          }}>
+            Proceed to checkout →
+          </Link>
+        </div>
       </div>
     </div>
   );

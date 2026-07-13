@@ -76,6 +76,7 @@ function StaffDashboardInner() {
   const [applications, setApplications] = useState<TenantApplication[]>([]);
   const [maintenance, setMaintenance] = useState<MaintenanceRequest[]>([]);
   const [loaded, setLoaded] = useState({ properties: false, applications: false, maintenance: false });
+  const [errors, setErrors] = useState<Record<string, string>>({});
   const [searchProp, setSearchProp] = useState('');
 
   // Auth guard — staff only.
@@ -85,32 +86,28 @@ function StaffDashboardInner() {
     }
   }, [profile, authLoading, router]);
 
-  // Fetch a staff API endpoint with the Firebase ID token attached.
-  const authedFetch = async (path: string) => {
-    if (!user) return null;
-    const token = await user.getIdToken();
-    const res = await fetch(path, { headers: { Authorization: `Bearer ${token}` } });
-    if (!res.ok) throw new Error(`${path} -> ${res.status}`);
-    return res.json();
-  };
-
+  // Fetch a staff API endpoint with the Firebase ID token attached. Surfaces the
+  // real HTTP status/message so a failure is visible instead of spinning forever.
   useEffect(() => {
     if (!profile || !user) return;
-    if (tab === 'properties' && !loaded.properties) {
-      authedFetch('/api/staff/properties')
-        .then(d => { if (d) setProperties(d.properties || []); setLoaded(l => ({ ...l, properties: true })); })
-        .catch(e => console.error(e));
-    }
-    if (tab === 'applications' && !loaded.applications) {
-      authedFetch('/api/staff/applications')
-        .then(d => { if (d) setApplications(d.applications || []); setLoaded(l => ({ ...l, applications: true })); })
-        .catch(e => console.error(e));
-    }
-    if (tab === 'maintenance' && !loaded.maintenance) {
-      authedFetch('/api/staff/maintenance')
-        .then(d => { if (d) setMaintenance(d.requests || []); setLoaded(l => ({ ...l, maintenance: true })); })
-        .catch(e => console.error(e));
-    }
+    const load = async (path: string, key: 'properties' | 'applications' | 'maintenance', apply: (j: any) => void) => {
+      try {
+        const token = await user.getIdToken();
+        const res = await fetch(path, { headers: { Authorization: `Bearer ${token}` } });
+        const json = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(json.message ? `${res.status} · ${json.message}` : `HTTP ${res.status}`);
+        apply(json);
+        setErrors(e => ({ ...e, [key]: '' }));
+      } catch (err: any) {
+        console.error(`${path} failed:`, err);
+        setErrors(e => ({ ...e, [key]: err.message || 'Request failed' }));
+      } finally {
+        setLoaded(l => ({ ...l, [key]: true }));
+      }
+    };
+    if (tab === 'properties' && !loaded.properties) load('/api/staff/properties', 'properties', j => setProperties(j.properties || []));
+    if (tab === 'applications' && !loaded.applications) load('/api/staff/applications', 'applications', j => setApplications(j.applications || []));
+    if (tab === 'maintenance' && !loaded.maintenance) load('/api/staff/maintenance', 'maintenance', j => setMaintenance(j.requests || []));
   }, [tab, profile, user]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const reloadProperties = () => {
@@ -172,6 +169,12 @@ function StaffDashboardInner() {
 
         {/* ── Main Content ── */}
         <main className="dash-content">
+
+          {errors[tab] && (
+            <div style={{ background: '#fef2f2', border: '1px solid #fca5a5', color: '#b91c1c', borderRadius: 8, padding: '12px 16px', marginBottom: 20, fontSize: 13.5, fontWeight: 600 }}>
+              ⚠️ Couldn&rsquo;t load {tab}: {errors[tab]}
+            </div>
+          )}
 
           {/* ── Properties ── */}
           {tab === 'properties' && (

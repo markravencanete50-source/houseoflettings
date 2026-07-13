@@ -24,7 +24,7 @@ function TenantDashboardInner() {
 
   useEffect(() => {
     if (!authLoading && (!profile || profile.role !== 'tenant')) {
-      router.push('/login');
+      router.push('/admin-login');
     }
   }, [profile, authLoading, router]);
 

@@ -110,8 +110,8 @@ match /tenantApplications {
 
 ## Accessing the Staff Dashboard
 
-1. Staff members log in at `/login` with their credentials
-2. After successful login, they're redirected to `/dashboard/staff`
+1. Staff members log in at `/admin-login` (the single team login for staff and admins) with their credentials
+2. After successful login, they're redirected to `/dashboard/staff` (admins go to `/admin`)
 3. The dashboard shows:
    - Applications tab: List of all tenant applications
    - Properties tab: Grid view of all properties
@@ -121,7 +121,7 @@ match /tenantApplications {
 
 ### First Login
 - Staff members receive a temporary password
-- On first login at `/login`, they should change their password
+- On first login at `/admin-login`, they should change their password
 - Use Firebase Console or auth UI to change password
 
 ### Password Reset

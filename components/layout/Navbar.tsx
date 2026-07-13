@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
-import { signOut } from '@/services/auth';
+import { signOut, getDashboardPath } from '@/services/auth';
 
 type NavItem = { href: string; label: string };
 
@@ -65,9 +65,7 @@ export default function Navbar() {
     router.push('/');
   };
 
-  const dashLink =
-    profile?.role === 'landlord' ? '/dashboard/landlord' :
-    profile?.role === 'tenant'   ? '/dashboard/tenant'   : '/admin';
+  const dashLink = profile ? getDashboardPath(profile.role) : '/';
 
   return (
     <>
@@ -115,12 +113,8 @@ export default function Navbar() {
               <Link href={dashLink} className="hol-nav__link">Dashboard</Link>
             )}
             <Link href="/terms" className="hol-nav__link">Terms</Link>
-            {!loading && (
-              profile ? (
-                <button onClick={handleSignOut} className="nav-btn-outline">Sign Out</button>
-              ) : (
-                <Link href="/login" className="nav-btn-outline">Sign In</Link>
-              )
+            {!loading && profile && (
+              <button onClick={handleSignOut} className="nav-btn-outline">Sign Out</button>
             )}
           </div>
         </div>

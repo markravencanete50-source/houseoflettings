@@ -27,7 +27,7 @@ function LandlordDashboardInner() {
   // Auth guard
   useEffect(() => {
     if (!authLoading && (!profile || profile.role !== 'landlord')) {
-      router.push('/login');
+      router.push('/admin-login');
     }
   }, [profile, authLoading, router]);
 

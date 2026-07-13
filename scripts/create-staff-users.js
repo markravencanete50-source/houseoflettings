@@ -88,7 +88,7 @@ async function createStaffUsers() {
   if (created > 0) {
     console.log(`\n💡 Next steps:`);
     console.log(`   1. Share temporary passwords securely with staff members`);
-    console.log(`   2. They should visit /login and change their password on first login`);
+    console.log(`   2. They should visit /admin-login and change their password on first login`);
     console.log(`   3. They can then access /dashboard/staff`);
   }
 

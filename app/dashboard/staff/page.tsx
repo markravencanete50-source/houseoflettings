@@ -30,7 +30,7 @@ function StaffDashboardInner() {
   // Auth guard
   useEffect(() => {
     if (!authLoading && (!profile || profile.role !== 'staff')) {
-      router.push('/login');
+      router.push('/admin-login');
     }
   }, [profile, authLoading, router]);
 

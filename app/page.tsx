@@ -1680,7 +1680,7 @@ export default function HomePage() {
     <div style={{ fontSize: 48, marginBottom: 16 }}>🏠</div>
     <p style={{ fontSize: 16, fontWeight: 500 }}>No properties listed yet.</p>
     <p style={{ fontSize: 14, marginTop: 8 }}>Be the first to list a property!</p>
-    <Link href="/register" style={{
+    <Link href="/landlord-registration" style={{
       display: 'inline-block', marginTop: 20, padding: '12px 24px',
       background: '#1e3a6e', color: '#ffffff', borderRadius: 4, fontSize: 14, fontWeight: 700,
       textDecoration: 'none',
@@ -1809,7 +1809,7 @@ export default function HomePage() {
             </p>
           </div>
           <div className="cta-banner-btns">
-            <Link href="/register" style={{
+            <Link href="/landlord-registration" style={{
               padding: '16px 36px', background: '#1e3a6e', color: '#ffffff',
               borderRadius: 4, fontSize: 14, fontWeight: 700, letterSpacing: '0.5px', textTransform: 'uppercase',
               textDecoration: 'none',

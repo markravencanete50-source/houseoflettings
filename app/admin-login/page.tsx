@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { signIn } from '@/services/auth';
+import { signIn, getDashboardPath } from '@/services/auth';
 
 export default function AdminLoginPage() {
   const router = useRouter();
@@ -18,11 +18,11 @@ export default function AdminLoginPage() {
     setLoading(true);
     try {
       const user = await signIn(email, password);
-      if (user.role !== 'admin') {
-        setError('Access denied. This login is for administrators only.');
+      if (user.role !== 'admin' && user.role !== 'staff') {
+        setError('Access denied. This login is for House of Lettings staff and administrators only.');
         return;
       }
-      router.push('/admin');
+      router.push(getDashboardPath(user.role));
     } catch (err: any) {
       setError(
         err.code === 'auth/invalid-credential'
@@ -51,10 +51,10 @@ export default function AdminLoginPage() {
             fontFamily: 'Georgia, "Times New Roman", serif', fontSize: 28, fontWeight: 700,
             color: '#fff', marginBottom: 8,
           }}>
-            Admin Access
+            Team Login
           </h1>
           <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 14, fontFamily: 'Georgia, "Times New Roman", serif' }}>
-            Restricted to authorised administrators only
+            Restricted to House of Lettings staff and administrators
           </p>
         </div>
 
@@ -79,7 +79,7 @@ export default function AdminLoginPage() {
                 textTransform: 'uppercase', color: 'rgba(255,255,255,0.45)', marginBottom: 8,
                 fontFamily: 'Georgia, "Times New Roman", serif',
               }}>
-                Admin Email
+                Email
               </label>
               <input
                 type="email"
@@ -136,13 +136,13 @@ export default function AdminLoginPage() {
               onMouseEnter={e => { if (!loading) e.currentTarget.style.background = '#c0392b'; }}
               onMouseLeave={e => { e.currentTarget.style.background = '#0f1f3d'; }}
             >
-              {loading ? 'Verifying…' : 'Enter Admin Panel →'}
+              {loading ? 'Verifying…' : 'Sign In →'}
             </button>
           </form>
         </div>
 
         <p style={{ textAlign: 'center', marginTop: 24, fontSize: 13, color: 'rgba(255,255,255,0.25)', fontFamily: 'Georgia, "Times New Roman", serif' }}>
-          <Link href="/login" style={{ color: 'rgba(255,255,255,0.4)', textDecoration: 'none' }}>← Back to main login</Link>
+          <Link href="/" style={{ color: 'rgba(255,255,255,0.4)', textDecoration: 'none' }}>← Back to website</Link>
         </p>
       </div>
     </div>

@@ -1,6 +1,7 @@
 import { initializeApp, getApps, cert } from "firebase-admin/app";
 import { getFirestore, FieldValue } from "firebase-admin/firestore";
 import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
+import { rateLimit } from '@/lib/rateLimit';
 
 function getFirestoreClient() {
   if (!getApps().length) {
@@ -233,6 +234,8 @@ function adminNotificationHtml(data: ValuationLeadData): string {
 
 // ─── Route handler ───────────────────────────────────────────────────────────
 export async function POST(request: Request) {
+  const limited = rateLimit(request, "instant-valuation", 10, 10 * 60 * 1000);
+  if (limited) return limited;
   try {
     const data = (await request.json()) as ValuationLeadData;
 

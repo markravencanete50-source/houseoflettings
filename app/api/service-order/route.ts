@@ -8,6 +8,7 @@ import { initializeApp, getApps, cert } from 'firebase-admin/app';
 import { getFirestore, FieldValue } from 'firebase-admin/firestore';
 import { priceLine, formatGBP, type OrderSelection, type LineBreakdown } from '@/lib/serviceCart';
 import { pushInspectionToCalendar } from '@/lib/googleCalendar';
+import { rateLimit } from '@/lib/rateLimit';
 
 type PropertyAssignment = { serviceId?: string; label?: string; postcode?: string; address?: string };
 
@@ -142,6 +143,8 @@ function adminEmailHtml(ref: string, customer: any, lines: LineBreakdown[], tota
 }
 
 export async function POST(request: Request) {
+  const limited = rateLimit(request, "service-order", 10, 10 * 60 * 1000);
+  if (limited) return limited;
   try {
     const body = await request.json();
     const items: OrderSelection[] = Array.isArray(body.items) ? body.items : [];

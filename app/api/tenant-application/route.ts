@@ -1,5 +1,6 @@
 import { initializeApp, getApps, cert } from 'firebase-admin/app';
 import { getFirestore, FieldValue } from 'firebase-admin/firestore';
+import { rateLimit } from '@/lib/rateLimit';
 
 function getFirestoreClient() {
   if (!getApps().length) {
@@ -159,6 +160,8 @@ function adminNotificationHtml(d: any) {
 }
 
 export async function POST(request: Request) {
+  const limited = rateLimit(request, "tenant-application", 10, 10 * 60 * 1000);
+  if (limited) return limited;
   try {
     const body = await request.json();
     const { pdfBase64, ...data } = body;

@@ -16,6 +16,7 @@ import {
 import { citiesForDateLive } from "@/lib/citySchedule";
 import { getWindowsForDate } from "@/lib/calendarAvailability";
 import { pushViewingToCalendar } from "@/lib/googleCalendar";
+import { rateLimit } from '@/lib/rateLimit';
 import {
   composeClientSms,
   composeBusinessSms,
@@ -86,6 +87,8 @@ function adminEmailHtml(d: any) {
 }
 
 export async function POST(request: Request) {
+  const limited = rateLimit(request, "book-viewing", 10, 10 * 60 * 1000);
+  if (limited) return limited;
   try {
     const data = await request.json();
     const required = ["name", "email", "phone", "city", "date", "time"];

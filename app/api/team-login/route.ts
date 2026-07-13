@@ -8,11 +8,16 @@ import { NextResponse } from 'next/server';
 import { getAuth } from 'firebase-admin/auth';
 import { getAdminDb } from '@/lib/staffApiAuth';
 import { DEFAULT_STAFF_PERMISSIONS, STAFF_FEATURE_IDS } from '@/lib/staffAccess';
+import { rateLimit } from '@/lib/rateLimit';
 
 const SESSION_COOKIE = 'hol_session';
 const EXPIRES_MS = 5 * 24 * 60 * 60 * 1000; // 5 days
 
 export async function POST(request: Request) {
+  // App-level throttle on top of Firebase's TOO_MANY_ATTEMPTS: 10 login
+  // attempts per IP per 15 minutes.
+  const limited = rateLimit(request, 'team-login', 10, 15 * 60 * 1000);
+  if (limited) return limited;
   try {
     const { email, password } = await request.json();
     if (!email || !password) {

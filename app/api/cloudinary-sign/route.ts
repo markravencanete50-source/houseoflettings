@@ -4,8 +4,20 @@
 // body limit that would otherwise break photo/video uploads.
 import { NextRequest, NextResponse } from 'next/server';
 import { v2 as cloudinary } from 'cloudinary';
+import { rateLimit } from '@/lib/rateLimit';
+
+// Only the folders our own upload forms actually use — a signature for an
+// arbitrary attacker-chosen folder is never issued.
+const ALLOWED_FOLDERS = new Set([
+  'houseoflettings/maintenance',
+  'houseoflettings/guarantor',
+  'houseoflettings/landlord-docs',
+]);
 
 export async function POST(req: NextRequest) {
+  // Uploads are multi-file, so allow bursts — but cap runaway abuse.
+  const limited = rateLimit(req, 'cloudinary-sign', 30, 10 * 60 * 1000);
+  if (limited) return limited;
   try {
     const cloudName = process.env.CLOUDINARY_CLOUD_NAME;
     const apiKey = process.env.CLOUDINARY_API_KEY;
@@ -15,6 +27,9 @@ export async function POST(req: NextRequest) {
     }
 
     const { folder = 'houseoflettings/maintenance' } = await req.json().catch(() => ({}));
+    if (!ALLOWED_FOLDERS.has(folder)) {
+      return NextResponse.json({ error: 'Invalid upload folder' }, { status: 400 });
+    }
     const timestamp = Math.round(Date.now() / 1000);
 
     // Sign exactly the params the browser will send (besides file/api_key/resource_type).

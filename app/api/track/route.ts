@@ -5,6 +5,7 @@
 // page and day. Country comes from Vercel's edge geo headers.
 import { initializeApp, getApps, cert } from 'firebase-admin/app';
 import { getFirestore, FieldValue } from 'firebase-admin/firestore';
+import { rateLimit } from '@/lib/rateLimit';
 
 function getDb() {
   if (!getApps().length) {
@@ -32,6 +33,8 @@ function pathKey(raw: string): string {
 }
 
 export async function POST(request: Request) {
+  const limited = rateLimit(request, "track", 120, 10 * 60 * 1000);
+  if (limited) return limited;
   try {
     const data = await request.json().catch(() => ({}));
     const rawPath = (data.path || '/').toString();

@@ -1,5 +1,6 @@
 import { initializeApp, getApps, cert } from "firebase-admin/app";
 import { getFirestore, FieldValue } from "firebase-admin/firestore";
+import { rateLimit } from '@/lib/rateLimit';
 
 function getFirestoreClient() {
   if (!getApps().length) {
@@ -97,6 +98,8 @@ function adminNotificationHtml(data: any) {
 }
 
 export async function POST(request: Request) {
+  const limited = rateLimit(request, "get-started", 10, 10 * 60 * 1000);
+  if (limited) return limited;
   try {
     const data = await request.json();
     const required = ["firstName", "lastName", "email", "phone", "propertyAddress", "numberOfProperties", "startDate"];

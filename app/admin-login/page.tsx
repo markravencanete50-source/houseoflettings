@@ -95,7 +95,7 @@ export default function AdminLoginPage() {
                 type="email"
                 value={email}
                 onChange={e => setEmail(e.target.value)}
-                placeholder="admin@houseoflettings.co.uk"
+                placeholder="Enter your email"
                 required
                 style={{
                   width: '100%', padding: '12px 16px', boxSizing: 'border-box',

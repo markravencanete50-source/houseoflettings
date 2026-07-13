@@ -244,7 +244,7 @@ export default function LandlordsPage() {
                   fontFamily: "'Poppins', sans-serif",
                   fontSize: 14, color: '#374151',
                 }}>
-                  <span style={{ color: '#2563eb', fontWeight: 700, flexShrink: 0, marginTop: 1 }}>✓</span>
+                  <span style={{ color: '#16a34a', fontWeight: 700, flexShrink: 0, marginTop: 1 }}>✓</span>
                   {item}
                 </li>
               ))}
@@ -291,12 +291,14 @@ export default function LandlordsPage() {
       {/* ── OUR SERVICES ────────────────────────────────────── */}
       <section style={{
         padding: 'clamp(60px, 8vw, 100px) clamp(24px, 7%, 100px)',
-        background: '#0f1f3d', position: 'relative', overflow: 'hidden',
+        background: 'linear-gradient(180deg, #0b1730 0%, #0f1f3d 55%, #0c1a33 100%)',
+        position: 'relative', overflow: 'hidden',
       }}>
         <div style={{
-          position: 'absolute', inset: 0,
-          background: 'radial-gradient(ellipse at 80% 20%, rgba(37,99,235,0.12) 0%, transparent 60%)',
-          pointerEvents: 'none',
+          position: 'absolute', inset: 0, pointerEvents: 'none',
+          background:
+            'radial-gradient(ellipse at 82% 8%, rgba(37,99,235,0.20) 0%, transparent 55%),' +
+            'radial-gradient(ellipse at 12% 92%, rgba(74,144,217,0.12) 0%, transparent 50%)',
         }} />
         <div style={{ position: 'relative', zIndex: 1 }}>
           <div style={{ textAlign: 'center', marginBottom: 56 }}>
@@ -323,15 +325,19 @@ export default function LandlordsPage() {
             </p>
           </div>
           <style>{`
+            /* Flex + centred wrap so the five cards read as 3 on top and 2
+               centred beneath, instead of 2 left-aligned with an empty gap. */
             .ll-packages-grid {
-              display: grid;
-              grid-template-columns: repeat(3, 1fr);
+              display: flex;
+              flex-wrap: wrap;
+              justify-content: center;
               gap: 24px;
-              max-width: 1100px;
+              max-width: 1120px;
               margin: 0 auto 48px;
             }
-            @media (max-width: 900px) { .ll-packages-grid { grid-template-columns: 1fr 1fr; } }
-            @media (max-width: 560px) { .ll-packages-grid { grid-template-columns: 1fr; } }
+            .ll-pkg-card { flex: 1 1 320px; max-width: 344px; }
+            @media (max-width: 900px) { .ll-pkg-card { flex-basis: 300px; } }
+            @media (max-width: 560px) { .ll-pkg-card { flex-basis: 100%; max-width: none; } }
           `}</style>
           <div className="ll-packages-grid">
             {/* Prices mirror lib/bundles.ts — keep in sync with the pricing page. */}
@@ -372,21 +378,26 @@ export default function LandlordsPage() {
                 popular: false,
               },
             ].map(pkg => (
-              <Link key={pkg.name} href={`/pricing/${pkg.slug}`} style={{
-                background: pkg.popular ? '#162849' : '#162849',
-                border: '2px solid #2563eb',
-                borderRadius: 10, padding: '32px 28px',
+              <Link key={pkg.name} href={`/pricing/${pkg.slug}`} className="ll-pkg-card" style={{
+                background: pkg.popular
+                  ? 'linear-gradient(165deg, #1c396b 0%, #102244 100%)'
+                  : 'linear-gradient(165deg, #16294c 0%, #0e1e3c 100%)',
+                border: pkg.popular ? '1.5px solid #2563eb' : '1px solid rgba(255,255,255,0.10)',
+                borderRadius: 16, padding: '34px 28px',
                 textDecoration: 'none', display: 'block',
                 position: 'relative',
-                transition: 'transform 0.25s ease, border-color 0.25s ease',
+                boxShadow: pkg.popular
+                  ? '0 26px 54px -26px rgba(37,99,235,0.55)'
+                  : '0 22px 46px -30px rgba(0,0,0,0.65)',
+                transition: 'transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease',
               }}
                 onMouseEnter={e => {
-                  (e.currentTarget as HTMLElement).style.transform = 'translateY(-5px)';
-                  (e.currentTarget as HTMLElement).style.borderColor = 'rgba(74,144,217,0.6)';
+                  (e.currentTarget as HTMLElement).style.transform = 'translateY(-6px)';
+                  (e.currentTarget as HTMLElement).style.borderColor = pkg.popular ? '#4a90d9' : 'rgba(74,144,217,0.5)';
                 }}
                 onMouseLeave={e => {
                   (e.currentTarget as HTMLElement).style.transform = 'translateY(0)';
-                  (e.currentTarget as HTMLElement).style.borderColor = '#2563eb';
+                  (e.currentTarget as HTMLElement).style.borderColor = pkg.popular ? '#2563eb' : 'rgba(255,255,255,0.10)';
                 }}
               >
                 {pkg.popular && (
@@ -425,7 +436,7 @@ export default function LandlordsPage() {
                       fontSize: 13, color: 'rgba(255,255,255,0.65)',
                       fontFamily: "'Poppins', sans-serif",
                     }}>
-                      <span style={{ color: '#4a90d9', fontWeight: 700, flexShrink: 0 }}>✓</span>
+                      <span style={{ color: '#4ade80', fontWeight: 700, flexShrink: 0 }}>✓</span>
                       {f}
                     </li>
                   ))}

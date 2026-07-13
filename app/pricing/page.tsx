@@ -128,7 +128,6 @@ function DashIcon() {
 export default function PricingPage() {
   const [active, setActive] = useState(HOT);
   const [mobileTab, setMobileTab] = useState(HOT);   // selected package in the mobile compare view
-  const [mcOpen, setMcOpen] = useState<Record<number, boolean>>({ 0: true }); // mobile compare accordions
   const [showModal, setShowModal] = useState(false);
   const [expanded, setExpanded] = useState<Record<number, boolean>>({});
   const [formData, setFormData] = useState({
@@ -392,25 +391,23 @@ export default function PricingPage() {
           border-radius:10px; padding:10px 12px; }
         .pr-mc-fees span { display:block; font-size:10.5px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:#a9c4ea; margin-bottom:3px; }
         .pr-mc-fees b { font-size:18px; font-weight:800; }
-        .pr-mc-summary { display:flex; align-items:center; justify-content:space-between; gap:12px;
-          padding:12px 18px; background:#fbfcfe; border-top:1px solid #eef1f5; }
-        .pr-mc-summary b { font-size:12.5px; font-weight:800; color:#0f1f3d; }
-        .pr-mc-summary span { font-size:11.5px; color:#9ca3af; }
-        .pr-mc-group { border-top:1px solid #eef1f5; }
-        .pr-mc-band { width:100%; border:0; cursor:pointer; display:flex; align-items:center; justify-content:space-between;
-          gap:12px; background:#f4f7fb; color:#0f1f3d; font-weight:800; font-size:11.5px; letter-spacing:.06em;
-          text-transform:uppercase; padding:13px 18px; text-align:left; font-family:inherit; }
-        .pr-mc-band:hover { background:#eef3f9; }
-        .pr-mc-band-title { flex:1; line-height:1.35; }
-        .pr-mc-band-right { display:inline-flex; align-items:center; gap:12px; flex:none; }
-        .pr-mc-count { background:#2563eb; color:#fff; border-radius:999px; height:20px; padding:0 9px;
-          display:inline-flex; align-items:center; justify-content:center; font-size:10.5px; font-weight:800;
-          letter-spacing:0; text-transform:none; white-space:nowrap; }
-        .pr-mc-count--none { background:#e5e9f0; color:#6b7280; }
-        .pr-mc-row { display:flex; gap:11px; align-items:flex-start; padding:11px 18px; border-top:1px solid #f2f5f9;
-          font-size:14px; color:#374151; line-height:1.45; }
-        .pr-mc-row .pr-tick, .pr-mc-row .pr-dash { flex:none; margin-top:1px; }
-        .pr-mc-row--off { color:#9aa4b2; background:#fbfcfd; }
+        .pr-mc-body { padding:20px 20px 4px; }
+        .pr-mc-blurb { font-size:14px; color:#5b6472; line-height:1.75; margin:0 0 20px; }
+        .pr-mc-sublabel { display:flex; align-items:baseline; justify-content:space-between; gap:10px;
+          font-size:10.5px; font-weight:800; letter-spacing:.12em; text-transform:uppercase; color:#8b96a5;
+          margin:0 0 12px; }
+        .pr-mc-sub-n { font-size:11px; font-weight:700; letter-spacing:0; text-transform:none; color:#2563eb; }
+        .pr-mc-hl { list-style:none; margin:0 0 22px; padding:0; display:flex; flex-direction:column; gap:10px; }
+        .pr-mc-hl li { display:flex; gap:11px; align-items:flex-start; font-size:14px; color:#374151; line-height:1.5; }
+        .pr-mc-hl .pr-tick { flex:none; margin-top:1px; }
+        .pr-mc-covs { display:flex; flex-direction:column; gap:13px; margin-bottom:6px; }
+        .pr-mc-cov-top { display:flex; align-items:baseline; justify-content:space-between; gap:10px; margin-bottom:6px; }
+        .pr-mc-cov-top span { font-size:12.5px; font-weight:600; color:#374151; line-height:1.35; }
+        .pr-mc-cov-top b { flex:none; font-size:11.5px; font-weight:700; color:#2563eb; }
+        .pr-mc-cov-top b.pr-mc-cov-zero { color:#9ca3af; font-weight:600; }
+        .pr-mc-bar { height:6px; border-radius:999px; background:#e8eef7; overflow:hidden; }
+        .pr-mc-bar i { display:block; height:100%; border-radius:999px;
+          background:linear-gradient(90deg,#2563eb,#4a90d9); transition:width .35s ease; }
         .pr-mc-cta { padding:18px; }
         .pr-mc-cta button { width:100%; padding:15px; background:#2563eb; color:#fff; border:none; border-radius:9px;
           font-size:14px; font-weight:700; text-transform:uppercase; letter-spacing:.03em; cursor:pointer; transition:background .18s ease; }
@@ -691,12 +688,12 @@ export default function PricingPage() {
           </div>
         </div>
 
-        {/* Mobile: pick one package, then browse its services by category.
-            Categories are collapsible accordions with an "x of y" count, and
-            expanded categories show what's NOT included (dimmed) as well —
-            more detail than the old flat tick list, in far less scroll. */}
+        {/* Mobile: a self-contained package card — NOT the comparison table.
+            Short description, four curated highlights, then a visual coverage
+            meter per service category. No 48-row service list on small
+            screens; the full breakdown lives in the desktop table. */}
         <div className="pr-mobile-compare">
-          <p className="pr-mc-help">Tap a package to see exactly what it includes.</p>
+          <p className="pr-mc-help">Tap a package to see what it does for you.</p>
           <div className="pr-mc-pills" role="tablist" aria-label="Choose a package to compare">
             {PACKAGES.map((p, i) => (
               <button
@@ -727,47 +724,50 @@ export default function PricingPage() {
               </div>
             </div>
 
-            <div className="pr-mc-summary">
-              <b>{mcIncluded} of {TOTAL_SERVICES} services included</b>
-              <span>Tap a category to view</span>
-            </div>
+            <div className="pr-mc-body">
+              <p className="pr-mc-blurb">{PACKAGES[mobileTab].blurb}</p>
 
-            {MATRIX_SECTIONS.map((section, s) => {
-              const total = section.rows.length;
-              const included = section.rows.filter((row) => !!row[mobileTab + 1]).length;
-              const open = !!mcOpen[s];
-              return (
-                <div key={section.title} className="pr-mc-group">
-                  <button
-                    type="button"
-                    className="pr-mc-band"
-                    aria-expanded={open}
-                    onClick={() => setMcOpen(o => ({ ...o, [s]: !o[s] }))}
-                  >
-                    <span className="pr-mc-band-title">{section.title}</span>
-                    <span className="pr-mc-band-right">
-                      <span className={`pr-mc-count${included === 0 ? ' pr-mc-count--none' : ''}`}>{included} of {total}</span>
-                      <span className={`pr-chev${open ? ' up' : ''}`} aria-hidden />
-                    </span>
-                  </button>
-                  {open && section.rows.map((row) => {
-                    const inc = !!row[mobileTab + 1];
-                    return (
-                      <div key={row[0] as string} className={`pr-mc-row${inc ? '' : ' pr-mc-row--off'}`}>
-                        {inc ? <TickIcon /> : <DashIcon />}
-                        <span>{row[0]}</span>
+              <div className="pr-mc-sublabel">What you get</div>
+              <ul className="pr-mc-hl">
+                {EXPLAINERS[mobileTab].highlights.map((h) => (
+                  <li key={h}>
+                    <i className="pr-tick" aria-hidden><svg viewBox="0 0 24 24"><polyline points="4 13 10 19 20 6" /></svg></i>
+                    <span>{h}</span>
+                  </li>
+                ))}
+              </ul>
+
+              <div className="pr-mc-sublabel">
+                Service coverage
+                <span className="pr-mc-sub-n">{mcIncluded} of {TOTAL_SERVICES} services</span>
+              </div>
+              <div className="pr-mc-covs">
+                {MATRIX_SECTIONS.map((section) => {
+                  const total = section.rows.length;
+                  const included = section.rows.filter((row) => !!row[mobileTab + 1]).length;
+                  return (
+                    <div key={section.title} className="pr-mc-cov">
+                      <div className="pr-mc-cov-top">
+                        <span>{section.title}</span>
+                        <b className={included === 0 ? 'pr-mc-cov-zero' : ''}>
+                          {included === total ? 'All included' : included === 0 ? 'Not included' : `${included} of ${total}`}
+                        </b>
                       </div>
-                    );
-                  })}
-                </div>
-              );
-            })}
+                      <div className="pr-mc-bar" role="img"
+                        aria-label={`${included} of ${total} ${section.title} services included`}>
+                        <i style={{ width: `${Math.round((included / total) * 100)}%` }} />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
 
             <div className="pr-mc-cta">
               <button onClick={() => addPackage(mobileTab)}>{justAdded === mobileTab ? 'Added to order ✓' : `Add ${PACKAGES[mobileTab].short} to order`}</button>
             </div>
           </div>
-          <p className="pr-mc-foot">Dimmed items are not part of this package. All prices inc. VAT.</p>
+          <p className="pr-mc-foot">All {TOTAL_SERVICES} services are compared line by line in the desktop view. Prices inc. VAT.</p>
         </div>
       </section>
 

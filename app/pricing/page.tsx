@@ -22,11 +22,12 @@ const HOT = 3;            // Full Management column index (Most Popular)
 // `fit` is the mobile-facing version of `points`: the same "who it's for"
 // guidance written as one flowing sentence rather than a repeating tick list,
 // per client feedback that the mobile explanation read as bullet points.
-const EXPLAINERS: { kicker: string; lead: string; body: string; fit: string; points: string[]; highlights: string[] }[] = [
+const EXPLAINERS: { kicker: string; lead: string; body: string; extra: string; fit: string; points: string[]; highlights: string[] }[] = [
   {
     kicker: 'Tenant Find · £399 one-time',
     lead: 'Choose this if you have the time to run the tenancy and handle maintenance yourself.',
     body: 'You live near the property and are happy to be the point of contact once a tenant moves in. We do the hard part remotely: market the property, vet applicants and reference them fully, then hand you a signed tenancy agreement. One fixed fee, no ongoing cost.',
+    extra: 'Everything is handled online, so you are never tied to office hours. We advertise across the major portals, qualify every enquiry, run full referencing and Right to Rent checks, then send you the signed tenancy and collect the first month’s rent and deposit. From move in day you take over as the point of contact, and there is nothing more to pay.',
     fit: 'It suits you if you live close by and can deal with day-to-day issues, are comfortable arranging your own repairs, and simply want a fully referenced tenant found fast for one fixed fee.',
     points: [
       'You live close by and can deal with day to day issues',
@@ -44,6 +45,7 @@ const EXPLAINERS: { kicker: string; lead: string; body: string; fit: string; poi
     kicker: 'Tenant Find · £699 one-time',
     lead: 'Choose this if you want the strongest tenant at the best rent, but still want to self manage.',
     body: 'We handle the full marketing and referencing for you, then add professional photography, a floor plan, accompanied viewings and a full in-person handover. It is the complete marketing push to attract stronger applicants and achieve a higher rent, and you keep control of the tenancy once it starts.',
+    extra: 'On top of everything in the Virtual Tenant Find, our team photographs the property, produces a floor plan and hosts accompanied viewings so applicants see it at its best. We meet your tenant in person to hand over the keys and complete the paperwork. Stronger presentation usually means more interest, better quality applicants and a higher achievable rent.',
     fit: 'It suits you if you want your property to stand out with professional photos and accompanied viewings, are happy to manage the tenancy yourself, and want to maximise your rent with expert marketing.',
     points: [
       'You want your property to stand out with pro photos and viewings',
@@ -61,6 +63,7 @@ const EXPLAINERS: { kicker: string; lead: string; body: string; fit: string; poi
     kicker: 'Management · £199 then 6% of rent',
     lead: 'Choose this if you want the rent handled for you, but are happy to look after maintenance.',
     body: 'We collect the rent, monitor payments, chase any arrears and take care of the monthly admin, so the money side runs itself. You stay in control of repairs and choosing your own contractors. A light touch option for confident landlords.',
+    extra: 'It starts with a full tenant find, then every month we collect the rent, check it lands on time, chase anything late and send you a clear statement. Repairs stay with you, so you keep your own trusted contractors and decide what gets done. You get the chasing and the admin off your plate while staying in control of the property itself.',
     fit: 'It suits you if you want rent collection and arrears chasing handled for you, are happy to arrange your own repairs and contractors, and want the admin off your plate without moving to full management.',
     points: [
       'You want rent collection and arrears chasing done for you',
@@ -78,6 +81,7 @@ const EXPLAINERS: { kicker: string; lead: string; body: string; fit: string; poi
     kicker: 'Management · £399 then 8% of rent',
     lead: 'Choose this if you want the whole tenancy off your plate.',
     body: 'Rent, tenant communication, maintenance, contractor coordination and compliance, all managed by your local team. You do nothing day to day. This is the truly hands off choice and by far our most popular package.',
+    extra: 'Your local team becomes the single point of contact for your tenant. We arrange repairs through vetted contractors, keep your gas, electrical and EPC compliance in date, carry out routine inspections and send you monthly statements. It is built for landlords who do not have the time, or do not live nearby, and want the confidence that nothing is missed.',
     fit: 'It suits you if you do not have the time, or do not live nearby, and want maintenance, contractors and compliance all handled for you so nothing is ever missed.',
     points: [
       'You do not have the time, or do not live nearby',
@@ -95,6 +99,7 @@ const EXPLAINERS: { kicker: string; lead: string; body: string; fit: string; poi
     kicker: 'Management · £399 then 10% of rent',
     lead: 'Choose this if you want maximum protection for your rental income.',
     body: 'Your local team manages the entire tenancy for you and adds rent guarantee cover, legal and eviction protection, priority contractor response and enhanced inspections. It is complete peace of mind, with your income protected even if a tenant stops paying.',
+    extra: 'This is everything in Full Management, plus a safety net for your income. Rent guarantee cover pays out if your tenant stops paying, legal and eviction protection covers the cost of regaining possession, and you get priority contractor response with more thorough inspections. It is what landlords choose when they want their return protected whatever happens.',
     fit: 'It suits you if you want your rent guaranteed even during arrears, your legal and eviction costs covered, and priority repairs with enhanced inspections for complete peace of mind.',
     points: [
       'You want your rent guaranteed even during arrears',
@@ -436,7 +441,9 @@ export default function PricingPage() {
         .pr-svc-kicker .pr-pop { background:#2563eb; color:#fff; border-radius:999px; padding:3px 11px; font-size:9.5px; letter-spacing:.08em; }
         .pr-svc-copy h3 { font-size:clamp(24px,2.7vw,32px); font-weight:800; color:#0f1f3d; margin:0 0 14px; line-height:1.16; letter-spacing:-.01em; }
         .pr-svc-lead { font-size:16.5px; font-weight:700; color:#0f1f3d; margin:0 0 12px; line-height:1.55; }
-        .pr-svc-body { font-size:15px; color:#5b6472; line-height:1.85; margin:0 0 20px; }
+        .pr-svc-body { font-size:15px; color:#5b6472; line-height:1.85; margin:0 0 16px; }
+        /* Fuller plain-English explanation shown in place of the old tick list. */
+        .pr-svc-extra { font-size:15px; color:#5b6472; line-height:1.85; margin:0 0 26px; }
         .pr-svc-points { list-style:none; margin:0 0 28px; padding:0; display:flex; flex-direction:column; gap:11px; }
         .pr-svc-points li { display:flex; gap:11px; font-size:14.5px; color:#374151; line-height:1.5; }
         .pr-svc-points .pr-ptick { flex:none; width:20px; height:20px; border-radius:50%; background:#e7f6ee;
@@ -446,7 +453,9 @@ export default function PricingPage() {
         .pr-svc-fit { display:none; font-size:15px; color:#5b6472; line-height:1.8; margin:0 0 24px; }
         .pr-svc-btn { display:inline-flex; align-items:center; gap:9px; padding:14px 30px; border-radius:9px; border:1.5px solid #2563eb;
           background:transparent; color:#2563eb; font-size:13.5px; font-weight:700; letter-spacing:.02em;
-          text-transform:uppercase; cursor:pointer; transition:all .18s ease; }
+          text-transform:uppercase; text-decoration:none; cursor:pointer; transition:all .18s ease; }
+        /* The whole spec panel is a link to the package's individual page. */
+        .pr-svc-visual { text-decoration:none; color:inherit; display:block; cursor:pointer; }
         .pr-svc-btn svg { transition:transform .2s ease; }
         .pr-svc-btn:hover { background:#2563eb; color:#fff; box-shadow:0 10px 22px -10px rgba(37,99,235,.55); }
         .pr-svc-btn:hover svg { transform:translateX(3px); }
@@ -520,6 +529,7 @@ export default function PricingPage() {
             overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0; }
           .pr-svc-lead { font-size:16px; margin-top:0; }
           .pr-svc-body { font-size:14.5px; }
+          .pr-svc-extra { font-size:14.5px; margin-bottom:20px; }
           /* Swap the repeating "You want…" tick list for the prose sentence so
              the explanation reads as sentences, not bullet points. */
           .pr-svc-points { display:none; }
@@ -805,29 +815,20 @@ export default function PricingPage() {
                   <h3>{p.label}</h3>
                   <p className="pr-svc-lead">{ex.lead}</p>
                   <p className="pr-svc-body">{ex.body}</p>
-                  <ul className="pr-svc-points">
-                    {ex.points.map((pt) => (
-                      <li key={pt}>
-                        <i className="pr-ptick" aria-hidden><svg viewBox="0 0 24 24"><polyline points="4 13 10 19 20 6" /></svg></i>
-                        <span>{pt}</span>
-                      </li>
-                    ))}
-                  </ul>
-                  {/* Mobile-only prose version of the points above — a single
-                      sentence rather than a repeating tick list. */}
-                  <p className="pr-svc-fit">{ex.fit}</p>
-                  <button
-                    type="button"
+                  {/* Fuller explanation of the service (replaces the old
+                      "You want…" tick list, which read as redundant). */}
+                  <p className="pr-svc-extra">{ex.extra}</p>
+                  <Link
+                    href={`/pricing/${p.id}`}
                     className={`pr-svc-btn${featured ? ' pr-svc-btn--solid' : ''}`}
-                    onClick={() => addPackage(i)}
                   >
-                    {justAdded === i ? 'Added to order ✓' : `Add ${p.short} to order`}
+                    See what&apos;s included
                     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
-                  </button>
+                  </Link>
                 </div>
 
-                {/* Designed spec panel (no photo) */}
-                <div className="pr-svc-visual">
+                {/* Designed spec panel (no photo) — links to the package's own page */}
+                <Link href={`/pricing/${p.id}`} className="pr-svc-visual" aria-label={`See everything included in ${p.label}`}>
                   <div className={`pr-vis${featured ? ' pr-vis--hot' : ''}`}>
                     <span className="pr-orb pr-orb-a" aria-hidden />
                     <span className="pr-orb pr-orb-b" aria-hidden />
@@ -852,7 +853,7 @@ export default function PricingPage() {
                       ))}
                     </ul>
                   </div>
-                </div>
+                </Link>
               </div>
             );
           })}

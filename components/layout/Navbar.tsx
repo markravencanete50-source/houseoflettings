@@ -109,7 +109,6 @@ export default function Navbar() {
           <div className={`hol-nav__links ${mobileMenuOpen ? 'hol-nav__links--open' : ''}`}>
             <NavDropdown label="Landlord" href="/landlords" items={LANDLORD_ITEMS} />
             <NavDropdown label="Tenant" href="/tenants" items={TENANT_ITEMS} />
-            <Link href="/additional-services" className="hol-nav__link">Additional Services</Link>
             <Link href="/branches" className="hol-nav__link">Branches</Link>
             {!loading && profile && (
               <Link href={dashLink} className="hol-nav__link">Dashboard</Link>

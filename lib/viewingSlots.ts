@@ -5,7 +5,7 @@
 //
 // Rules (from the House of Lettings brief):
 //  • Viewings run 09:00 → 19:30, in 15-minute slots.
-//  • Each slot time holds a maximum of 2 clients; a 3rd is blocked (greyed out).
+//  • Each slot time holds a maximum of 3 clients; a 4th is blocked (greyed out).
 //  • A 3-hour travel gap is required between viewings at DIFFERENT slot times on
 //    the same day (a second client may still share the SAME slot time).
 //  • Each day locks to the first city booked: once a Leeds viewing exists on a
@@ -238,12 +238,12 @@ export function cityFromText(text?: string): City | null {
 export const DAY_START_MIN = 9 * 60;       // 09:00
 export const DAY_END_MIN = 19 * 60 + 30;   // 19:30 (last bookable slot)
 export const SLOT_INTERVAL_MIN = 15;       // slots every 15 minutes
-export const SLOT_CAPACITY = 2;            // max clients per slot time
+export const SLOT_CAPACITY = 3;            // max clients per slot time
 export const TRAVEL_GAP_MIN = 180;         // 3h gap between different slot times
 
 export type SlotStatus =
   | 'available'    // free (0 or 1 client so far), bookable
-  | 'full'         // 2 clients already — greyed out
+  | 'full'         // 3 clients already — greyed out
   | 'blocked-gap'  // within 3h of another viewing that day — greyed out
   | 'other-city'   // day is locked to the other city — greyed out
   | 'past';        // slot time already passed (today only) — greyed out
@@ -252,7 +252,7 @@ export interface SlotView {
   time: string;        // "HH:mm"
   minutes: number;     // minutes from midnight
   status: SlotStatus;
-  spotsLeft: number;   // remaining capacity at this exact time (0–2)
+  spotsLeft: number;   // remaining capacity at this exact time (0–3)
 }
 
 // A minimal booking shape — only what the availability maths needs.

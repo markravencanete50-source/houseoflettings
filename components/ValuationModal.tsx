@@ -199,8 +199,7 @@ export default function ValuationModal({ isOpen, onClose }: ValuationModalProps)
                       <option>1 Bedroom</option>
                       <option>2 Bedrooms</option>
                       <option>3 Bedrooms</option>
-                      <option>4 Bedrooms</option>
-                      <option>5+ Bedrooms</option>
+                      <option>4+ Bedrooms</option>
                     </select>
                     {errors.bedrooms && <p className="hol-err">{errors.bedrooms}</p>}
                   </div>

@@ -70,64 +70,40 @@ function HeroCycler() {
 }
 
 const ValuationModal = lazy(() => import('@/components/ValuationModal'));
-const TenantEnquiryModal = lazy(() => import('@/components/property/TenantEnquiryModal'));
 
-// ── INLINE VALUATION BUTTON ───────────────────────────────────────────────────
+// ── INLINE VALUATION BUTTON (routes to the full valuation form) ───────────────
+const inlineCtaStyle: React.CSSProperties = {
+  padding: '16px 0', background: '#2563eb', color: '#fff',
+  border: 'none', borderRadius: 6, fontSize: 16, fontWeight: 700,
+  letterSpacing: '0.5px', cursor: 'pointer', transition: 'background 0.2s',
+  fontFamily: "'Poppins', sans-serif",
+  display: 'block', width: '100%', maxWidth: '260px', textAlign: 'center',
+  textDecoration: 'none',
+};
 function ValuationInlineButton() {
-  const [open, setOpen] = useState(false);
   return (
-    <>
-      <button
-        onClick={() => setOpen(true)}
-        style={{
-          padding: '16px 0', background: '#2563eb', color: '#fff',
-          border: 'none', borderRadius: 6, fontSize: 16, fontWeight: 700,
-          letterSpacing: '0.5px', cursor: 'pointer', transition: 'background 0.2s',
-          fontFamily: "'Poppins', sans-serif",
-          display: 'block', width: '100%', maxWidth: '260px', textAlign: 'center',
-        }}
-        onMouseEnter={e => (e.currentTarget.style.background = '#1d4ed8')}
-        onMouseLeave={e => (e.currentTarget.style.background = '#2563eb')}
-      >
-        Book a valuation
-      </button>
-      <Suspense fallback={null}>
-        {open && <ValuationModal isOpen={open} onClose={() => setOpen(false)} />}
-      </Suspense>
-    </>
+    <Link
+      href="/book-valuation"
+      style={inlineCtaStyle}
+      onMouseEnter={e => (e.currentTarget.style.background = '#1d4ed8')}
+      onMouseLeave={e => (e.currentTarget.style.background = '#2563eb')}
+    >
+      Book a valuation
+    </Link>
   );
 }
 
-// ── INLINE BOOK A VIEWING BUTTON ──────────────────────────────────────────────
+// ── INLINE BOOK A VIEWING BUTTON (routes to browse properties) ────────────────
 function BookViewingInlineButton() {
-  const [open, setOpen] = useState(false);
   return (
-    <>
-      <button
-        onClick={() => setOpen(true)}
-        style={{
-          padding: '16px 0', background: '#2563eb', color: '#fff',
-          border: 'none', borderRadius: 6, fontSize: 16, fontWeight: 700,
-          letterSpacing: '0.5px', cursor: 'pointer', transition: 'background 0.2s',
-          fontFamily: "'Poppins', sans-serif",
-          display: 'block', width: '100%', maxWidth: '260px', textAlign: 'center',
-        }}
-        onMouseEnter={e => (e.currentTarget.style.background = '#1d4ed8')}
-        onMouseLeave={e => (e.currentTarget.style.background = '#2563eb')}
-      >
-        Book a viewing
-      </button>
-      <Suspense fallback={null}>
-        {open && (
-          <TenantEnquiryModal
-            isOpen={open}
-            onClose={() => setOpen(false)}
-            propertyTitle="House of Lettings"
-            propertyPrice={0}
-          />
-        )}
-      </Suspense>
-    </>
+    <Link
+      href="/listings"
+      style={inlineCtaStyle}
+      onMouseEnter={e => (e.currentTarget.style.background = '#1d4ed8')}
+      onMouseLeave={e => (e.currentTarget.style.background = '#2563eb')}
+    >
+      Book a viewing
+    </Link>
   );
 }
 
@@ -766,10 +742,10 @@ export default function HomePage() {
             }
           `}</style>
           <div className="hero-btns">
-            <Link href="/tenants" className="hero-btn">
+            <Link href="/listings" className="hero-btn">
               Book a Viewing
             </Link>
-            <Link href="/landlords" className="hero-btn">
+            <Link href="/book-valuation" className="hero-btn">
               Book a Valuation
             </Link>
             <Link href="/instant-valuation" className="hero-btn">

@@ -253,10 +253,10 @@ export default function InstantValuationPage() {
         *, *::before, *::after { box-sizing: border-box; }
         .iv-page {
           min-height: 100vh;
-          background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 60%, #0f172a 100%);
+          background: #f3f4f6;
           display: flex; flex-direction: column; align-items: center;
           padding: 0 1rem 5rem;
-          font-family: 'Inter', -apple-system, sans-serif;
+          font-family: 'Poppins', -apple-system, sans-serif;
         }
         .iv-header {
           width: 100%; max-width: 680px;
@@ -264,47 +264,47 @@ export default function InstantValuationPage() {
           padding: 1.5rem 0;
         }
         .iv-back-link {
-          color: rgba(255,255,255,0.55); text-decoration: none;
+          color: #6b7280; text-decoration: none;
           font-size: 0.875rem; display: flex; align-items: center; gap: 0.4rem;
           transition: color 0.2s;
         }
-        .iv-back-link:hover { color: #fff; }
-        .iv-logo-text { font-size: 1rem; font-weight: 700; color: #f0c040; letter-spacing: 0.02em; }
+        .iv-back-link:hover { color: #0f1f3d; }
+        .iv-logo-text { font-size: 1rem; font-weight: 700; color: #2563eb; letter-spacing: 0.02em; }
 
         .iv-progress { width: 100%; max-width: 680px; margin-bottom: 1.75rem; }
         .iv-progress__track { display: flex; gap: 0.5rem; align-items: center; margin-bottom: 0.5rem; }
         .iv-progress__seg {
           flex: 1; height: 4px; border-radius: 2px;
-          background: rgba(255,255,255,0.12); transition: background 0.35s;
+          background: #e5e7eb; transition: background 0.35s;
         }
         .iv-progress__seg--done   { background: #2563eb; }
         .iv-progress__seg--active { background: #60a5fa; }
-        .iv-progress__label { font-size: 0.8125rem; color: rgba(255,255,255,0.45); }
-        .iv-progress__label span { color: rgba(255,255,255,0.75); font-weight: 600; }
+        .iv-progress__label { font-size: 0.8125rem; color: #6b7280; }
+        .iv-progress__label span { color: #0f1f3d; font-weight: 600; }
 
         .iv-card-wrap {
           width: 100%; max-width: 680px;
-          background: rgba(255,255,255,0.04);
-          backdrop-filter: blur(16px);
-          border: 1px solid rgba(255,255,255,0.09);
+          background: #fff;
+          border: 1px solid #e5e7eb;
           border-radius: 1.5rem; overflow: hidden;
+          box-shadow: 0 4px 24px rgba(15,31,61,0.06);
         }
         .iv-step-head {
           padding: 2rem 2.25rem 1.25rem;
-          border-bottom: 1px solid rgba(255,255,255,0.07);
+          border-bottom: 1px solid #eef1f5;
         }
         .iv-step-head__eyebrow {
           font-size: 0.6875rem; font-weight: 700; letter-spacing: 0.1em;
-          text-transform: uppercase; color: #f0c040; margin: 0 0 0.5rem;
+          text-transform: uppercase; color: #2563eb; margin: 0 0 0.5rem;
         }
-        .iv-step-head__title { font-size: 1.375rem; font-weight: 800; color: #fff; margin: 0; }
+        .iv-step-head__title { font-size: 1.375rem; font-weight: 800; color: #0f1f3d; margin: 0; }
 
         .iv-section {
           padding: 1.75rem 2.25rem;
-          border-bottom: 1px solid rgba(255,255,255,0.07);
+          border-bottom: 1px solid #eef1f5;
         }
         .iv-section:last-child { border-bottom: none; }
-        .iv-section__q { font-size: 0.9375rem; font-weight: 600; color: rgba(255,255,255,0.85); margin: 0 0 1rem; }
+        .iv-section__q { font-size: 0.9375rem; font-weight: 600; color: #374151; margin: 0 0 1rem; }
 
         .iv-opts { display: grid; gap: 0.625rem; }
         .iv-opts--2 { grid-template-columns: 1fr 1fr; }
@@ -313,56 +313,56 @@ export default function InstantValuationPage() {
         .iv-opt {
           display: flex; flex-direction: column; align-items: flex-start;
           gap: 0.2rem; padding: 0.875rem 1rem;
-          background: rgba(255,255,255,0.05);
-          border: 1.5px solid rgba(255,255,255,0.09);
+          background: #fff;
+          border: 1.5px solid #e5e7eb;
           border-radius: 0.875rem; cursor: pointer; text-align: left;
           transition: border-color 0.18s, background 0.18s, transform 0.14s;
-          color: #fff; width: 100%;
+          color: #0f1f3d; width: 100%;
         }
-        .iv-opt:hover { background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.22); transform: translateY(-2px); }
-        .iv-opt--active { border-color: #2563eb; background: rgba(37,99,235,0.16); }
+        .iv-opt:hover { background: #f6f9fc; border-color: #c7d2e0; transform: translateY(-2px); }
+        .iv-opt--active { border-color: #2563eb; background: #eff5ff; }
         .iv-opt__icon  { font-size: 1.375rem; line-height: 1; }
         .iv-opt__label { font-size: 0.875rem; font-weight: 600; }
-        .iv-opt__desc  { font-size: 0.775rem; color: rgba(255,255,255,0.45); }
+        .iv-opt__desc  { font-size: 0.775rem; color: #6b7280; }
 
         .iv-pills { display: flex; flex-wrap: wrap; gap: 0.5rem; }
         .iv-pill {
           padding: 0.55rem 1rem;
-          background: rgba(255,255,255,0.05);
-          border: 1.5px solid rgba(255,255,255,0.1);
-          border-radius: 2rem; color: #fff;
+          background: #fff;
+          border: 1.5px solid #e5e7eb;
+          border-radius: 2rem; color: #374151;
           font-size: 0.875rem; font-weight: 500; cursor: pointer;
           transition: border-color 0.18s, background 0.18s; white-space: nowrap;
         }
-        .iv-pill:hover { background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.28); }
-        .iv-pill--active { border-color: #2563eb; background: rgba(37,99,235,0.2); }
+        .iv-pill:hover { background: #f6f9fc; border-color: #c7d2e0; }
+        .iv-pill--active { border-color: #2563eb; background: #eff5ff; color: #1d4ed8; }
 
         .iv-input {
           padding: 0.8125rem 1rem;
-          background: rgba(255,255,255,0.07);
-          border: 1.5px solid rgba(255,255,255,0.13);
-          border-radius: 0.75rem; color: #fff;
+          background: #fff;
+          border: 1.5px solid #e5e7eb;
+          border-radius: 0.75rem; color: #111827;
           font-size: 1.0625rem; font-weight: 600; letter-spacing: 0.06em;
-          outline: none; transition: border-color 0.18s; width: 100%;
+          outline: none; transition: border-color 0.18s, box-shadow 0.18s; width: 100%;
         }
-        .iv-input::placeholder { color: rgba(255,255,255,0.28); font-weight: 400; letter-spacing: 0; }
-        .iv-input:focus { border-color: #2563eb; }
+        .iv-input::placeholder { color: #9ca3af; font-weight: 400; letter-spacing: 0; }
+        .iv-input:focus { border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37,99,235,0.08); }
         .iv-input--error { border-color: #ef4444 !important; }
         .iv-input--contact { font-size: 1rem; font-weight: 500; letter-spacing: 0; }
-        .iv-error { color: #fca5a5; font-size: 0.8125rem; margin: 0.5rem 0 0; }
+        .iv-error { color: #dc2626; font-size: 0.8125rem; margin: 0.5rem 0 0; }
 
         .iv-step-foot {
           padding: 1.5rem 2.25rem;
-          border-top: 1px solid rgba(255,255,255,0.07);
+          border-top: 1px solid #eef1f5;
           display: flex; align-items: center; justify-content: space-between; gap: 1rem;
         }
         .iv-btn-ghost {
-          background: none; border: 1.5px solid rgba(255,255,255,0.18);
-          border-radius: 0.75rem; color: rgba(255,255,255,0.6);
+          background: #fff; border: 1.5px solid #e5e7eb;
+          border-radius: 0.75rem; color: #374151;
           font-size: 0.9375rem; font-weight: 600; cursor: pointer;
           padding: 0.75rem 1.5rem; transition: all 0.18s;
         }
-        .iv-btn-ghost:hover { color: #fff; border-color: rgba(255,255,255,0.4); }
+        .iv-btn-ghost:hover { color: #0f1f3d; border-color: #c7d2e0; background: #f6f9fc; }
         .iv-btn-primary {
           background: #2563eb; color: #fff; border: none;
           border-radius: 0.75rem; font-size: 0.9375rem; font-weight: 700;
@@ -374,17 +374,17 @@ export default function InstantValuationPage() {
 
         .iv-summary {
           padding: 1rem 2.25rem;
-          background: rgba(255,255,255,0.03);
-          border-bottom: 1px solid rgba(255,255,255,0.07);
+          background: #f6f9fc;
+          border-bottom: 1px solid #eef1f5;
           display: flex; flex-wrap: wrap; gap: 0.5rem 1.25rem;
         }
-        .iv-summary__item { font-size: 0.8125rem; color: rgba(255,255,255,0.5); }
-        .iv-summary__item strong { color: rgba(255,255,255,0.85); font-weight: 600; }
+        .iv-summary__item { font-size: 0.8125rem; color: #6b7280; }
+        .iv-summary__item strong { color: #0f1f3d; font-weight: 600; }
 
         .iv-gate { padding: 2.25rem; text-align: center; }
         .iv-gate__icon { font-size: 2.5rem; margin-bottom: 0.875rem; }
-        .iv-gate__title { font-size: 1.25rem; font-weight: 800; color: #fff; margin: 0 0 0.5rem; }
-        .iv-gate__sub { color: rgba(255,255,255,0.5); font-size: 0.9rem; margin: 0 0 1.75rem; }
+        .iv-gate__title { font-size: 1.25rem; font-weight: 800; color: #0f1f3d; margin: 0 0 0.5rem; }
+        .iv-gate__sub { color: #6b7280; font-size: 0.9rem; margin: 0 0 1.75rem; }
         .iv-gate__btns { display: flex; gap: 0.875rem; justify-content: center; flex-wrap: wrap; }
         .iv-gate__btn {
           padding: 0.875rem 2.5rem; border-radius: 0.75rem;
@@ -393,32 +393,32 @@ export default function InstantValuationPage() {
         .iv-gate__btn--yes { background: #2563eb; color: #fff; }
         .iv-gate__btn--yes:hover { background: #1d4ed8; transform: translateY(-1px); }
         .iv-gate__btn--no {
-          background: rgba(255,255,255,0.07); color: rgba(255,255,255,0.6);
-          border: 1.5px solid rgba(255,255,255,0.15);
+          background: #fff; color: #374151;
+          border: 1.5px solid #e5e7eb;
         }
-        .iv-gate__btn--no:hover { background: rgba(255,255,255,0.12); color: #fff; }
+        .iv-gate__btn--no:hover { background: #f6f9fc; color: #0f1f3d; border-color: #c7d2e0; }
 
         .iv-contact-view {
           width: 100%; max-width: 680px;
-          background: rgba(255,255,255,0.04);
-          backdrop-filter: blur(16px);
-          border: 1px solid rgba(255,255,255,0.09);
+          background: #fff;
+          border: 1px solid #e5e7eb;
           border-radius: 1.5rem; padding: 2.5rem 2.25rem;
+          box-shadow: 0 4px 24px rgba(15,31,61,0.06);
         }
         .iv-contact-view__back {
-          background: none; border: none; color: rgba(255,255,255,0.5);
+          background: none; border: none; color: #6b7280;
           font-size: 0.875rem; cursor: pointer; padding: 0;
           margin-bottom: 1.5rem; transition: color 0.18s;
           display: flex; align-items: center; gap: 0.35rem;
         }
-        .iv-contact-view__back:hover { color: #fff; }
-        .iv-contact-view h2 { font-size: 1.625rem; font-weight: 800; color: #fff; margin: 0 0 0.5rem; }
-        .iv-contact-view p.sub { color: rgba(255,255,255,0.5); font-size: 0.9375rem; margin: 0 0 2rem; }
+        .iv-contact-view__back:hover { color: #0f1f3d; }
+        .iv-contact-view h2 { font-size: 1.625rem; font-weight: 800; color: #0f1f3d; margin: 0 0 0.5rem; }
+        .iv-contact-view p.sub { color: #6b7280; font-size: 0.9375rem; margin: 0 0 2rem; }
         .iv-form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.125rem; }
         .iv-form-field { display: flex; flex-direction: column; gap: 0.4rem; }
         .iv-form-field label {
           font-size: 0.75rem; font-weight: 700; letter-spacing: 0.07em;
-          text-transform: uppercase; color: rgba(255,255,255,0.45);
+          text-transform: uppercase; color: #6b7280;
         }
         .iv-submit-btn {
           width: 100%; margin-top: 1.75rem; padding: 1rem;
@@ -429,21 +429,21 @@ export default function InstantValuationPage() {
         .iv-submit-btn:hover:not(:disabled) { background: #1d4ed8; transform: translateY(-1px); }
         .iv-submit-btn:disabled { opacity: 0.6; cursor: not-allowed; }
         .iv-privacy {
-          font-size: 0.8rem; color: rgba(255,255,255,0.35);
+          font-size: 0.8rem; color: #9ca3af;
           line-height: 1.6; margin: 1rem 0 0; text-align: center;
         }
 
         .iv-outcome {
           width: 100%; max-width: 680px;
-          background: rgba(255,255,255,0.04);
-          backdrop-filter: blur(16px);
-          border: 1px solid rgba(255,255,255,0.09);
+          background: #fff;
+          border: 1px solid #e5e7eb;
           border-radius: 1.5rem; padding: 3.5rem 2.25rem; text-align: center;
+          box-shadow: 0 4px 24px rgba(15,31,61,0.06);
         }
         .iv-outcome__icon { font-size: 3rem; margin-bottom: 1rem; }
-        .iv-outcome h2 { font-size: 1.625rem; font-weight: 800; color: #fff; margin: 0 0 0.75rem; }
+        .iv-outcome h2 { font-size: 1.625rem; font-weight: 800; color: #0f1f3d; margin: 0 0 0.75rem; }
         .iv-outcome p {
-          color: rgba(255,255,255,0.55); font-size: 0.9375rem; line-height: 1.7;
+          color: #6b7280; font-size: 0.9375rem; line-height: 1.7;
           margin: 0 auto 2rem; max-width: 460px;
         }
         .iv-outcome__links { display: flex; gap: 0.875rem; justify-content: center; flex-wrap: wrap; }
@@ -455,10 +455,10 @@ export default function InstantValuationPage() {
         .iv-outcome__btn--primary { background: #2563eb; color: #fff; border: none; }
         .iv-outcome__btn--primary:hover { background: #1d4ed8; }
         .iv-outcome__btn--outline {
-          background: transparent; color: rgba(255,255,255,0.65);
-          border: 1.5px solid rgba(255,255,255,0.2);
+          background: #fff; color: #374151;
+          border: 1.5px solid #e5e7eb;
         }
-        .iv-outcome__btn--outline:hover { color: #fff; border-color: rgba(255,255,255,0.45); }
+        .iv-outcome__btn--outline:hover { color: #0f1f3d; border-color: #c7d2e0; }
 
         @media (max-width: 600px) {
           .iv-section { padding: 1.25rem 1.125rem; }
@@ -569,10 +569,10 @@ export default function InstantValuationPage() {
                   <div className="iv-section">
                     <p className="iv-section__q">How many bedrooms?</p>
                     <div className="iv-pills">
-                      {[0, 1, 2, 3, 4, 5, 6].map((n) => (
+                      {[0, 1, 2, 3, 4].map((n) => (
                         <button key={n} onClick={() => setBedrooms(n)}
                           className={`iv-pill ${bedrooms === n ? 'iv-pill--active' : ''}`}>
-                          {n === 0 ? 'Studio' : `${n} bed${n > 1 ? 's' : ''}`}
+                          {n === 0 ? 'Studio' : n === 4 ? '4+ beds' : `${n} bed${n > 1 ? 's' : ''}`}
                         </button>
                       ))}
                     </div>
@@ -800,7 +800,7 @@ export default function InstantValuationPage() {
             <h2>Your report is on its way</h2>
             <p>
               We've emailed your personalised valuation report to{' '}
-              <strong style={{ color: '#fff' }}>{lead.email}</strong>.
+              <strong style={{ color: '#0f1f3d' }}>{lead.email}</strong>.
               Check your inbox. It should arrive within a few minutes.
             </p>
             <div className="iv-outcome__links">

@@ -908,10 +908,10 @@ export default function TenantEnquiryModal({
                 <div className="hol-field hol-field--mb">
                   <label className="hol-label">How many people will be moving in?</label>
                   <RadioGroup
-                    options={["1", "2", "3", "4", "5", "6+"]}
+                    options={["1", "2", "3", "4+"]}
                     value={form.peopleCount}
                     onChange={(v) => setRadio("peopleCount", v)}
-                    columns={6}
+                    columns={4}
                   />
                 </div>
 

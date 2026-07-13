@@ -105,6 +105,8 @@ export default function Footer() {
           <span className="hol-ft__dotsep" aria-hidden>·</span>
           <Link href="/cookie-policy" className="hol-ft__bar-link">Cookie Policy</Link>
           <span className="hol-ft__dotsep" aria-hidden>·</span>
+          <Link href="/admin-login" className="hol-ft__bar-link">Staff Login</Link>
+          <span className="hol-ft__dotsep" aria-hidden>·</span>
           <span className="hol-ft__muted">Leeds &amp; Manchester</span>
         </div>
       </div>

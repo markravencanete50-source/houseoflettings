@@ -128,6 +128,7 @@ function DashIcon() {
 export default function PricingPage() {
   const [active, setActive] = useState(HOT);
   const [mobileTab, setMobileTab] = useState(HOT);   // selected package in the mobile compare view
+  const [mcOpen, setMcOpen] = useState<Record<number, boolean>>({ 0: true }); // mobile compare accordions
   const [showModal, setShowModal] = useState(false);
   const [expanded, setExpanded] = useState<Record<number, boolean>>({});
   const [formData, setFormData] = useState({
@@ -139,6 +140,10 @@ export default function PricingPage() {
   const [error, setError] = useState('');
 
   const pkg = PACKAGES[active];
+
+  // Total services included by the package selected in the mobile compare view.
+  const mcIncluded = MATRIX_SECTIONS.reduce(
+    (n, sec) => n + sec.rows.filter(r => !!r[mobileTab + 1]).length, 0);
 
   const { addItem } = useCart();
   const [justAdded, setJustAdded] = useState<number | null>(null);
@@ -364,29 +369,48 @@ export default function PricingPage() {
         .pr-mc-pills { display:flex; gap:8px; overflow-x:auto; padding:2px 2px 14px; -webkit-overflow-scrolling:touch; scrollbar-width:none; }
         .pr-mc-pills::-webkit-scrollbar { display:none; }
         .pr-mc-pill { position:relative; flex:0 0 auto; border:1.5px solid #dbe2ea; background:#fff; color:#374151;
-          border-radius:999px; padding:10px 16px; font-size:13.5px; font-weight:700; cursor:pointer; white-space:nowrap; transition:all .15s ease; }
+          border-radius:14px; padding:9px 16px 8px; cursor:pointer; white-space:nowrap; text-align:center; transition:all .15s ease; }
+        .pr-mc-pill-name { display:block; font-size:13.5px; font-weight:700; line-height:1.2; }
+        .pr-mc-pill-fee { display:block; font-size:10.5px; font-weight:600; opacity:.6; margin-top:2px; }
         .pr-mc-pill.active { background:#2563eb; border-color:#2563eb; color:#fff; box-shadow:0 8px 18px -8px rgba(37,99,235,.6); }
+        .pr-mc-pill.active .pr-mc-pill-fee { opacity:.85; }
         .pr-mc-dot { position:absolute; top:6px; right:9px; width:6px; height:6px; border-radius:50%; background:#f59e0b; }
         .pr-mc-pill.active .pr-mc-dot { background:#fff; }
         .pr-mc-card { background:#fff; border:1px solid #e5e7eb; border-radius:16px; overflow:hidden;
           box-shadow:0 16px 40px -26px rgba(15,31,61,.34); }
         .pr-mc-head { background:linear-gradient(155deg,#15294c,#0c1a33); color:#fff; padding:22px 20px 20px; }
         .pr-mc-head--hot { background:linear-gradient(155deg,#2563eb 0%,#12295a 60%,#0c1a33 100%); }
+        .pr-mc-kindrow { display:flex; align-items:center; justify-content:space-between; gap:10px; }
         .pr-mc-kind { font-size:11px; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:#a9c4ea; }
-        .pr-mc-name { display:block; font-size:21px; font-weight:800; margin:5px 0 14px; line-height:1.15; }
+        .pr-mc-tag { flex:none; font-size:9.5px; font-weight:700; letter-spacing:.06em; text-transform:uppercase;
+          color:#dce8fa; background:rgba(255,255,255,.12); border:1px solid rgba(255,255,255,.16);
+          border-radius:999px; padding:4px 10px; }
+        .pr-mc-name { display:block; font-size:21px; font-weight:800; margin:6px 0 6px; line-height:1.15; }
+        .pr-mc-best { font-size:13px; font-weight:400; color:#c7d7f2; line-height:1.55; margin:0 0 14px; }
         .pr-mc-fees { display:flex; gap:12px; }
         .pr-mc-fees > div { flex:1; background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.14);
           border-radius:10px; padding:10px 12px; }
         .pr-mc-fees span { display:block; font-size:10.5px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:#a9c4ea; margin-bottom:3px; }
         .pr-mc-fees b { font-size:18px; font-weight:800; }
+        .pr-mc-summary { display:flex; align-items:center; justify-content:space-between; gap:12px;
+          padding:12px 18px; background:#fbfcfe; border-top:1px solid #eef1f5; }
+        .pr-mc-summary b { font-size:12.5px; font-weight:800; color:#0f1f3d; }
+        .pr-mc-summary span { font-size:11.5px; color:#9ca3af; }
         .pr-mc-group { border-top:1px solid #eef1f5; }
-        .pr-mc-band { display:flex; align-items:center; justify-content:space-between; background:#f4f7fb; color:#0f1f3d;
-          font-weight:800; font-size:11.5px; letter-spacing:.06em; text-transform:uppercase; padding:11px 18px; }
-        .pr-mc-count { background:#2563eb; color:#fff; border-radius:999px; min-width:22px; height:20px; padding:0 7px;
-          display:inline-flex; align-items:center; justify-content:center; font-size:11px; font-weight:800; }
+        .pr-mc-band { width:100%; border:0; cursor:pointer; display:flex; align-items:center; justify-content:space-between;
+          gap:12px; background:#f4f7fb; color:#0f1f3d; font-weight:800; font-size:11.5px; letter-spacing:.06em;
+          text-transform:uppercase; padding:13px 18px; text-align:left; font-family:inherit; }
+        .pr-mc-band:hover { background:#eef3f9; }
+        .pr-mc-band-title { flex:1; line-height:1.35; }
+        .pr-mc-band-right { display:inline-flex; align-items:center; gap:12px; flex:none; }
+        .pr-mc-count { background:#2563eb; color:#fff; border-radius:999px; height:20px; padding:0 9px;
+          display:inline-flex; align-items:center; justify-content:center; font-size:10.5px; font-weight:800;
+          letter-spacing:0; text-transform:none; white-space:nowrap; }
+        .pr-mc-count--none { background:#e5e9f0; color:#6b7280; }
         .pr-mc-row { display:flex; gap:11px; align-items:flex-start; padding:11px 18px; border-top:1px solid #f2f5f9;
           font-size:14px; color:#374151; line-height:1.45; }
-        .pr-mc-row .pr-tick { flex:none; margin-top:1px; }
+        .pr-mc-row .pr-tick, .pr-mc-row .pr-dash { flex:none; margin-top:1px; }
+        .pr-mc-row--off { color:#9aa4b2; background:#fbfcfd; }
         .pr-mc-cta { padding:18px; }
         .pr-mc-cta button { width:100%; padding:15px; background:#2563eb; color:#fff; border:none; border-radius:9px;
           font-size:14px; font-weight:700; text-transform:uppercase; letter-spacing:.03em; cursor:pointer; transition:background .18s ease; }
@@ -667,7 +691,10 @@ export default function PricingPage() {
           </div>
         </div>
 
-        {/* Mobile: pick one package, see everything it includes — no side-scroll */}
+        {/* Mobile: pick one package, then browse its services by category.
+            Categories are collapsible accordions with an "x of y" count, and
+            expanded categories show what's NOT included (dimmed) as well —
+            more detail than the old flat tick list, in far less scroll. */}
         <div className="pr-mobile-compare">
           <p className="pr-mc-help">Tap a package to see exactly what it includes.</p>
           <div className="pr-mc-pills" role="tablist" aria-label="Choose a package to compare">
@@ -679,7 +706,8 @@ export default function PricingPage() {
                 className={`pr-mc-pill${mobileTab === i ? ' active' : ''}`}
                 onClick={() => setMobileTab(i)}
               >
-                {p.short}
+                <span className="pr-mc-pill-name">{p.short}</span>
+                <span className="pr-mc-pill-fee">{p.setupFee}{p.mgmtFee ? ` + ${p.mgmtFee}` : ''}</span>
                 {p.badge && <span className="pr-mc-dot" aria-hidden />}
               </button>
             ))}
@@ -687,29 +715,50 @@ export default function PricingPage() {
 
           <div className="pr-mc-card">
             <div className={`pr-mc-head${mobileTab === HOT ? ' pr-mc-head--hot' : ''}`}>
-              <span className="pr-mc-kind">{PACKAGES[mobileTab].kind}{PACKAGES[mobileTab].badge ? ' · Most Popular' : ''}</span>
+              <div className="pr-mc-kindrow">
+                <span className="pr-mc-kind">{PACKAGES[mobileTab].kind}{PACKAGES[mobileTab].badge ? ' · Most Popular' : ''}</span>
+                <span className="pr-mc-tag">{PACKAGES[mobileTab].youWe}</span>
+              </div>
               <span className="pr-mc-name">{PACKAGES[mobileTab].label}</span>
+              <p className="pr-mc-best">Best for {PACKAGES[mobileTab].bestForLead} {PACKAGES[mobileTab].bestForRest}.</p>
               <div className="pr-mc-fees">
                 <div><span>One-time</span><b>{PACKAGES[mobileTab].setupFee}</b></div>
-                <div><span>Ongoing</span><b>{PACKAGES[mobileTab].mgmtFee || 'None'}</b></div>
+                <div><span>Ongoing</span><b>{PACKAGES[mobileTab].mgmtFee ? `${PACKAGES[mobileTab].mgmtFee} of rent` : 'None'}</b></div>
               </div>
             </div>
 
-            {MATRIX_SECTIONS.map((section) => {
-              const included = section.rows.filter((row) => !!row[mobileTab + 1]);
-              if (included.length === 0) return null;
+            <div className="pr-mc-summary">
+              <b>{mcIncluded} of {TOTAL_SERVICES} services included</b>
+              <span>Tap a category to view</span>
+            </div>
+
+            {MATRIX_SECTIONS.map((section, s) => {
+              const total = section.rows.length;
+              const included = section.rows.filter((row) => !!row[mobileTab + 1]).length;
+              const open = !!mcOpen[s];
               return (
                 <div key={section.title} className="pr-mc-group">
-                  <div className="pr-mc-band">
-                    {section.title}
-                    <span className="pr-mc-count">{included.length}</span>
-                  </div>
-                  {included.map((row) => (
-                    <div key={row[0] as string} className="pr-mc-row">
-                      <i className="pr-tick" aria-hidden><svg viewBox="0 0 24 24"><polyline points="4 13 10 19 20 6" /></svg></i>
-                      <span>{row[0]}</span>
-                    </div>
-                  ))}
+                  <button
+                    type="button"
+                    className="pr-mc-band"
+                    aria-expanded={open}
+                    onClick={() => setMcOpen(o => ({ ...o, [s]: !o[s] }))}
+                  >
+                    <span className="pr-mc-band-title">{section.title}</span>
+                    <span className="pr-mc-band-right">
+                      <span className={`pr-mc-count${included === 0 ? ' pr-mc-count--none' : ''}`}>{included} of {total}</span>
+                      <span className={`pr-chev${open ? ' up' : ''}`} aria-hidden />
+                    </span>
+                  </button>
+                  {open && section.rows.map((row) => {
+                    const inc = !!row[mobileTab + 1];
+                    return (
+                      <div key={row[0] as string} className={`pr-mc-row${inc ? '' : ' pr-mc-row--off'}`}>
+                        {inc ? <TickIcon /> : <DashIcon />}
+                        <span>{row[0]}</span>
+                      </div>
+                    );
+                  })}
                 </div>
               );
             })}
@@ -718,7 +767,7 @@ export default function PricingPage() {
               <button onClick={() => addPackage(mobileTab)}>{justAdded === mobileTab ? 'Added to order ✓' : `Add ${PACKAGES[mobileTab].short} to order`}</button>
             </div>
           </div>
-          <p className="pr-mc-foot">All {TOTAL_SERVICES} services are listed in the table on larger screens. Prices inc. VAT.</p>
+          <p className="pr-mc-foot">Dimmed items are not part of this package. All prices inc. VAT.</p>
         </div>
       </section>
 

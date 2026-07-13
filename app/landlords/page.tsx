@@ -62,22 +62,17 @@ export default function LandlordsPage() {
         }
       `}</style>
       <section style={{
-        position: 'relative', minHeight: '100vh',
-        display: 'flex', alignItems: 'center',
+        position: 'relative',
         overflow: 'hidden',
+        background: 'linear-gradient(165deg, #0c1a33 0%, #15294c 55%, #0f1f3d 100%)',
       }}>
-        {/* Background image */}
+        {/* Clean, balanced backdrop: soft brand-blue accents instead of the old
+            photo (whose baked-in text clashed with the headline on mobile). */}
         <div style={{
-          position: 'absolute', inset: 0,
-          backgroundImage: 'url(/images/Landlord_page.webp)',
-          backgroundSize: 'cover',
-          backgroundPosition: 'center center',
-          backgroundRepeat: 'no-repeat',
-        }} />
-        {/* Dark overlay */}
-        <div style={{
-          position: 'absolute', inset: 0,
-          background: 'linear-gradient(90deg, rgba(8,18,42,0.92) 0%, rgba(8,18,42,0.75) 55%, rgba(8,18,42,0.40) 100%)',
+          position: 'absolute', inset: 0, pointerEvents: 'none',
+          background:
+            'radial-gradient(ellipse at 78% 12%, rgba(37,99,235,0.22) 0%, transparent 55%),' +
+            'radial-gradient(ellipse at 12% 88%, rgba(74,144,217,0.14) 0%, transparent 50%)',
         }} />
 
         <div style={{
@@ -85,15 +80,22 @@ export default function LandlordsPage() {
           width: '100%',
           maxWidth: 860,
           margin: '0 auto',
-          padding: 'clamp(100px,12vw,140px) clamp(32px,6%,80px) clamp(80px,10vw,120px)',
+          padding: 'clamp(128px,16vw,190px) clamp(24px,6%,80px) clamp(72px,10vw,130px)',
           textAlign: 'center',
         }}>
+          <div style={{
+            fontFamily: "'Poppins', sans-serif",
+            fontSize: 12, fontWeight: 700, letterSpacing: 4,
+            textTransform: 'uppercase', color: '#4a90d9', marginBottom: 18,
+          }}>
+            For Landlords · Leeds &amp; Manchester
+          </div>
           <h1 style={{
             fontFamily: "'Poppins', sans-serif",
-            fontSize: 'clamp(40px,5.5vw,72px)',
+            fontSize: 'clamp(34px,5.5vw,68px)',
             fontWeight: 800, color: '#fff',
-            lineHeight: 1.12, letterSpacing: '-1px',
-            marginBottom: 28,
+            lineHeight: 1.12, letterSpacing: '-0.5px',
+            marginBottom: 22,
           }}>
             We handle the management.<br />
             You enjoy the returns.
@@ -101,12 +103,13 @@ export default function LandlordsPage() {
           <p style={{
             fontFamily: "'Poppins', sans-serif",
             fontSize: 'clamp(15px,1.3vw,18px)',
-            color: 'rgba(255,255,255,0.72)',
-            lineHeight: 1.7, marginBottom: 44,
+            color: 'rgba(255,255,255,0.68)',
+            lineHeight: 1.75, marginBottom: 40,
             fontWeight: 300,
-            maxWidth: 560, margin: '0 auto 44px',
+            maxWidth: 560, margin: '0 auto 40px',
           }}>
-            Serving landlords across Leeds &amp; Manchester.
+            Local experts who let your property faster, keep it compliant and
+            protect your rental income — across Leeds &amp; Manchester.
           </p>
           <div className="hero-btns" style={{ display: 'flex', gap: 14, flexWrap: 'wrap', justifyContent: 'center' }}>
             <Link href="/book-valuation"
@@ -275,35 +278,36 @@ export default function LandlordsPage() {
             @media (max-width: 560px) { .ll-packages-grid { grid-template-columns: 1fr; } }
           `}</style>
           <div className="ll-packages-grid">
+            {/* Prices mirror lib/bundles.ts — keep in sync with the pricing page. */}
             {[
               {
-                price: '£499', name: 'Virtual Tenant Find', type: 'One time fee',
+                price: '£399', name: 'Virtual Tenant Find', type: 'One-time fee',
                 desc: 'Advertise your property, handle enquiries, and secure a tenant, all managed online.',
-                features: ['Professional listing creation', 'Multi portal advertising', 'Enquiry management', 'Tenant referencing'],
+                features: ['Professional listing creation', 'Multi portal advertising', 'Enquiry management', 'Full tenant referencing'],
                 popular: false,
               },
               {
-                price: '£799', name: 'Expert Tenant Find', type: 'One time fee',
-                desc: 'Everything in Virtual, plus an in person agent visit, accompanied viewings, and tenancy setup.',
-                features: ['Everything in Virtual', 'Agent property visit', 'Accompanied viewings', 'Full tenancy setup'],
+                price: '£699', name: 'Expert Tenant Find', type: 'One-time fee',
+                desc: 'The full marketing push: professional photography, accompanied viewings, and in-person tenancy setup.',
+                features: ['Everything in Virtual', 'Photography & floor plan', 'Accompanied viewings', 'In-person tenant handover'],
+                popular: false,
+              },
+              {
+                price: '6%', name: 'Essential Management', type: '£199 setup · monthly',
+                desc: 'We collect rent, chase arrears, and transfer funds, so you never have to chase a tenant.',
+                features: ['Includes a full tenant find', 'Monthly rent collection', 'Arrears management', 'Monthly statements'],
+                popular: false,
+              },
+              {
+                price: '8%', name: 'Full Management', type: '£399 setup · monthly',
+                desc: 'Comprehensive management covering maintenance, inspections, and compliance.',
+                features: ['Everything in Essential', 'Maintenance coordination', 'Regular inspections', 'Compliance monitoring'],
                 popular: true,
               },
               {
-                price: '6%', name: 'Rent Collection', type: 'Monthly',
-                desc: 'We collect rent, chase arrears, and transfer funds, so you never have to chase a tenant.',
-                features: ['Monthly rent collection', 'Arrears management', 'Monthly statements', 'Direct landlord transfer'],
-                popular: false,
-              },
-              {
-                price: '8%', name: 'Full Management', type: 'Monthly',
-                desc: 'Comprehensive management covering maintenance, inspections, and compliance.',
-                features: ['Everything in Rent Collection', 'Maintenance coordination', 'Regular inspections', 'Legal compliance support'],
-                popular: false,
-              },
-              {
-                price: '10%', name: 'Comprehensive Management', type: 'Monthly',
+                price: '10%', name: 'Comprehensive Management', type: '£399 setup · monthly',
                 desc: 'Our complete hands off package with rent guarantee insurance and dedicated support.',
-                features: ['Everything in Full Management', 'Rent guarantee insurance', 'Legal eviction cover', 'Priority support'],
+                features: ['Everything in Full Management', 'Rent guarantee cover', 'Legal & eviction protection', 'Priority contractor response'],
                 popular: false,
               },
             ].map(pkg => (

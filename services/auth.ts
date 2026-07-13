@@ -53,6 +53,7 @@ export async function signIn(email: string, password: string): Promise<AppUser> 
     email: data.email,
     role: data.role,
     phone: data.phone,
+    permissions: data.permissions,
     createdAt: data.createdAt?.toDate() || new Date(),
   };
 }
@@ -74,6 +75,7 @@ export async function getUserProfile(uid: string): Promise<AppUser | null> {
     email: data.email,
     role: data.role,
     phone: data.phone,
+    permissions: data.permissions,
     createdAt: data.createdAt?.toDate() || new Date(),
   };
 }

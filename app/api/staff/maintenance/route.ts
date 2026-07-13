@@ -3,8 +3,9 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { cert, initializeApp, getApps } from 'firebase-admin/app';
-import { getFirestore } from 'firebase-admin/firestore';
+import { getFirestore, FieldValue } from 'firebase-admin/firestore';
 import { getAuth } from 'firebase-admin/auth';
+import { requireStaff, getAdminDb } from '@/lib/staffApiAuth';
 
 function getDb() {
   if (!getApps().length) {
@@ -70,6 +71,35 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ requests }, { status: 200 });
   } catch (e) {
     console.error('staff/maintenance error:', e);
+    return NextResponse.json({ message: 'Internal server error' }, { status: 500 });
+  }
+}
+
+// Update a maintenance request's status (staff and admin). Body: { id, status }.
+const MAINT_STATUSES = ['open', 'in-progress', 'resolved', 'cancelled'] as const;
+
+export async function PATCH(request: NextRequest) {
+  try {
+    const auth = await requireStaff(request, 'maintenance');
+    if (auth instanceof Response) return auth;
+
+    const body = await request.json();
+    const id = (body.id || '').toString().trim();
+    const status = (body.status || '').toString().trim();
+    if (!id) return NextResponse.json({ message: 'Request id is required.' }, { status: 400 });
+    if (!MAINT_STATUSES.includes(status as any)) {
+      return NextResponse.json({ message: 'Invalid status.' }, { status: 400 });
+    }
+
+    await getAdminDb().collection('maintenanceRequests').doc(id).update({
+      status,
+      updatedAt: FieldValue.serverTimestamp(),
+      lastStatusBy: auth.uid,
+    });
+
+    return NextResponse.json({ ok: true }, { status: 200 });
+  } catch (e) {
+    console.error('staff/maintenance PATCH error:', e);
     return NextResponse.json({ message: 'Internal server error' }, { status: 500 });
   }
 }

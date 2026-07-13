@@ -9,6 +9,9 @@ export interface AppUser {
   role: UserRole;
   phone?: string;
   createdAt: Date;
+  // Staff-dashboard features enabled for this user (staff role only). Absent =
+  // the default set; managed from the admin dashboard. See lib/staffAccess.ts.
+  permissions?: string[];
 }
 
 export interface Property {

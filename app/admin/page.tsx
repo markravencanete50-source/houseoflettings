@@ -15,6 +15,7 @@ import {
   getAnalytics,
 } from '@/services/admin';
 import { AppUser, Property, propertyAvailability } from '@/lib/types';
+import { STAFF_FEATURES, staffPermissions } from '@/lib/staffAccess';
 
 const AVAILABILITY_META: Record<'available' | 'pending' | 'let-agreed', { label: string; bg: string; color: string }> = {
   'available':  { label: 'Available',  bg: '#e8f5e9', color: '#2e7d32' },
@@ -48,6 +49,7 @@ interface ServiceOrder {
   lines: ServiceOrderLine[];
   total: number;
   hasFrom?: boolean;
+  proofOfPaymentUrls?: string[];
   status: 'pending' | 'contacted' | 'paid' | 'completed' | 'cancelled';
   createdAt: any;
 }
@@ -218,6 +220,10 @@ export default function AdminDashboard() {
   const [expandedOrder, setExpandedOrder] = useState<string | null>(null);
   const [maintenance, setMaintenance] = useState<MaintenanceRequest[]>([]);
   const [expandedMaint, setExpandedMaint] = useState<string | null>(null);
+  // Per-staff dashboard access editor (Users tab).
+  const [accessUser, setAccessUser] = useState<AppUser | null>(null);
+  const [accessPerms, setAccessPerms] = useState<string[]>([]);
+  const [accessSaving, setAccessSaving] = useState(false);
 
   // Website visitor analytics (first-party, from /api/track).
   useEffect(() => {
@@ -293,6 +299,29 @@ export default function AdminDashboard() {
     if (!confirm('Delete this review?')) return;
     await deleteDoc(doc(db, 'google_reviews', id));
     setReviews(prev => prev.filter(r => r.id !== id));
+  };
+
+  // ── Staff access handlers ────────────────────────────────────────────────────
+  const openAccess = (u: AppUser) => {
+    setAccessUser(u);
+    setAccessPerms(staffPermissions(u));
+  };
+
+  const toggleAccess = (id: string) =>
+    setAccessPerms(p => (p.includes(id) ? p.filter(x => x !== id) : [...p, id]));
+
+  const saveAccess = async () => {
+    if (!accessUser) return;
+    setAccessSaving(true);
+    try {
+      await updateDoc(doc(db, 'users', accessUser.uid), { permissions: accessPerms });
+      setUsers(prev => prev.map(u => u.uid === accessUser.uid ? { ...u, permissions: accessPerms } : u));
+      setAccessUser(null);
+    } catch (e) {
+      console.error('saveAccess failed:', e);
+      alert('Could not save access. Please try again.');
+    }
+    setAccessSaving(false);
   };
 
   // ── Property handlers ────────────────────────────────────────────────────────
@@ -641,6 +670,60 @@ export default function AdminDashboard() {
                   onChange={e => setSearchUser(e.target.value)}
                 />
               </div>
+
+              {/* Staff access editor — which dashboard sections this member sees */}
+              {accessUser && (
+                <div className="dash-card" style={{ marginBottom: 20, border: '1.5px solid #2563eb' }}>
+                  <h3 style={{ fontSize: 15, fontWeight: 700, marginBottom: 6 }}>
+                    🔑 Dashboard access for {accessUser.name}
+                  </h3>
+                  <p style={{ fontSize: 13, color: 'var(--gray-600)', marginBottom: 16 }}>
+                    Tick the sections {accessUser.name} can see and use in the staff dashboard. Changes apply the next time they load the dashboard.
+                  </p>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, marginBottom: 18 }}>
+                    {STAFF_FEATURES.map(f => {
+                      const on = accessPerms.includes(f.id);
+                      return (
+                        <label
+                          key={f.id}
+                          style={{
+                            display: 'inline-flex', alignItems: 'center', gap: 8,
+                            padding: '9px 14px', borderRadius: 8, cursor: 'pointer',
+                            border: `1.5px solid ${on ? '#2563eb' : '#e5e7eb'}`,
+                            background: on ? '#eff5ff' : '#fff',
+                            fontSize: 13.5, fontWeight: 600, color: on ? '#1d4ed8' : '#374151',
+                            userSelect: 'none',
+                          }}
+                        >
+                          <input
+                            type="checkbox"
+                            checked={on}
+                            onChange={() => toggleAccess(f.id)}
+                            style={{ accentColor: '#2563eb', width: 15, height: 15 }}
+                          />
+                          {f.icon} {f.label}
+                        </label>
+                      );
+                    })}
+                  </div>
+                  <div style={{ display: 'flex', gap: 10 }}>
+                    <button
+                      onClick={saveAccess}
+                      disabled={accessSaving}
+                      style={{ padding: '10px 22px', background: '#2563eb', color: '#fff', border: 'none', borderRadius: 6, fontSize: 13, fontWeight: 700, cursor: accessSaving ? 'not-allowed' : 'pointer', opacity: accessSaving ? 0.7 : 1 }}
+                    >
+                      {accessSaving ? 'Saving…' : '✓ Save access'}
+                    </button>
+                    <button
+                      onClick={() => setAccessUser(null)}
+                      style={{ padding: '10px 18px', background: '#fff', color: '#374151', border: '1.5px solid #e5e7eb', borderRadius: 6, fontSize: 13, fontWeight: 600, cursor: 'pointer' }}
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              )}
+
               <div className="dash-card" style={{ padding: 0, overflow: 'hidden' }}>
                 <table className="data-table">
                   <thead>
@@ -664,11 +747,25 @@ export default function AdminDashboard() {
                           {u.createdAt instanceof Date ? format(u.createdAt, 'd MMM yyyy') : '-'}
                         </td>
                         <td>
-                          {u.role !== 'admin' && (
-                            <button className="btn-danger" onClick={() => handleDeleteUser(u.uid, u.name)}>
-                              Delete
-                            </button>
-                          )}
+                          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                            {u.role === 'staff' && (
+                              <button
+                                onClick={() => openAccess(u)}
+                                style={{
+                                  padding: '5px 10px', background: 'transparent',
+                                  border: '1px solid #2563eb', color: '#2563eb',
+                                  borderRadius: 4, fontSize: 11, cursor: 'pointer', fontWeight: 600,
+                                }}
+                              >
+                                🔑 Access
+                              </button>
+                            )}
+                            {u.role !== 'admin' && (
+                              <button className="btn-danger" onClick={() => handleDeleteUser(u.uid, u.name)}>
+                                Delete
+                              </button>
+                            )}
+                          </div>
                         </td>
                       </tr>
                     ))}
@@ -1401,6 +1498,16 @@ export default function AdminDashboard() {
                               <div><strong style={{ color: 'var(--navy)' }}>Address:</strong> {o.customer?.address || '—'}</div>
                             </div>
                             {o.customer?.notes && <div style={{ marginTop: 8, fontSize: 13, color: 'var(--gray-600)' }}><strong style={{ color: 'var(--navy)' }}>Notes:</strong> {o.customer.notes}</div>}
+                            {(o.proofOfPaymentUrls?.length || 0) > 0 && (
+                              <div style={{ marginTop: 12 }}>
+                                <div style={{ fontSize: 12, fontWeight: 700, color: '#15803d', marginBottom: 6 }}>Proof of payment (verify before starting work)</div>
+                                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                                  {o.proofOfPaymentUrls!.map((url, i) => (
+                                    <a key={i} href={url} target="_blank" rel="noopener noreferrer" style={{ padding: '4px 10px', background: '#f0fdf4', color: '#15803d', borderRadius: 4, fontSize: 12, fontWeight: 600, textDecoration: 'none', border: '1px solid #bbf7d0' }}>📄 Proof {i + 1}</a>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
                           </div>
                         )}
                       </div>

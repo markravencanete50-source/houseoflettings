@@ -10,6 +10,7 @@ import {
 } from '@/lib/serviceCart';
 
 const BLUE = '#2563eb';
+const GREEN = '#16a34a';
 
 function Stepper({ value, min, max, onChange }: { value: number; min: number; max: number; onChange: (v: number) => void }) {
   const btn: React.CSSProperties = {
@@ -86,7 +87,7 @@ export default function OrderControls({ serviceId }: { serviceId: string }) {
                 return (
                   <label key={a.id} style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer', fontSize: 14, color: '#0a162f' }}>
                     <input type="checkbox" checked={!!cur} onChange={e => setAddon(a.id, e.target.checked ? 1 : 0)}
-                      style={{ accentColor: BLUE, width: 16, height: 16 }} />
+                      style={{ accentColor: GREEN, width: 16, height: 16 }} />
                     <span style={{ flex: 1 }}>{a.label}</span>
                     <span style={{ fontWeight: 700, color: BLUE }}>+{formatGBP(a.price)}</span>
                   </label>
@@ -121,7 +122,7 @@ export default function OrderControls({ serviceId }: { serviceId: string }) {
           </div>
         </div>
         <button type="button" onClick={add} style={{
-          padding: '13px 26px', background: added ? '#16a34a' : BLUE, color: '#fff', border: 'none',
+          padding: '13px 26px', background: added ? '#15803d' : GREEN, color: '#fff', border: 'none',
           borderRadius: 9, fontSize: 14, fontWeight: 700, cursor: 'pointer', letterSpacing: '0.02em',
           transition: 'background .18s', fontFamily: "'Poppins', sans-serif",
         }}>

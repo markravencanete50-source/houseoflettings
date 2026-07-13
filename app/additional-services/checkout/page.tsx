@@ -1,6 +1,6 @@
 'use client';
 // app/additional-services/checkout/page.tsx
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import Navbar from '@/components/layout/Navbar';
@@ -8,8 +8,10 @@ import Footer from '@/components/layout/Footer';
 import PostcodeLookup, { type AddressResult } from '@/components/PostcodeLookup';
 import { useCart } from '@/components/services/CartProvider';
 import { priceLine, formatGBP, anyFrom } from '@/lib/serviceCart';
+import { cityFromText, type City } from '@/lib/viewingSlots';
 
 const BLUE = '#2563eb';
+const GREEN = '#16a34a';
 
 // Appointment-based services: when any of these is in the order we offer the
 // landlord a "Property Inspection" slot from the office calendar.
@@ -18,7 +20,7 @@ const INSPECTION_SERVICE_IDS = new Set([
 ]);
 
 type Prop = { postcode: string; address: string };
-type Insp = { date: string; time: string };
+type Insp = { date: string; time: string; city?: City | null };
 
 const input: React.CSSProperties = {
   width: '100%', padding: '12px 14px', background: '#fff', border: '1.5px solid #e5e7eb',
@@ -156,27 +158,37 @@ function PropertyField({ propKey, value, onChange }: {
 }
 
 // ── "Property Inspection" appointment picker (calendar-driven) ──
-function InspectionScheduler({ value, onChange }: { value: Insp; onChange: (v: Insp) => void }) {
+// `city` is worked out from the property address so we only show the Leeds or
+// Manchester availability that matches where the property is.
+function InspectionScheduler({ value, city, onChange }: { value: Insp; city: City | null; onChange: (v: Insp) => void }) {
   const [dates, setDates] = useState<string[]>([]);
   const [configured, setConfigured] = useState(true);
   const [loadingDates, setLoadingDates] = useState(true);
   const [slots, setSlots] = useState<{ time: string; status: string }[]>([]);
   const [loadingSlots, setLoadingSlots] = useState(false);
 
+  const cityQuery = city ? `&city=${city}` : '';
+
+  // (Re)load available dates whenever the detected city changes, and clear any
+  // selection that no longer applies to the new city.
   useEffect(() => {
     const today = isoLondonToday();
-    fetch(`/api/inspection-availability?from=${today}&days=60`)
+    setLoadingDates(true);
+    setSlots([]);
+    onChange({ date: '', time: '', city });
+    fetch(`/api/inspection-availability?from=${today}&days=60${cityQuery}`)
       .then((r) => r.json())
       .then((d) => { setDates(Array.isArray(d.dates) ? d.dates : []); setConfigured(d.configured !== false); })
       .catch(() => { /* ignore */ })
       .finally(() => setLoadingDates(false));
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [city]);
 
   const pickDate = (date: string) => {
-    onChange({ date, time: '' });
+    onChange({ date, time: '', city });
     setLoadingSlots(true);
     setSlots([]);
-    fetch(`/api/inspection-availability?date=${date}`)
+    fetch(`/api/inspection-availability?date=${date}${cityQuery}`)
       .then((r) => r.json())
       .then((d) => setSlots(Array.isArray(d.slots) ? d.slots : []))
       .catch(() => setSlots([]))
@@ -189,8 +201,15 @@ function InspectionScheduler({ value, onChange }: { value: Insp; onChange: (v: I
     <div style={cardStyle}>
       <h2 style={{ fontSize: 16, fontWeight: 700, color: '#0a162f', margin: '0 0 4px' }}>Preferred inspection appointment</h2>
       <p style={{ fontSize: 12.5, color: '#64748b', margin: '0 0 14px', lineHeight: 1.6 }}>
-        Optional. Pick a date and time that suits you from our published inspection availability. We&rsquo;ll confirm it with you.
+        Optional. Pick a date and time that suits you from our published inspection availability. Each inspection lasts about an hour. We&rsquo;ll confirm it with you.
       </p>
+
+      {city && (
+        <div style={{ display: 'inline-flex', alignItems: 'center', gap: 7, background: '#eef4ff', border: '1px solid #cfe0ff', borderRadius: 999, padding: '5px 12px', marginBottom: 14 }}>
+          <span aria-hidden>📍</span>
+          <span style={{ fontSize: 12.5, fontWeight: 700, color: '#1d4ed8' }}>Showing {city} inspection availability</span>
+        </div>
+      )}
 
       {loadingDates && <p style={{ color: '#64748b', fontSize: 13 }}>Loading available times&hellip;</p>}
 
@@ -238,7 +257,7 @@ function InspectionScheduler({ value, onChange }: { value: Insp; onChange: (v: I
                       <button
                         key={s.time}
                         type="button"
-                        onClick={() => onChange({ date: value.date, time: s.time })}
+                        onClick={() => onChange({ date: value.date, time: s.time, city })}
                         style={{
                           padding: '10px 6px', borderRadius: 8, fontSize: 13, fontWeight: 700, cursor: 'pointer',
                           border: `1.5px solid ${active ? BLUE : '#dbe2ea'}`,
@@ -254,7 +273,7 @@ function InspectionScheduler({ value, onChange }: { value: Insp; onChange: (v: I
               {value.time && (
                 <button
                   type="button"
-                  onClick={() => onChange({ date: '', time: '' })}
+                  onClick={() => onChange({ date: '', time: '', city })}
                   style={{ marginTop: 12, background: 'none', border: 'none', color: '#64748b', fontSize: 12.5, fontWeight: 600, cursor: 'pointer', padding: 0 }}
                 >
                   Clear selected appointment
@@ -290,6 +309,28 @@ export default function CheckoutPage() {
   const multi = items.length > 1;
   const perItem = multi && !sameProperty;
   const hasInspection = items.some((it) => INSPECTION_SERVICE_IDS.has(it.serviceId));
+
+  // Work out whether the property is a Leeds or Manchester one from the address
+  // the landlord entered, so we only offer that city's inspection availability.
+  const inspectionCity = useMemo<City | null>(() => {
+    if (!hasInspection) return null;
+    const texts: string[] = [];
+    if (perItem) {
+      for (const it of items) {
+        if (!INSPECTION_SERVICE_IDS.has(it.serviceId)) continue;
+        const p = props[it.uid];
+        if (p) texts.push(`${p.postcode} ${p.address}`);
+      }
+    } else {
+      const p = props['shared'];
+      if (p) texts.push(`${p.postcode} ${p.address}`);
+    }
+    for (const t of texts) {
+      const c = cityFromText(t);
+      if (c) return c;
+    }
+    return null;
+  }, [hasInspection, perItem, items, props]);
 
   // Build the property assignment list sent to the server.
   const buildProperties = () => {
@@ -433,7 +474,7 @@ export default function CheckoutPage() {
                         type="checkbox"
                         checked={sameProperty}
                         onChange={(e) => setSameProperty(e.target.checked)}
-                        style={{ marginTop: 2, width: 16, height: 16, flexShrink: 0 }}
+                        style={{ marginTop: 2, width: 16, height: 16, flexShrink: 0, accentColor: GREEN }}
                       />
                       <span>All of these services are for the <strong>same property</strong>.</span>
                     </label>
@@ -459,7 +500,7 @@ export default function CheckoutPage() {
                 </div>
 
                 {/* Inspection appointment (only when the order contains one) */}
-                {hasInspection && <InspectionScheduler value={insp} onChange={setInsp} />}
+                {hasInspection && <InspectionScheduler value={insp} city={inspectionCity} onChange={setInsp} />}
 
                 {/* Customer details */}
                 <div style={cardStyle}>
@@ -509,7 +550,7 @@ export default function CheckoutPage() {
                   {error && <div style={{ marginTop: 14, background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 8, padding: '11px 14px', color: '#dc2626', fontSize: 13 }}>{error}</div>}
 
                   <button onClick={submit} disabled={submitting} style={{
-                    marginTop: 16, width: '100%', padding: '15px', background: submitting ? '#93c5fd' : BLUE, color: '#fff', border: 'none',
+                    marginTop: 16, width: '100%', padding: '15px', background: submitting ? '#86efac' : GREEN, color: '#fff', border: 'none',
                     borderRadius: 9, fontSize: 15, fontWeight: 700, cursor: submitting ? 'wait' : 'pointer', letterSpacing: '0.02em',
                   }}>
                     {submitting ? 'Placing your order…' : `Place order · ${formatGBP(total)}`}

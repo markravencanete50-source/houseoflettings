@@ -614,10 +614,90 @@ export default function LandlordsPage() {
       </section>
 
 
-      {/* ── FAQ ─────────────────────────────────────────────── */}
+      {/* ── LANDLORD RESPONSIBILITIES CHECKLIST ─────────────── */}
       <section style={{
         padding: 'clamp(60px, 8vw, 100px) clamp(24px, 7%, 100px)',
         background: '#f7f8fa',
+      }}>
+        <div style={{ textAlign: 'center', marginBottom: 52, maxWidth: 640, marginLeft: 'auto', marginRight: 'auto' }}>
+          <div style={{
+            fontSize: 11, fontWeight: 700, letterSpacing: 3,
+            textTransform: 'uppercase', color: '#2563eb', marginBottom: 14,
+            fontFamily: "'Poppins', sans-serif",
+          }}>
+            Know Your Obligations
+          </div>
+          <h2 style={{
+            fontFamily: "'Poppins', sans-serif",
+            fontSize: 'clamp(28px,4vw,44px)', fontWeight: 700,
+            color: '#0f1f3d', margin: '0 0 16px',
+          }}>
+            A landlord&rsquo;s legal responsibilities at a glance
+          </h2>
+          <p style={{
+            fontFamily: "'Poppins', sans-serif",
+            fontSize: 15, color: '#6b7280', lineHeight: 1.7, margin: 0,
+          }}>
+            Letting a property in England comes with real legal duties. Here is what every
+            landlord needs in place. On our managed packages, we arrange, track and renew all of it for you.
+          </p>
+        </div>
+        <style>{`
+          .ll-resp-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 20px;
+            max-width: 1100px;
+            margin: 0 auto;
+          }
+          .ll-resp-card {
+            background: #fff; border: 1px solid #e5e7eb; border-radius: 14px;
+            padding: 26px 24px; display: flex; flex-direction: column;
+          }
+          .ll-resp-ic {
+            width: 40px; height: 40px; border-radius: 10px; background: #eff6ff;
+            display: inline-flex; align-items: center; justify-content: center;
+            font-size: 20px; margin-bottom: 14px;
+          }
+          .ll-resp-h { font-family:'Poppins',sans-serif; font-size:16px; font-weight:700; color:#0f1f3d; margin:0 0 8px; line-height:1.3; }
+          .ll-resp-p { font-family:'Poppins',sans-serif; font-size:13.5px; color:#4b5563; line-height:1.65; margin:0; }
+        `}</style>
+        <div className="ll-resp-grid">
+          {[
+            { ic: '🔥', h: 'Gas safety', p: 'An annual Gas Safety Certificate (CP12) from a Gas Safe registered engineer if the property has any gas appliances.' },
+            { ic: '⚡', h: 'Electrical safety', p: 'A satisfactory Electrical Installation Condition Report (EICR), renewed at least every 5 years, with any faults put right.' },
+            { ic: '📋', h: 'Energy performance', p: 'A valid EPC rated E or above, provided to tenants before they move in. Minimum standards are set to tighten in the coming years.' },
+            { ic: '🔔', h: 'Smoke and CO alarms', p: 'A working smoke alarm on every floor and a carbon monoxide alarm in any room with a fuel burning appliance, tested at the start of a tenancy.' },
+            { ic: '🛡️', h: 'Deposit protection', p: 'Any deposit placed in a government approved scheme within 30 days, with the prescribed information served on the tenant.' },
+            { ic: '🪪', h: 'Right to Rent', p: 'Every adult occupier checked for the right to rent in England before the tenancy begins, with records kept.' },
+            { ic: '📑', h: 'How to Rent guide', p: 'The latest government How to Rent guide issued to tenants, so a valid notice can be served later if ever needed.' },
+            { ic: '🏷️', h: 'Licensing', p: 'HMO and selective licensing checked for the property and postcode. Many parts of Leeds and Manchester now require a licence.' },
+          ].map((c) => (
+            <div key={c.h} className="ll-resp-card">
+              <span className="ll-resp-ic" aria-hidden>{c.ic}</span>
+              <h3 className="ll-resp-h">{c.h}</h3>
+              <p className="ll-resp-p">{c.p}</p>
+            </div>
+          ))}
+        </div>
+        <div style={{
+          maxWidth: 1100, margin: '28px auto 0',
+          background: '#fff', border: '1px solid #e5e7eb', borderLeft: '3px solid #2563eb',
+          borderRadius: 12, padding: '18px 22px',
+        }}>
+          <p style={{ fontFamily: "'Poppins', sans-serif", fontSize: 13.5, color: '#475569', lineHeight: 1.7, margin: 0 }}>
+            <strong style={{ color: '#0f1f3d' }}>Heads up:</strong> the Renters&rsquo; Rights reforms are changing how tenancies work,
+            including the move away from Section 21 no fault evictions and new rules on how homes are let and managed.
+            We keep every landlord we work with updated as the law changes, so your properties stay compliant.
+          </p>
+        </div>
+      </section>
+
+
+      {/* ── FAQ ─────────────────────────────────────────────── */}
+      <section style={{
+        padding: 'clamp(60px, 8vw, 100px) clamp(24px, 7%, 100px)',
+        background: '#fff',
       }}>
         <div style={{ maxWidth: 760, margin: '0 auto' }}>
           <div style={{

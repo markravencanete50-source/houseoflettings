@@ -8,14 +8,17 @@ import { initializeApp, getApps, cert } from 'firebase-admin/app';
 import { getFirestore, FieldValue } from 'firebase-admin/firestore';
 import { priceLine, formatGBP, type OrderSelection, type LineBreakdown } from '@/lib/serviceCart';
 import { pushInspectionToCalendar } from '@/lib/googleCalendar';
+import { cityFromText, INSPECTION_DURATION_MIN, type City } from '@/lib/viewingSlots';
 import { rateLimit } from '@/lib/rateLimit';
 
 type PropertyAssignment = { serviceId?: string; label?: string; postcode?: string; address?: string };
 
-// "HH:mm" + 30 minutes, clamped to 23:59 — the default inspection slot length.
-function addThirtyMinutes(time: string): string {
+// "HH:mm" + the inspection length (1 hour), clamped to 23:59. An inspection
+// occupies a full hour on the calendar; the 30-minute travel gap to the next
+// appointment is enforced by the slot spacing, not the event length.
+function addInspectionDuration(time: string): string {
   const [h, m] = time.split(':').map(Number);
-  const total = Math.min(23 * 60 + 59, h * 60 + m + 30);
+  const total = Math.min(23 * 60 + 59, h * 60 + m + INSPECTION_DURATION_MIN);
   return `${String(Math.floor(total / 60)).padStart(2, '0')}:${String(total % 60).padStart(2, '0')}`;
 }
 
@@ -43,12 +46,14 @@ function proofHtml(urls: string[]): string {
   </div>`;
 }
 
-function inspectionHtml(inspection: { date?: string; time?: string } | null): string {
+function inspectionHtml(inspection: { date?: string; time?: string; city?: City | null } | null): string {
   if (!inspection?.date) return '';
   const when = inspection.time ? `${inspection.date} at ${inspection.time}` : inspection.date;
+  const cityTag = inspection.city ? ` · ${inspection.city}` : '';
   return `<div style="margin-bottom:16px;background:#eef4ff;border:1px solid #cfe0ff;border-radius:8px;padding:10px 14px">
-    <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:#1d4ed8;margin:0 0 4px">Requested inspection appointment</div>
+    <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:#1d4ed8;margin:0 0 4px">Requested inspection appointment${cityTag}</div>
     <div style="font-size:14px;color:#0a162f;font-weight:700">${when}</div>
+    <div style="font-size:12px;color:#64748b;margin-top:2px">Allow 1 hour on site, plus 30 minutes travel to the next appointment.</div>
   </div>`;
 }
 
@@ -100,13 +105,13 @@ function customerEmailHtml(ref: string, name: string, lines: LineBreakdown[], to
   return `<!DOCTYPE html><html><head><meta charset="utf-8"/></head>
   <body style="font-family:Arial,sans-serif;background:#f4f6f9;margin:0;padding:0">
     <div style="max-width:600px;margin:36px auto;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,.08)">
-      <div style="background:linear-gradient(135deg,#0a162f,#2563eb);padding:32px 40px;color:#fff">
-        <h1 style="margin:0;font-size:22px">Order received</h1>
+      <div style="background:linear-gradient(135deg,#0a162f,#16a34a);padding:32px 40px;color:#fff">
+        <h1 style="margin:0;font-size:22px">Thank you for ordering</h1>
         <p style="margin:6px 0 0;opacity:.85;font-size:14px">House of Lettings · Additional Services</p>
       </div>
       <div style="padding:32px 40px">
         <p style="font-size:15px;color:#374151">Dear <strong>${name}</strong>,</p>
-        <p style="font-size:15px;color:#374151;line-height:1.6">Thank you for your order (ref <strong>${ref}</strong>) and for sending your proof of payment. Here's a summary. Once we have confirmed your bank transfer, our team will be in touch to arrange everything and confirm any &ldquo;from&rdquo; pricing.</p>
+        <p style="font-size:15px;color:#374151;line-height:1.6">Thank you for your order (ref <strong>${ref}</strong>) and for sending your proof of payment. Here's a summary below. If there's anything our team needs to clarify, we'll get in touch. Otherwise, once we've confirmed your bank transfer, we'll proceed exactly as your order sets out and confirm any &ldquo;from&rdquo; pricing before any work begins.</p>
         <table style="width:100%;border-collapse:collapse;font-size:14px;margin:18px 0">${linesTableHtml(lines)}
           <tr><td style="padding:14px 12px;font-weight:800;color:#0a162f">${hasFrom ? 'Estimated total' : 'Total'} (inc. VAT)</td>
           <td style="padding:14px 12px;text-align:right;font-weight:800;color:#0a162f">${formatGBP(total)}</td></tr>
@@ -118,7 +123,7 @@ function customerEmailHtml(ref: string, name: string, lines: LineBreakdown[], to
   </body></html>`;
 }
 
-function adminEmailHtml(ref: string, customer: any, lines: LineBreakdown[], total: number, hasFrom: boolean, properties: PropertyAssignment[], inspection: { date?: string; time?: string } | null, proofUrls: string[]) {
+function adminEmailHtml(ref: string, customer: any, lines: LineBreakdown[], total: number, hasFrom: boolean, properties: PropertyAssignment[], inspection: { date?: string; time?: string; city?: City | null } | null, proofUrls: string[]) {
   return `<!DOCTYPE html><html><head><meta charset="utf-8"/></head>
   <body style="font-family:Arial,sans-serif;background:#f4f6f9;margin:0;padding:0">
     <div style="max-width:600px;margin:28px auto;background:#fff;border-radius:14px;overflow:hidden">
@@ -169,9 +174,18 @@ export async function POST(request: Request) {
       properties.push({ label: 'All services', postcode: customer.postcode || '', address: customer.address || '' });
     }
 
-    // Optional inspection appointment the landlord picked.
+    // Optional inspection appointment the landlord picked. The city is worked
+    // out from the property when the client didn't tag it.
+    const inspCity: City | null =
+      body.inspection?.city === 'Leeds' || body.inspection?.city === 'Manchester'
+        ? body.inspection.city
+        : null;
     const inspection = body.inspection && /^\d{4}-\d{2}-\d{2}$/.test(body.inspection.date || '')
-      ? { date: body.inspection.date as string, time: /^\d{2}:\d{2}$/.test(body.inspection.time || '') ? body.inspection.time as string : '' }
+      ? {
+          date: body.inspection.date as string,
+          time: /^\d{2}:\d{2}$/.test(body.inspection.time || '') ? body.inspection.time as string : '',
+          city: inspCity,
+        }
       : null;
 
     // Proof of the up-front bank transfer. Required: an order cannot be placed
@@ -224,15 +238,19 @@ export async function POST(request: Request) {
     // (best-effort; a calendar problem must never fail the order).
     if (inspection?.date && inspection.time) {
       const first = properties[0];
+      const propertyText = first ? [first.address, first.postcode].filter(Boolean).join(', ') : '';
+      // Prefer the city the client detected; otherwise infer it from the property.
+      const city = inspection.city || cityFromText(propertyText) || null;
       await pushInspectionToCalendar({
         date: inspection.date,
         time: inspection.time,
-        endTime: addThirtyMinutes(inspection.time),
+        endTime: addInspectionDuration(inspection.time),
         name: customer.fullName,
         phone: customer.phone,
         email: customer.email,
         ref,
-        property: first ? [first.address, first.postcode].filter(Boolean).join(', ') : '',
+        city: city || undefined,
+        property: propertyText,
         services: lines.map((l) => l.name).join(', '),
       }).catch((e) => console.error('inspection calendar push failed:', e));
     }

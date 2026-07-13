@@ -34,7 +34,7 @@ export default function CartBar() {
           </div>
         </div>
         <Link href="/additional-services/checkout" style={{
-          flexShrink: 0, background: '#2563eb', color: '#fff', textDecoration: 'none',
+          flexShrink: 0, background: '#16a34a', color: '#fff', textDecoration: 'none',
           padding: '14px 30px', borderRadius: 9, fontSize: 14.5, fontWeight: 700, letterSpacing: '0.02em',
           whiteSpace: 'nowrap',
         }}>

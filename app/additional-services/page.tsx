@@ -319,8 +319,8 @@ export default function AdditionalServicesPage() {
                                   <div key={item} style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
                                     <span style={{
                                       width: 18, height: 18, borderRadius: '50%',
-                                      background: 'rgba(10,22,47,0.08)',
-                                      color: 'var(--navy)', fontSize: 10, fontWeight: 900,
+                                      background: 'rgba(22,163,74,0.12)',
+                                      color: '#16a34a', fontSize: 10, fontWeight: 900,
                                       display: 'inline-flex', alignItems: 'center',
                                       justifyContent: 'center', flexShrink: 0, marginTop: 2,
                                     }}>✓</span>

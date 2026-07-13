@@ -126,19 +126,22 @@ export interface CalendarInspection {
   phone: string;
   email: string;
   ref?: string;
+  city?: string;       // Leeds | Manchester (kept in the title for city scoping)
   property?: string;   // address / postcode
   services?: string;   // comma-separated service names
 }
 
 // One-way push of a confirmed inspection appointment. The summary starts with
 // "Inspection —" so lib/inspectionSchedule.ts treats it as a booking (capacity),
-// never as an availability window. Never throws; returns the event id or null.
+// never as an availability window; the city is appended in parentheses so the
+// availability engine can keep Leeds and Manchester bookings apart. Never
+// throws; returns the event id or null.
 export async function pushInspectionToCalendar(v: CalendarInspection): Promise<string | null> {
   if (!isCalendarConfigured()) return null;
   try {
     const token = await getCalendarAccessToken();
     const calendarId = encodeURIComponent(process.env.GOOGLE_CALENDAR_ID as string);
-    const summary = `Inspection — ${v.name}`;
+    const summary = `Inspection — ${v.name}${v.city ? ` (${v.city})` : ''}`;
     const descriptionLines = [
       v.ref ? `Order ref: ${v.ref}` : "",
       `Client: ${v.name}`,

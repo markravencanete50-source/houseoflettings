@@ -157,6 +157,75 @@ export function computeWindowSlots(
     });
 }
 
+// ── Inspection appointments (distinct from viewings) ───────────────────────
+// A property inspection takes a full hour, and the agent needs 30 minutes to
+// travel to the next destination. So consecutive inspections must start at
+// least 90 minutes apart (60 on site + 30 travel): an inspection booked at
+// 12:00 finishes at 13:00, and the next bookable start is 13:30.
+//
+// Start times are OFFERED every 30 minutes across the published window (so the
+// landlord has real choice), but any candidate within 90 minutes of an existing
+// inspection is hidden — which is what guarantees the hour-plus-travel gap
+// between whatever actually gets booked.
+export const INSPECTION_DURATION_MIN = 60;      // an inspection lasts 1 hour
+export const INSPECTION_TRAVEL_GAP_MIN = 30;    // + 30 min travel to the next
+export const INSPECTION_BUFFER_MIN = INSPECTION_DURATION_MIN + INSPECTION_TRAVEL_GAP_MIN; // 90 min min. separation
+export const INSPECTION_SLOT_STEP_MIN = 30;     // granularity of offered start times
+
+// Bookable inspection slots inside the given windows. Unlike viewing slots
+// (every 15 min, 3 per slot), inspections are offered at 30-minute spacing, one
+// per slot, and each keeps a 90-minute buffer clear of any booked inspection.
+export function computeInspectionSlots(
+  windows: AvailabilityWindow[],
+  bookedTimes: string[],
+  opts: { isToday?: boolean; nowMinutes?: number } = {},
+): SlotView[] {
+  const { isToday = false, nowMinutes = 0 } = opts;
+  const booked = bookedTimes.map(timeToMinutes);
+
+  // Candidate starts every 30 min from the window start; the full hour must fit
+  // inside the window for the slot to be offered.
+  const starts = new Set<number>();
+  for (const w of windows) {
+    const first = Math.ceil(w.startMin / INSPECTION_SLOT_STEP_MIN) * INSPECTION_SLOT_STEP_MIN;
+    for (let m = first; m + INSPECTION_DURATION_MIN <= w.endMin; m += INSPECTION_SLOT_STEP_MIN) {
+      starts.add(m);
+    }
+  }
+
+  return Array.from(starts)
+    .sort((a, b) => a - b)
+    .map((m): SlotView => {
+      // Blocked if any existing inspection is within the hour-plus-travel buffer
+      // on either side (so a 12:00 booking clears 13:30 but not 12:30/13:00).
+      const clash = booked.some((b) => Math.abs(b - m) < INSPECTION_BUFFER_MIN);
+      let status: SlotStatus = 'available';
+      if (isToday && m <= nowMinutes) status = 'past';
+      else if (clash) status = 'full';
+      return { time: minutesToTime(m), minutes: m, status, spotsLeft: clash ? 0 : 1 };
+    });
+}
+
+// Server gate for an inspection booking: the time must sit inside a window and
+// keep the hour-plus-travel buffer clear of another inspection.
+export function inspectionBookingRejectionReason(
+  time: string,
+  windows: AvailabilityWindow[],
+  bookedTimes: string[],
+): string | null {
+  const minutes = timeToMinutes(time);
+  const inWindow = windows.some(
+    (w) => minutes >= w.startMin && minutes + INSPECTION_DURATION_MIN <= w.endMin,
+  );
+  if (!inWindow) {
+    return 'That inspection time is no longer available. Please pick an offered slot.';
+  }
+  if (bookedTimes.some((t) => Math.abs(timeToMinutes(t) - minutes) < INSPECTION_BUFFER_MIN)) {
+    return 'That inspection time is too close to another appointment. Each inspection needs an hour plus 30 minutes travel. Please choose another slot.';
+  }
+  return null;
+}
+
 // Server gate for a per-property booking: the time must sit inside a window and
 // still have capacity. Returns null if OK, else a human-readable reason.
 export function windowBookingRejectionReason(

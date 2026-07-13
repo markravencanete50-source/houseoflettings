@@ -8,15 +8,17 @@ import { signOut, getDashboardPath } from '@/services/auth';
 
 type NavItem = { href: string; label: string };
 
-// Desktop: hover reveals the menu. Mobile (inside the open burger menu):
-// the menu renders inline as an always-expanded grouped list.
-function NavDropdown({ label, items }: { label: string; items: NavItem[] }) {
+// Desktop: hover reveals the menu, and clicking the label itself routes to the
+// section's landing page (e.g. Landlord -> /landlords). Mobile (inside the open
+// burger menu): the menu renders inline as an always-expanded grouped list, and
+// tapping the label still navigates to the landing page.
+function NavDropdown({ label, href, items }: { label: string; href: string; items: NavItem[] }) {
   return (
     <div className="hol-nav__dd">
-      <button type="button" className="hol-nav__dd-trigger" aria-haspopup="true">
+      <Link href={href} className="hol-nav__dd-trigger" aria-haspopup="true">
         {label}
         <span className="hol-nav__dd-caret" aria-hidden>▾</span>
-      </button>
+      </Link>
       <div className="hol-nav__dd-menu">
         {items.map((it) => (
           <Link key={it.href} href={it.href} className="hol-nav__dd-item">
@@ -105,8 +107,8 @@ export default function Navbar() {
 
           {/* Links + CTAs — always visible on desktop, collapses into a dropdown on mobile */}
           <div className={`hol-nav__links ${mobileMenuOpen ? 'hol-nav__links--open' : ''}`}>
-            <NavDropdown label="Landlord" items={LANDLORD_ITEMS} />
-            <NavDropdown label="Tenant" items={TENANT_ITEMS} />
+            <NavDropdown label="Landlord" href="/landlords" items={LANDLORD_ITEMS} />
+            <NavDropdown label="Tenant" href="/tenants" items={TENANT_ITEMS} />
             <Link href="/additional-services" className="hol-nav__link">Additional Services</Link>
             <Link href="/branches" className="hol-nav__link">Branches</Link>
             {!loading && profile && (
@@ -217,6 +219,7 @@ export default function Navbar() {
             font-weight: 500;
             letter-spacing: 0.06em;
             text-transform: uppercase;
+            text-decoration: none;
             padding: 4px 0;
             white-space: nowrap;
           }

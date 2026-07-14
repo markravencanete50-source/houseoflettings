@@ -1,6 +1,6 @@
 'use client';
 // app/landlords/page.tsx
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import Link from 'next/link';
 import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
@@ -45,9 +45,42 @@ const PKG_HL: string[][] = [
   ['Everything in Full Management', 'Rent guarantee cover', 'Legal and eviction protection', 'Priority contractors and enhanced inspections'],
 ];
 
+// Rent Guarantee Insurance carousel — a client-supplied 7-slide educational set
+// (optimised to WebP in /public/images/rent-guarantee). Ties to the rent
+// guarantee cover in the Comprehensive Management package.
+const RGI_SLIDES = [
+  { src: '/images/rent-guarantee/rgi-1.webp', alt: '6 reasons landlords choose rent guarantee insurance' },
+  { src: '/images/rent-guarantee/rgi-2.webp', alt: 'Reason 1: protects your rental income if a tenant stops paying, subject to policy terms' },
+  { src: '/images/rent-guarantee/rgi-3.webp', alt: 'Reason 2: legal support and expenses for possession proceedings' },
+  { src: '/images/rent-guarantee/rgi-4.webp', alt: 'Reason 3: less stress during tenant issues, with financial and legal backing' },
+  { src: '/images/rent-guarantee/rgi-5.webp', alt: 'Reason 4: who should consider it, from first-time to portfolio landlords' },
+  { src: '/images/rent-guarantee/rgi-6.webp', alt: 'Reason 5: read the policy carefully for eligibility, exclusions, waiting periods and claims' },
+  { src: '/images/rent-guarantee/rgi-7.webp', alt: 'Is rent guarantee insurance right for you? Speak to the House of Lettings team' },
+];
+
 export default function LandlordsPage() {
   const [openFaq, setOpenFaq] = useState<number | null>(null);
   const [activePkg, setActivePkg] = useState(3); // default: Full Management (Most Popular)
+  const rgiRef = useRef<HTMLDivElement>(null);
+  const [rgiSlide, setRgiSlide] = useState(0);
+  const rgiStep = () => {
+    const t = rgiRef.current;
+    const a = t?.children[0] as HTMLElement | undefined;
+    const b = t?.children[1] as HTMLElement | undefined;
+    return a && b ? b.offsetLeft - a.offsetLeft : a?.offsetWidth || 1;
+  };
+  const rgiGo = (i: number) => {
+    const t = rgiRef.current;
+    if (!t) return;
+    const c = Math.max(0, Math.min(RGI_SLIDES.length - 1, i));
+    t.scrollTo({ left: c * rgiStep(), behavior: 'smooth' });
+  };
+  const rgiOnScroll = () => {
+    const t = rgiRef.current;
+    if (!t) return;
+    const idx = Math.round(t.scrollLeft / rgiStep());
+    setRgiSlide(Math.max(0, Math.min(RGI_SLIDES.length - 1, idx)));
+  };
 
   return (
     <>
@@ -908,6 +941,99 @@ export default function LandlordsPage() {
             including the move away from Section 21 no fault evictions and new rules on how homes are let and managed.
             We keep every landlord we work with updated as the law changes, so your properties stay compliant.
           </p>
+        </div>
+      </section>
+
+
+      {/* ── RENT GUARANTEE CAROUSEL ─────────────────────────── */}
+      <section style={{
+        padding: 'clamp(60px, 8vw, 100px) clamp(16px, 5%, 80px)',
+        background: 'linear-gradient(180deg, #f8fbff 0%, #eaf1fb 100%)',
+      }}>
+        <style>{`
+          .rgi { max-width: 1180px; margin: 0 auto; }
+          .rgi-track { display: flex; gap: 20px; overflow-x: auto; scroll-snap-type: x mandatory;
+            padding: 6px 4px 22px; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+          .rgi-track::-webkit-scrollbar { display: none; }
+          .rgi-slide { flex: 0 0 auto; width: clamp(280px, 80vw, 392px); margin: 0; scroll-snap-align: start;
+            border-radius: 20px; overflow: hidden; background: #fff; border: 1px solid #d7e3f4;
+            box-shadow: 0 22px 46px -30px rgba(15,31,61,.45); }
+          .rgi-slide img { display: block; width: 100%; height: auto; }
+          .rgi-controls { display: flex; align-items: center; justify-content: center; gap: 18px; }
+          .rgi-arrow { width: 44px; height: 44px; border-radius: 50%; border: 1.5px solid #cdd6ea;
+            background: #fff; color: #2563eb; display: inline-flex; align-items: center; justify-content: center;
+            cursor: pointer; transition: all .2s ease; box-shadow: 0 6px 16px -8px rgba(15,31,61,.3); flex: none; }
+          .rgi-arrow:hover { background: #2563eb; color: #fff; border-color: #2563eb; }
+          .rgi-dots { display: flex; align-items: center; gap: 8px; }
+          .rgi-dot { width: 8px; height: 8px; border-radius: 50%; background: #c2d3ea; border: none; padding: 0;
+            cursor: pointer; transition: all .25s ease; }
+          .rgi-dot.active { background: #2563eb; width: 24px; border-radius: 999px; }
+          .rgi-cta { display: flex; gap: 14px; flex-wrap: wrap; justify-content: center; margin-top: 34px; }
+          .rgi-btn { display: inline-flex; align-items: center; justify-content: center; padding: 15px 32px;
+            border-radius: 8px; font-family: 'Poppins', sans-serif; font-size: 14px; font-weight: 700;
+            letter-spacing: .5px; text-transform: uppercase; text-decoration: none; transition: all .2s ease; }
+          .rgi-btn.primary { background: #2563eb; color: #fff; border: 1.5px solid #2563eb; }
+          .rgi-btn.primary:hover { background: #1d4ed8; border-color: #1d4ed8; }
+          .rgi-btn.ghost { background: #fff; color: #0f1f3d; border: 1.5px solid #cdd6ea; }
+          .rgi-btn.ghost:hover { border-color: #2563eb; color: #2563eb; }
+          @media (max-width: 600px) { .rgi-btn { width: 100%; } }
+        `}</style>
+        <div className="rgi">
+          <div style={{ textAlign: 'center', maxWidth: 640, margin: '0 auto 40px', padding: '0 8px' }}>
+            <div style={{
+              fontSize: 11, fontWeight: 700, letterSpacing: 3, textTransform: 'uppercase',
+              color: '#2563eb', marginBottom: 14, fontFamily: "'Poppins', sans-serif",
+            }}>
+              Protect Your Income
+            </div>
+            <h2 style={{
+              fontFamily: "'Poppins', sans-serif", fontSize: 'clamp(28px,4vw,44px)',
+              fontWeight: 700, color: '#0f1f3d', margin: '0 0 16px',
+            }}>
+              Rent guarantee insurance, explained
+            </h2>
+            <p style={{
+              fontFamily: "'Poppins', sans-serif", fontSize: 15, color: '#6b7280', lineHeight: 1.7, margin: 0,
+            }}>
+              If a tenant stops paying, rent guarantee cover can protect your income and help with legal
+              costs. Swipe through the essentials, then talk to us about adding it through Comprehensive Management.
+            </p>
+          </div>
+
+          <div className="rgi-track" ref={rgiRef} onScroll={rgiOnScroll}>
+            {RGI_SLIDES.map((s) => (
+              <figure key={s.src} className="rgi-slide">
+                <img src={s.src} alt={s.alt} width={1000} height={1000} loading="lazy" decoding="async" />
+              </figure>
+            ))}
+          </div>
+
+          <div className="rgi-controls">
+            <button type="button" className="rgi-arrow" aria-label="Previous slide" onClick={() => rgiGo(rgiSlide - 1)}>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="M15 18l-6-6 6-6" /></svg>
+            </button>
+            <div className="rgi-dots" role="tablist" aria-label="Choose a slide">
+              {RGI_SLIDES.map((s, i) => (
+                <button
+                  key={s.src}
+                  type="button"
+                  role="tab"
+                  aria-label={`Go to slide ${i + 1}`}
+                  aria-selected={rgiSlide === i}
+                  className={`rgi-dot${rgiSlide === i ? ' active' : ''}`}
+                  onClick={() => rgiGo(i)}
+                />
+              ))}
+            </div>
+            <button type="button" className="rgi-arrow" aria-label="Next slide" onClick={() => rgiGo(rgiSlide + 1)}>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="M9 6l6 6-6 6" /></svg>
+            </button>
+          </div>
+
+          <div className="rgi-cta">
+            <Link href="/pricing/comprehensive-management" className="rgi-btn primary">Explore Comprehensive Management</Link>
+            <Link href="/book-valuation" className="rgi-btn ghost">Book a Free Valuation</Link>
+          </div>
         </div>
       </section>
 

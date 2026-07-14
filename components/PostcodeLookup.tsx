@@ -21,6 +21,53 @@ type PostcodeLookupProps = {
   buttonText?: string;
 };
 
+// ── Quota-saving helpers ───────────────────────────────────────────────────
+// Homedata bills per lookup, so we never fire a call unless the postcode is a
+// valid UK format, and we cache every result (including "no results") for the
+// browsing session so the same postcode is never charged twice.
+
+const UK_POSTCODE = /^[A-Z]{1,2}\d[A-Z\d]?\d[A-Z]{2}$/;
+
+function normalizePostcode(pc: string): string {
+  const s = pc.replace(/\s+/g, '').toUpperCase();
+  if (s.length < 5) return s;
+  return `${s.slice(0, -3)} ${s.slice(-3)}`; // single space before the inward code
+}
+
+function isValidPostcode(pc: string): boolean {
+  return UK_POSTCODE.test(pc.replace(/\s+/g, '').toUpperCase());
+}
+
+// Two-layer cache: an in-memory Map (survives client-side navigation between
+// forms) backed by sessionStorage (survives a page refresh, cleared when the
+// tab closes). Keyed by the normalised postcode.
+const memCache = new Map<string, AddressResult[]>();
+const CACHE_PREFIX = 'hol_addr_';
+
+function readCache(key: string): AddressResult[] | null {
+  if (memCache.has(key)) return memCache.get(key)!;
+  try {
+    const raw = sessionStorage.getItem(CACHE_PREFIX + key);
+    if (raw) {
+      const parsed = JSON.parse(raw) as AddressResult[];
+      memCache.set(key, parsed);
+      return parsed;
+    }
+  } catch {
+    /* sessionStorage unavailable — fall back to memory only */
+  }
+  return null;
+}
+
+function writeCache(key: string, value: AddressResult[]): void {
+  memCache.set(key, value);
+  try {
+    sessionStorage.setItem(CACHE_PREFIX + key, JSON.stringify(value));
+  } catch {
+    /* ignore quota/availability errors — memory cache still applies */
+  }
+}
+
 export default function PostcodeLookup({
   postcode,
   onPostcodeChange,
@@ -33,17 +80,48 @@ export default function PostcodeLookup({
   buttonText = 'Find Addresses',
 }: PostcodeLookupProps) {
   const inputRef = useRef<HTMLInputElement>(null);
+  const lastKeyRef = useRef<string | null>(null);
   const [addresses, setAddresses] = useState<AddressResult[]>([]);
   const [showDropdown, setShowDropdown] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const handleFindAddresses = async () => {
-    const pc = postcode.trim();
-    if (!pc || pc.length < 3) {
-      setError('Please enter a valid postcode.');
+  const applyResult = (list: AddressResult[]) => {
+    if (list.length === 0) {
+      setError('No addresses found for this postcode.');
       setAddresses([]);
       setShowDropdown(false);
+    } else {
+      setError(null);
+      setAddresses(list);
+      setShowDropdown(true);
+    }
+  };
+
+  const handleFindAddresses = async () => {
+    if (loading) return; // ignore rapid double-clicks
+
+    const raw = postcode.trim();
+    if (!isValidPostcode(raw)) {
+      setError('Enter a full UK postcode, e.g. LS1 4DY.');
+      setAddresses([]);
+      setShowDropdown(false);
+      return;
+    }
+
+    const key = normalizePostcode(raw);
+
+    // Already showing this postcode's results — just reopen, no call.
+    if (lastKeyRef.current === key && addresses.length > 0) {
+      setShowDropdown(true);
+      return;
+    }
+
+    // Cache hit — no API call is made.
+    const cached = readCache(key);
+    if (cached) {
+      lastKeyRef.current = key;
+      applyResult(cached);
       return;
     }
 
@@ -52,19 +130,14 @@ export default function PostcodeLookup({
     setAddresses([]);
 
     try {
-      const response = await fetch(`/api/address-lookup?postcode=${encodeURIComponent(pc)}`);
+      const response = await fetch(`/api/address-lookup?postcode=${encodeURIComponent(key)}`);
       if (!response.ok) {
         throw new Error('Failed to fetch addresses.');
       }
       const data = (await response.json()) as { addresses: AddressResult[] };
-      if (data.addresses.length === 0) {
-        setError('No addresses found for this postcode.');
-        setAddresses([]);
-        setShowDropdown(false);
-      } else {
-        setAddresses(data.addresses);
-        setShowDropdown(true);
-      }
+      writeCache(key, data.addresses); // cache even empty results to avoid re-charging
+      lastKeyRef.current = key;
+      applyResult(data.addresses);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred.');
       setAddresses([]);

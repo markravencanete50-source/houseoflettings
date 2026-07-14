@@ -12,10 +12,10 @@ type NavItem = { href: string; label: string };
 // section's landing page (e.g. Landlord -> /landlords). Mobile (inside the open
 // burger menu): the menu renders inline as an always-expanded grouped list, and
 // tapping the label still navigates to the landing page.
-function NavDropdown({ label, href, items }: { label: string; href: string; items: NavItem[] }) {
+function NavDropdown({ label, href, items, active }: { label: string; href: string; items: NavItem[]; active?: boolean }) {
   return (
     <div className="hol-nav__dd">
-      <Link href={href} className="hol-nav__dd-trigger" aria-haspopup="true">
+      <Link href={href} className={`hol-nav__dd-trigger${active ? ' is-active' : ''}`} aria-haspopup="true">
         {label}
         <span className="hol-nav__dd-caret" aria-hidden>▾</span>
       </Link>
@@ -51,12 +51,27 @@ export default function Navbar() {
   const pathname = usePathname();
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [progress, setProgress] = useState(0);
 
   useEffect(() => {
-    const handleScroll = () => setScrolled(window.scrollY > 12);
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 12);
+      const total = document.documentElement.scrollHeight - window.innerHeight;
+      setProgress(total > 0 ? (window.scrollY / total) * 100 : 0);
+    };
+    handleScroll();
     window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
+    window.addEventListener('resize', handleScroll, { passive: true });
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      window.removeEventListener('resize', handleScroll);
+    };
   }, []);
+
+  // Active-section detection: highlight the nav item whose landing page (or any of
+  // its sub-pages) the visitor is currently on.
+  const isActive = (href: string) =>
+    href === '/' ? pathname === '/' : pathname === href || pathname.startsWith(href + '/');
 
   useEffect(() => {
     setMobileMenuOpen(false);
@@ -85,11 +100,25 @@ export default function Navbar() {
           transition: 'background 0.3s ease, box-shadow 0.3s ease',
         }}
       >
+        {/* Scroll progress bar (sits along the very top edge of the nav) */}
+        <div className="hol-nav__progress" aria-hidden>
+          <span className="hol-nav__progress-fill" style={{ width: `${progress}%` }} />
+        </div>
+
         <div className="hol-nav__inner">
           {/* Logo */}
           <Link href="/" className="hol-nav__logo">
-            <span className="hol-nav__logo-top">House of Lettings</span>
-            <span className="hol-nav__logo-sub">Leeds &amp; Manchester</span>
+            <img
+              src="/images/logo_HOL_tight.png"
+              alt="House of Lettings"
+              className="hol-nav__logo-img"
+              width={38}
+              height={39}
+            />
+            <span className="hol-nav__logo-txt">
+              <span className="hol-nav__logo-top">House of Lettings</span>
+              <span className="hol-nav__logo-sub">Leeds &amp; Manchester</span>
+            </span>
           </Link>
 
           {/* Hamburger — mobile only */}
@@ -107,13 +136,13 @@ export default function Navbar() {
 
           {/* Links + CTAs — always visible on desktop, collapses into a dropdown on mobile */}
           <div className={`hol-nav__links ${mobileMenuOpen ? 'hol-nav__links--open' : ''}`}>
-            <NavDropdown label="Landlord" href="/landlords" items={LANDLORD_ITEMS} />
-            <NavDropdown label="Tenant" href="/tenants" items={TENANT_ITEMS} />
-            <Link href="/branches" className="hol-nav__link">Branches</Link>
+            <NavDropdown label="Landlord" href="/landlords" items={LANDLORD_ITEMS} active={isActive('/landlords')} />
+            <NavDropdown label="Tenant" href="/tenants" items={TENANT_ITEMS} active={isActive('/tenants')} />
+            <Link href="/branches" className={`hol-nav__link${isActive('/branches') ? ' is-active' : ''}`}>Branches</Link>
             {!loading && profile && (
               <Link href={dashLink} className="hol-nav__link">Dashboard</Link>
             )}
-            <Link href="/terms" className="hol-nav__link">Terms</Link>
+            <Link href="/terms" className={`hol-nav__link${isActive('/terms') ? ' is-active' : ''}`}>Terms</Link>
             {!loading && profile && (
               <button onClick={handleSignOut} className="nav-btn-outline">Sign Out</button>
             )}
@@ -135,13 +164,36 @@ export default function Navbar() {
             min-height: 72px;
             flex-wrap: wrap;
           }
+          .hol-nav__progress {
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 3px;
+            background: rgba(37,99,235,0.14);
+          }
+          .hol-nav__progress-fill {
+            display: block; height: 100%;
+            background: #2563eb;
+            transition: width 0.1s linear;
+          }
           .hol-nav__logo {
             display: flex;
-            flex-direction: column;
+            flex-direction: row;
+            align-items: center;
+            gap: 12px;
             text-decoration: none;
             flex-shrink: 0;
             line-height: 1.2;
             padding: 12px 0;
+          }
+          .hol-nav__logo-img {
+            width: 38px; height: 39px;
+            object-fit: contain;
+            flex-shrink: 0;
+          }
+          .hol-nav__logo-txt {
+            display: flex;
+            flex-direction: column;
+            line-height: 1.2;
           }
           .hol-nav__logo-top {
             font-family: 'Poppins', sans-serif;
@@ -201,6 +253,12 @@ export default function Navbar() {
             white-space: nowrap;
           }
           .hol-nav__link:hover { opacity: 0.75; }
+          .hol-nav__link.is-active,
+          .hol-nav__dd-trigger.is-active {
+            color: #fff;
+            font-weight: 600;
+            box-shadow: inset 0 -2px 0 0 #2563eb;
+          }
           .hol-nav__dd {
             position: relative;
             display: inline-block;

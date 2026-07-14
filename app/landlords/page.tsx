@@ -656,39 +656,147 @@ export default function LandlordsPage() {
         <style>{`
           .ll-resp-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-            gap: 20px;
-            max-width: 1100px;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 18px;
+            max-width: 1160px;
             margin: 0 auto;
           }
+          @media (max-width: 1040px) { .ll-resp-grid { grid-template-columns: repeat(2, 1fr); } }
+          @media (max-width: 560px)  { .ll-resp-grid { grid-template-columns: 1fr; gap: 14px; } }
+
           .ll-resp-card {
-            background: #fff; border: 1px solid #e5e7eb; border-radius: 14px;
-            padding: 26px 24px; display: flex; flex-direction: column;
+            position: relative;
+            background: linear-gradient(180deg, #ffffff 0%, #fbfdff 100%);
+            border-radius: 18px;
+            padding: 24px 22px 20px;
+            display: flex;
+            flex-direction: column;
+            isolation: isolate;
+            transition: transform .3s ease, box-shadow .3s ease;
+          }
+          /* Flowing gradient border on every card (masked ring) */
+          .ll-resp-card::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: 18px;
+            padding: 1.5px;
+            background: linear-gradient(120deg, #dbeafe, #2563eb, #60a5fa, #1e40af, #dbeafe);
+            background-size: 300% 300%;
+            -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+            -webkit-mask-composite: xor;
+                    mask-composite: exclude;
+            animation: ll-border-flow 9s ease-in-out infinite;
+            opacity: .55;
+            transition: opacity .3s ease, filter .3s ease;
+            z-index: -1;
+            pointer-events: none;
+          }
+          .ll-resp-card:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 26px 46px -26px rgba(37,99,235,.42);
+          }
+          .ll-resp-card:hover::before {
+            opacity: 1;
+            filter: brightness(1.12) saturate(1.25);
+            animation-duration: 3.5s;
+          }
+          @keyframes ll-border-flow {
+            0%   { background-position: 0% 50%; }
+            50%  { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+          }
+          @media (prefers-reduced-motion: reduce) {
+            .ll-resp-card::before { animation: none; opacity: .7; }
+            .ll-resp-card { transition: none; }
+          }
+
+          .ll-resp-top {
+            display: flex; align-items: center; justify-content: space-between;
+            gap: 10px; margin-bottom: 16px;
           }
           .ll-resp-ic {
-            width: 40px; height: 40px; border-radius: 10px; background: #eff6ff;
+            width: 46px; height: 46px; border-radius: 13px; flex: none;
+            background: linear-gradient(135deg, #2563eb 0%, #4f83f1 100%);
+            color: #fff;
             display: inline-flex; align-items: center; justify-content: center;
-            font-size: 20px; margin-bottom: 14px;
+            box-shadow: 0 10px 20px -8px rgba(37,99,235,.6);
+          }
+          .ll-resp-tag {
+            font-family: 'Poppins', sans-serif;
+            font-size: 10px; font-weight: 700; letter-spacing: .09em;
+            text-transform: uppercase; border-radius: 999px; padding: 4px 10px;
+            white-space: nowrap;
           }
           .ll-resp-h { font-family:'Poppins',sans-serif; font-size:16px; font-weight:700; color:#0f1f3d; margin:0 0 8px; line-height:1.3; }
-          .ll-resp-p { font-family:'Poppins',sans-serif; font-size:13.5px; color:#4b5563; line-height:1.65; margin:0; }
+          .ll-resp-p { font-family:'Poppins',sans-serif; font-size:13px; color:#4b5563; line-height:1.65; margin:0 0 16px; }
+          .ll-resp-foot {
+            margin-top: auto; display: flex; align-items: center; gap: 6px;
+            padding-top: 14px; border-top: 1px solid #eef2f7;
+            font-family: 'Poppins', sans-serif; font-size: 11.5px; font-weight: 600; color: #059669;
+          }
         `}</style>
         <div className="ll-resp-grid">
           {[
-            { ic: '🔥', h: 'Gas safety', p: 'An annual Gas Safety Certificate (CP12) from a Gas Safe registered engineer if the property has any gas appliances.' },
-            { ic: '⚡', h: 'Electrical safety', p: 'A satisfactory Electrical Installation Condition Report (EICR), renewed at least every 5 years, with any faults put right.' },
-            { ic: '📋', h: 'Energy performance', p: 'A valid EPC rated E or above, provided to tenants before they move in. Minimum standards are set to tighten in the coming years.' },
-            { ic: '🔔', h: 'Smoke and CO alarms', p: 'A working smoke alarm on every floor and a carbon monoxide alarm in any room with a fuel burning appliance, tested at the start of a tenancy.' },
-            { ic: '🛡️', h: 'Deposit protection', p: 'Any deposit placed in a government approved scheme within 30 days, with the prescribed information served on the tenant.' },
-            { ic: '🪪', h: 'Right to Rent', p: 'Every adult occupier checked for the right to rent in England before the tenancy begins, with records kept.' },
-            { ic: '📑', h: 'How to Rent guide', p: 'The latest government How to Rent guide issued to tenants, so a valid notice can be served later if ever needed.' },
-            { ic: '🏷️', h: 'Licensing', p: 'HMO and selective licensing checked for the property and postcode. Many parts of Leeds and Manchester now require a licence.' },
+            {
+              tag: 'Safety', tc: '#b45309', tb: '#fef3c7', h: 'Gas safety',
+              p: 'An annual Gas Safety Certificate (CP12) from a Gas Safe registered engineer if the property has any gas appliances.',
+              icon: (<path d="M12 2c1.5 3 4.5 4.5 4.5 8.5a4.5 4.5 0 1 1-9 0c0-1.7.7-3 1.7-4.2.1 1.2.9 2.1 2 2.4C10.8 6.6 11 4.2 12 2z" />),
+            },
+            {
+              tag: 'Safety', tc: '#b45309', tb: '#fef3c7', h: 'Electrical safety',
+              p: 'A satisfactory Electrical Installation Condition Report (EICR), renewed at least every 5 years, with any faults put right.',
+              icon: (<path d="M13 2 5 13h6l-1 9 9-13h-6l0-7z" />),
+            },
+            {
+              tag: 'Certificate', tc: '#047857', tb: '#d1fae5', h: 'Energy performance',
+              p: 'A valid EPC rated E or above, provided to tenants before they move in. Minimum standards are set to tighten in the coming years.',
+              icon: (<><path d="M7 3h7l4 4v13a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z" /><path d="M14 3v4h4M9 13h6M9 17h4" /></>),
+            },
+            {
+              tag: 'Safety', tc: '#b45309', tb: '#fef3c7', h: 'Smoke and CO alarms',
+              p: 'A working smoke alarm on every floor and a carbon monoxide alarm in any room with a fuel burning appliance, tested at the start of a tenancy.',
+              icon: (<><path d="M18 9a6 6 0 1 0-12 0c0 4-1.5 5.5-2 6h16c-.5-.5-2-2-2-6z" /><path d="M10 20a2 2 0 0 0 4 0" /></>),
+            },
+            {
+              tag: 'Legal', tc: '#2563eb', tb: '#eff6ff', h: 'Deposit protection',
+              p: 'Any deposit placed in a government approved scheme within 30 days, with the prescribed information served on the tenant.',
+              icon: (<><path d="M12 3 5 6v5c0 4.4 3 7.6 7 9 4-1.4 7-4.6 7-9V6l-7-3z" /><path d="m9 12 2 2 4-4" /></>),
+            },
+            {
+              tag: 'Legal', tc: '#2563eb', tb: '#eff6ff', h: 'Right to Rent',
+              p: 'Every adult occupier checked for the right to rent in England before the tenancy begins, with records kept.',
+              icon: (<><rect x="3" y="5" width="18" height="14" rx="2" /><circle cx="8.5" cy="11" r="2" /><path d="M6 16c.4-1.2 1.4-2 2.5-2s2.1.8 2.5 2M14 10h4M14 13.5h4" /></>),
+            },
+            {
+              tag: 'Legal', tc: '#2563eb', tb: '#eff6ff', h: 'How to Rent guide',
+              p: 'The latest government How to Rent guide issued to tenants, so a valid notice can be served later if ever needed.',
+              icon: (<><path d="M5 4a1 1 0 0 1 1-1h11v15H6a2 2 0 0 0-2 2V5z" /><path d="M4 20a2 2 0 0 1 2-2h11M9 7h5" /></>),
+            },
+            {
+              tag: 'Council', tc: '#6d28d9', tb: '#ede9fe', h: 'Licensing',
+              p: 'HMO and selective licensing checked for the property and postcode. Many parts of Leeds and Manchester now require a licence.',
+              icon: (<><circle cx="12" cy="9" r="5" /><path d="m9 13-1.5 8L12 19l4.5 2L15 13" /></>),
+            },
           ].map((c) => (
-            <div key={c.h} className="ll-resp-card">
-              <span className="ll-resp-ic" aria-hidden>{c.ic}</span>
+            <article key={c.h} className="ll-resp-card">
+              <div className="ll-resp-top">
+                <span className="ll-resp-ic" aria-hidden>
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                    {c.icon}
+                  </svg>
+                </span>
+                <span className="ll-resp-tag" style={{ color: c.tc, background: c.tb }}>{c.tag}</span>
+              </div>
               <h3 className="ll-resp-h">{c.h}</h3>
               <p className="ll-resp-p">{c.p}</p>
-            </div>
+              <div className="ll-resp-foot">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                  <polyline points="20 6 9 17 4 12" />
+                </svg>
+                Handled on managed plans
+              </div>
+            </article>
           ))}
         </div>
         <div style={{

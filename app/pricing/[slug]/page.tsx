@@ -181,8 +181,8 @@ export default function PackageDetailPage({ params }: { params: { slug: string }
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     className={styles.heroImg}
-                    src="/images/heropage.webp"
-                    alt="Landlord handing keys to a happy new tenant"
+                    src={bundle.image}
+                    alt={bundle.imageAlt}
                     loading="eager"
                   />
                 </div>

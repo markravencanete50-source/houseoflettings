@@ -81,6 +81,8 @@ export type Bundle = {
   youWe: string;         // who-does-what tag, e.g. "You manage · we find"
   accent: string;        // radial background accent for the pricing hero panel
   blurb: string;
+  image: string;         // hero photo shown on the package detail page (/pricing/[slug])
+  imageAlt: string;
   groups: { heading: string; items: string[] }[];
 };
 
@@ -94,6 +96,8 @@ export const BUNDLES: Bundle[] = [
     id: 'virtual-tenant-find',
     label: 'Virtual Tenant Find',
     short: 'Virtual Find',
+    image: '/images/heropage.webp',
+    imageAlt: 'A family collecting the keys to their new rented home',
     kind: 'Tenant Find',
     setupFee: '£399',
     mgmtFee: '',
@@ -110,6 +114,8 @@ export const BUNDLES: Bundle[] = [
     id: 'expert-tenant-find',
     label: 'Expert Tenant Find',
     short: 'Expert Find',
+    image: '/images/Background_Book_Valuation.webp',
+    imageAlt: 'A premium city-view apartment interior styled for viewings',
     kind: 'Tenant Find',
     setupFee: '£699',
     mgmtFee: '',
@@ -126,6 +132,8 @@ export const BUNDLES: Bundle[] = [
     id: 'essential-management',
     label: 'Essential Management',
     short: 'Essential',
+    image: '/images/Tenants_Book_viewing_background.webp',
+    imageAlt: 'A House of Lettings agent going through paperwork with clients',
     kind: 'Management',
     setupFee: '£199',
     mgmtFee: '6%',
@@ -145,6 +153,8 @@ export const BUNDLES: Bundle[] = [
     id: 'full-management',
     label: 'Full Management',
     short: 'Full',
+    image: '/images/Background_of_the_services.webp',
+    imageAlt: 'A House of Lettings agent handling a tenancy with a couple',
     kind: 'Management',
     setupFee: '£399',
     mgmtFee: '8%',
@@ -165,6 +175,8 @@ export const BUNDLES: Bundle[] = [
     id: 'comprehensive-management',
     label: 'Comprehensive Management',
     short: 'Comprehensive',
+    image: '/images/Background_of_the_Homepage.png',
+    imageAlt: 'The Leeds city skyline at sunset',
     kind: 'Management',
     setupFee: '£399',
     mgmtFee: '10%',

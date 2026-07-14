@@ -43,111 +43,162 @@ export default function LandlordsPage() {
 
       {/* ── HERO ─────────────────────────────────────────────── */}
       <style>{`
-        .hero-btn {
-          padding: 18px 0;
-          width: 280px;
-          font-size: 15px;
-          font-weight: 700;
-          letter-spacing: 0.5px;
-          border-radius: 6px;
-          cursor: pointer;
-          font-family: 'Poppins', sans-serif;
-          text-transform: uppercase;
-          text-align: center;
-          text-decoration: none;
-          display: inline-block;
-          transition: background 0.2s, border-color 0.2s;
+        .ll-hero {
+          position: relative; overflow: hidden; isolation: isolate;
+          background: linear-gradient(168deg, #0a1730 0%, #12244a 52%, #0a1a38 100%);
         }
+        /* Masked grid texture */
+        .ll-hero-grid {
+          position: absolute; inset: 0; z-index: 0; pointer-events: none; opacity: .6;
+          background-image:
+            linear-gradient(rgba(255,255,255,0.045) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(255,255,255,0.045) 1px, transparent 1px);
+          background-size: 48px 48px;
+          -webkit-mask-image: radial-gradient(ellipse 78% 68% at 50% 34%, #000 0%, transparent 76%);
+                  mask-image: radial-gradient(ellipse 78% 68% at 50% 34%, #000 0%, transparent 76%);
+        }
+        /* Floating aurora orbs */
+        .ll-hero-orb { position: absolute; z-index: 0; border-radius: 50%; filter: blur(72px); pointer-events: none; }
+        .ll-hero-orb.a { width: 540px; height: 540px; top: -170px; left: -130px;
+          background: radial-gradient(circle, rgba(37,99,235,.5) 0%, transparent 70%);
+          animation: ll-orb-a 20s ease-in-out infinite; }
+        .ll-hero-orb.b { width: 480px; height: 480px; bottom: -200px; right: -120px;
+          background: radial-gradient(circle, rgba(74,144,217,.38) 0%, transparent 70%);
+          animation: ll-orb-b 24s ease-in-out infinite; }
+        .ll-hero-orb.c { width: 380px; height: 380px; top: 14%; right: 16%;
+          background: radial-gradient(circle, rgba(56,120,220,.26) 0%, transparent 70%);
+          animation: ll-orb-a 30s ease-in-out infinite reverse; }
+        @keyframes ll-orb-a { 0%,100% { transform: translate(0,0); } 50% { transform: translate(64px,44px); } }
+        @keyframes ll-orb-b { 0%,100% { transform: translate(0,0); } 50% { transform: translate(-54px,-40px); } }
+        /* Spotlight behind headline */
+        .ll-hero-glow { position: absolute; inset: 0; z-index: 0; pointer-events: none;
+          background: radial-gradient(ellipse 58% 46% at 50% 28%, rgba(37,99,235,.24) 0%, transparent 70%); }
+
+        .ll-hero-inner {
+          position: relative; z-index: 2; max-width: 920px; margin: 0 auto; text-align: center;
+          padding: clamp(140px,17vw,204px) clamp(24px,6%,80px) clamp(84px,10vw,120px);
+        }
+        .ll-hero-eyebrow {
+          display: inline-flex; align-items: center; gap: 9px;
+          font: 700 12px/1 'Poppins', sans-serif; letter-spacing: .2em; text-transform: uppercase;
+          color: #9dc2f2; background: rgba(37,99,235,.12);
+          border: 1px solid rgba(74,144,217,.3); border-radius: 999px;
+          padding: 8px 16px 8px 13px; margin-bottom: 26px; backdrop-filter: blur(4px);
+        }
+        .ll-hero-eyebrow .dot { width: 7px; height: 7px; border-radius: 50%; background: #4a90d9;
+          box-shadow: 0 0 0 0 rgba(74,144,217,.6); animation: ll-pulse 2.4s ease-out infinite; }
+        @keyframes ll-pulse {
+          0% { box-shadow: 0 0 0 0 rgba(74,144,217,.55); }
+          70% { box-shadow: 0 0 0 9px rgba(74,144,217,0); }
+          100% { box-shadow: 0 0 0 0 rgba(74,144,217,0); }
+        }
+        .ll-hero-h1 {
+          font-family: 'Poppins', sans-serif; font-weight: 800; color: #fff;
+          font-size: clamp(42px, 7.4vw, 86px); line-height: 1.02; letter-spacing: -0.022em;
+          text-transform: uppercase; margin: 0 0 26px; text-shadow: 0 2px 44px rgba(0,0,0,.5);
+        }
+        .ll-hero-h1 .accent {
+          text-shadow: none;
+          background: linear-gradient(100deg, #4a90d9 0%, #8fc0f4 28%, #2563eb 54%, #7db4ee 78%, #4a90d9 100%);
+          background-size: 220% auto; -webkit-background-clip: text; background-clip: text;
+          -webkit-text-fill-color: transparent; color: transparent;
+          filter: drop-shadow(0 6px 26px rgba(37,99,235,.4));
+          animation: ll-shimmer 6.5s linear infinite;
+        }
+        @keyframes ll-shimmer { to { background-position: 220% center; } }
+        .ll-hero-sub {
+          font: 300 clamp(15px,1.35vw,19px)/1.72 'Poppins', sans-serif;
+          color: rgba(255,255,255,.72); max-width: 600px; margin: 0 auto 36px;
+        }
+        .ll-hero-cta { display: flex; gap: 14px; flex-wrap: wrap; justify-content: center; margin-bottom: 46px; }
+        .ll-hero-btn {
+          display: inline-flex; align-items: center; justify-content: center; gap: 9px;
+          padding: 17px 34px; min-width: 232px; border-radius: 10px; cursor: pointer;
+          font: 700 15px/1 'Poppins', sans-serif; letter-spacing: .03em; text-transform: uppercase;
+          text-decoration: none;
+          transition: transform .25s ease, box-shadow .25s ease, background .25s ease, border-color .25s ease;
+        }
+        .ll-hero-primary { background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); color: #fff; border: none;
+          box-shadow: 0 14px 34px -12px rgba(37,99,235,.72); }
+        .ll-hero-primary:hover { transform: translateY(-3px); box-shadow: 0 22px 46px -12px rgba(37,99,235,.9); }
+        .ll-hero-primary svg { transition: transform .25s ease; }
+        .ll-hero-primary:hover svg { transform: translateX(4px); }
+        .ll-hero-ghost { background: rgba(255,255,255,.05); color: #fff;
+          border: 1.5px solid rgba(255,255,255,.28); backdrop-filter: blur(4px); }
+        .ll-hero-ghost:hover { transform: translateY(-3px); border-color: #fff; background: rgba(255,255,255,.11); }
+
+        .ll-hero-stats {
+          display: flex; flex-wrap: wrap; justify-content: center; max-width: 720px; margin: 0 auto;
+          border: 1px solid rgba(255,255,255,.1); border-radius: 16px; overflow: hidden;
+          background: rgba(255,255,255,.035); backdrop-filter: blur(6px);
+        }
+        .ll-hero-stat { flex: 1 1 150px; padding: 18px 18px; text-align: center;
+          border-right: 1px solid rgba(255,255,255,.08); }
+        .ll-hero-stat:last-child { border-right: none; }
+        .ll-hero-stat b { display: block; font: 800 22px/1 'Poppins', sans-serif; color: #fff; margin-bottom: 6px; }
+        .ll-hero-stat b em { font-style: normal; color: #4a90d9; }
+        .ll-hero-stat span { font: 600 11px/1.3 'Poppins', sans-serif; letter-spacing: .06em;
+          text-transform: uppercase; color: rgba(255,255,255,.55); }
+        @media (max-width: 560px) {
+          .ll-hero-stat { flex-basis: 50%; }
+          .ll-hero-stat:nth-child(2n) { border-right: none; }
+          .ll-hero-stat:nth-child(-n+2) { border-bottom: 1px solid rgba(255,255,255,.08); }
+        }
+
+        /* Staggered entrance — layered on ONLY when motion is welcome, so the
+           hero content is never left hidden if the animation can't run. */
+        @keyframes ll-rise { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: none; } }
+        @media (prefers-reduced-motion: no-preference) {
+          .ll-anim { opacity: 0; animation: ll-rise .7s cubic-bezier(.2,.7,.2,1) forwards; }
+          .ll-d1 { animation-delay: .05s; } .ll-d2 { animation-delay: .16s; }
+          .ll-d3 { animation-delay: .28s; } .ll-d4 { animation-delay: .4s; } .ll-d5 { animation-delay: .52s; }
+        }
+
         @media (max-width: 600px) {
-          .hero-btn { width: 100%; }
-          .hero-btns { flex-direction: column !important; }
+          .ll-hero-btn { width: 100%; min-width: 0; }
+          .ll-hero-cta { flex-direction: column; }
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .ll-hero-orb, .ll-hero-eyebrow .dot, .ll-hero-h1 .accent { animation: none !important; }
         }
       `}</style>
-      <section style={{
-        position: 'relative',
-        overflow: 'hidden',
-        background: 'linear-gradient(165deg, #0c1a33 0%, #15294c 55%, #0f1f3d 100%)',
-      }}>
-        {/* Clean, balanced backdrop: soft brand-blue accents instead of the old
-            photo (whose baked-in text clashed with the headline on mobile). */}
-        <div style={{
-          position: 'absolute', inset: 0, pointerEvents: 'none',
-          background:
-            'radial-gradient(ellipse at 78% 12%, rgba(37,99,235,0.22) 0%, transparent 55%),' +
-            'radial-gradient(ellipse at 12% 88%, rgba(74,144,217,0.14) 0%, transparent 50%)',
-        }} />
+      <section className="ll-hero">
+        <div className="ll-hero-grid" aria-hidden />
+        <span className="ll-hero-orb a" aria-hidden />
+        <span className="ll-hero-orb b" aria-hidden />
+        <span className="ll-hero-orb c" aria-hidden />
+        <div className="ll-hero-glow" aria-hidden />
 
-        <div style={{
-          position: 'relative', zIndex: 1,
-          width: '100%',
-          maxWidth: 860,
-          margin: '0 auto',
-          padding: 'clamp(128px,16vw,190px) clamp(24px,6%,80px) clamp(72px,10vw,130px)',
-          textAlign: 'center',
-        }}>
-          <div style={{
-            fontFamily: "'Poppins', sans-serif",
-            fontSize: 12, fontWeight: 700, letterSpacing: 4,
-            textTransform: 'uppercase', color: '#4a90d9', marginBottom: 18,
-          }}>
+        <div className="ll-hero-inner">
+          <div className="ll-hero-eyebrow ll-anim ll-d1">
+            <span className="dot" aria-hidden />
             For Landlords · Leeds &amp; Manchester
           </div>
-          <h1 style={{
-            fontFamily: "'Poppins', sans-serif",
-            fontSize: 'clamp(40px,7vw,78px)',
-            fontWeight: 800, color: '#fff',
-            lineHeight: 1.04, letterSpacing: '-1px',
-            textTransform: 'uppercase',
-            marginBottom: 24,
-          }}>
+          <h1 className="ll-hero-h1 ll-anim ll-d2">
             Better management.<br />
             Better tenants.<br />
-            <span style={{ color: '#4a90d9' }}>Better returns.</span>
+            <span className="accent">Better returns.</span>
           </h1>
-          <p style={{
-            fontFamily: "'Poppins', sans-serif",
-            fontSize: 'clamp(15px,1.3vw,18px)',
-            color: 'rgba(255,255,255,0.7)',
-            lineHeight: 1.75, marginBottom: 28,
-            fontWeight: 300,
-            maxWidth: 580, margin: '0 auto 28px',
-          }}>
+          <p className="ll-hero-sub ll-anim ll-d3">
             Professional lettings and property management that protects your
             investment and maximises your returns, across Leeds and Manchester.
           </p>
-          <div style={{
-            display: 'flex', gap: 10, flexWrap: 'wrap', justifyContent: 'center', marginBottom: 40,
-          }}>
-            {['Inclusive of VAT', 'No hidden fees', 'Fully compliant', 'Local expert teams'].map(chip => (
-              <span key={chip} style={{
-                fontFamily: "'Poppins', sans-serif",
-                fontSize: 12.5, fontWeight: 600, color: '#dbe8fb',
-                background: 'rgba(255,255,255,0.06)',
-                border: '1px solid rgba(255,255,255,0.14)',
-                borderRadius: 999, padding: '7px 14px',
-              }}>{chip}</span>
-            ))}
-          </div>
-          <div className="hero-btns" style={{ display: 'flex', gap: 14, flexWrap: 'wrap', justifyContent: 'center' }}>
-            <Link href="/book-valuation"
-              className="hero-btn"
-              style={{ background: '#2563eb', color: '#fff', border: 'none' }}
-              onMouseEnter={e => (e.currentTarget.style.background = '#1d4ed8')}
-              onMouseLeave={e => (e.currentTarget.style.background = '#2563eb')}
-            >
+          <div className="ll-hero-cta ll-anim ll-d4">
+            <Link href="/book-valuation" className="ll-hero-btn ll-hero-primary">
               Book a Free Valuation
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                <path d="M5 12h14M13 6l6 6-6 6" />
+              </svg>
             </Link>
-            <Link href="/pricing"
-              className="hero-btn"
-              style={{
-                background: 'transparent', color: '#fff',
-                border: '1.5px solid rgba(255,255,255,0.4)',
-              }}
-              onMouseEnter={e => (e.currentTarget.style.borderColor = '#fff')}
-              onMouseLeave={e => (e.currentTarget.style.borderColor = 'rgba(255,255,255,0.4)')}
-            >
+            <Link href="/pricing" className="ll-hero-btn ll-hero-ghost">
               View Our Packages
             </Link>
+          </div>
+          <div className="ll-hero-stats ll-anim ll-d5">
+            <div className="ll-hero-stat"><b>From&nbsp;<em>6%</em></b><span>Management fees</span></div>
+            <div className="ll-hero-stat"><b><em>£0</em></b><span>Hidden fees</span></div>
+            <div className="ll-hero-stat"><b><em>2</em></b><span>Cities covered</span></div>
+            <div className="ll-hero-stat"><b><em>Free</em></b><span>Rental valuation</span></div>
           </div>
         </div>
       </section>

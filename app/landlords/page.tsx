@@ -34,8 +34,20 @@ const landlordFaqs = [
   },
 ];
 
+// Curated "what's included" highlights per package, mirroring the four shown on
+// /pricing so this landlord explainer stays consistent with the pricing page.
+// Indexed to BUNDLES order; the full lists live in lib/bundles.ts (groups).
+const PKG_HL: string[][] = [
+  ['Advertising on major property portals', 'Full applicant referencing and Right to Rent checks', 'Tenancy agreement and deposit registration', "First month's rent and deposit collected"],
+  ['Everything in Virtual Tenant Find', 'Professional photography and floor plan', 'Agent-led accompanied viewings', 'In-person tenant handover'],
+  ['Includes a full tenant find', 'Monthly rent collection and monitoring', 'Arrears chasing and reminders', 'Key holding and annual income summary'],
+  ['Dedicated day-to-day management team', 'Maintenance and contractor coordination', 'Compliance monitoring (Gas, EICR, EPC)', 'Monthly landlord statements'],
+  ['Everything in Full Management', 'Rent guarantee cover', 'Legal and eviction protection', 'Priority contractors and enhanced inspections'],
+];
+
 export default function LandlordsPage() {
   const [openFaq, setOpenFaq] = useState<number | null>(null);
+  const [activePkg, setActivePkg] = useState(3); // default: Full Management (Most Popular)
 
   return (
     <>
@@ -370,135 +382,171 @@ export default function LandlordsPage() {
             <p style={{
               fontFamily: "'Poppins', sans-serif",
               fontSize: 15, color: 'rgba(255,255,255,0.5)',
-              maxWidth: 520, margin: '0 auto', lineHeight: 1.7, fontWeight: 300,
+              maxWidth: 560, margin: '0 auto', lineHeight: 1.7, fontWeight: 300,
             }}>
-              From a one time tenant find to fully comprehensive management, choose what works for your portfolio.
+              Not sure which fits? Pick a package below to see exactly what it does for you,
+              from simply finding a tenant to fully protecting your rental income.
             </p>
           </div>
+
           <style>{`
-            /* Flex + centred wrap so the five cards read as 3 on top and 2
-               centred beneath, instead of 2 left-aligned with an empty gap. */
-            .ll-packages-grid {
-              display: flex;
-              flex-wrap: wrap;
-              justify-content: center;
-              gap: 24px;
-              max-width: 1120px;
-              margin: 0 auto 48px;
-            }
-            .ll-pkg-card { flex: 1 1 320px; max-width: 344px; }
-            @media (max-width: 900px) { .ll-pkg-card { flex-basis: 300px; } }
-            @media (max-width: 560px) { .ll-pkg-card { flex-basis: 100%; max-width: none; } }
+            /* Interactive package explainer: a tab selector drives a single
+               detail panel. A deliberately different structure from both the
+               old card grid and the /pricing alternating layout. */
+            .ll-svc { max-width: 1060px; margin: 0 auto 44px; }
+            .ll-svc-tabs { display: flex; gap: 10px; justify-content: center; flex-wrap: nowrap;
+              overflow-x: auto; padding: 4px 4px 14px; margin-bottom: 26px; scrollbar-width: none; }
+            .ll-svc-tabs::-webkit-scrollbar { display: none; }
+            .ll-svc-tab { position: relative; flex: 0 0 auto; cursor: pointer;
+              display: flex; flex-direction: column; align-items: center; gap: 3px;
+              padding: 12px 20px; border-radius: 12px; white-space: nowrap;
+              background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.12);
+              color: #cdddf5; font-family: 'Poppins', sans-serif; transition: all .2s ease; }
+            .ll-svc-tab:hover { background: rgba(255,255,255,.09); border-color: rgba(74,144,217,.5); }
+            .ll-svc-tab.active { background: linear-gradient(135deg,#2563eb,#1d4ed8);
+              border-color: #2563eb; color: #fff; box-shadow: 0 12px 26px -12px rgba(37,99,235,.7); }
+            .ll-svc-tab-name { font-size: 14px; font-weight: 700; }
+            .ll-svc-tab-fee { font-size: 11px; font-weight: 600; opacity: .68; }
+            .ll-svc-tab.active .ll-svc-tab-fee { opacity: .9; }
+            .ll-svc-tab-dot { position: absolute; top: 8px; right: 10px; width: 6px; height: 6px;
+              border-radius: 50%; background: #f59e0b; }
+            .ll-svc-tab.active .ll-svc-tab-dot { background: #fff; }
+
+            .ll-svc-panel { display: grid; grid-template-columns: 1.15fr 1fr; border-radius: 20px;
+              overflow: hidden; border: 1px solid rgba(255,255,255,.1);
+              background: linear-gradient(160deg, rgba(22,41,76,.92) 0%, rgba(12,26,51,.92) 100%);
+              box-shadow: 0 30px 64px -34px rgba(0,0,0,.75); animation: ll-svc-fade .4s ease; }
+            .ll-svc-panel.featured { border-color: rgba(37,99,235,.5); box-shadow: 0 30px 64px -30px rgba(37,99,235,.5); }
+            @keyframes ll-svc-fade { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+            @media (max-width: 820px) { .ll-svc-panel { grid-template-columns: 1fr; } }
+
+            .ll-svc-info { padding: clamp(28px,3.4vw,44px); }
+            .ll-svc-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
+            .ll-svc-kind, .ll-svc-you, .ll-svc-pop { font-family: 'Poppins', sans-serif; font-size: 10.5px;
+              font-weight: 700; letter-spacing: .08em; text-transform: uppercase; border-radius: 999px; padding: 5px 11px; }
+            .ll-svc-kind { color: #a9c4ea; background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.14); }
+            .ll-svc-you { color: #cbdcf6; background: rgba(37,99,235,.16); border: 1px solid rgba(74,144,217,.3); }
+            .ll-svc-pop { color: #fff; background: #2563eb; }
+            .ll-svc-name { font-family: 'Poppins', sans-serif; font-size: clamp(24px,2.6vw,32px); font-weight: 800;
+              color: #fff; line-height: 1.15; margin: 0 0 10px; }
+            .ll-svc-best { font-family: 'Poppins', sans-serif; font-size: 14px; font-weight: 600; color: #7db4f0;
+              margin: 0 0 16px; line-height: 1.5; }
+            .ll-svc-blurb { font-family: 'Poppins', sans-serif; font-size: 14.5px; color: rgba(255,255,255,.72);
+              line-height: 1.8; margin: 0 0 24px; }
+            .ll-svc-price { display: flex; align-items: center; gap: 20px; margin-bottom: 26px; }
+            .ll-svc-price > div { display: flex; flex-direction: column; }
+            .ll-svc-price b { font-family: 'Poppins', sans-serif; font-size: 30px; font-weight: 800; color: #fff; line-height: 1; }
+            .ll-svc-price b.accent { color: #4a90d9; }
+            .ll-svc-price span { font-family: 'Poppins', sans-serif; font-size: 11px; font-weight: 600; letter-spacing: .04em;
+              text-transform: uppercase; color: rgba(255,255,255,.5); margin-top: 6px; }
+            .ll-svc-price-sep { width: 1px; height: 42px; background: rgba(255,255,255,.14); }
+            .ll-svc-cta { display: flex; gap: 12px; flex-wrap: wrap; }
+            .ll-svc-btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+              font-family: 'Poppins', sans-serif; font-size: 13px; font-weight: 700; letter-spacing: .03em;
+              text-transform: uppercase; text-decoration: none; padding: 14px 24px; border-radius: 9px; transition: all .2s ease; }
+            .ll-svc-btn.primary { background: #2563eb; color: #fff; border: 1.5px solid #2563eb; }
+            .ll-svc-btn.primary:hover { background: #1d4ed8; border-color: #1d4ed8; transform: translateY(-2px); }
+            .ll-svc-btn.ghost { background: transparent; color: #cddffb; border: 1.5px solid rgba(255,255,255,.28); }
+            .ll-svc-btn.ghost:hover { border-color: #fff; color: #fff; }
+            .ll-svc-btn.ghost svg { transition: transform .2s ease; }
+            .ll-svc-btn.ghost:hover svg { transform: translateX(3px); }
+
+            .ll-svc-included { padding: clamp(28px,3.4vw,44px); background: rgba(0,0,0,.18);
+              border-left: 1px solid rgba(255,255,255,.08); display: flex; flex-direction: column; }
+            @media (max-width: 820px) { .ll-svc-included { border-left: 0; border-top: 1px solid rgba(255,255,255,.08); } }
+            .ll-svc-inc-label { font-family: 'Poppins', sans-serif; font-size: 11px; font-weight: 700; letter-spacing: .12em;
+              text-transform: uppercase; color: #8fa6c9; margin-bottom: 18px; }
+            .ll-svc-inc-list { list-style: none; margin: 0 0 22px; padding: 0; display: flex; flex-direction: column; gap: 14px; }
+            .ll-svc-inc-list li { display: flex; gap: 12px; align-items: flex-start; font-family: 'Poppins', sans-serif;
+              font-size: 14px; color: #e7eefb; line-height: 1.45; }
+            .ll-svc-inc-tick { flex: none; width: 22px; height: 22px; border-radius: 50%; background: rgba(74,222,128,.16);
+              color: #4ade80; display: inline-flex; align-items: center; justify-content: center; margin-top: 1px; }
+            .ll-svc-inc-tick svg { width: 12px; height: 12px; }
+            .ll-svc-inc-more { margin-top: auto; display: inline-flex; align-items: center; gap: 7px; font-family: 'Poppins', sans-serif;
+              font-size: 12.5px; font-weight: 700; color: #4a90d9; text-decoration: none; }
+            .ll-svc-inc-more:hover { color: #7db4f0; }
+            .ll-svc-inc-more svg { transition: transform .2s ease; }
+            .ll-svc-inc-more:hover svg { transform: translateX(3px); }
+            @media (prefers-reduced-motion: reduce) { .ll-svc-panel { animation: none; } }
           `}</style>
-          <div className="ll-packages-grid">
-            {/* Prices mirror lib/bundles.ts — keep in sync with the pricing page. */}
-            {[
-              {
-                slug: 'virtual-tenant-find',
-                price: '£399', name: 'Virtual Tenant Find', type: 'One-time fee',
-                desc: 'Advertise your property, handle enquiries, and secure a tenant, all managed online.',
-                features: ['Professional listing creation', 'Multi portal advertising', 'Enquiry management', 'Full tenant referencing'],
-                popular: false,
-              },
-              {
-                slug: 'expert-tenant-find',
-                price: '£699', name: 'Expert Tenant Find', type: 'One-time fee',
-                desc: 'The full marketing push: professional photography, accompanied viewings, and in-person tenancy setup.',
-                features: ['Everything in Virtual', 'Photography & floor plan', 'Accompanied viewings', 'In-person tenant handover'],
-                popular: false,
-              },
-              {
-                slug: 'essential-management',
-                price: '6%', name: 'Essential Management', type: '£199 setup · monthly',
-                desc: 'We collect rent, chase arrears, and transfer funds, so you never have to chase a tenant.',
-                features: ['Includes a full tenant find', 'Monthly rent collection', 'Arrears management', 'Monthly statements'],
-                popular: false,
-              },
-              {
-                slug: 'full-management',
-                price: '8%', name: 'Full Management', type: '£399 setup · monthly',
-                desc: 'Comprehensive management covering maintenance, inspections, and compliance.',
-                features: ['Everything in Essential', 'Maintenance coordination', 'Regular inspections', 'Compliance monitoring'],
-                popular: true,
-              },
-              {
-                slug: 'comprehensive-management',
-                price: '10%', name: 'Comprehensive Management', type: '£399 setup · monthly',
-                desc: 'Our complete hands off package with rent guarantee insurance and dedicated support.',
-                features: ['Everything in Full Management', 'Rent guarantee cover', 'Legal & eviction protection', 'Priority contractor response'],
-                popular: false,
-              },
-            ].map(pkg => (
-              <Link key={pkg.name} href={`/pricing/${pkg.slug}`} className="ll-pkg-card" style={{
-                background: pkg.popular
-                  ? 'linear-gradient(165deg, #1c396b 0%, #102244 100%)'
-                  : 'linear-gradient(165deg, #16294c 0%, #0e1e3c 100%)',
-                border: pkg.popular ? '1.5px solid #2563eb' : '1px solid rgba(255,255,255,0.10)',
-                borderRadius: 16, padding: '34px 28px',
-                textDecoration: 'none', display: 'block',
-                position: 'relative',
-                boxShadow: pkg.popular
-                  ? '0 26px 54px -26px rgba(37,99,235,0.55)'
-                  : '0 22px 46px -30px rgba(0,0,0,0.65)',
-                transition: 'transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease',
-              }}
-                onMouseEnter={e => {
-                  (e.currentTarget as HTMLElement).style.transform = 'translateY(-6px)';
-                  (e.currentTarget as HTMLElement).style.borderColor = pkg.popular ? '#4a90d9' : 'rgba(74,144,217,0.5)';
-                }}
-                onMouseLeave={e => {
-                  (e.currentTarget as HTMLElement).style.transform = 'translateY(0)';
-                  (e.currentTarget as HTMLElement).style.borderColor = pkg.popular ? '#2563eb' : 'rgba(255,255,255,0.10)';
-                }}
-              >
-                {pkg.popular && (
-                  <div style={{
-                    position: 'absolute', top: -13, left: '50%', transform: 'translateX(-50%)',
-                    background: '#2563eb', color: '#fff', fontSize: 9, fontWeight: 800,
-                    letterSpacing: 2, textTransform: 'uppercase', padding: '4px 14px',
-                    borderRadius: 20, whiteSpace: 'nowrap', fontFamily: "'Poppins', sans-serif",
-                  }}>Most Popular</div>
-                )}
-                <div style={{
-                  fontSize: 11, color: 'rgba(255,255,255,0.4)',
-                  textTransform: 'uppercase', letterSpacing: 1,
-                  marginBottom: 8, fontFamily: "'Poppins', sans-serif",
-                }}>{pkg.type}</div>
-                <div style={{
-                  fontFamily: "'Poppins', sans-serif",
-                  fontSize: 'clamp(28px,3vw,38px)', fontWeight: 800,
-                  color: pkg.popular ? '#4a90d9' : '#fff',
-                  lineHeight: 1, marginBottom: 8,
-                }}>{pkg.price}</div>
-                <div style={{
-                  fontFamily: "'Poppins', sans-serif",
-                  fontSize: 15, fontWeight: 700, color: '#fff',
-                  marginBottom: 12,
-                }}>{pkg.name}</div>
-                <p style={{
-                  fontFamily: "'Poppins', sans-serif",
-                  fontSize: 13, color: 'rgba(255,255,255,0.55)',
-                  lineHeight: 1.7, marginBottom: 20,
-                }}>{pkg.desc}</p>
-                <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 20px', display: 'flex', flexDirection: 'column', gap: 8 }}>
-                  {pkg.features.map(f => (
-                    <li key={f} style={{
-                      display: 'flex', alignItems: 'flex-start', gap: 8,
-                      fontSize: 13, color: 'rgba(255,255,255,0.65)',
-                      fontFamily: "'Poppins', sans-serif",
-                    }}>
-                      <span style={{ color: '#4ade80', fontWeight: 700, flexShrink: 0 }}>✓</span>
-                      {f}
-                    </li>
-                  ))}
-                </ul>
-                <div style={{
-                  fontSize: 12, color: '#4a90d9', fontWeight: 600,
-                  letterSpacing: 0.5, textTransform: 'uppercase',
-                  fontFamily: "'Poppins', sans-serif",
-                }}>View full details →</div>
-              </Link>
-            ))}
+
+          <div className="ll-svc">
+            <div className="ll-svc-tabs" role="tablist" aria-label="Choose a package">
+              {BUNDLES.map((b, i) => (
+                <button
+                  key={b.id}
+                  type="button"
+                  role="tab"
+                  aria-selected={activePkg === i}
+                  className={`ll-svc-tab${activePkg === i ? ' active' : ''}`}
+                  onClick={() => setActivePkg(i)}
+                >
+                  {b.badge && <span className="ll-svc-tab-dot" aria-hidden />}
+                  <span className="ll-svc-tab-name">{b.short}</span>
+                  <span className="ll-svc-tab-fee">{b.setupFee}{b.mgmtFee ? ` + ${b.mgmtFee}` : ''}</span>
+                </button>
+              ))}
+            </div>
+
+            {(() => {
+              const b = BUNDLES[activePkg];
+              const isMgmt = b.kind === 'Management';
+              return (
+                <div className={`ll-svc-panel${b.badge ? ' featured' : ''}`}>
+                  <div className="ll-svc-info">
+                    <div className="ll-svc-chips">
+                      <span className="ll-svc-kind">{b.kind}</span>
+                      <span className="ll-svc-you">{b.youWe}</span>
+                      {b.badge && <span className="ll-svc-pop">Most Popular</span>}
+                    </div>
+                    <h3 className="ll-svc-name">{b.label}</h3>
+                    <p className="ll-svc-best">Best for {b.bestForLead} {b.bestForRest}.</p>
+                    <p className="ll-svc-blurb">{b.blurb}</p>
+                    <div className="ll-svc-price">
+                      <div>
+                        <b>{b.setupFee}</b>
+                        <span>{isMgmt ? 'setup' : 'one-time'}</span>
+                      </div>
+                      <div className="ll-svc-price-sep" aria-hidden />
+                      <div>
+                        <b className={b.mgmtFee ? 'accent' : ''}>{b.mgmtFee || '£0'}</b>
+                        <span>{b.mgmtFee ? 'of rent / month' : 'ongoing fee'}</span>
+                      </div>
+                    </div>
+                    <div className="ll-svc-cta">
+                      <Link href="/book-valuation" className="ll-svc-btn primary">Book a Free Valuation</Link>
+                      <Link href={`/pricing/${b.id}`} className="ll-svc-btn ghost">
+                        See full details
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                          <path d="M5 12h14M13 6l6 6-6 6" />
+                        </svg>
+                      </Link>
+                    </div>
+                  </div>
+                  <div className="ll-svc-included">
+                    <div className="ll-svc-inc-label">What&apos;s included</div>
+                    <ul className="ll-svc-inc-list">
+                      {PKG_HL[activePkg].map((h) => (
+                        <li key={h}>
+                          <span className="ll-svc-inc-tick" aria-hidden>
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                              <polyline points="20 6 9 17 4 12" />
+                            </svg>
+                          </span>
+                          {h}
+                        </li>
+                      ))}
+                    </ul>
+                    <Link href={`/pricing/${b.id}`} className="ll-svc-inc-more">
+                      See every service included, explained
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                        <path d="M5 12h14M13 6l6 6-6 6" />
+                      </svg>
+                    </Link>
+                  </div>
+                </div>
+              );
+            })()}
           </div>
           <p style={{
             fontFamily: "'Poppins', sans-serif", textAlign: 'center',

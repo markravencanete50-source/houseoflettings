@@ -167,6 +167,19 @@ export default function TenantsPage() {
           0% { width: 0; opacity: 0; }
           100% { width: 60px; opacity: 1; }
         }
+        /* Uniform hero action buttons (equal width on desktop, full-width stacked on mobile) */
+        .t-hero-btn {
+          display: inline-flex; align-items: center; justify-content: center;
+          box-sizing: border-box; min-width: 240px; padding: 14px 32px;
+          background: #2563eb; color: #fff; border: 2px solid #2563eb; border-radius: 8px;
+          font-weight: 700; font-size: 15px; letter-spacing: 0.02em; text-decoration: none;
+          transition: background .2s ease, border-color .2s ease;
+        }
+        .t-hero-btn:hover { background: #1d4ed8; border-color: #1d4ed8; }
+        @media (max-width: 600px) {
+          .t-hero-btns { flex-direction: column; align-items: center; }
+          .t-hero-btn { width: 100%; max-width: 340px; min-width: 0; }
+        }
       `}</style>
 
       <Navbar />
@@ -233,70 +246,11 @@ export default function TenantsPage() {
             and we'll get you in for a viewing.
           </p>
 
-          <div style={{ display: "flex", gap: 14, justifyContent: "center", flexWrap: "wrap" }}>
-            <a
-              href="/book-viewing"
-              style={{
-                background: "#2563eb",
-                color: "#fff",
-                border: "2px solid #2563eb",
-                padding: "14px 32px",
-                borderRadius: 8,
-                fontWeight: 700,
-                fontSize: 15,
-                textDecoration: "none",
-                letterSpacing: "0.02em",
-              }}
-            >
-              Book a Viewing
-            </a>
-            <a
-              href="/listings"
-              style={{
-                background: "#2563eb",
-                color: "#fff",
-                border: "2px solid #2563eb",
-                padding: "14px 32px",
-                borderRadius: 8,
-                fontWeight: 700,
-                fontSize: 15,
-                textDecoration: "none",
-              }}
-            >
-              Browse Properties
-            </a>
-            <a
-              href="/tenant-application"
-              style={{
-                background: "#2563eb",
-                color: "#fff",
-                border: "2px solid #2563eb",
-                padding: "14px 32px",
-                borderRadius: 8,
-                fontWeight: 700,
-                fontSize: 15,
-                textDecoration: "none",
-                letterSpacing: "0.02em",
-              }}
-            >
-              Tenant Application
-            </a>
-            <a
-              href="/guarantor"
-              style={{
-                background: "#2563eb",
-                color: "#fff",
-                border: "2px solid #2563eb",
-                padding: "14px 32px",
-                borderRadius: 8,
-                fontWeight: 700,
-                fontSize: 15,
-                textDecoration: "none",
-                letterSpacing: "0.02em",
-              }}
-            >
-              Guarantor Form
-            </a>
+          <div className="t-hero-btns" style={{ display: "flex", gap: 14, justifyContent: "center", flexWrap: "wrap" }}>
+            <a href="/book-viewing" className="t-hero-btn">Book a Viewing</a>
+            <a href="/listings" className="t-hero-btn">Browse Properties</a>
+            <a href="/tenant-application" className="t-hero-btn">Tenant Application</a>
+            <a href="/guarantor" className="t-hero-btn">Guarantor Form</a>
           </div>
         </div>
       </section>

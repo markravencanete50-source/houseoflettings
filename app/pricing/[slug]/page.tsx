@@ -15,6 +15,7 @@ import Footer from '@/components/layout/Footer';
 import { BUNDLES } from '@/lib/bundles';
 import { MATRIX_SECTIONS, TOTAL_SERVICES } from '@/lib/pricingMatrix';
 import { describeService } from '@/lib/serviceDescriptions';
+import NotIncludedChips from '@/components/pricing/NotIncludedChips';
 import styles from './page.module.css';
 
 export function generateStaticParams() {
@@ -260,11 +261,7 @@ export default function PackageDetailPage({ params }: { params: { slug: string }
               <div className={styles.not}>
                 <h2 className={styles.notHead}>Not included in this package</h2>
                 <p className={styles.notSub}>Want any of these? Compare packages or move up a tier at any time, with no re-setup charge.</p>
-                <div className={styles.chips}>
-                  {excludedAll.map((label) => (
-                    <span key={label} className={styles.chip}>{label}</span>
-                  ))}
-                </div>
+                <NotIncludedChips items={excludedAll} initial={5} />
                 <Link href="/pricing#compare" className={styles.upgrade}>Compare all packages →</Link>
               </div>
             </div>

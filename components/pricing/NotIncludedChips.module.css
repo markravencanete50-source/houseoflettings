@@ -1,0 +1,23 @@
+/* components/pricing/NotIncludedChips.module.css
+   Chip list + Show more/less toggle for the package detail "Not included"
+   section. Styling matches app/pricing/[slug]/page.module.css chips. */
+
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip {
+  font-size: 12.5px; color: #8a94a3; background: #fff;
+  border: 1px solid #e5e9f0; border-radius: 999px; padding: 7px 13px;
+}
+
+.more {
+  display: inline-flex; align-items: center; gap: 8px;
+  margin-top: 16px; padding: 9px 16px;
+  background: #fff; border: 1.5px solid #dbe2ea; border-radius: 999px;
+  color: #2563eb; font-family: inherit; font-size: 13px; font-weight: 700;
+  cursor: pointer; transition: border-color .18s ease, background .18s ease;
+}
+.more:hover { border-color: #2563eb; background: #f4f8ff; }
+.chev {
+  width: 7px; height: 7px; border-right: 2px solid #2563eb; border-bottom: 2px solid #2563eb;
+  transform: rotate(45deg) translateY(-1px); transition: transform .18s ease;
+}
+.chev.up { transform: rotate(-135deg) translateY(1px); }

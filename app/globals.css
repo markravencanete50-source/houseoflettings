@@ -326,3 +326,40 @@ ul, ol { list-style: none; }
 @media (max-width: 600px) {
   .hol-branch-btn { width: 100%; }
 }
+
+/* ── Reusable animated feature cards ──────────────────────────────────
+   Add `hol-card` to any card for depth + a hover lift with a blue top
+   accent bar. Add `hol-reveal` too (and drop one <RevealCards/> on the
+   page) for a staggered scroll-in. Cards are fully visible by default, so
+   they are never left hidden if scripting or the observer is unavailable. */
+.hol-card {
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 4px 14px -6px rgba(15, 31, 61, 0.12), 0 2px 5px -2px rgba(15, 31, 61, 0.08);
+  transition: transform .3s cubic-bezier(.22, 1, .36, 1), box-shadow .3s ease, border-color .3s ease;
+  will-change: transform;
+}
+.hol-card::before {
+  content: "";
+  position: absolute; top: 0; left: 0; right: 0; height: 3px;
+  background: linear-gradient(90deg, #2563eb, #4a90d9);
+  transform: scaleX(0); transform-origin: left;
+  transition: transform .32s ease;
+}
+.hol-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 28px 46px -20px rgba(15, 31, 61, 0.34), 0 10px 20px -12px rgba(37, 99, 235, 0.20);
+  border-color: #cfe0f7 !important;
+}
+.hol-card:hover::before { transform: scaleX(1); }
+
+.hol-js .hol-reveal.hol-in { animation: hol-rise .6s cubic-bezier(.22, 1, .36, 1) backwards; }
+@keyframes hol-rise {
+  from { opacity: 0; transform: translateY(24px); }
+  to { opacity: 1; transform: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hol-card, .hol-card::before { transition: none; }
+  .hol-card:hover { transform: none; }
+  .hol-js .hol-reveal.hol-in { animation: none; }
+}

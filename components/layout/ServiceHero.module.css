@@ -92,6 +92,13 @@
 @media (min-width: 940px) {
   .grid { grid-template-columns: 1.05fr .95fr; }
 }
+/* Mobile: make every CTA the same full width, and lay the stats out as a
+   tidy 2-column grid so the figures line up instead of wrapping unevenly. */
+@media (max-width: 560px) {
+  .cta { flex-direction: column; align-items: stretch; }
+  .btn { width: 100%; justify-content: center; }
+  .stats { display: grid; grid-template-columns: 1fr 1fr; gap: 20px 18px; }
+}
 @media (prefers-reduced-motion: reduce) {
   .btnSolid, .btnGhost { transition: none; }
 }

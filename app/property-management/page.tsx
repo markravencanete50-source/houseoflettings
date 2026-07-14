@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useState } from 'react';
 import Navbar from '@/components/layout/Navbar';
 import ServiceHero from '@/components/layout/ServiceHero';
+import RevealCards from '@/components/RevealCards';
 
 const colors = {
   navy: '#0f1f3d',
@@ -155,6 +156,7 @@ export default function PropertyManagementPage() {
   return (
     <div style={{ fontFamily: 'Poppins, sans-serif', color: colors.textDark, background: colors.white }}>
       <Navbar />
+      <RevealCards />
 
       {/* Hero */}
       <ServiceHero
@@ -223,13 +225,13 @@ export default function PropertyManagementPage() {
             </p>
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 24 }}>
-            {services.map(s => (
-              <div key={s.title} style={{
+            {services.map((s, i) => (
+              <div key={s.title} className="hol-card hol-reveal" style={{
                 background: colors.white,
                 borderRadius: 12,
                 padding: 28,
                 border: `1px solid ${colors.borderGray}`,
-                transition: 'box-shadow 0.2s',
+                animationDelay: `${i * 55}ms`,
               }}>
                 <div style={{ fontSize: 32, marginBottom: 14 }}>{s.icon}</div>
                 <h3 style={{ fontSize: 17, fontWeight: 700, color: colors.navy, margin: '0 0 10px' }}>{s.title}</h3>
@@ -537,13 +539,14 @@ export default function PropertyManagementPage() {
               { icon: '📚', title: 'Compliance Experts', body: "Fully up to date with the Renters' Rights Act 2025 and all UK landlord legislation." },
               { icon: '📊', title: 'Regular Reporting', body: 'Monthly statements, inspection reports, and complete transparency on your property at all times.' },
               { icon: '🤝', title: 'Personal Service', body: 'You deal with a dedicated property manager (not a call centre) who knows your property.' },
-            ].map(item => (
-              <div key={item.title} style={{
+            ].map((item, i) => (
+              <div key={item.title} className="hol-card hol-reveal" style={{
                 textAlign: 'center',
                 padding: '32px 20px',
                 background: colors.offWhite,
                 borderRadius: 12,
                 border: `1px solid ${colors.borderGray}`,
+                animationDelay: `${i * 55}ms`,
               }}>
                 <div style={{ fontSize: 36, marginBottom: 14 }}>{item.icon}</div>
                 <h3 style={{ fontSize: 15, fontWeight: 700, color: colors.navy, margin: '0 0 8px' }}>{item.title}</h3>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Navbar from "@/components/layout/Navbar";
 import ServiceHero from "@/components/layout/ServiceHero";
 
@@ -121,6 +121,31 @@ const steps = [
 export default function TenantsPage() {
   const [openFaq, setOpenFaq] = useState<number | null>(null);
 
+  // Staggered scroll-reveal for the feature cards. JS-gated (adds `t-js` to
+  // <body>) so the cards stay fully visible if scripting is ever unavailable.
+  useEffect(() => {
+    document.body.classList.add("t-js");
+    const els = Array.from(document.querySelectorAll(".t-reveal"));
+    if (!els.length) return;
+    if (!("IntersectionObserver" in window)) {
+      els.forEach((el) => el.classList.add("t-in"));
+      return;
+    }
+    const io = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((e) => {
+          if (e.isIntersecting) {
+            e.target.classList.add("t-in");
+            io.unobserve(e.target);
+          }
+        });
+      },
+      { threshold: 0.15, rootMargin: "0px 0px -8% 0px" }
+    );
+    els.forEach((el) => io.observe(el));
+    return () => io.disconnect();
+  }, []);
+
   return (
     <main
       style={{
@@ -181,6 +206,50 @@ export default function TenantsPage() {
           .t-hero-btns { flex-direction: column; align-items: center; }
           .t-hero-btn { width: 100%; max-width: 340px; min-width: 0; }
         }
+
+        /* Feature / step cards: depth, hover lift, top-accent bar */
+        .t-card {
+          position: relative;
+          background: #ffffff;
+          border: 1px solid #eef1f5;
+          border-radius: 14px;
+          padding: 28px 24px;
+          box-shadow: 0 4px 14px -6px rgba(15,31,61,0.12), 0 2px 5px -2px rgba(15,31,61,0.08);
+          transition: transform .3s cubic-bezier(.22,1,.36,1), box-shadow .3s ease, border-color .3s ease;
+          will-change: transform;
+        }
+        .t-card::before {
+          content: "";
+          position: absolute; top: 0; left: 0; right: 0; height: 3px;
+          background: linear-gradient(90deg, #2563eb, #4a90d9);
+          border-radius: 14px 14px 0 0;
+          transform: scaleX(0); transform-origin: left;
+          transition: transform .32s ease;
+        }
+        .t-card:hover {
+          transform: translateY(-8px);
+          box-shadow: 0 28px 46px -20px rgba(15,31,61,0.34), 0 10px 20px -12px rgba(37,99,235,0.20);
+          border-color: #cfe0f7;
+        }
+        .t-card:hover::before { transform: scaleX(1); }
+
+        /* Scroll-reveal entrance — only engaged once JS marks body as t-js,
+           so cards remain fully visible if scripting is unavailable. Uses a
+           keyframe with backwards fill (not a transition) so the per-card
+           stagger delay never leaks into the hover-lift transition. */
+        .t-js .t-reveal.t-in {
+          animation: t-rise .6s cubic-bezier(.22,1,.36,1) backwards;
+        }
+        @keyframes t-rise {
+          from { opacity: 0; transform: translateY(24px); }
+          to { opacity: 1; transform: none; }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+          .t-card, .t-card::before { transition: none; }
+          .t-card:hover { transform: none; }
+          .t-js .t-reveal.t-in { animation: none; }
+        }
       `}</style>
 
       <Navbar />
@@ -215,16 +284,11 @@ export default function TenantsPage() {
           </h2>
 
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 20 }}>
-            {steps.map((step) => (
+            {steps.map((step, i) => (
               <div
                 key={step.num}
-                style={{
-                  border: "none",
-                  boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
-                  borderRadius: 12,
-                  padding: "28px 24px",
-                  background: "#ffffff",
-                }}
+                className="t-card t-reveal"
+                style={{ animationDelay: `${i * 55}ms` }}
               >
                 <div style={{ fontSize: 11, fontWeight: 700, color: "#2563eb", letterSpacing: "0.1em", marginBottom: 12, textTransform: "uppercase" }}>
                   {step.num}
@@ -250,8 +314,8 @@ export default function TenantsPage() {
             What makes us different.
           </h2>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 20 }}>
-            {whyCards.map((card) => (
-              <div key={card.title} style={{ border: "none", boxShadow: "0 1px 3px rgba(0,0,0,0.08)", borderRadius: 12, padding: "28px 24px", background: "#ffffff" }}>
+            {whyCards.map((card, i) => (
+              <div key={card.title} className="t-card t-reveal" style={{ animationDelay: `${i * 55}ms` }}>
                 <div style={{ marginBottom: 16 }}>{card.icon}</div>
                 <h3 style={{ fontSize: 17, fontWeight: 700, marginBottom: 10, color: "#111827" }}>{card.title}</h3>
                 <p style={{ fontSize: 14, color: "#4b5563", lineHeight: 1.65 }}>{card.body}</p>

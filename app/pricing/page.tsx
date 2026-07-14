@@ -271,6 +271,43 @@ export default function PricingPage() {
         .pr-head h2 { font-size:clamp(24px,3vw,34px); font-weight:700; color:#0f1f3d; margin:0 0 10px; line-height:1.15; }
         .pr-head p { color:#6b7280; font-size:15px; line-height:1.65; margin:0; }
 
+        /* ---------- Hero (two-column: copy + property photo) ---------- */
+        .pr-hero2 { position:relative; overflow:hidden; color:#fff;
+          background:linear-gradient(160deg,#15294c 0%,#0c1a33 62%,#0f1f3d 100%);
+          padding:clamp(112px,14vw,150px) 5% clamp(84px,11vw,120px); }
+        .pr-hero2-orb { position:absolute; width:340px; height:340px; top:-120px; right:-90px;
+          border-radius:50%; pointer-events:none; filter:blur(2px);
+          background:radial-gradient(circle, rgba(74,144,217,.32) 0%, transparent 70%); }
+        .pr-hero2-grid { position:relative; z-index:1; max-width:1120px; margin:0 auto;
+          display:grid; grid-template-columns:1fr; gap:clamp(30px,5vw,56px); align-items:center; }
+        .pr-hero2-eyebrow { display:inline-block; font-size:12px; font-weight:700; letter-spacing:.14em;
+          text-transform:uppercase; color:#a9c4ea; margin-bottom:14px; }
+        .pr-hero2-title { font-size:clamp(32px,5vw,54px); font-weight:800; line-height:1.06;
+          letter-spacing:-.015em; margin:0 0 18px; }
+        .pr-hero2-sub { font-size:clamp(15px,2vw,17px); color:rgba(255,255,255,.66); line-height:1.7;
+          font-weight:300; margin:0 0 28px; max-width:540px; }
+        .pr-hero2-cta { display:flex; gap:12px; flex-wrap:wrap; }
+        .pr-hero2-btn { display:inline-block; padding:14px 30px; border-radius:9px; font-size:13.5px;
+          font-weight:700; letter-spacing:.02em; text-transform:uppercase; text-decoration:none; transition:all .18s ease; cursor:pointer; }
+        .pr-hero2-btn--solid { background:#2563eb; color:#fff; }
+        .pr-hero2-btn--solid:hover { background:#1d4ed8; box-shadow:0 14px 28px -12px rgba(37,99,235,.6); }
+        .pr-hero2-btn--ghost { background:transparent; color:#fff; border:1.5px solid rgba(255,255,255,.4); }
+        .pr-hero2-btn--ghost:hover { border-color:#fff; background:rgba(255,255,255,.06); }
+        .pr-hero2-media { position:relative; }
+        .pr-hero2-imgwrap { position:relative; border-radius:20px; overflow:hidden; aspect-ratio:4/3;
+          box-shadow:0 40px 80px -34px rgba(4,10,26,.85); border:1px solid rgba(255,255,255,.1); }
+        .pr-hero2-img { width:100%; height:100%; object-fit:cover; display:block; }
+        .pr-hero2-imgwrap::after { content:''; position:absolute; inset:0;
+          background:linear-gradient(200deg, transparent 55%, rgba(12,26,51,.55) 100%); }
+        .pr-hero2-float { position:absolute; left:18px; bottom:18px; z-index:2;
+          background:rgba(255,255,255,.96); color:#0f1f3d; border-radius:14px; padding:13px 18px;
+          box-shadow:0 18px 40px -18px rgba(4,10,26,.7); }
+        .pr-hero2-float-label { display:block; font-size:10px; font-weight:700; letter-spacing:.08em;
+          text-transform:uppercase; color:#6b7280; margin-bottom:3px; }
+        .pr-hero2-float-val { font-size:22px; font-weight:800; line-height:1; }
+        .pr-hero2-float-sub { display:block; font-size:12px; font-weight:600; color:#2563eb; margin-top:4px; }
+        @media(min-width:940px){ .pr-hero2-grid { grid-template-columns:1.05fr .95fr; } }
+
         /* ---------- Trust strip ---------- */
         .pr-trust { max-width:1120px; margin:-52px auto 0; padding:0 5%; position:relative; z-index:3; }
         .pr-trust-in { background:#fff; border:1px solid #e5e7eb; border-radius:14px;
@@ -575,28 +612,33 @@ export default function PricingPage() {
 
       <div className="pr-scope">
 
-      {/* ── HERO ─────────────────────────────────────────────── */}
-      <section style={{
-        paddingTop: 130, paddingBottom: 96,
-        background: '#0f1f3d', position: 'relative', overflow: 'hidden', textAlign: 'center',
-      }}>
-        <div style={{
-          position: 'absolute', inset: 0,
-          backgroundImage: 'url(/images/Background_of_the_services.webp)',
-          backgroundSize: 'cover', backgroundPosition: 'center', backgroundRepeat: 'no-repeat',
-        }} />
-        <div style={{ position: 'absolute', inset: 0, background: 'rgba(5,12,30,0.9)' }} />
-        <div style={{ position: 'relative', zIndex: 1, padding: '0 5%' }}>
-          <div style={{ fontSize: 13, fontWeight: 700, letterSpacing: 4, textTransform: 'uppercase', color: '#4a90d9', marginBottom: 16 }}>
-            Landlord Packages &amp; Fees
+      {/* ── HERO (two-column: copy + property photo card) ────── */}
+      <section className="pr-hero2">
+        <span className="pr-hero2-orb" aria-hidden />
+        <div className="pr-hero2-grid">
+          <div className="pr-hero2-text">
+            <span className="pr-hero2-eyebrow">Landlord Packages &amp; Fees</span>
+            <h1 className="pr-hero2-title">Clear pricing, every service side by side</h1>
+            <p className="pr-hero2-sub">
+              From simply finding the right tenant to fully managing your property, choose the level of support that suits you.
+              No hidden fees, no surprises — and you can upgrade whenever you&apos;re ready.
+            </p>
+            <div className="pr-hero2-cta">
+              <a href="#compare" className="pr-hero2-btn pr-hero2-btn--solid">Compare packages</a>
+              <Link href="/book-valuation" className="pr-hero2-btn pr-hero2-btn--ghost">Book a free valuation</Link>
+            </div>
           </div>
-          <h1 style={{ fontSize: 'clamp(34px, 5vw, 60px)', fontWeight: 800, color: '#fff', margin: '0 0 18px', lineHeight: 1.06 }}>
-            Clear pricing, every service side by side
-          </h1>
-          <p style={{ fontSize: 17, color: 'rgba(255,255,255,0.62)', maxWidth: 620, margin: '0 auto', lineHeight: 1.7, fontWeight: 300 }}>
-            From simply finding the right tenant to fully managing your property, choose the level of support that suits you.
-            No hidden fees, no surprises — and you can upgrade whenever you&apos;re ready.
-          </p>
+          <div className="pr-hero2-media">
+            <div className="pr-hero2-imgwrap">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img className="pr-hero2-img" src="/images/heropage.webp" alt="Landlord handing keys to a happy new tenant" loading="eager" />
+            </div>
+            <div className="pr-hero2-float">
+              <span className="pr-hero2-float-label">Packages from</span>
+              <span className="pr-hero2-float-val">£399</span>
+              <span className="pr-hero2-float-sub">inc. VAT · no hidden fees</span>
+            </div>
+          </div>
         </div>
       </section>
 

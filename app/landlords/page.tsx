@@ -4,6 +4,7 @@ import { useState, useRef } from 'react';
 import Link from 'next/link';
 import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
+import ServiceHero from '@/components/layout/ServiceHero';
 import { BUNDLES } from '@/lib/bundles';
 import { SERVICE_CATEGORIES } from '@/lib/additionalServices';
 
@@ -207,46 +208,23 @@ export default function LandlordsPage() {
           .ll-hero-orb, .ll-hero-eyebrow .dot, .ll-hero-h1 .accent { animation: none !important; }
         }
       `}</style>
-      <section className="ll-hero">
-        <div className="ll-hero-grid" aria-hidden />
-        <span className="ll-hero-orb a" aria-hidden />
-        <span className="ll-hero-orb b" aria-hidden />
-        <span className="ll-hero-orb c" aria-hidden />
-        <div className="ll-hero-glow" aria-hidden />
-
-        <div className="ll-hero-inner">
-          <div className="ll-hero-eyebrow ll-anim ll-d1">
-            <span className="dot" aria-hidden />
-            For Landlords · Leeds &amp; Manchester
-          </div>
-          <h1 className="ll-hero-h1 ll-anim ll-d2">
-            Better management.<br />
-            Better tenants.<br />
-            <span className="accent">Better returns.</span>
-          </h1>
-          <p className="ll-hero-sub ll-anim ll-d3">
-            Professional lettings and property management that protects your
-            investment and maximises your returns, across Leeds and Manchester.
-          </p>
-          <div className="ll-hero-cta ll-anim ll-d4">
-            <Link href="/book-valuation" className="ll-hero-btn ll-hero-primary">
-              Book a Free Valuation
-              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-                <path d="M5 12h14M13 6l6 6-6 6" />
-              </svg>
-            </Link>
-            <Link href="/pricing" className="ll-hero-btn ll-hero-ghost">
-              View Our Packages
-            </Link>
-          </div>
-          <div className="ll-hero-stats ll-anim ll-d5">
-            <div className="ll-hero-stat"><b>From&nbsp;<em>6%</em></b><span>Management fees</span></div>
-            <div className="ll-hero-stat"><b><em>£0</em></b><span>Hidden fees</span></div>
-            <div className="ll-hero-stat"><b><em>2</em></b><span>Cities covered</span></div>
-            <div className="ll-hero-stat"><b><em>Free</em></b><span>Rental valuation</span></div>
-          </div>
-        </div>
-      </section>
+      <ServiceHero
+        eyebrow="For Landlords · Leeds & Manchester"
+        title={<>Better management.<br />Better tenants.<br /><span style={{ color: '#4a90d9' }}>Better returns.</span></>}
+        subtitle="Professional lettings and property management that protects your investment and maximises your returns, across Leeds and Manchester."
+        image="/images/Background_of_the_services.webp"
+        imageAlt="House of Lettings agents advising landlord clients"
+        ctas={[
+          { label: 'Book a Free Valuation', href: '/book-valuation' },
+          { label: 'View Our Packages', href: '/pricing', variant: 'ghost' },
+        ]}
+        stats={[
+          { value: <>From&nbsp;<em>6%</em></>, label: 'Management fees' },
+          { value: <em>£0</em>, label: 'Hidden fees' },
+          { value: <em>2</em>, label: 'Cities covered' },
+          { value: <em>Free</em>, label: 'Rental valuation' },
+        ]}
+      />
 
 
 

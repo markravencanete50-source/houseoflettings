@@ -8,6 +8,7 @@ import { isOrderable } from '@/lib/serviceCart';
 import OrderControls from '@/components/services/OrderControls';
 import CartBar from '@/components/services/CartBar';
 import Footer from '@/components/layout/Footer';
+import ServiceHero from '@/components/layout/ServiceHero';
 
 export default function AdditionalServicesPage() {
   const [open, setOpen] = useState<string | null>(null);
@@ -153,49 +154,19 @@ export default function AdditionalServicesPage() {
       `}</style>
 
       {/* ── HERO ─────────────────────────────────────────────── */}
-      <section style={{
-        paddingTop: 130, paddingBottom: 70,
-        background: '#0f1f3d',
-        position: 'relative',
-        overflow: 'hidden',
-        textAlign: 'center',
-      }}>
-        <div style={{
-          position: 'absolute', inset: 0,
-          backgroundImage: 'url(/images/Background_of_the_services.webp)',
-          backgroundSize: 'cover', backgroundPosition: 'center',
-          backgroundRepeat: 'no-repeat',
-        }} />
-        <div style={{ position: 'absolute', inset: 0, background: 'rgba(5,12,30,0.88)' }} />
-        <div style={{ position: 'relative', zIndex: 1, padding: '0 5%' }}>
-          <h1 style={{
-            fontFamily: "'Poppins', sans-serif",
-            fontSize: 'clamp(36px, 5.5vw, 68px)',
-            fontWeight: 700, color: '#fff',
-            margin: '0 0 20px', lineHeight: 1.05,
-          }}>
-            Additional Services
-          </h1>
-          <p style={{
-            fontSize: 17, color: 'rgba(255,255,255,0.9)',
-            maxWidth: 640, margin: '0 auto',
-            lineHeight: 1.75, fontWeight: 400,
-            fontFamily: "'Poppins', sans-serif",
-          }}>
-            Order any of these services individually, whether or not you use one of our
-            management packages. Every price includes VAT/IPT where applicable.
-          </p>
-          <p style={{
-            fontSize: 13.5, color: 'rgba(255,255,255,0.72)',
-            maxWidth: 560, margin: '14px auto 0',
-            lineHeight: 1.7,
-            fontFamily: "'Poppins', sans-serif",
-          }}>
-            &ldquo;From&rdquo; prices are starting rates. The final cost depends on the size,
-            furnishing and location of the property.
-          </p>
-        </div>
-      </section>
+      <ServiceHero
+        eyebrow="Pay As You Go · Leeds & Manchester"
+        title="Additional Services"
+        subtitle="Order any of these services individually, whether or not you use one of our management packages. Every price includes VAT/IPT where applicable."
+        note="“From” prices are starting rates. The final cost depends on the size, furnishing and location of the property."
+        image="/images/Background_of_the_services.webp"
+        imageAlt="House of Lettings agents reviewing paperwork with clients"
+        ctas={[
+          { label: 'Browse all services', href: '#inventory' },
+          { label: 'View Packages', href: '/pricing', variant: 'ghost' },
+        ]}
+        float={{ label: 'Every price', value: 'inc. VAT', sub: 'Pay only for what you need' }}
+      />
 
       {/* ── CATEGORY JUMP BAR ────────────────────────────────── */}
       <div className="as-jump-bar">

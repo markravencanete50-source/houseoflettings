@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useState } from 'react';
 import Navbar from '@/components/layout/Navbar';
+import ServiceHero from '@/components/layout/ServiceHero';
 
 const colors = {
   navy: '#0f1f3d',
@@ -156,95 +157,19 @@ export default function PropertyManagementPage() {
       <Navbar />
 
       {/* Hero */}
-      <section style={{
-        background: `linear-gradient(135deg, ${colors.navy} 0%, ${colors.navyLight} 60%, #1e3a6e 100%)`,
-        padding: '100px 24px 80px',
-        textAlign: 'center',
-        position: 'relative',
-        overflow: 'hidden',
-      }}>
-        <div style={{
-          position: 'absolute', inset: 0,
-          background: 'radial-gradient(ellipse at top right, rgba(74,144,217,0.15) 0%, transparent 60%)',
-          pointerEvents: 'none',
-        }} />
-        <div style={{ maxWidth: 760, margin: '0 auto', position: 'relative' }}>
-          <div style={{
-            display: 'inline-block',
-            background: 'rgba(37,99,235,0.2)',
-            border: '1px solid rgba(74,144,217,0.4)',
-            borderRadius: 20,
-            padding: '6px 16px',
-            color: colors.lightBlue,
-            fontSize: 13,
-            fontWeight: 600,
-            letterSpacing: '0.05em',
-            marginBottom: 20,
-            textTransform: 'uppercase',
-          }}>
-            Leeds &amp; Manchester
-          </div>
-          <h1 style={{
-            color: colors.white,
-            fontSize: 'clamp(32px, 5vw, 52px)',
-            fontWeight: 700,
-            lineHeight: 1.2,
-            margin: '0 0 20px',
-          }}>
-            Property Management<br />
-            <span style={{ color: colors.lightBlue }}>Done Properly.</span>
-          </h1>
-          <p style={{
-            color: 'rgba(255,255,255,0.75)',
-            fontSize: 18,
-            lineHeight: 1.7,
-            margin: '0 0 36px',
-          }}>
-            From finding your first tenant to navigating the Renters&apos; Rights Act 2025,
-            we manage your property so you don&apos;t have to worry about a thing.
-          </p>
-          <div style={{ display: 'flex', gap: 16, justifyContent: 'center', flexWrap: 'wrap' }}>
-            <Link href="/book-valuation" style={{
-              background: colors.blue,
-              color: colors.white,
-              padding: '14px 32px',
-              borderRadius: 8,
-              fontWeight: 600,
-              fontSize: 16,
-              textDecoration: 'none',
-              display: 'inline-block',
-            }}>
-              Book Valuation
-            </Link>
-            <Link href="/book-viewing" style={{
-              background: colors.blue,
-              color: colors.white,
-              padding: '14px 32px',
-              borderRadius: 8,
-              fontWeight: 600,
-              fontSize: 16,
-              textDecoration: 'none',
-              display: 'inline-block',
-            }}>
-              Book a Viewing
-            </Link>
-          </div>
-          {/* Trust bar */}
-          <div style={{
-            marginTop: 52,
-            display: 'flex',
-            justifyContent: 'center',
-            gap: 40,
-            flexWrap: 'wrap',
-          }}>
-            {['Leeds & Manchester', 'No Hidden Fees', 'Renters\' Rights Act Compliant'].map(t => (
-              <div key={t} style={{ color: 'rgba(255,255,255,0.6)', fontSize: 13, fontWeight: 500 }}>
-                <span style={{ color: colors.lightBlue, marginRight: 6 }}>✓</span>{t}
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
+      <ServiceHero
+        eyebrow="Property Management · Leeds & Manchester"
+        title={<>Property Management<br /><span style={{ color: '#4a90d9' }}>Done Properly.</span></>}
+        subtitle="From finding your first tenant to navigating the Renters' Rights Act 2025, we manage your property so you don't have to worry about a thing."
+        image="/images/Tenants_Book_viewing_background.webp"
+        imageAlt="House of Lettings team advising landlord clients in the office"
+        ctas={[
+          { label: 'Book Valuation', href: '/book-valuation' },
+          { label: 'View Packages', href: '/pricing', variant: 'ghost' },
+        ]}
+        trust={['Leeds & Manchester', 'No Hidden Fees', "Renters' Rights Act Compliant"]}
+        float={{ label: 'Hidden fees', value: '£0', sub: 'One clear monthly fee' }}
+      />
 
       {/* What is Property Management */}
       <section style={{ padding: '80px 24px', background: colors.white }}>

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Navbar from "@/components/layout/Navbar";
+import ServiceHero from "@/components/layout/ServiceHero";
 
 const faqs = [
   {
@@ -185,75 +186,20 @@ export default function TenantsPage() {
       <Navbar />
 
       {/* ── HERO ── */}
-      <section
-        style={{
-          backgroundImage: "linear-gradient(160deg, rgba(2,11,26,0.80) 0%, rgba(4,18,48,0.75) 60%, rgba(6,26,66,0.70) 100%), url(/images/Tenants_Book_viewing_background.webp)",
-          backgroundSize: "cover",
-          backgroundPosition: "center",
-          backgroundRepeat: "no-repeat",
-        }}
-      >
-        <div style={{
-          maxWidth: 1100,
-          margin: "0 auto",
-          padding: "calc(68px + 100px) 24px 100px",
-          textAlign: "center",
-        }}>
-          <span
-            style={{
-              display: "inline-block",
-              border: "1.5px solid rgba(37,99,235,0.8)",
-              borderRadius: 999,
-              padding: "7px 20px",
-              fontSize: 13,
-              fontWeight: 700,
-              color: "#bfdbfe",
-              letterSpacing: "0.1em",
-              marginBottom: 28,
-              textTransform: "uppercase",
-              background: "rgba(37,99,235,0.15)",
-            }}
-          >
-            Leeds &amp; Manchester
-          </span>
-
-          <h1
-            style={{
-              fontSize: "clamp(2.4rem, 6vw, 4rem)",
-              fontWeight: 800,
-              lineHeight: 1.1,
-              marginBottom: 24,
-              letterSpacing: "-0.02em",
-              color: "#ffffff",
-            }}
-          >
-            Looking for Your Next Home?{" "}
-            <span style={{ color: "#ffffff" }}>
-              House of Lettings Holds the Key.
-            </span>
-          </h1>
-
-          <p
-            style={{
-              fontSize: "clamp(1rem, 2.5vw, 1.2rem)",
-              color: "rgba(255,255,255,0.65)",
-              maxWidth: 560,
-              margin: "0 auto 40px",
-              lineHeight: 1.7,
-            }}
-          >
-            No agency fees. No endless forms. Send an enquiry, answer a few quick questions,
-            and we'll get you in for a viewing.
-          </p>
-
-          <div className="t-hero-btns" style={{ display: "flex", gap: 14, justifyContent: "center", flexWrap: "wrap" }}>
-            <a href="/book-viewing" className="t-hero-btn">Book a Viewing</a>
-            <a href="/listings" className="t-hero-btn">Browse Properties</a>
-            <a href="/tenant-application" className="t-hero-btn">Tenant Application</a>
-            <a href="/guarantor" className="t-hero-btn">Guarantor Form</a>
-          </div>
-        </div>
-      </section>
+      <ServiceHero
+        eyebrow="For Tenants · Leeds & Manchester"
+        title={<>Looking for your next home? <span style={{ color: '#4a90d9' }}>House of Lettings holds the key.</span></>}
+        subtitle="No agency fees. No endless forms. Send an enquiry, answer a few quick questions, and we'll get you in for a viewing."
+        image="/images/heropage.webp"
+        imageAlt="Happy family holding the keys to their new rented home"
+        ctas={[
+          { label: 'Book a Viewing', href: '/book-viewing' },
+          { label: 'Browse Properties', href: '/listings', variant: 'ghost' },
+          { label: 'Tenant Application', href: '/tenant-application', variant: 'ghost' },
+          { label: 'Guarantor Form', href: '/guarantor', variant: 'ghost' },
+        ]}
+        float={{ label: 'Tenant fees', value: '£0', sub: 'No agency fees, ever' }}
+      />
 
       {/* ── HOW IT WORKS ── */}
       <section

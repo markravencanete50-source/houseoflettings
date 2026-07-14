@@ -97,6 +97,20 @@ function docRows(data: any) {
   }).join("");
 }
 
+// An identity/ownership field may arrive as multiple files (*Urls / *FileNames
+// arrays) with a single-file fallback (*Url / *FileName) for older submissions.
+function idDocFiles(data: any, base: string): { url: string; name: string }[] {
+  const urls = data[`${base}Urls`];
+  const names = data[`${base}FileNames`];
+  if (Array.isArray(urls) && urls.length) {
+    return urls
+      .filter((u: string) => !!u)
+      .map((url: string, i: number) => ({ url, name: (Array.isArray(names) && names[i]) || `document ${i + 1}` }));
+  }
+  if (data[`${base}Url`]) return [{ url: data[`${base}Url`], name: data[`${base}FileName`] || "document" }];
+  return [];
+}
+
 // Full registration as a PDF (attached to both emails) so the office has a
 // printable record even if the email formatting is mangled by a client.
 function registrationPdfBase64(data: any, ref: string): string {
@@ -157,12 +171,15 @@ function registrationPdfBase64(data: any, ref: string): string {
   line("Email", data.email);
   line("Telephone", data.phone);
   line("Contact Address", data.contactAddress);
-  line(isCompany ? "Director's ID" : "Landlord ID", data.landlordIdUrl ? `Uploaded${data.landlordIdFileName ? ` (${data.landlordIdFileName})` : ""}` : "-");
-  if (data.landlordIdUrl) line("", data.landlordIdUrl);
-  line("Billing Address Doc", data.billingProofUrl ? `Uploaded${data.billingProofFileName ? ` (${data.billingProofFileName})` : ""}` : "-");
-  if (data.billingProofUrl) line("", data.billingProofUrl);
-  line("Proof of Ownership", data.ownershipProofUrl ? `Uploaded${data.ownershipProofFileName ? ` (${data.ownershipProofFileName})` : ""}` : "-");
-  if (data.ownershipProofUrl) line("", data.ownershipProofUrl);
+  const idFiles = idDocFiles(data, "landlordId");
+  line(isCompany ? "Director's ID" : "Landlord ID", idFiles.length ? `${idFiles.length} file(s) uploaded` : "-");
+  idFiles.forEach(f => line("", `${f.name}: ${f.url}`));
+  const billFiles = idDocFiles(data, "billingProof");
+  line("Billing Address Doc", billFiles.length ? `${billFiles.length} file(s) uploaded` : "-");
+  billFiles.forEach(f => line("", `${f.name}: ${f.url}`));
+  const ownFiles = idDocFiles(data, "ownershipProof");
+  line("Proof of Ownership", ownFiles.length ? `${ownFiles.length} file(s) uploaded` : "-");
+  ownFiles.forEach(f => line("", `${f.name}: ${f.url}`));
   line("Properties Owned", data.propertyCount);
 
   const props = Array.isArray(data.properties) ? data.properties : [];
@@ -207,7 +224,11 @@ function adminNotificationHtml(data: any) {
   const companyRows = isCompany
     ? `<tr><td>Company Name</td><td>${data.companyName || "-"}</td></tr><tr><td>Company Number</td><td>${data.companyNumber || "-"}</td></tr><tr><td>Registered Office</td><td>${data.registeredAddress || "-"}</td></tr>${peopleRows}`
     : "";
-  return `<!DOCTYPE html><html><head><meta charset="utf-8"/><style>body{font-family:Arial,sans-serif;background:#f4f6f9;margin:0;padding:0;}.wrap{max-width:600px;margin:32px auto;background:#fff;border-radius:14px;overflow:hidden;}.header{background:#1a3c5e;padding:24px 32px;color:#fff;}.header h2{margin:0;font-size:20px;}.body{padding:28px 32px;}table{width:100%;border-collapse:collapse;font-size:14px;}td{padding:10px 12px;border-bottom:1px solid #eef0f5;vertical-align:top;}td:first-child{font-weight:600;color:#6b7280;width:38%;}td:last-child{color:#111;}</style></head><body><div class="wrap"><div class="header"><h2>🔔 New Landlord Registration</h2><p style="margin:4px 0 0;opacity:.8;font-size:13px;">${new Date().toLocaleString("en-GB")}</p></div><div class="body"><table><tr><td>Owner Type</td><td>${isCompany ? "Company / Ltd" : "Individual owner"}</td></tr>${companyRows}${isCompany && people.length ? "" : `<tr><td>${isCompany ? "Contact Person" : "Full Name"}</td><td>${data.fullName}</td></tr>`}<tr><td>Email</td><td>${data.email}</td></tr><tr><td>Telephone</td><td>${data.phone}</td></tr><tr><td>Contact Address</td><td>${data.contactAddress || "-"}</td></tr><tr><td>${isCompany ? "Director's ID" : "Landlord ID"}</td><td>${data.landlordIdUrl ? `<a href="${data.landlordIdUrl}">view document</a>` : "-"}</td></tr><tr><td>Billing Address Document</td><td>${data.billingProofUrl ? `<a href="${data.billingProofUrl}">view document</a>` : "-"}</td></tr><tr><td>Proof of Ownership</td><td>${data.ownershipProofUrl ? `<a href="${data.ownershipProofUrl}">view document</a>` : "-"}</td></tr><tr><td>Properties Owned</td><td>${data.propertyCount}</td></tr>${propertyRows(data)}<tr><td>Package Selected</td><td>${data.selectedPackage}</td></tr>${docRows(data)}<tr><td>Notes</td><td>${data.notes || "-"}</td></tr><tr><td>Terms &amp; Conditions</td><td>Agreed by submitting the registration</td></tr></table><p style="font-size:12px;color:#9ca3af;margin:16px 0 0;">A PDF copy of the full registration is attached.</p></div></div></body></html>`;
+  const docLinks = (base: string) => {
+    const files = idDocFiles(data, base);
+    return files.length ? files.map((f, i) => `<a href="${f.url}">${f.name || `document ${i + 1}`}</a>`).join("<br/>") : "-";
+  };
+  return `<!DOCTYPE html><html><head><meta charset="utf-8"/><style>body{font-family:Arial,sans-serif;background:#f4f6f9;margin:0;padding:0;}.wrap{max-width:600px;margin:32px auto;background:#fff;border-radius:14px;overflow:hidden;}.header{background:#1a3c5e;padding:24px 32px;color:#fff;}.header h2{margin:0;font-size:20px;}.body{padding:28px 32px;}table{width:100%;border-collapse:collapse;font-size:14px;}td{padding:10px 12px;border-bottom:1px solid #eef0f5;vertical-align:top;}td:first-child{font-weight:600;color:#6b7280;width:38%;}td:last-child{color:#111;}</style></head><body><div class="wrap"><div class="header"><h2>🔔 New Landlord Registration</h2><p style="margin:4px 0 0;opacity:.8;font-size:13px;">${new Date().toLocaleString("en-GB")}</p></div><div class="body"><table><tr><td>Owner Type</td><td>${isCompany ? "Company / Ltd" : "Individual owner"}</td></tr>${companyRows}${isCompany && people.length ? "" : `<tr><td>${isCompany ? "Contact Person" : "Full Name"}</td><td>${data.fullName}</td></tr>`}<tr><td>Email</td><td>${data.email}</td></tr><tr><td>Telephone</td><td>${data.phone}</td></tr><tr><td>Contact Address</td><td>${data.contactAddress || "-"}</td></tr><tr><td>${isCompany ? "Director's ID" : "Landlord ID"}</td><td>${docLinks("landlordId")}</td></tr><tr><td>Billing Address Document</td><td>${docLinks("billingProof")}</td></tr><tr><td>Proof of Ownership</td><td>${docLinks("ownershipProof")}</td></tr><tr><td>Properties Owned</td><td>${data.propertyCount}</td></tr>${propertyRows(data)}<tr><td>Package Selected</td><td>${data.selectedPackage}</td></tr>${docRows(data)}<tr><td>Notes</td><td>${data.notes || "-"}</td></tr><tr><td>Terms &amp; Conditions</td><td>Agreed by submitting the registration</td></tr></table><p style="font-size:12px;color:#9ca3af;margin:16px 0 0;">A PDF copy of the full registration is attached.</p></div></div></body></html>`;
 }
 
 export async function POST(request: Request) {

@@ -43,6 +43,12 @@ type DocState = { has: string; url: string; uploading: boolean; fileName: string
 const EMPTY_DOC: DocState = { has: '', url: '', uploading: false, fileName: '', error: '' };
 const initDocs = (): Record<string, DocState> => Object.fromEntries(DOC_KEYS.map(k => [k, { ...EMPTY_DOC }]));
 
+// Identity/ownership docs accept several files each (e.g. front & back of an ID,
+// or multiple pages), mirroring the guarantor / tenant-application uploads.
+type IdDocState = { urls: string[]; fileNames: string[]; uploading: boolean; error: string };
+const newIdDoc = (): IdDocState => ({ urls: [], fileNames: [], uploading: false, error: '' });
+const ID_DOC_MAX_FILES = 6;
+
 const PROPERTY_TYPES = ['Detached house', 'Semi-detached house', 'Terraced house', 'Flat / Apartment', 'Bungalow', 'Maisonette', 'Studio', 'HMO / House share', 'Other'];
 const FURNISHING = ['Furnished', 'Unfurnished', 'Part-furnished'];
 const PARKING = ['None', 'On-street', 'Driveway', 'Garage', 'Allocated space', 'Other'];
@@ -127,7 +133,7 @@ export default function LandlordRegistrationApplyPage() {
   const [companyPeople, setCompanyPeople] = useState<CompanyPerson[]>([newPerson('cp0')]);
   const nextPersonId = useRef(1);
   const [docs, setDocs] = useState<Record<string, DocState>>(initDocs);
-  const [idDocs, setIdDocs] = useState<Record<string, DocState>>(() => Object.fromEntries(ID_DOC_KEYS.map(k => [k, { ...EMPTY_DOC }])));
+  const [idDocs, setIdDocs] = useState<Record<string, IdDocState>>(() => Object.fromEntries(ID_DOC_KEYS.map(k => [k, newIdDoc()])));
   const [expandedBundle, setExpandedBundle] = useState<string | null>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
@@ -157,7 +163,13 @@ export default function LandlordRegistrationApplyPage() {
           setDocs(d => Object.fromEntries(DOC_KEYS.map(k => [k, { ...d[k], ...saved.docs[k], uploading: false, error: '' }])));
         }
         if (saved.idDocs) {
-          setIdDocs(d => Object.fromEntries(ID_DOC_KEYS.map(k => [k, { ...d[k], ...saved.idDocs[k], uploading: false, error: '' }])));
+          setIdDocs(d => Object.fromEntries(ID_DOC_KEYS.map(k => {
+            const s = saved.idDocs[k] || {};
+            // Accept both the new multi-file shape and the older single-file one.
+            const urls = Array.isArray(s.urls) ? s.urls : (s.url ? [s.url] : []);
+            const fileNames = Array.isArray(s.fileNames) ? s.fileNames : (s.fileName ? [s.fileName] : []);
+            return [k, { ...d[k], urls, fileNames, uploading: false, error: '' }];
+          })));
         }
         if (typeof saved.step === 'number') setStep(Math.min(Math.max(saved.step, 0), STEPS.length - 1));
       }
@@ -205,19 +217,35 @@ export default function LandlordRegistrationApplyPage() {
   const removePerson = (id: string) => setCompanyPeople(ps => (ps.length > 1 ? ps.filter(p => p.id !== id) : ps));
 
   const setDoc = (key: string, patch: Partial<DocState>) => setDocs(d => ({ ...d, [key]: { ...d[key], ...patch } }));
-  const setIdDoc = (key: string, patch: Partial<DocState>) => setIdDocs(d => ({ ...d, [key]: { ...d[key], ...patch } }));
+  const setIdDoc = (key: string, patch: Partial<IdDocState>) => setIdDocs(d => ({ ...d, [key]: { ...d[key], ...patch } }));
 
-  const handleIdFile = async (key: string, file: File | undefined) => {
-    if (!file) return;
-    setIdDoc(key, { uploading: true, error: '', fileName: file.name });
+  // New selections are ADDED to what's already uploaded, so a landlord can build
+  // up several files (e.g. ID front + back) one at a time — matching the
+  // guarantor / tenant-application upload behaviour.
+  const handleIdFile = async (key: string, files: FileList | null) => {
+    if (!files || files.length === 0) return;
+    const room = Math.max(0, ID_DOC_MAX_FILES - idDocs[key].urls.length);
+    const newFiles = Array.from(files).slice(0, room);
+    if (newFiles.length === 0) return;
+    setIdDoc(key, { uploading: true, error: '' });
     setErrors(er => ({ ...er, [`id_${key}`]: '' }));
+    const addedUrls: string[] = [];
+    const addedNames: string[] = [];
     try {
-      const url = await uploadToCloudinary(file);
-      setIdDoc(key, { uploading: false, url });
+      for (const file of newFiles) {
+        addedUrls.push(await uploadToCloudinary(file));
+        addedNames.push(file.name);
+      }
+      setIdDocs(d => ({ ...d, [key]: { ...d[key], uploading: false, urls: [...d[key].urls, ...addedUrls], fileNames: [...d[key].fileNames, ...addedNames] } }));
     } catch (e: any) {
-      setIdDoc(key, { uploading: false, url: '', error: e.message || 'Upload failed' });
+      setIdDocs(d => ({ ...d, [key]: { ...d[key], uploading: false, urls: [...d[key].urls, ...addedUrls], fileNames: [...d[key].fileNames, ...addedNames], error: e.message || 'Upload failed' } }));
     }
   };
+
+  const removeIdFile = (key: string, index: number) => setIdDocs(d => ({
+    ...d,
+    [key]: { ...d[key], urls: d[key].urls.filter((_, i) => i !== index), fileNames: d[key].fileNames.filter((_, i) => i !== index) },
+  }));
 
   const handleFile = async (key: string, file: File | undefined) => {
     if (!file) return;
@@ -265,7 +293,7 @@ export default function LandlordRegistrationApplyPage() {
       ID_DOCS.forEach(d => {
         const label = isCompany ? d.companyLabel : d.label;
         if (idDocs[d.key].uploading) e[`id_${d.key}`] = 'Please wait for the upload to finish';
-        else if (!idDocs[d.key].url) e[`id_${d.key}`] = `Please upload your ${label.toLowerCase()}`;
+        else if (idDocs[d.key].urls.length === 0) e[`id_${d.key}`] = `Please upload your ${label.toLowerCase()}`;
       });
     } else if (s === 2) {
       properties.forEach(p => {
@@ -309,12 +337,20 @@ export default function LandlordRegistrationApplyPage() {
           selectedPackage: form.selectedPackage,
           // No checkbox any more — submitting the form is the agreement.
           termsAccepted: true,
-          landlordIdUrl: idDocs.landlordId.url,
-          landlordIdFileName: idDocs.landlordId.fileName,
-          billingProofUrl: idDocs.billingProof.url,
-          billingProofFileName: idDocs.billingProof.fileName,
-          ownershipProofUrl: idDocs.ownershipProof.url,
-          ownershipProofFileName: idDocs.ownershipProof.fileName,
+          // First file kept as *Url/*FileName for backward compatibility; full
+          // lists sent as *Urls/*FileNames so every uploaded document is captured.
+          landlordIdUrl: idDocs.landlordId.urls[0] || '',
+          landlordIdFileName: idDocs.landlordId.fileNames[0] || '',
+          landlordIdUrls: idDocs.landlordId.urls,
+          landlordIdFileNames: idDocs.landlordId.fileNames,
+          billingProofUrl: idDocs.billingProof.urls[0] || '',
+          billingProofFileName: idDocs.billingProof.fileNames[0] || '',
+          billingProofUrls: idDocs.billingProof.urls,
+          billingProofFileNames: idDocs.billingProof.fileNames,
+          ownershipProofUrl: idDocs.ownershipProof.urls[0] || '',
+          ownershipProofFileName: idDocs.ownershipProof.fileNames[0] || '',
+          ownershipProofUrls: idDocs.ownershipProof.urls,
+          ownershipProofFileNames: idDocs.ownershipProof.fileNames,
           documents: Object.fromEntries(DOC_KEYS.map(k => [k, { status: docs[k].has, url: docs[k].url }])),
           properties: properties.map(({ id, ...p }) => p),
           postcode: properties[0]?.postcode || '',
@@ -528,21 +564,25 @@ export default function LandlordRegistrationApplyPage() {
                     {ID_DOCS.map(d => {
                       const st = idDocs[d.key];
                       const docLabel = isCompany ? d.companyLabel : d.label;
+                      const full = st.urls.length >= ID_DOC_MAX_FILES;
                       return (
                         <div key={d.key} className="hol-field hol-field--full">
                           <label className="hol-label">{docLabel}<span className="hol-req">*</span></label>
-                          {st.url ? (
-                            <div className="hol-uploaded">
+                          {st.urls.map((url, i) => (
+                            <div key={i} className="hol-uploaded" style={{ marginBottom: 6 }}>
                               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="20 6 9 17 4 12" /></svg>
-                              <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{st.fileName || 'Uploaded'}</span>
-                              <a href={st.url} target="_blank" rel="noreferrer" className="hol-view-link">View</a>
-                              <button type="button" onClick={() => setIdDoc(d.key, { url: '', fileName: '' })} className="hol-remove">Remove</button>
+                              <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{st.fileNames[i] || 'Uploaded'}</span>
+                              <a href={url} target="_blank" rel="noreferrer" className="hol-view-link">View</a>
+                              <button type="button" onClick={() => removeIdFile(d.key, i)} className="hol-remove">Remove</button>
                             </div>
-                          ) : (
+                          ))}
+                          {!full && (
                             <label className={`hol-upload${st.uploading ? ' is-loading' : ''}${errors[`id_${d.key}`] ? ' hol-upload--error' : ''}`}>
-                              <input type="file" accept=".pdf,.jpg,.jpeg,.png,.webp" onChange={(e) => handleIdFile(d.key, e.target.files?.[0])} disabled={st.uploading} />
+                              <input type="file" multiple accept=".pdf,.jpg,.jpeg,.png,.webp" onChange={(e) => { handleIdFile(d.key, e.target.files); e.currentTarget.value = ''; }} disabled={st.uploading} />
                               {st.uploading ? (
                                 <><svg className="hol-spinner" width="15" height="15" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" strokeOpacity=".25" /><path d="M12 2a10 10 0 0 1 10 10" stroke="currentColor" strokeWidth="3" strokeLinecap="round" /></svg> Uploading…</>
+                              ) : st.urls.length > 0 ? (
+                                <><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg> Add another document{` (up to ${ID_DOC_MAX_FILES})`}</>
                               ) : (
                                 <><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12" /></svg> Upload {docLabel} (photo or PDF)</>
                               )}
@@ -550,7 +590,7 @@ export default function LandlordRegistrationApplyPage() {
                           )}
                           {st.error && <p className="hol-err">{st.error}</p>}
                           {errors[`id_${d.key}`] && <p className="hol-err">{errors[`id_${d.key}`]}</p>}
-                          <p style={{ fontSize: 12, color: '#9ca3af', margin: '2px 0 0' }}>{d.hint}</p>
+                          <p style={{ fontSize: 12, color: '#9ca3af', margin: '2px 0 0' }}>{d.hint} You can add more than one file.</p>
                         </div>
                       );
                     })}
@@ -719,9 +759,9 @@ export default function LandlordRegistrationApplyPage() {
                       <SummaryRow label="Email" value={form.email} />
                       <SummaryRow label="Telephone" value={form.phone} />
                       <SummaryRow label="Contact address" value={form.contactAddress} />
-                      <SummaryRow label={isCompany ? "Director's ID" : 'Landlord ID'} value={idDocs.landlordId.url ? `Uploaded: ${idDocs.landlordId.fileName || 'document'}` : '-'} />
-                      <SummaryRow label="Billing address document" value={idDocs.billingProof.url ? `Uploaded: ${idDocs.billingProof.fileName || 'document'}` : '-'} />
-                      <SummaryRow label="Proof of ownership" value={idDocs.ownershipProof.url ? `Uploaded: ${idDocs.ownershipProof.fileName || 'document'}` : '-'} />
+                      <SummaryRow label={isCompany ? "Director's ID" : 'Landlord ID'} value={idDocs.landlordId.urls.length ? `${idDocs.landlordId.urls.length} file${idDocs.landlordId.urls.length > 1 ? 's' : ''} uploaded` : '-'} />
+                      <SummaryRow label="Billing address document" value={idDocs.billingProof.urls.length ? `${idDocs.billingProof.urls.length} file${idDocs.billingProof.urls.length > 1 ? 's' : ''} uploaded` : '-'} />
+                      <SummaryRow label="Proof of ownership" value={idDocs.ownershipProof.urls.length ? `${idDocs.ownershipProof.urls.length} file${idDocs.ownershipProof.urls.length > 1 ? 's' : ''} uploaded` : '-'} />
                       <SummaryRow label="Properties owned" value={form.propertyCount} />
                       {properties.map((p, i) => (
                         <div key={p.id} className="hol-summary-row">

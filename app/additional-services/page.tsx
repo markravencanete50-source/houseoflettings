@@ -9,6 +9,7 @@ import OrderControls from '@/components/services/OrderControls';
 import CartBar from '@/components/services/CartBar';
 import Footer from '@/components/layout/Footer';
 import ServiceHero from '@/components/layout/ServiceHero';
+import RevealCards from '@/components/RevealCards';
 
 export default function AdditionalServicesPage() {
   const [open, setOpen] = useState<string | null>(null);
@@ -18,6 +19,7 @@ export default function AdditionalServicesPage() {
   return (
     <>
       <Navbar />
+      <RevealCards />
 
       <style>{`
         .as-jump-bar {
@@ -217,10 +219,10 @@ export default function AdditionalServicesPage() {
 
               {/* Service cards */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-                {cat.services.map((svc) => {
+                {cat.services.map((svc, si) => {
                   const isOpen = open === svc.id;
                   return (
-                    <div key={svc.id} className={`as-card${isOpen ? ' is-open' : ''}`}>
+                    <div key={svc.id} className={`as-card hol-reveal${isOpen ? ' is-open' : ''}`} style={{ animationDelay: `${si * 45}ms` }}>
                       <button
                         type="button"
                         className="as-card__head"

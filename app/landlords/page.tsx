@@ -5,6 +5,7 @@ import Link from 'next/link';
 import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
 import ServiceHero from '@/components/layout/ServiceHero';
+import RevealCards from '@/components/RevealCards';
 import { BUNDLES } from '@/lib/bundles';
 import { SERVICE_CATEGORIES } from '@/lib/additionalServices';
 
@@ -86,6 +87,7 @@ export default function LandlordsPage() {
   return (
     <>
       <Navbar />
+      <RevealCards />
 
       {/* ── HERO ─────────────────────────────────────────────── */}
       <style>{`
@@ -640,8 +642,8 @@ export default function LandlordsPage() {
             letter-spacing:.4px; text-transform:uppercase; color:#2563eb; }
         `}</style>
         <div className="ll-as-grid">
-          {SERVICE_CATEGORIES.map(cat => (
-            <Link key={cat.id} href="/additional-services" className="ll-as-card">
+          {SERVICE_CATEGORIES.map((cat, i) => (
+            <Link key={cat.id} href="/additional-services" className="ll-as-card hol-reveal" style={{ animationDelay: `${i * 55}ms` }}>
               <h3 className="ll-as-title">{cat.title}</h3>
               <ul className="ll-as-list">
                 {cat.services.slice(0, 3).map(s => (
@@ -710,8 +712,8 @@ export default function LandlordsPage() {
             { n: '02', title: 'Choose Your Package', desc: 'Pick from Virtual Tenant Find, Expert Tenant Find, or one of our management packages. No pressure, no hard sell.' },
             { n: '03', title: 'We Find Your Tenant', desc: 'We advertise, screen applicants, conduct viewings, and handle all referencing so only the best tenants make it through.' },
             { n: '04', title: 'Sit Back & Collect', desc: 'Once your tenant is in, we handle everything from rent collection to maintenance calls. You just enjoy the returns.' },
-          ].map(step => (
-            <div key={step.n} style={{ textAlign: 'center' }}>
+          ].map((step, i) => (
+            <div key={step.n} className="hol-reveal" style={{ textAlign: 'center', animationDelay: `${i * 55}ms` }}>
               <div style={{
                 width: 64, height: 64, borderRadius: '50%',
                 background: '#eff6ff', border: '2px solid #2563eb',
@@ -888,8 +890,8 @@ export default function LandlordsPage() {
               p: 'HMO and selective licensing checked for the property and postcode. Many parts of Leeds and Manchester now require a licence.',
               icon: (<><circle cx="12" cy="9" r="5" /><path d="m9 13-1.5 8L12 19l4.5 2L15 13" /></>),
             },
-          ].map((c) => (
-            <article key={c.h} className="ll-resp-card">
+          ].map((c, i) => (
+            <article key={c.h} className="ll-resp-card hol-reveal" style={{ animationDelay: `${i * 55}ms` }}>
               <div className="ll-resp-top">
                 <span className="ll-resp-ic" aria-hidden>
                   <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">

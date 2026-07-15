@@ -143,6 +143,7 @@ export default function AdditionalServicesPage() {
           vertical-align: top;
         }
         .as-price-table tr:last-child td { border-bottom: none; }
+        /* Colour is set inline per-cell below (this table sits on a dark panel). */
         .as-price-table td:last-child {
           text-align: right;
           font-weight: 700;
@@ -251,7 +252,7 @@ export default function AdditionalServicesPage() {
                         <div className="as-card__price">
                           <div style={{
                             fontFamily: "'Poppins', sans-serif",
-                            fontSize: 20, fontWeight: 800, color: '#16a34a',
+                            fontSize: 20, fontWeight: 800, color: 'var(--price-green)',
                             lineHeight: 1.1, whiteSpace: 'nowrap',
                           }}>
                             {svc.price}
@@ -342,7 +343,7 @@ export default function AdditionalServicesPage() {
                                         <td style={{ color: 'rgba(255,255,255,0.85)', borderBottomColor: 'rgba(255,255,255,0.1)' }}>
                                           {line.label}
                                         </td>
-                                        <td style={{ color: '#4ade80', fontWeight: 700, borderBottomColor: 'rgba(255,255,255,0.1)' }}>
+                                        <td style={{ color: 'var(--price-green-bright)', fontWeight: 700, borderBottomColor: 'rgba(255,255,255,0.1)' }}>
                                           {line.value}
                                         </td>
                                       </tr>

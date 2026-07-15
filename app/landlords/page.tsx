@@ -678,7 +678,7 @@ export default function LandlordsPage() {
           .ll-as-list { list-style:none; margin:0 0 18px; padding:0; display:flex; flex-direction:column; gap:11px; flex:1; }
           .ll-as-item { display:flex; align-items:baseline; justify-content:space-between; gap:12px; }
           .ll-as-item span { font-family:'Poppins',sans-serif; font-size:13.5px; color:#4b5563; line-height:1.4; }
-          .ll-as-item b { flex:none; font-family:'Poppins',sans-serif; font-size:13.5px; font-weight:800; color:var(--logo-blue); white-space:nowrap; }
+          .ll-as-item b { flex:none; font-family:'Poppins',sans-serif; font-size:13.5px; font-weight:800; color:var(--price-green-ink); white-space:nowrap; }
           .ll-as-more { font-family:'Poppins',sans-serif; font-size:12px; font-weight:700;
             letter-spacing:.4px; text-transform:uppercase; color:var(--logo-blue); }
         `}</style>

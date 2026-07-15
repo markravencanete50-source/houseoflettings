@@ -1,0 +1,130 @@
+// firestore.rules
+// The Firestore security rules for House of Lettings.
+//
+// NOTE: this file is a RECORD ONLY — Firestore does not read it from the repo,
+// and there is no firebase CLI config here. To apply it: Firebase Console ->
+// Firestore Database -> Rules -> paste -> Publish. Keep this file in step with
+// the console whenever the rules change, so the repo shows what is live.
+//
+// Context that shapes these rules:
+//
+//  * Almost every write happens SERVER-SIDE in an /api route using
+//    firebase-admin, which bypasses rules entirely: tenant applications,
+//    maintenance requests, service orders, valuations, and (since c6139e72)
+//    staff property posts. Those collections therefore need no client write
+//    rule — granting one only opens a door no legitimate user goes through.
+//
+//  * Only admin and staff can sign in. The public landlord/tenant login was
+//    removed (app/login/page.tsx redirects to /admin-login), so the only
+//    client-side Firestore writer left is an admin on the /admin dashboard.
+//
+// This is the previous rule set with four changes, each marked CHANGED below.
+
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // get() inside a rule is a privileged read — it does not re-enter these
+    // rules — so calling isAdmin() from within /users is not recursive.
+    function isAdmin() {
+      return request.auth != null &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+    function isStaff() {
+      return request.auth != null &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'staff';
+    }
+
+    match /users/{userId} {
+      // CHANGED (1 of 4) — was `allow read: if true`.
+      //
+      // That let anyone, signed in or not, list the whole users collection and
+      // harvest every team member's name, email and role.
+      //
+      // `get` (one document by id) and `list` (query the collection) are
+      // separate permissions. A single-doc read stays public because the public
+      // property page reads the poster's name/role to render the seller line
+      // (app/listings/[id]/PropertyDetailClient.tsx:61) — that needs a UID you
+      // already hold. Listing is now admin-only, so the table can no longer be
+      // enumerated.
+      allow get: if true;
+      allow list: if isAdmin();
+
+      allow create: if request.auth != null && request.auth.uid == userId;
+
+      // CHANGED (2 of 4) — was `allow write: if request.auth.uid == userId || isAdmin()`.
+      //
+      // Any signed-in user could edit their own doc and set role: 'admin',
+      // making themselves an administrator in one call. Self-edits may no
+      // longer change role or permissions; only an admin can.
+      allow update: if isAdmin() || (
+        request.auth != null && request.auth.uid == userId
+        && request.resource.data.role == resource.data.role
+        && request.resource.data.get('permissions', []) == resource.data.get('permissions', [])
+      );
+
+      allow delete: if isAdmin();
+    }
+
+    match /properties/{propertyId} {
+      allow read: if true;
+      allow create: if request.auth != null &&
+        (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'landlord' || isStaff() || isAdmin());
+      allow update, delete: if request.auth != null &&
+        (resource.data.landlordId == request.auth.uid || isAdmin());
+    }
+
+    match /chats/{chatId} {
+      allow read, write: if request.auth != null && (
+        resource == null ||
+        request.auth.uid == resource.data.landlordId ||
+        request.auth.uid == resource.data.tenantId ||
+        isAdmin()
+      );
+
+      match /messages/{messageId} {
+        // CHANGED (3 of 4) — was `allow read, write: if request.auth != null`.
+        //
+        // The parent chat was correctly restricted to its two participants, but
+        // the messages inside it were readable and writable by ANY signed-in
+        // user who knew (or guessed) a chat id. Now only the two people in that
+        // chat, or an admin.
+        allow read, write: if request.auth != null && (
+          isAdmin() ||
+          request.auth.uid == get(/databases/$(database)/documents/chats/$(chatId)).data.landlordId ||
+          request.auth.uid == get(/databases/$(database)/documents/chats/$(chatId)).data.tenantId
+        );
+      }
+    }
+
+    // CHANGED (4 of 4) — dropped `allow create: if request.auth != null` here
+    // and `allow create: if true` on tenantApplications below.
+    //
+    // Both collections are written only by /api routes using firebase-admin
+    // (verified: no addDoc/setDoc to either anywhere on the client). The create
+    // rules let anyone — on tenantApplications, anyone at all, signed in or not
+    // — write straight into the collection, which is a spam and junk-data vector
+    // with no legitimate user.
+    match /valuationRequests/{id} {
+      allow read, write: if request.auth != null && isAdmin();
+    }
+
+    match /google_reviews/{id} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /tenantApplications/{id} {
+      allow read, update, delete: if isAdmin();
+    }
+
+    match /serviceOrders/{id} {
+      allow read, update, delete: if isAdmin();
+    }
+
+    match /maintenanceRequests/{id} {
+      allow read, update, delete: if isAdmin();
+    }
+  }
+}

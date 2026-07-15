@@ -110,7 +110,7 @@ export const BUNDLES: Bundle[] = [
     youWe: 'You manage · we find',
     accent: ACCENT_SOFT,
     blurb:
-      'You have the time to run the tenancy and handle maintenance yourself — you just need a quality, fully-referenced tenant found quickly. We market, vet and reference it all remotely, then hand you a signed tenancy agreement.',
+      'You have the time to run the tenancy and handle maintenance yourself. You just need a quality, fully-referenced tenant found quickly. We market, vet and reference it all remotely, then hand you a signed tenancy agreement.',
     groups: [{ heading: 'Virtual Tenant Find: £399 one-time', items: TENANT_FIND_VIRTUAL }],
   },
   {
@@ -128,7 +128,7 @@ export const BUNDLES: Bundle[] = [
     youWe: 'You manage · we showcase',
     accent: ACCENT_SOFT,
     blurb:
-      'Everything in Virtual, plus professional photography, accompanied viewings and a full in-person handover — the complete marketing push to attract stronger applicants and achieve a higher rent. You still self-manage the tenancy.',
+      'Everything in Virtual, plus professional photography, accompanied viewings and a full in-person handover: the complete marketing push to attract stronger applicants and achieve a higher rent. You still self-manage the tenancy.',
     groups: [{ heading: 'Expert Tenant Find: £699 one-time', items: TENANT_FIND_EXPERT }],
   },
   {
@@ -146,7 +146,7 @@ export const BUNDLES: Bundle[] = [
     youWe: 'We collect · you maintain',
     accent: ACCENT_SOFT,
     blurb:
-      'We collect the rent, monitor payments, chase any arrears and handle the monthly admin — you stay in control of repairs and choosing contractors. A light-touch option for confident landlords.',
+      'We collect the rent, monitor payments, chase any arrears and handle the monthly admin, while you stay in control of repairs and choosing contractors. A light-touch option for confident landlords.',
     groups: [
       { heading: 'Includes a full tenant find', items: TENANT_FIND_VIRTUAL },
       { heading: 'Essential Management: 6% per month', items: MANAGEMENT_ESSENTIAL },
@@ -168,7 +168,7 @@ export const BUNDLES: Bundle[] = [
     youWe: 'We manage everything',
     accent: ACCENT_BLUE,
     blurb:
-      'Rent, tenant communication, maintenance, contractor coordination and compliance — all managed by your local team. The truly hands-off choice, and by far our most popular package.',
+      'Rent, tenant communication, maintenance, contractor coordination and compliance, all managed by your local team. The truly hands-off choice, and by far our most popular package.',
     groups: [
       { heading: 'Includes a full tenant find', items: TENANT_FIND_EXPERT },
       { heading: 'Full Management: 8% per month', items: MANAGEMENT_FULL },

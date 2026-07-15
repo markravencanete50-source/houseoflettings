@@ -88,19 +88,19 @@ export const TOTAL_SERVICES = MATRIX_SECTIONS.reduce((n, s) => n + s.rows.length
 export const PRICING_FAQ: { q: string; a: string }[] = [
   {
     q: 'Can I upgrade my package later?',
-    a: 'Yes — move up a tier at any time. We simply apply the difference to your next invoice, with no re-setup charge.',
+    a: 'Yes, move up a tier at any time. We simply apply the difference to your next invoice, with no re-setup charge.',
   },
   {
     q: "Which package if I'm a hands-on landlord?",
-    a: 'If you have the time to handle maintenance and day-to-day yourself, Virtual Tenant Find is the value choice — we just find and reference the tenant. Prefer it fully managed? Choose Full Management.',
+    a: 'If you have the time to handle maintenance and day-to-day yourself, Virtual Tenant Find is the value choice: we just find and reference the tenant. Prefer it fully managed? Choose Full Management.',
   },
   {
     q: 'Essential vs Full Management?',
-    a: 'Essential covers rent collection, monitoring and key admin — you keep maintenance. Full adds hands-on maintenance, contractor coordination and compliance.',
+    a: 'Essential covers rent collection, monitoring and key admin, and you keep maintenance. Full adds hands-on maintenance, contractor coordination and compliance.',
   },
   {
     q: 'What is a "handover"?',
-    a: 'On move-in day we walk the tenant through the property in person — the water stop-tap, fuse board, gas shut-off, boiler and thermostat, plus how to secure the home — so the property is used correctly from day one.',
+    a: 'On move-in day we walk the tenant through the property in person (the water stop-tap, fuse board, gas shut-off, boiler and thermostat, plus how to secure the home) so the property is used correctly from day one.',
   },
   {
     q: 'Are there any hidden fees?',

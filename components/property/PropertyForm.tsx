@@ -12,6 +12,14 @@ interface PropertyFormProps {
   onSuccess: () => void;
   onCancel: () => void;
   adminOverride?: { featured?: boolean };
+  /**
+   * Create through this server route instead of writing to Firestore from the
+   * browser. The staff dashboard passes '/api/staff/properties': a staff member
+   * is often signed in by session cookie with no Firebase client user, so a
+   * browser write is unauthenticated (rules reject it) and, when Firestore is
+   * unreachable, never settles at all — the form just span forever.
+   */
+  createVia?: string;
 }
 
 // ── Amenity toggle pill ──────────────────────────────────────────────────────
@@ -65,7 +73,7 @@ function SectionHeader({ icon, title, subtitle }: { icon: string; title: string;
 }
 
 export default function PropertyForm({
-  landlordId, landlordName, existing, onSuccess, onCancel, adminOverride,
+  landlordId, landlordName, existing, onSuccess, onCancel, adminOverride, createVia,
 }: PropertyFormProps) {
 
   // ── Core fields ─────────────────────────────────────────────────────────
@@ -272,6 +280,15 @@ export default function PropertyForm({
 
       if (existing?.id) {
         await updateProperty(existing.id, data, []);
+      } else if (createVia) {
+        const res = await fetch(createVia, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'same-origin',
+          body: JSON.stringify(data),
+        });
+        const body = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(body.message || 'Failed to save property.');
       } else {
         await createProperty(data, []);
       }

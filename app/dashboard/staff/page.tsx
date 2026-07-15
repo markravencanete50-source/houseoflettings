@@ -741,6 +741,10 @@ function StaffDashboardInner() {
                   landlordName={profile.name}
                   onSuccess={reloadProperties}
                   onCancel={() => setTab('properties')}
+                  // Save server-side, like every other staff feature: a
+                  // cookie-only session has no Firebase client user, so a
+                  // browser write is unauthenticated and hangs.
+                  createVia="/api/staff/properties"
                 />
               </div>
             </div>

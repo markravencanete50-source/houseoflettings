@@ -49,16 +49,19 @@ export const MANAGEMENT_FULL = [
   'Day-to-day tenant communication',
   'Maintenance reporting and contractor coordination',
   'Repair quotation and completion verification',
-  'Emergency maintenance support',
   'Compliance monitoring (Gas Safety, EICR, EPC)',
   'Monthly landlord statements',
   'Rent review guidance',
-  'Property inspections with report',
+  'Check in and check out inventory',
 ];
 
-// Comprehensive = everything in Full, plus income protection & legal cover.
+// Comprehensive = everything in Full, plus emergency cover, inspections,
+// income protection & legal cover.
 export const MANAGEMENT_COMPREHENSIVE = [
   ...MANAGEMENT_FULL,
+  'Emergency maintenance support',
+  'Property inspections with report',
+  'Routine inspection every 6 months',
   'Rent guarantee cover',
   'Rent recovery, legal and eviction protection',
   'Priority contractor response',
@@ -186,7 +189,7 @@ export const BUNDLES: Bundle[] = [
     youWe: 'We manage & protect',
     accent: ACCENT_BLUE,
     blurb:
-      'Everything in Full, plus rent guarantee cover, legal & eviction protection, priority contractor response and enhanced inspections. Complete peace of mind, with your rental income protected.',
+      'Everything in Full, plus emergency maintenance support, property inspections with report, rent guarantee cover, legal and eviction protection and priority contractor response. Complete peace of mind, with your rental income protected.',
     groups: [
       { heading: 'Includes a full tenant find', items: TENANT_FIND_EXPERT },
       { heading: 'Comprehensive Management: 10% per month', items: MANAGEMENT_COMPREHENSIVE },

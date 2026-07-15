@@ -9,6 +9,17 @@ import RevealCards from '@/components/RevealCards';
 import { BUNDLES } from '@/lib/bundles';
 import { SERVICE_CATEGORIES } from '@/lib/additionalServices';
 
+// The site-standard CTA size, matching components/layout/ServiceHero.module.css
+// (.btn). Every call-to-action is this size, so the inline-styled buttons on
+// this page stay in step with the shared hero rather than drifting.
+const CTA_STYLE: React.CSSProperties = {
+  display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 9,
+  boxSizing: 'border-box', minHeight: 48,
+  padding: '14px 28px', border: '1.5px solid transparent', borderRadius: 9,
+  fontFamily: "'Poppins', sans-serif", fontSize: 13.5, fontWeight: 700, lineHeight: 1.2,
+  letterSpacing: '.02em', textTransform: 'uppercase', textDecoration: 'none',
+};
+
 const landlordFaqs = [
   {
     q: 'What legal certificates do I need before letting my property?',
@@ -43,8 +54,8 @@ const PKG_HL: string[][] = [
   ['Advertising on major property portals', 'Full applicant referencing and Right to Rent checks', 'Tenancy agreement and deposit registration', "First month's rent and deposit collected"],
   ['Everything in Virtual Tenant Find', 'Professional photography and floor plan', 'Agent-led accompanied viewings', 'In-person tenant handover'],
   ['Includes a full tenant find', 'Monthly rent collection and monitoring', 'Arrears chasing and reminders', 'Key holding and annual income summary'],
-  ['Dedicated day-to-day management team', 'Maintenance and contractor coordination', 'Compliance monitoring (Gas, EICR, EPC)', 'Monthly landlord statements'],
-  ['Everything in Full Management', 'Rent guarantee cover', 'Legal and eviction protection', 'Priority contractors and enhanced inspections'],
+  ['Dedicated day-to-day management team', 'Maintenance and contractor coordination', 'Compliance monitoring (Gas, EICR, EPC)', 'Check in and check out inventory'],
+  ['Everything in Full Management', 'Emergency maintenance support', 'Routine inspection every 6 months', 'Rent guarantee, legal and eviction protection'],
 ];
 
 // Rent Guarantee Insurance carousel — a client-supplied 7-slide educational set
@@ -327,11 +338,8 @@ export default function LandlordsPage() {
             </ul>
             <Link href="/book-valuation"
               style={{
-                padding: '14px 32px', background: '#0f1f3d', color: '#fff',
-                border: 'none', borderRadius: 6, fontSize: 14, fontWeight: 700,
-                letterSpacing: '0.5px', cursor: 'pointer', transition: 'background 0.2s',
-                fontFamily: "'Poppins', sans-serif", textTransform: 'uppercase',
-                textDecoration: 'none', display: 'inline-block',
+                ...CTA_STYLE, background: '#0f1f3d', color: '#fff',
+                cursor: 'pointer', transition: 'background 0.2s',
               }}
               onMouseEnter={e => (e.currentTarget.style.background = '#162849')}
               onMouseLeave={e => (e.currentTarget.style.background = '#0f1f3d')}
@@ -454,12 +462,14 @@ export default function LandlordsPage() {
               text-transform: uppercase; color: rgba(255,255,255,.5); margin-top: 6px; }
             .ll-svc-price-sep { width: 1px; height: 42px; background: rgba(255,255,255,.14); }
             .ll-svc-cta { display: flex; gap: 12px; flex-wrap: wrap; }
-            .ll-svc-btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px;
-              font-family: 'Poppins', sans-serif; font-size: 13px; font-weight: 700; letter-spacing: .03em;
-              text-transform: uppercase; text-decoration: none; padding: 14px 24px; border-radius: 9px; transition: all .2s ease; }
-            .ll-svc-btn.primary { background: #2563eb; color: #fff; border: 1.5px solid #2563eb; }
+            .ll-svc-btn { display: inline-flex; align-items: center; justify-content: center; gap: 9px;
+              box-sizing: border-box; min-height: 48px; line-height: 1.2;
+              font-family: 'Poppins', sans-serif; font-size: 13.5px; font-weight: 700; letter-spacing: .02em;
+              text-transform: uppercase; text-decoration: none; padding: 14px 28px;
+              border: 1.5px solid transparent; border-radius: 9px; transition: all .2s ease; }
+            .ll-svc-btn.primary { background: #2563eb; color: #fff; border-color: #2563eb; }
             .ll-svc-btn.primary:hover { background: #1d4ed8; border-color: #1d4ed8; transform: translateY(-2px); }
-            .ll-svc-btn.ghost { background: transparent; color: #cddffb; border: 1.5px solid rgba(255,255,255,.28); }
+            .ll-svc-btn.ghost { background: transparent; color: #cddffb; border-color: rgba(255,255,255,.28); }
             .ll-svc-btn.ghost:hover { border-color: #fff; color: #fff; }
             .ll-svc-btn.ghost svg { transition: transform .2s ease; }
             .ll-svc-btn.ghost:hover svg { transform: translateX(3px); }
@@ -551,7 +561,7 @@ export default function LandlordsPage() {
                       ))}
                     </ul>
                     <Link href={`/pricing/${b.id}`} className="ll-svc-inc-more">
-                      See every service included, explained
+                      See every service included
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
                         <path d="M5 12h14M13 6l6 6-6 6" />
                       </svg>
@@ -571,11 +581,8 @@ export default function LandlordsPage() {
           </p>
           <div style={{ textAlign: 'center' }}>
             <Link href="/pricing" style={{
-              display: 'inline-block', padding: '16px 48px',
-              background: '#2563eb', color: '#fff', borderRadius: 6,
-              fontSize: 14, fontWeight: 700, letterSpacing: '0.5px',
-              textTransform: 'uppercase', textDecoration: 'none',
-              fontFamily: "'Poppins', sans-serif", transition: 'background 0.2s',
+              ...CTA_STYLE, background: '#2563eb', color: '#fff',
+              transition: 'background 0.2s',
             }}
               onMouseEnter={e => (e.currentTarget.style.background = '#1d4ed8')}
               onMouseLeave={e => (e.currentTarget.style.background = '#2563eb')}
@@ -659,11 +666,8 @@ export default function LandlordsPage() {
         </div>
         <div style={{ textAlign: 'center' }}>
           <Link href="/additional-services" style={{
-            display: 'inline-block', padding: '16px 48px',
-            background: '#0f1f3d', color: '#fff', borderRadius: 6,
-            fontSize: 14, fontWeight: 700, letterSpacing: '0.5px',
-            textTransform: 'uppercase', textDecoration: 'none',
-            fontFamily: "'Poppins', sans-serif", transition: 'background 0.2s',
+            ...CTA_STYLE, background: '#0f1f3d', color: '#fff',
+            transition: 'background 0.2s',
           }}
             onMouseEnter={e => (e.currentTarget.style.background = '#162849')}
             onMouseLeave={e => (e.currentTarget.style.background = '#0f1f3d')}
@@ -949,12 +953,14 @@ export default function LandlordsPage() {
             cursor: pointer; transition: all .25s ease; }
           .rgi-dot.active { background: #2563eb; width: 24px; border-radius: 999px; }
           .rgi-cta { display: flex; gap: 14px; flex-wrap: wrap; justify-content: center; margin-top: 34px; }
-          .rgi-btn { display: inline-flex; align-items: center; justify-content: center; padding: 15px 32px;
-            border-radius: 8px; font-family: 'Poppins', sans-serif; font-size: 14px; font-weight: 700;
-            letter-spacing: .5px; text-transform: uppercase; text-decoration: none; transition: all .2s ease; }
-          .rgi-btn.primary { background: #2563eb; color: #fff; border: 1.5px solid #2563eb; }
+          .rgi-btn { display: inline-flex; align-items: center; justify-content: center; gap: 9px;
+            box-sizing: border-box; min-height: 48px; line-height: 1.2; padding: 14px 28px;
+            border: 1.5px solid transparent; border-radius: 9px;
+            font-family: 'Poppins', sans-serif; font-size: 13.5px; font-weight: 700;
+            letter-spacing: .02em; text-transform: uppercase; text-decoration: none; transition: all .2s ease; }
+          .rgi-btn.primary { background: #2563eb; color: #fff; border-color: #2563eb; }
           .rgi-btn.primary:hover { background: #1d4ed8; border-color: #1d4ed8; }
-          .rgi-btn.ghost { background: #fff; color: #0f1f3d; border: 1.5px solid #cdd6ea; }
+          .rgi-btn.ghost { background: #fff; color: #0f1f3d; border-color: #cdd6ea; }
           .rgi-btn.ghost:hover { border-color: #2563eb; color: #2563eb; }
           @media (max-width: 600px) { .rgi-btn { width: 100%; } }
         `}</style>
@@ -970,7 +976,7 @@ export default function LandlordsPage() {
               fontFamily: "'Poppins', sans-serif", fontSize: 'clamp(28px,4vw,44px)',
               fontWeight: 700, color: '#0f1f3d', margin: '0 0 16px',
             }}>
-              Rent guarantee insurance, explained
+              Rent guarantee insurance
             </h2>
             <p style={{
               fontFamily: "'Poppins', sans-serif", fontSize: 15, color: '#6b7280', lineHeight: 1.7, margin: 0,
@@ -1099,11 +1105,8 @@ export default function LandlordsPage() {
           <div style={{ display: 'flex', gap: 16, justifyContent: 'center', flexWrap: 'wrap' }}>
             <Link href="/book-valuation"
               style={{
-                padding: '16px 44px', background: '#2563eb', color: '#fff',
-                border: 'none', borderRadius: 6, fontSize: 15, fontWeight: 700,
-                letterSpacing: '0.5px', cursor: 'pointer', transition: 'background 0.2s',
-                fontFamily: "'Poppins', sans-serif", textTransform: 'uppercase',
-                textDecoration: 'none', display: 'inline-block',
+                ...CTA_STYLE, background: '#2563eb', color: '#fff',
+                cursor: 'pointer', transition: 'background 0.2s',
               }}
               onMouseEnter={e => (e.currentTarget.style.background = '#1d4ed8')}
               onMouseLeave={e => (e.currentTarget.style.background = '#2563eb')}

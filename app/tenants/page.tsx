@@ -193,13 +193,14 @@ export default function TenantsPage() {
           0% { width: 0; opacity: 0; }
           100% { width: 60px; opacity: 1; }
         }
-        /* Uniform hero action buttons (equal width on desktop, full-width stacked on mobile) */
+        /* Uniform hero action buttons (equal width on desktop, full-width stacked
+           on mobile). Sized to the site-standard CTA, as ServiceHero .btn. */
         .t-hero-btn {
-          display: inline-flex; align-items: center; justify-content: center;
-          box-sizing: border-box; min-width: 240px; padding: 14px 32px;
-          background: #2563eb; color: #fff; border: 2px solid #2563eb; border-radius: 8px;
-          font-weight: 700; font-size: 15px; letter-spacing: 0.02em; text-decoration: none;
-          transition: background .2s ease, border-color .2s ease;
+          display: inline-flex; align-items: center; justify-content: center; gap: 9px;
+          box-sizing: border-box; min-width: 240px; min-height: 48px; padding: 14px 28px;
+          background: #2563eb; color: #fff; border: 1.5px solid #2563eb; border-radius: 9px;
+          font-weight: 700; font-size: 13.5px; line-height: 1.2; letter-spacing: 0.02em;
+          text-decoration: none; transition: background .2s ease, border-color .2s ease;
         }
         .t-hero-btn:hover { background: #1d4ed8; border-color: #1d4ed8; }
         @media (max-width: 600px) {
@@ -406,10 +407,12 @@ export default function TenantsPage() {
                 <a
                   href="/maintenance/report"
                   style={{
-                    display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 8,
+                    display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 9,
+                    boxSizing: "border-box", minHeight: 48, lineHeight: 1.2,
                     alignSelf: "flex-start", background: "#2563eb", color: "#fff", fontWeight: 700,
-                    fontSize: 14, padding: "12px 22px", borderRadius: 8, textDecoration: "none",
-                    letterSpacing: "0.01em",
+                    fontSize: 13.5, padding: "14px 28px", border: "1.5px solid transparent",
+                    borderRadius: 9, textDecoration: "none",
+                    letterSpacing: "0.02em",
                   }}
                 >
                   🔧 Report a maintenance issue →
@@ -521,17 +524,23 @@ export default function TenantsPage() {
             <a
               href="/book-viewing"
               style={{
-                display: "inline-block",
+                display: "inline-flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: 9,
+                boxSizing: "border-box",
+                minHeight: 48,
+                lineHeight: 1.2,
                 background: "#060d1f",
                 color: "#fff",
-                padding: "14px 36px",
-                borderRadius: 8,
+                padding: "14px 28px",
+                borderRadius: 9,
                 fontWeight: 700,
-                fontSize: 15,
+                fontSize: 13.5,
                 textDecoration: "none",
-                letterSpacing: "0.06em",
+                letterSpacing: "0.02em",
                 textTransform: "uppercase",
-                border: "2px solid rgba(255,255,255,0.12)",
+                border: "1.5px solid rgba(255,255,255,0.12)",
                 marginTop: 8,
               }}
             >

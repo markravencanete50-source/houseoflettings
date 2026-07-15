@@ -11,6 +11,17 @@ import Footer from '@/components/layout/Footer';
 import ServiceHero from '@/components/layout/ServiceHero';
 import RevealCards from '@/components/RevealCards';
 
+// The site-standard CTA size, matching components/layout/ServiceHero.module.css
+// (.btn) which this page's hero already uses. Every call-to-action is this size.
+const CTA_STYLE: React.CSSProperties = {
+  display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 9,
+  boxSizing: 'border-box', minHeight: 48, lineHeight: 1.2,
+  padding: '14px 28px', border: '1.5px solid transparent', borderRadius: 9,
+  fontFamily: "'Poppins', sans-serif", fontSize: 13.5, fontWeight: 700,
+  letterSpacing: '.02em', textTransform: 'uppercase', textDecoration: 'none',
+  whiteSpace: 'nowrap',
+};
+
 export default function AdditionalServicesPage() {
   const [open, setOpen] = useState<string | null>(null);
 
@@ -411,15 +422,11 @@ export default function AdditionalServicesPage() {
         </div>
         <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap' }}>
           <Link href="/pricing" style={{
-            padding: '16px 36px', background: 'var(--blue)', color: '#fff',
-            borderRadius: 4, fontSize: 14, fontWeight: 700, letterSpacing: '0.5px',
-            textTransform: 'uppercase', textDecoration: 'none', fontFamily: "'Poppins', sans-serif", whiteSpace: 'nowrap',
+            ...CTA_STYLE, background: 'var(--blue)', color: '#fff',
           }}>View Packages</Link>
           <Link href="/landlord-registration" style={{
-            padding: '16px 36px', background: 'transparent', color: '#fff',
-            border: '1px solid rgba(255,255,255,0.3)', borderRadius: 4, fontSize: 14,
-            fontWeight: 500, letterSpacing: '0.5px', textTransform: 'uppercase',
-            textDecoration: 'none', fontFamily: "'Poppins', sans-serif", whiteSpace: 'nowrap',
+            ...CTA_STYLE, background: 'transparent', color: '#fff',
+            borderColor: 'rgba(255,255,255,0.3)',
           }}>Register as a Landlord</Link>
         </div>
       </section>

@@ -15,6 +15,17 @@ const PACKAGES = BUNDLES;
 const VISIBLE_ROWS = 7;   // rows shown per matrix section before "Show more"
 const HOT = 3;            // Full Management column index (Most Popular)
 
+// The site-standard CTA size, matching components/layout/ServiceHero.module.css
+// (.btn) and .pr-hero2-btn above. Every call-to-action is this size.
+const PR_CTA_STYLE: React.CSSProperties = {
+  display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 9,
+  boxSizing: 'border-box', minHeight: 48, lineHeight: 1.2,
+  padding: '14px 28px', border: '1.5px solid transparent', borderRadius: 9,
+  fontFamily: "'Poppins', sans-serif", fontSize: 13.5, fontWeight: 700,
+  letterSpacing: '.02em', textTransform: 'uppercase', textDecoration: 'none',
+  whiteSpace: 'nowrap',
+};
+
 // Decision guide shown AFTER the comparison table. An alternating left/right
 // layout: plain-English "who it's for" copy on one side, a designed spec panel
 // (price + what's included) on the other. Index matches BUNDLES order. Copy
@@ -81,7 +92,7 @@ const EXPLAINERS: { kicker: string; lead: string; body: string; extra: string; f
     kicker: 'Management · £399 then 8% of rent',
     lead: 'Choose this if you want the whole tenancy off your plate.',
     body: 'Rent, tenant communication, maintenance, contractor coordination and compliance, all managed by your local team. You do nothing day to day. This is the truly hands off choice and by far our most popular package.',
-    extra: 'Your local team becomes the single point of contact for your tenant. We arrange repairs through vetted contractors, keep your gas, electrical and EPC compliance in date, carry out routine inspections and send you monthly statements. It is built for landlords who do not have the time, or do not live nearby, and want the confidence that nothing is missed.',
+    extra: 'Your local team becomes the single point of contact for your tenant. We arrange repairs through vetted contractors, keep your gas, electrical and EPC compliance in date, handle the check in and check out inventory and send you monthly statements. It is built for landlords who do not have the time, or do not live nearby, and want the confidence that nothing is missed.',
     fit: 'It suits you if you do not have the time, or do not live nearby, and want maintenance, contractors and compliance all handled for you so nothing is ever missed.',
     points: [
       'You do not have the time, or do not live nearby',
@@ -98,19 +109,19 @@ const EXPLAINERS: { kicker: string; lead: string; body: string; extra: string; f
   {
     kicker: 'Management · £399 then 10% of rent',
     lead: 'Choose this if you want maximum protection for your rental income.',
-    body: 'Your local team manages the entire tenancy for you and adds rent guarantee cover, legal and eviction protection, priority contractor response and enhanced inspections. It is complete peace of mind, with your income protected even if a tenant stops paying.',
-    extra: 'This is everything in Full Management, plus a safety net for your income. Rent guarantee cover pays out if your tenant stops paying, legal and eviction protection covers the cost of regaining possession, and you get priority contractor response with more thorough inspections. It is what landlords choose when they want their return protected whatever happens.',
+    body: 'Your local team manages the entire tenancy for you and adds emergency maintenance support, routine inspections every 6 months, rent guarantee cover, legal and eviction protection and priority contractor response. It is complete peace of mind, with your income protected even if a tenant stops paying.',
+    extra: 'This is everything in Full Management, plus a safety net for your income and your property. You get emergency maintenance support for urgent out-of-hours issues, a routine inspection with a written report every 6 months, and rent guarantee cover that pays out if your tenant stops paying. Legal and eviction protection covers the cost of regaining possession, and priority contractor response puts you at the front of the queue. It is what landlords choose when they want their return protected whatever happens.',
     fit: 'It suits you if you want your rent guaranteed even during arrears, your legal and eviction costs covered, and priority repairs with enhanced inspections for complete peace of mind.',
     points: [
       'You want your rent guaranteed even during arrears',
       'You want legal and eviction costs covered',
-      'You want priority repairs and enhanced inspections',
+      'You want emergency cover and inspections every 6 months',
     ],
     highlights: [
       'Everything in Full Management',
-      'Rent guarantee cover',
-      'Legal and eviction protection',
-      'Priority contractors and enhanced inspections',
+      'Emergency maintenance support',
+      'Routine inspection every 6 months',
+      'Rent guarantee, legal and eviction protection',
     ],
   },
 ];
@@ -287,11 +298,13 @@ export default function PricingPage() {
         .pr-hero2-sub { font-size:clamp(15px,2vw,17px); color:rgba(255,255,255,.66); line-height:1.7;
           font-weight:300; margin:0 0 28px; max-width:540px; }
         .pr-hero2-cta { display:flex; gap:12px; flex-wrap:wrap; }
-        .pr-hero2-btn { display:inline-block; padding:14px 30px; border-radius:9px; font-size:13.5px;
+        .pr-hero2-btn { display:inline-flex; align-items:center; justify-content:center; gap:9px;
+          box-sizing:border-box; min-height:48px; line-height:1.2;
+          padding:14px 28px; border:1.5px solid transparent; border-radius:9px; font-size:13.5px;
           font-weight:700; letter-spacing:.02em; text-transform:uppercase; text-decoration:none; transition:all .18s ease; cursor:pointer; }
         .pr-hero2-btn--solid { background:#2563eb; color:#fff; }
         .pr-hero2-btn--solid:hover { background:#1d4ed8; box-shadow:0 14px 28px -12px rgba(37,99,235,.6); }
-        .pr-hero2-btn--ghost { background:transparent; color:#fff; border:1.5px solid rgba(255,255,255,.4); }
+        .pr-hero2-btn--ghost { background:transparent; color:#fff; border-color:rgba(255,255,255,.4); }
         .pr-hero2-btn--ghost:hover { border-color:#fff; background:rgba(255,255,255,.06); }
         .pr-hero2-media { position:relative; }
         .pr-hero2-imgwrap { position:relative; border-radius:20px; overflow:hidden; aspect-ratio:4/3;
@@ -390,7 +403,8 @@ export default function PricingPage() {
         .pr-chev.up { transform:rotate(-135deg) translateY(-1px); }
         .pr-cta-row td { padding:16px 10px 20px; text-align:center; border-top:2px solid #eef1f5; background:#fff; }
         .pr-cta-row td:first-child { position:sticky; left:0; background:#fff; }
-        .pr-btn { display:inline-block; font-size:12px; font-weight:700; padding:9px 16px; border-radius:8px;
+        .pr-btn { display:inline-flex; align-items:center; justify-content:center;
+          box-sizing:border-box; min-height:44px; font-size:12px; font-weight:700; padding:9px 16px; border-radius:8px;
           border:1.5px solid #2563eb; color:#2563eb; background:transparent; transition:all .15s ease;
           white-space:nowrap; cursor:pointer; text-transform:uppercase; letter-spacing:.02em; }
         .pr-btn:hover { background:#2563eb; color:#fff; }
@@ -409,7 +423,9 @@ export default function PricingPage() {
         .pr-mc-help { text-align:center; font-size:13px; color:#6b7280; margin:0 0 14px; }
         .pr-mc-pills { display:flex; gap:8px; overflow-x:auto; padding:2px 2px 14px; -webkit-overflow-scrolling:touch; scrollbar-width:none; }
         .pr-mc-pills::-webkit-scrollbar { display:none; }
-        .pr-mc-pill { position:relative; flex:0 0 auto; border:1.5px solid #dbe2ea; background:#fff; color:#374151;
+        /* Mobile-only control, so it must clear the 44px tap-target minimum. */
+        .pr-mc-pill { position:relative; flex:0 0 auto; box-sizing:border-box; min-height:44px;
+          border:1.5px solid #dbe2ea; background:#fff; color:#374151;
           border-radius:14px; padding:9px 16px 8px; cursor:pointer; white-space:nowrap; text-align:center; transition:all .15s ease; }
         .pr-mc-pill-name { display:block; font-size:13.5px; font-weight:700; line-height:1.2; }
         .pr-mc-pill-fee { display:block; font-size:10.5px; font-weight:600; opacity:.6; margin-top:2px; }
@@ -488,7 +504,9 @@ export default function PricingPage() {
         .pr-svc-points .pr-ptick svg { width:11px; height:11px; stroke:#16a34a; stroke-width:3; fill:none; stroke-linecap:round; stroke-linejoin:round; }
         /* Prose alternative to the tick points; only shown on mobile. */
         .pr-svc-fit { display:none; font-size:15px; color:#5b6472; line-height:1.8; margin:0 0 24px; }
-        .pr-svc-btn { display:inline-flex; align-items:center; gap:9px; padding:14px 30px; border-radius:9px; border:1.5px solid #2563eb;
+        .pr-svc-btn { display:inline-flex; align-items:center; justify-content:center; gap:9px;
+          box-sizing:border-box; min-height:48px; line-height:1.2;
+          padding:14px 28px; border-radius:9px; border:1.5px solid #2563eb;
           background:transparent; color:#2563eb; font-size:13.5px; font-weight:700; letter-spacing:.02em;
           text-transform:uppercase; text-decoration:none; cursor:pointer; transition:all .18s ease; }
         /* The whole spec panel is a link to the package's individual page. */
@@ -594,8 +612,10 @@ export default function PricingPage() {
         .pr-addl-in .pr-eyebrow { color:#9dc3ff; }
         .pr-addl-in h2 { color:#fff; font-size:clamp(22px,3vw,30px); font-weight:800; margin:0 0 8px; max-width:600px; line-height:1.15; }
         .pr-addl-in p { color:#d3e2f7; font-size:14px; line-height:1.6; margin:0; max-width:600px; }
-        .pr-addl-btn { flex:none; display:inline-flex; align-items:center; gap:10px; background:#fff; color:#0f1f3d;
-          font-size:14.5px; font-weight:800; padding:16px 28px; border-radius:10px; text-decoration:none;
+        .pr-addl-btn { flex:none; display:inline-flex; align-items:center; justify-content:center; gap:9px;
+          box-sizing:border-box; min-height:48px; line-height:1.2; background:#fff; color:#0f1f3d;
+          font-size:13.5px; font-weight:700; letter-spacing:.02em; text-transform:uppercase;
+          padding:14px 28px; border:1.5px solid transparent; border-radius:9px; text-decoration:none;
           box-shadow:0 12px 24px -12px rgba(0,0,0,.4); transition:transform .15s ease, box-shadow .15s ease; white-space:nowrap; }
         .pr-addl-btn:hover { transform:translateY(-2px); box-shadow:0 18px 30px -12px rgba(0,0,0,.5); }
 
@@ -820,7 +840,7 @@ export default function PricingPage() {
               </div>
 
               <Link href={`/pricing/${PACKAGES[mobileTab].id}`} className="pr-mc-all">
-                See all {mcIncluded} services included, explained
+                See all {mcIncluded} services included
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
               </Link>
             </div>
@@ -829,7 +849,7 @@ export default function PricingPage() {
               <button onClick={() => addPackage(mobileTab)}>{justAdded === mobileTab ? 'Added to order ✓' : `Add ${PACKAGES[mobileTab].short} to order`}</button>
             </div>
           </div>
-          <p className="pr-mc-foot">Tap a package above to see everything it includes, explained in full. Prices inc. VAT.</p>
+          <p className="pr-mc-foot">Tap a package above to see everything it includes. Prices inc. VAT.</p>
         </div>
       </section>
 
@@ -970,14 +990,11 @@ export default function PricingPage() {
         </div>
         <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap' }}>
           <Link href="/book-valuation" style={{
-            padding: '16px 36px', background: '#2563eb', color: '#fff', borderRadius: 6, fontSize: 14, fontWeight: 700,
-            letterSpacing: '0.5px', textTransform: 'uppercase', textDecoration: 'none', fontFamily: "'Poppins', sans-serif", whiteSpace: 'nowrap',
+            ...PR_CTA_STYLE, background: '#2563eb', color: '#fff',
           }}>Book a Free Valuation</Link>
           <Link href="/landlord-registration" style={{
-            padding: '16px 36px', background: 'transparent', color: '#fff',
-            border: '1px solid rgba(255,255,255,0.3)', borderRadius: 6, fontSize: 14,
-            fontWeight: 500, letterSpacing: '0.5px', textTransform: 'uppercase',
-            textDecoration: 'none', fontFamily: "'Poppins', sans-serif", whiteSpace: 'nowrap',
+            ...PR_CTA_STYLE, background: 'transparent', color: '#fff',
+            borderColor: 'rgba(255,255,255,0.3)',
           }}>Register as a Landlord</Link>
         </div>
       </section>

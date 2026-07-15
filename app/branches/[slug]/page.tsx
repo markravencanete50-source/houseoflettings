@@ -255,6 +255,10 @@ export default function BranchPage({ params }: { params: { slug: string } }) {
                   key={s}
                   href={`/listings?location=${encodeURIComponent(branch.name)}`}
                   style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    boxSizing: 'border-box',
+                    minHeight: 44,   // tap-target minimum
                     background: 'var(--gray-100)',
                     border: '1px solid var(--gray-200)',
                     color: 'var(--gray-800)',

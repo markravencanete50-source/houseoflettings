@@ -21,6 +21,16 @@ const colors = {
   textLight: '#718096',
 };
 
+// The site-standard CTA size, matching components/layout/ServiceHero.module.css
+// (.btn) which this page's hero already uses. Every call-to-action is this size.
+const CTA_STYLE: React.CSSProperties = {
+  display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 9,
+  boxSizing: 'border-box', minHeight: 48, lineHeight: 1.2,
+  padding: '14px 28px', border: '1.5px solid transparent', borderRadius: 9,
+  fontFamily: "'Poppins', sans-serif", fontSize: 13.5, fontWeight: 700,
+  letterSpacing: '.02em', textTransform: 'uppercase', textDecoration: 'none',
+};
+
 const faqs = [
   {
     q: 'How much does full property management cost?',
@@ -370,14 +380,9 @@ export default function PropertyManagementPage() {
                 Not sure if your property is compliant?
               </p>
               <Link href="/book-valuation" style={{
+                ...CTA_STYLE,
                 background: colors.blue,
                 color: colors.white,
-                padding: '14px 32px',
-                borderRadius: 6,
-                fontWeight: 700,
-                fontSize: 15,
-                textDecoration: 'none',
-                display: 'inline-block',
                 whiteSpace: 'nowrap',
               }}>
                 Book Valuation
@@ -627,26 +632,16 @@ export default function PropertyManagementPage() {
           </p>
           <div style={{ display: 'flex', gap: 16, justifyContent: 'center', flexWrap: 'wrap' }}>
             <Link href="/book-valuation" style={{
+              ...CTA_STYLE,
               background: colors.white,
               color: colors.navy,
-              padding: '16px 36px',
-              borderRadius: 8,
-              fontWeight: 700,
-              fontSize: 16,
-              textDecoration: 'none',
-              display: 'inline-block',
             }}>
               Book Valuation
             </Link>
             <Link href="/book-viewing" style={{
+              ...CTA_STYLE,
               background: colors.blue,
               color: colors.white,
-              padding: '16px 36px',
-              borderRadius: 8,
-              fontWeight: 600,
-              fontSize: 16,
-              textDecoration: 'none',
-              display: 'inline-block',
             }}>
               Book a Viewing
             </Link>

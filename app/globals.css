@@ -250,19 +250,25 @@ ul, ol { list-style: none; }
   to { transform: rotate(360deg); }
 }
 
-/* ── Branch / location pages ───────────────────────────────── */
+/* ── Branch / location pages ─────────────────────────────────
+   Sized to the site-standard CTA, as components/layout/ServiceHero.module.css
+   (.btn). The transparent border keeps the solid variants exactly the same
+   height as the outline/ghost ones sitting next to them. */
 .hol-branch-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  padding: 13px 22px;
-  min-height: 46px;
-  border-radius: 6px;
+  gap: 9px;
+  box-sizing: border-box;
+  padding: 14px 28px;
+  min-height: 48px;
+  line-height: 1.2;
+  border: 1.5px solid transparent;
+  border-radius: 9px;
   font-family: 'Poppins', sans-serif;
-  font-size: 13px;
-  font-weight: 600;
-  letter-spacing: 0.04em;
+  font-size: 13.5px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
   text-transform: uppercase;
   text-decoration: none;
   cursor: pointer;
@@ -277,20 +283,20 @@ ul, ol { list-style: none; }
 .hol-branch-btn--outline {
   background: transparent;
   color: var(--navy);
-  border: 1.5px solid var(--navy);
+  border-color: var(--navy);
 }
 .hol-branch-btn--outline:hover { background: var(--navy); color: #fff; transform: translateY(-2px); }
 .hol-branch-btn--ghost {
   background: rgba(255,255,255,0.12);
   color: #fff;
-  border: 1.5px solid rgba(255,255,255,0.55);
+  border-color: rgba(255,255,255,0.55);
 }
 .hol-branch-btn--ghost:hover { background: #fff; color: var(--navy); transform: translateY(-2px); }
 /* Solid white button — for use on dark/navy backgrounds (e.g. hero) */
 .hol-branch-btn--white {
   background: #fff;
   color: var(--navy);
-  border: 1.5px solid #fff;
+  border-color: #fff;
 }
 .hol-branch-btn--white:hover { background: rgba(255,255,255,0.88); transform: translateY(-2px); box-shadow: 0 8px 22px rgba(0,0,0,0.18); }
 

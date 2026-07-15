@@ -10,6 +10,7 @@
 
 .more {
   display: inline-flex; align-items: center; gap: 8px;
+  box-sizing: border-box; min-height: 44px;   /* tap-target minimum */
   margin-top: 16px; padding: 9px 16px;
   background: #fff; border: 1.5px solid #dbe2ea; border-radius: 999px;
   color: #2563eb; font-family: inherit; font-size: 13px; font-weight: 700;

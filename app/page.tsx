@@ -71,14 +71,23 @@ function HeroCycler() {
 
 const ValuationModal = lazy(() => import('@/components/ValuationModal'));
 
+// The site-standard CTA size, matching components/layout/ServiceHero.module.css
+// (.btn) and the .hero-btn rule below. Every call-to-action is this size.
+const HOME_CTA_STYLE: React.CSSProperties = {
+  display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 9,
+  boxSizing: 'border-box', minHeight: 48, lineHeight: 1.2,
+  padding: '14px 28px', border: '1.5px solid transparent', borderRadius: 9,
+  fontFamily: "'Poppins', sans-serif", fontSize: 13.5, fontWeight: 700,
+  letterSpacing: '.02em', textTransform: 'uppercase', textDecoration: 'none',
+};
+
 // ── INLINE VALUATION BUTTON (routes to the full valuation form) ───────────────
+// Same size as every other CTA, but laid out full-width within its column.
 const inlineCtaStyle: React.CSSProperties = {
-  padding: '16px 0', background: '#2563eb', color: '#fff',
-  border: 'none', borderRadius: 6, fontSize: 16, fontWeight: 700,
-  letterSpacing: '0.5px', cursor: 'pointer', transition: 'background 0.2s',
-  fontFamily: "'Poppins', sans-serif",
-  display: 'block', width: '100%', maxWidth: '260px', textAlign: 'center',
-  textDecoration: 'none',
+  ...HOME_CTA_STYLE,
+  background: '#2563eb', color: '#fff',
+  cursor: 'pointer', transition: 'background 0.2s',
+  display: 'flex', width: '100%', maxWidth: '260px',
 };
 function ValuationInlineButton() {
   return (
@@ -717,32 +726,23 @@ export default function HomePage() {
               display: flex; gap: 12px; flex-wrap: wrap;
               justify-content: center;
             }
+            /* Site-standard CTA size, as components/layout/ServiceHero.module.css (.btn). */
             .hero-btn {
+              display: inline-flex; align-items: center; justify-content: center; gap: 9px;
+              box-sizing: border-box; min-height: 48px; line-height: 1.2;
               padding: 14px 28px;
               min-width: 200px; text-align: center;
-              background: #2563eb; color: #fff; border: none;
-              border-radius: 6px; font-size: 13px; font-weight: 700;
-              letter-spacing: 0.5px; text-transform: uppercase;
+              background: #2563eb; color: #fff; border: 1.5px solid transparent;
+              border-radius: 9px; font-size: 13.5px; font-weight: 700;
+              letter-spacing: 0.02em; text-transform: uppercase;
               text-decoration: none; font-family: 'Poppins', sans-serif;
-              white-space: nowrap; display: inline-block;
+              white-space: nowrap;
               cursor: pointer; transition: background 0.2s, border-color 0.2s, color 0.2s;
             }
             .hero-btn:hover { background: #1d4ed8; }
-            .hero-btn-outline {
-              background: #F59E0B;
-              border: 2px solid #F59E0B;
-              color: #fff;
-            }
-            .hero-btn-outline:hover {
-              background: #D97706;
-              border-color: #D97706;
-            }
-            @media (max-width: 480px) {
+            @media (max-width: 600px) {
               .hero-btns { flex-direction: column; gap: 10px; align-items: stretch; }
-              .hero-btn {
-                padding: 14px 18px; font-size: 12px;
-                text-align: center; width: 100%;
-              }
+              .hero-btn { width: 100%; min-width: 0; }
             }
           `}</style>
           <div className="hero-btns">
@@ -1422,12 +1422,8 @@ export default function HomePage() {
 
           <div style={{ textAlign: 'center' }}>
             <Link href="/pricing" style={{
-              display: 'inline-block', padding: '16px 48px',
-              background: '#2563eb', color: '#fff', borderRadius: 6,
-              fontSize: 14, fontWeight: 700, letterSpacing: '0.5px',
-              textTransform: 'uppercase', textDecoration: 'none',
+              ...HOME_CTA_STYLE, background: '#2563eb', color: '#fff',
               transition: 'background 0.2s',
-              fontFamily: "'Poppins', sans-serif",
             }}
               onMouseEnter={e => (e.currentTarget.style.background = '#1d4ed8')}
               onMouseLeave={e => (e.currentTarget.style.background = '#2563eb')}
@@ -1583,9 +1579,8 @@ export default function HomePage() {
               </select>
             </div>
             <button onClick={handleSearch} style={{
-              padding: '14px 32px', background: '#0f1f3d', color: '#fff', border: 'none',
-              borderRadius: 6, fontSize: 15, fontWeight: 700, whiteSpace: 'nowrap',
-              textTransform: 'uppercase', letterSpacing: '1px', cursor: 'pointer', transition: 'background .2s',
+              ...HOME_CTA_STYLE, background: '#0f1f3d', color: '#fff',
+              whiteSpace: 'nowrap', cursor: 'pointer', transition: 'background .2s',
             }}
               onMouseEnter={e => (e.currentTarget.style.background = '#162849')}
               onMouseLeave={e => (e.currentTarget.style.background = '#0f1f3d')}
@@ -1619,9 +1614,9 @@ export default function HomePage() {
             </h2>
           </div>
           <Link href="/listings" style={{
-            padding: '12px 24px', border: '1px solid #e5e7eb', borderRadius: 4,
-            fontSize: 13, fontWeight: 600, color: '#0f1f3d', textTransform: 'uppercase',
-            letterSpacing: '0.5px', transition: 'all .2s', textDecoration: 'none',
+            ...HOME_CTA_STYLE, background: 'transparent',
+            borderColor: '#e5e7eb', color: '#0f1f3d',
+            transition: 'all .2s',
           }}>
             View All &rarr;
           </Link>
@@ -1661,9 +1656,8 @@ export default function HomePage() {
     <p style={{ fontSize: 16, fontWeight: 500 }}>No properties listed yet.</p>
     <p style={{ fontSize: 14, marginTop: 8 }}>Be the first to list a property!</p>
     <Link href="/landlord-registration" style={{
-      display: 'inline-block', marginTop: 20, padding: '12px 24px',
-      background: '#1e3a6e', color: '#ffffff', borderRadius: 4, fontSize: 14, fontWeight: 700,
-      textDecoration: 'none',
+      ...HOME_CTA_STYLE, marginTop: 20,
+      background: '#1e3a6e', color: '#ffffff',
     }}>
       List Your Property &rarr;
     </Link>
@@ -1790,17 +1784,13 @@ export default function HomePage() {
           </div>
           <div className="cta-banner-btns">
             <Link href="/landlord-registration" style={{
-              padding: '16px 36px', background: '#1e3a6e', color: '#ffffff',
-              borderRadius: 4, fontSize: 14, fontWeight: 700, letterSpacing: '0.5px', textTransform: 'uppercase',
-              textDecoration: 'none',
+              ...HOME_CTA_STYLE, background: '#1e3a6e', color: '#ffffff',
             }}>
               Get Started Free
             </Link>
             <Link href="/listings" style={{
-              padding: '16px 36px', background: 'transparent', color: '#fff',
-              border: '1px solid rgba(255,255,255,0.3)', borderRadius: 4, fontSize: 14,
-              fontWeight: 500, letterSpacing: '0.5px', textTransform: 'uppercase',
-              textDecoration: 'none',
+              ...HOME_CTA_STYLE, background: 'transparent', color: '#fff',
+              borderColor: 'rgba(255,255,255,0.3)',
             }}>
               Browse Listings
             </Link>

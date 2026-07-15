@@ -91,6 +91,8 @@ export const SERVICE_DESCRIPTIONS: Record<string, string> = {
     'We confirm each repair is completed to standard before signing it off and releasing payment.',
   'Contractor Invoice Verification':
     'We check contractor invoices against the agreed work and quote before anything is paid.',
+  'Check In & Check Out Inventory':
+    'A photographed record of the condition and contents of the property at move-in, and a matching check-out report at the end of the tenancy. This is the evidence any deposit deduction is built on.',
   'Gas Safety, EICR & EPC Compliance Tracking':
     'Enhanced tracking of every statutory certificate, with proactive renewals arranged well ahead of expiry.',
   'Annual Property Maintenance Schedule & Reminders':
@@ -107,6 +109,8 @@ export const SERVICE_DESCRIPTIONS: Record<string, string> = {
     'More frequent, detailed inspections with reports, so any issue is caught early.',
   'Property Inspections with Report':
     'Regular property inspections with a written report and photos on the condition of your property.',
+  'Routine Inspection Every 6 Months':
+    'We visit the property every six months as standard, so problems are spotted and dealt with long before they become expensive.',
 };
 
 // Fallback so a page never renders an empty explanation if a label changes.

@@ -55,17 +55,26 @@ const PARKING = ['None', 'On-street', 'Driveway', 'Garage', 'Allocated space', '
 const CONDITIONS = ['Newly built / refurbished', 'Excellent', 'Good', 'Fair', 'Needs some work', 'Needs full refurbishment'];
 const OCCUPANCY = ['Vacant', 'Occupied'];
 
+// Photos and a floor plan are optional: plenty of landlords register before they
+// have either, and we don't want to lose them at this step. Both are per
+// property, and only the Cloudinary URLs are kept (so a draft still serialises).
+const PROPERTY_PHOTO_MAX = 12;
+const FLOOR_PLAN_MAX = 3;
+
 type Property = {
   id: string; postcode: string; street: string; city: string; county: string;
   propertyType: string; receptions: string; bedrooms: string; bathrooms: string;
   furnishing: string; parking: string; flatNumber: string; availableFrom: string; securityNote: string;
   condition: string; occupancy: string; currentRent: string; tenancyStart: string; tenancyEnd: string;
+  photoUrls: string[]; photoNames: string[];
+  floorPlanUrls: string[]; floorPlanNames: string[];
 };
 const newProperty = (id: string): Property => ({
   id, postcode: '', street: '', city: '', county: '',
   propertyType: '', receptions: '', bedrooms: '', bathrooms: '',
   furnishing: '', parking: '', flatNumber: '', availableFrom: '', securityNote: '',
   condition: '', occupancy: '', currentRent: '', tenancyStart: '', tenancyEnd: '',
+  photoUrls: [], photoNames: [], floorPlanUrls: [], floorPlanNames: [],
 });
 const formatAddress = (p: Property) => [p.street, p.city, p.county, p.postcode].filter(Boolean).join(', ');
 const propertyDetails = (p: Property) => [
@@ -80,6 +89,8 @@ const propertyDetails = (p: Property) => [
   p.occupancy === 'Occupied' && p.currentRent && `Rent £${p.currentRent}/mo`,
   p.occupancy === 'Occupied' && p.tenancyStart && `Tenancy ${p.tenancyStart}${p.tenancyEnd ? ` - ${p.tenancyEnd}` : ''}`,
   p.availableFrom && `Available ${p.availableFrom}`,
+  p.photoUrls.length && `${p.photoUrls.length} photo${p.photoUrls.length > 1 ? 's' : ''}`,
+  p.floorPlanUrls.length && `${p.floorPlanUrls.length} floor plan${p.floorPlanUrls.length > 1 ? 's' : ''}`,
 ].filter(Boolean).join(' · ');
 
 // Human-readable status for a document answer in the confirm summary.
@@ -630,7 +641,7 @@ export default function LandlordRegistrationApplyPage() {
                 {/* STEP 4 — SERVICE / BUNDLE */}
                 {step === 3 && (
                   <div>
-                    <p style={{ fontSize: 13, color: '#6b7280', margin: '0 0 16px' }}>Choose a management bundle. Each pairs a one-time tenant-find fee with an ongoing monthly management fee. You can discuss and change this with your agent later.</p>
+                    <p style={{ fontSize: 13, color: '#6b7280', margin: '0 0 16px' }}>Choose a management bundle. Our management fee is the percentage of the monthly rent shown in green, with a smaller one-time setup fee to get started. You can discuss and change this with your agent later.</p>
                     <div className="hol-pkg-list">
                       {BUNDLES.map(b => {
                         const on = form.selectedPackage === b.label;
@@ -641,9 +652,23 @@ export default function LandlordRegistrationApplyPage() {
                               <input type="radio" name="package" checked={on} onChange={() => { setForm(f => ({ ...f, selectedPackage: b.label })); setErrors(er => ({ ...er, selectedPackage: '' })); }} />
                               <span className="hol-radio" aria-hidden>{on && <span className="hol-radio-dot" />}</span>
                               <span style={{ flex: 1 }}>
-                                <span style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 12 }}>
+                                <span style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12 }}>
                                   <span style={{ fontWeight: 700, fontSize: 14.5, color: '#0f1f3d' }}>{b.label}{b.badge && <span className="hol-pkg-badge">{b.badge}</span>}</span>
-                                  <span style={{ fontWeight: 800, fontSize: 14, color: '#dc2626', whiteSpace: 'nowrap' }}>{b.setupFee} <span style={{ fontSize: 11, fontWeight: 500, color: '#dc2626' }}>{b.mgmtFee ? `+ ${b.mgmtFee}/mo` : 'one-time'}</span></span>
+                                  {/* The management % is the headline figure: the setup fee is the
+                                      small print, not the other way round. */}
+                                  <span className="hol-pkg-fee">
+                                    {b.mgmtFee ? (
+                                      <>
+                                        <span className="hol-pkg-fee-main">{b.mgmtFee}<span className="hol-pkg-fee-unit">of rent</span></span>
+                                        <span className="hol-pkg-fee-sub">{b.setupFee} one-time setup</span>
+                                      </>
+                                    ) : (
+                                      <>
+                                        <span className="hol-pkg-fee-main">{b.setupFee}</span>
+                                        <span className="hol-pkg-fee-sub">one-time, no ongoing fee</span>
+                                      </>
+                                    )}
+                                  </span>
                                 </span>
                                 <span style={{ display: 'block', fontSize: 12.5, color: '#6b7280', marginTop: 3, lineHeight: 1.55 }}>{b.blurb}</span>
                               </span>
@@ -835,6 +860,78 @@ function SummaryRow({ label, value }: { label: string; value: string }) {
 // One property block in the step-2 list. Kept as its own component so the
 // PostcodeLookup callbacks stay stable per-property (id-bound) and the Google
 // autocomplete doesn't re-bind on every keystroke.
+// An optional multi-file upload for one property (photos, floor plan). Upload
+// progress is local state: only the finished URLs go back to the property, so a
+// saved draft never restores a half-finished upload.
+function PropertyFileField({
+  label, hint, emptyCta, addCta, accept, max, urls, fileNames, onAdd, onRemove,
+}: {
+  label: string;
+  hint: string;
+  emptyCta: string;
+  addCta: string;
+  accept: string;
+  max: number;
+  urls: string[];
+  fileNames: string[];
+  onAdd: (urls: string[], names: string[]) => void;
+  onRemove: (index: number) => void;
+}) {
+  const [uploading, setUploading] = useState(false);
+  const [error, setError] = useState('');
+  const full = urls.length >= max;
+
+  const handle = async (files: FileList | null) => {
+    if (!files || files.length === 0) return;
+    const picked = Array.from(files).slice(0, Math.max(0, max - urls.length));
+    if (picked.length === 0) return;
+    setUploading(true);
+    setError('');
+    const addedUrls: string[] = [];
+    const addedNames: string[] = [];
+    try {
+      for (const file of picked) {
+        addedUrls.push(await uploadToCloudinary(file));
+        addedNames.push(file.name);
+      }
+    } catch (e: any) {
+      setError(e.message || 'Upload failed');
+    } finally {
+      // Keep whatever did upload before the failure.
+      if (addedUrls.length) onAdd(addedUrls, addedNames);
+      setUploading(false);
+    }
+  };
+
+  return (
+    <div className="hol-field hol-field--full">
+      <label className="hol-label">{label} <span style={{ color: '#9ca3af', fontWeight: 400 }}>(optional)</span></label>
+      {urls.map((url, i) => (
+        <div key={i} className="hol-uploaded" style={{ marginBottom: 6 }}>
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="20 6 9 17 4 12" /></svg>
+          <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{fileNames[i] || 'Uploaded'}</span>
+          <a href={url} target="_blank" rel="noreferrer" className="hol-view-link">View</a>
+          <button type="button" onClick={() => onRemove(i)} className="hol-remove">Remove</button>
+        </div>
+      ))}
+      {!full && (
+        <label className={`hol-upload${uploading ? ' is-loading' : ''}`}>
+          <input type="file" multiple accept={accept} onChange={(e) => { handle(e.target.files); e.currentTarget.value = ''; }} disabled={uploading} />
+          {uploading ? (
+            <><svg className="hol-spinner" width="15" height="15" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" strokeOpacity=".25" /><path d="M12 2a10 10 0 0 1 10 10" stroke="currentColor" strokeWidth="3" strokeLinecap="round" /></svg> Uploading…</>
+          ) : urls.length > 0 ? (
+            <><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg> {addCta}{` (up to ${max})`}</>
+          ) : (
+            <><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12" /></svg> {emptyCta}</>
+          )}
+        </label>
+      )}
+      {error && <p className="hol-err">{error}</p>}
+      <p style={{ fontSize: 12, color: '#9ca3af', margin: '2px 0 0' }}>{hint}</p>
+    </div>
+  );
+}
+
 function PropertyRow({
   property, index, total, onUpdate, onRemove, postcodeError, streetError, propertyTypeError, bedroomsError, occupancyError,
 }: {
@@ -859,6 +956,19 @@ function PropertyRow({
     onUpdate(property.id, patch);
   }, [property.id, onUpdate]);
   const handlePostcode = useCallback((v: string) => onUpdate(property.id, { postcode: v }), [property.id, onUpdate]);
+
+  const addPhotos = useCallback((urls: string[], names: string[]) => {
+    onUpdate(property.id, { photoUrls: [...property.photoUrls, ...urls], photoNames: [...property.photoNames, ...names] });
+  }, [property.id, property.photoUrls, property.photoNames, onUpdate]);
+  const removePhoto = useCallback((i: number) => {
+    onUpdate(property.id, { photoUrls: property.photoUrls.filter((_, n) => n !== i), photoNames: property.photoNames.filter((_, n) => n !== i) });
+  }, [property.id, property.photoUrls, property.photoNames, onUpdate]);
+  const addFloorPlans = useCallback((urls: string[], names: string[]) => {
+    onUpdate(property.id, { floorPlanUrls: [...property.floorPlanUrls, ...urls], floorPlanNames: [...property.floorPlanNames, ...names] });
+  }, [property.id, property.floorPlanUrls, property.floorPlanNames, onUpdate]);
+  const removeFloorPlan = useCallback((i: number) => {
+    onUpdate(property.id, { floorPlanUrls: property.floorPlanUrls.filter((_, n) => n !== i), floorPlanNames: property.floorPlanNames.filter((_, n) => n !== i) });
+  }, [property.id, property.floorPlanUrls, property.floorPlanNames, onUpdate]);
 
   return (
     <div className="hol-prop-card">
@@ -1001,6 +1111,31 @@ function PropertyRow({
           <label className="hol-label">Security Code / Access Note <span style={{ color: '#9ca3af', fontWeight: 400 }}>(optional)</span></label>
           <input type="text" className="hol-input" placeholder="e.g. key-safe code, alarm code or access instructions" value={property.securityNote} onChange={upd('securityNote')} autoComplete="off" />
         </div>
+
+        <PropertyFileField
+          label="Photos of the property"
+          hint="If you have photos to hand, add them now. It gives us a head start on your valuation and listing. If not, no problem, our photographer can take them later."
+          emptyCta="Upload property photos"
+          addCta="Add another photo"
+          accept=".jpg,.jpeg,.png,.webp,.heic"
+          max={PROPERTY_PHOTO_MAX}
+          urls={property.photoUrls}
+          fileNames={property.photoNames}
+          onAdd={addPhotos}
+          onRemove={removePhoto}
+        />
+        <PropertyFileField
+          label="Floor plan"
+          hint="An existing floor plan, if you have one. A photo, PDF or scan is fine."
+          emptyCta="Upload floor plan"
+          addCta="Add another floor plan"
+          accept=".pdf,.jpg,.jpeg,.png,.webp"
+          max={FLOOR_PLAN_MAX}
+          urls={property.floorPlanUrls}
+          fileNames={property.floorPlanNames}
+          onAdd={addFloorPlans}
+          onRemove={removeFloorPlan}
+        />
       </div>
     </div>
   );
@@ -1055,6 +1190,11 @@ const PAGE_CSS = `
   .hol-pkg:hover{border-color:#bcd0ee;}
   .hol-pkg--on{border-color:#2563a8;background:#f5f9ff;}
   .hol-pkg-main{display:flex;align-items:flex-start;gap:12px;cursor:pointer;}
+  .hol-pkg-fee{display:flex;flex-direction:column;align-items:flex-end;gap:1px;white-space:nowrap;text-align:right;}
+  .hol-pkg-fee-main{font-weight:800;font-size:22px;line-height:1.1;color:#16a34a;letter-spacing:-.01em;}
+  .hol-pkg-fee-unit{font-size:11px;font-weight:600;color:#16a34a;margin-left:3px;}
+  .hol-pkg-fee-sub{font-size:11px;font-weight:500;color:#6b7280;}
+  @media(max-width:480px){ .hol-pkg-fee-main{font-size:19px;} .hol-pkg-fee-unit,.hol-pkg-fee-sub{font-size:10.5px;} }
   .hol-readmore{background:none;border:none;padding:0;margin:10px 0 0 32px;font-family:'Poppins',sans-serif;font-size:12px;font-weight:700;color:#2563eb;cursor:pointer;}
   .hol-readmore:hover{text-decoration:underline;}
   .hol-pkg-details{margin:10px 0 2px 32px;border-top:1px dashed #dbe3f0;padding-top:4px;}

@@ -59,6 +59,22 @@ function propertyFields(p: any): [string, string][] {
   ].map(([label, value]) => [label, (value ?? "").toString().trim()]);
 }
 
+// Optional per-property uploads (photos, floor plan), same multi-file shape as
+// the identity documents. Absent on registrations submitted before we asked.
+function propertyFiles(p: any, base: "photo" | "floorPlan"): { url: string; name: string }[] {
+  const urls = p?.[`${base}Urls`];
+  const names = p?.[`${base}Names`];
+  if (!Array.isArray(urls)) return [];
+  return urls
+    .filter((u: string) => !!u)
+    .map((url: string, i: number) => ({ url, name: (Array.isArray(names) && names[i]) || `file ${i + 1}` }));
+}
+
+const PROPERTY_FILE_LABELS: [("photo" | "floorPlan"), string][] = [
+  ["photo", "Property Photos"],
+  ["floorPlan", "Floor Plan"],
+];
+
 const DOC_LABELS: [string, string][] = [
   ["epc", "EPC"],
   ["electrical", "Electrical Safety (EICR)"],
@@ -83,7 +99,14 @@ function propertyRows(data: any) {
     const rows = propertyFields(p)
       .map(([label, value]) => `<tr><td style="padding-left:24px;">${label}</td><td>${value || "-"}</td></tr>`)
       .join("");
-    return heading + rows;
+    const fileRows = PROPERTY_FILE_LABELS.map(([base, label]) => {
+      const files = propertyFiles(p, base);
+      const value = files.length
+        ? files.map((f, n) => `<a href="${f.url}">${f.name || `file ${n + 1}`}</a>`).join(", ")
+        : "-";
+      return `<tr><td style="padding-left:24px;">${label}</td><td>${value}</td></tr>`;
+    }).join("");
+    return heading + rows + fileRows;
   }).join("");
 }
 
@@ -186,6 +209,11 @@ function registrationPdfBase64(data: any, ref: string): string {
   props.forEach((p: any, i: number) => {
     section(props.length > 1 ? `Property ${i + 1}` : "Property");
     propertyFields(p).forEach(([label, value]) => line(label, value));
+    PROPERTY_FILE_LABELS.forEach(([base, label]) => {
+      const files = propertyFiles(p, base);
+      line(label, files.length ? `${files.length} file(s) uploaded` : "-");
+      files.forEach(f => line("", `${f.name}: ${f.url}`));
+    });
   });
   if (!props.length && data.address) {
     section("Property");

@@ -229,7 +229,7 @@ export default function PackageDetailPage({ params }: { params: { slug: string }
           <section className={styles.svc}>
             <div className={styles.svcHead}>
               <span className={styles.svcEyebrow}>What&apos;s included</span>
-              <h2 className={styles.svcTitle}>Everything in {bundle.label}, explained</h2>
+              <h2 className={styles.svcTitle}>Everything in {bundle.label}</h2>
               <p className={styles.svcIntro}>{bundle.blurb}</p>
             </div>
 

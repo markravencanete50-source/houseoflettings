@@ -9,7 +9,7 @@ import { PRICING_FAQ } from '@/lib/pricingMatrix';
 export const metadata: Metadata = {
   title: 'Landlord Pricing & Fees | House of Lettings, Leeds & Manchester',
   description:
-    'Clear landlord pricing from House of Lettings. Tenant Find from £399 and full Management from 6% of rent, all inclusive of VAT with no hidden fees. Compare every package side by side.',
+    'Clear landlord pricing from House of Lettings. Tenant Find from £399 and full Management from 6%, all inclusive of VAT with no hidden fees. Compare every package side by side.',
   alternates: { canonical: '/pricing' },
   openGraph: {
     title: 'Landlord Pricing & Fees | House of Lettings',
@@ -65,7 +65,7 @@ const offerCatalogSchema = {
       category: b.kind,
       priceCurrency: 'GBP',
       price: b.setupFee.replace(/[^0-9.]/g, ''),
-      description: b.mgmtFee ? `${b.mgmtFee} of monthly rent ongoing, plus a ${b.setupFee} one time fee. Inclusive of VAT.` : `${b.setupFee} one time fee, no ongoing fee. Inclusive of VAT.`,
+      description: b.mgmtFee ? `${b.mgmtFee} management fees on the monthly rent, plus ${b.setupFee} set up fees. Inclusive of VAT.` : `${b.setupFee} set up fees, no management fees. Inclusive of VAT.`,
     })),
   },
 };

@@ -77,7 +77,7 @@ export type Bundle = {
   kind: 'Tenant Find' | 'Management';
   setupFee: string;   // one-time fee, e.g. "£399"
   mgmtFee: string;    // ongoing % ("6%") or "" when there is no ongoing fee
-  ongoing: string;    // display line, e.g. "No ongoing fee" | "then 6% of rent"
+  ongoing: string;    // display line, e.g. "No management fees" | "then 6%"
   badge?: string;
   bestForLead: string;   // emphasised phrase in the "Best for" line
   bestForRest: string;   // remainder of the "Best for" line
@@ -104,7 +104,7 @@ export const BUNDLES: Bundle[] = [
     kind: 'Tenant Find',
     setupFee: '£399',
     mgmtFee: '',
-    ongoing: 'No ongoing fee',
+    ongoing: 'No management fees',
     bestForLead: 'hands-on landlords',
     bestForRest: 'who live near the property',
     youWe: 'You manage · we find',
@@ -122,7 +122,7 @@ export const BUNDLES: Bundle[] = [
     kind: 'Tenant Find',
     setupFee: '£699',
     mgmtFee: '',
-    ongoing: 'No ongoing fee',
+    ongoing: 'No management fees',
     bestForLead: 'landlords who want',
     bestForRest: 'the best tenant at the best rent',
     youWe: 'You manage · we showcase',
@@ -140,7 +140,7 @@ export const BUNDLES: Bundle[] = [
     kind: 'Management',
     setupFee: '£199',
     mgmtFee: '6%',
-    ongoing: 'then 6% of rent',
+    ongoing: 'then 6%',
     bestForLead: 'landlords who want rent handled',
     bestForRest: 'but keep maintenance',
     youWe: 'We collect · you maintain',
@@ -161,7 +161,7 @@ export const BUNDLES: Bundle[] = [
     kind: 'Management',
     setupFee: '£399',
     mgmtFee: '8%',
-    ongoing: 'then 8% of rent',
+    ongoing: 'then 8%',
     badge: 'Most Popular',
     bestForLead: 'landlords who want it',
     bestForRest: 'fully off their plate',
@@ -183,7 +183,7 @@ export const BUNDLES: Bundle[] = [
     kind: 'Management',
     setupFee: '£399',
     mgmtFee: '10%',
-    ongoing: 'then 10% of rent',
+    ongoing: 'then 10%',
     bestForLead: 'landlords who want',
     bestForRest: 'maximum protection',
     youWe: 'We manage & protect',

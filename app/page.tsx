@@ -1407,16 +1407,15 @@ export default function HomePage() {
                     </div>
                   )}
                   <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.65)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 10, fontFamily: "'Poppins', sans-serif" }}>
-                    {isMgmt ? 'Ongoing fee' : 'One time fee'}
+                    {isMgmt ? 'Management fees' : 'Set up fees'}
                   </div>
                   <div style={{ fontFamily: "'Poppins', sans-serif", fontSize: 'clamp(28px,3vw,40px)', fontWeight: 700, color: 'var(--price-green)', lineHeight: 1, marginBottom: 6 }}>
                     {isMgmt ? b.mgmtFee : b.setupFee}
-                    {isMgmt && <span style={{ fontSize: 14, fontWeight: 600, marginLeft: 5, color: 'rgba(255,255,255,0.55)' }}>of rent</span>}
-                  </div>
+                                      </div>
                   <div style={{ fontFamily: "'Poppins', sans-serif", fontSize: 11.5, fontWeight: 600, color: 'rgba(255,255,255,0.55)', marginBottom: 12 }}>
                     {isMgmt
-                      ? <><b style={{ fontWeight: 800, color: 'var(--price-green-bright)' }}>{b.setupFee}</b> one time fee</>
-                      : 'No ongoing fee'}
+                      ? <><b style={{ fontWeight: 800, color: 'var(--price-green-bright)' }}>{b.setupFee}</b> set up fees</>
+                      : 'No management fees'}
                   </div>
                   <div style={{ fontFamily: "'Poppins', sans-serif", fontSize: 13, fontWeight: 700, color: '#fff', lineHeight: 1.4 }}>
                     {b.label}

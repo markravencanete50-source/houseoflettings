@@ -20,6 +20,19 @@ const CTA_STYLE: React.CSSProperties = {
   letterSpacing: '.02em', textTransform: 'uppercase', textDecoration: 'none',
 };
 
+// Hero stat figures come from lib/bundles.ts rather than being typed here, so
+// they can never quote a fee the pricing page disagrees with. Both are "from"
+// figures: management runs 6-10% and a tenant find is £399-£699.
+const LOWEST_MGMT_FEE = BUNDLES
+  .filter(b => b.mgmtFee)
+  .map(b => b.mgmtFee)
+  .sort((a, b) => parseFloat(a) - parseFloat(b))[0];
+
+const LOWEST_FIND_FEE = BUNDLES
+  .filter(b => b.kind === 'Tenant Find')
+  .map(b => b.setupFee)
+  .sort((a, b) => Number(a.replace(/[^0-9.]/g, '')) - Number(b.replace(/[^0-9.]/g, '')))[0];
+
 const landlordFaqs = [
   {
     q: 'What legal certificates do I need before letting my property?',
@@ -232,9 +245,9 @@ export default function LandlordsPage() {
           { label: 'View Our Packages', href: '/pricing', variant: 'ghost' },
         ]}
         stats={[
-          { value: <>From&nbsp;<em>6%</em></>, label: 'Management fees' },
+          { value: <>From&nbsp;<em>{LOWEST_MGMT_FEE}</em></>, label: 'Management fees' },
+          { value: <>From&nbsp;<em>{LOWEST_FIND_FEE}</em></>, label: 'Tenant find fees' },
           { value: <em>£0</em>, label: 'Hidden fees' },
-          { value: <em>2</em>, label: 'Cities covered' },
           { value: <em>Free</em>, label: 'Rental valuation' },
         ]}
       />
@@ -363,7 +376,7 @@ export default function LandlordsPage() {
                   {/* The ongoing percentage leads: it is our main management fee. */}
                   <div className="ll-price-fig">
                     <b>{b.mgmtFee || b.setupFee}</b>
-                    <span>{b.mgmtFee ? `of rent + ${b.setupFee} one time fee` : 'one time fee'}</span>
+                    <span>{b.mgmtFee ? `management fees + ${b.setupFee} set up fees` : 'set up fees'}</span>
                   </div>
                 </li>
               ))}
@@ -535,24 +548,24 @@ export default function LandlordsPage() {
                         <>
                           <div>
                             <b className="accent">{b.mgmtFee}</b>
-                            <span>of rent / month</span>
+                            <span>management fees</span>
                           </div>
                           <div className="ll-svc-price-sep" aria-hidden />
                           <div>
                             <b>{b.setupFee}</b>
-                            <span>one time fee</span>
+                            <span>set up fees</span>
                           </div>
                         </>
                       ) : (
                         <>
                           <div>
                             <b>{b.setupFee}</b>
-                            <span>one time fee</span>
+                            <span>set up fees</span>
                           </div>
                           <div className="ll-svc-price-sep" aria-hidden />
                           <div>
                             <b>£0</b>
-                            <span>ongoing fee</span>
+                            <span>no management fees</span>
                           </div>
                         </>
                       )}

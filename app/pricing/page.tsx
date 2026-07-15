@@ -35,7 +35,7 @@ const PR_CTA_STYLE: React.CSSProperties = {
 // per client feedback that the mobile explanation read as bullet points.
 const EXPLAINERS: { kicker: string; lead: string; body: string; extra: string; fit: string; points: string[]; highlights: string[] }[] = [
   {
-    kicker: 'Tenant Find · £399 one-time',
+    kicker: 'Tenant Find · £399 one time fee',
     lead: 'Choose this if you have the time to run the tenancy and handle maintenance yourself.',
     body: 'You live near the property and are happy to be the point of contact once a tenant moves in. We do the hard part remotely: market the property, vet applicants and reference them fully, then hand you a signed tenancy agreement. One fixed fee, no ongoing cost.',
     extra: 'Everything is handled online, so you are never tied to office hours. We advertise across the major portals, qualify every enquiry, run full referencing and Right to Rent checks, then send you the signed tenancy and collect the first month’s rent and deposit. From move in day you take over as the point of contact, and there is nothing more to pay.',
@@ -53,7 +53,7 @@ const EXPLAINERS: { kicker: string; lead: string; body: string; extra: string; f
     ],
   },
   {
-    kicker: 'Tenant Find · £699 one-time',
+    kicker: 'Tenant Find · £699 one time fee',
     lead: 'Choose this if you want the strongest tenant at the best rent, but still want to self manage.',
     body: 'We handle the full marketing and referencing for you, then add professional photography, a floor plan, accompanied viewings and a full in-person handover. It is the complete marketing push to attract stronger applicants and achieve a higher rent, and you keep control of the tenancy once it starts.',
     extra: 'On top of everything in the Virtual Tenant Find, our team photographs the property, produces a floor plan and hosts accompanied viewings so applicants see it at its best. We meet your tenant in person to hand over the keys and complete the paperwork. Stronger presentation usually means more interest, better quality applicants and a higher achievable rent.',
@@ -71,7 +71,7 @@ const EXPLAINERS: { kicker: string; lead: string; body: string; extra: string; f
     ],
   },
   {
-    kicker: 'Management · £199 then 6% of rent',
+    kicker: 'Management · 6% of rent · £199 one time fee',
     lead: 'Choose this if you want the rent handled for you, but are happy to look after maintenance.',
     body: 'We collect the rent, monitor payments, chase any arrears and take care of the monthly admin, so the money side runs itself. You stay in control of repairs and choosing your own contractors. A light touch option for confident landlords.',
     extra: 'It starts with a full tenant find, then every month we collect the rent, check it lands on time, chase anything late and send you a clear statement. Repairs stay with you, so you keep your own trusted contractors and decide what gets done. You get the chasing and the admin off your plate while staying in control of the property itself.',
@@ -89,7 +89,7 @@ const EXPLAINERS: { kicker: string; lead: string; body: string; extra: string; f
     ],
   },
   {
-    kicker: 'Management · £399 then 8% of rent',
+    kicker: 'Management · 8% of rent · £399 one time fee',
     lead: 'Choose this if you want the whole tenancy off your plate.',
     body: 'Rent, tenant communication, maintenance, contractor coordination and compliance, all managed by your local team. You do nothing day to day. This is the truly hands off choice and by far our most popular package.',
     extra: 'Your local team becomes the single point of contact for your tenant. We arrange repairs through vetted contractors, keep your gas, electrical and EPC compliance in date, handle the check in and check out inventory and send you monthly statements. It is built for landlords who do not have the time, or do not live nearby, and want the confidence that nothing is missed.',
@@ -107,7 +107,7 @@ const EXPLAINERS: { kicker: string; lead: string; body: string; extra: string; f
     ],
   },
   {
-    kicker: 'Management · £399 then 10% of rent',
+    kicker: 'Management · 10% of rent · £399 one time fee',
     lead: 'Choose this if you want maximum protection for your rental income.',
     body: 'Your local team manages the entire tenancy for you and adds emergency maintenance support, routine inspections every 6 months, rent guarantee cover, legal and eviction protection and priority contractor response. It is complete peace of mind, with your income protected even if a tenant stops paying.',
     extra: 'This is everything in Full Management, plus a safety net for your income and your property. You get emergency maintenance support for urgent out-of-hours issues, a routine inspection with a written report every 6 months, and rent guarantee cover that pays out if your tenant stops paying. Legal and eviction protection covers the cost of regaining possession, and priority contractor response puts you at the front of the queue. It is what landlords choose when they want their return protected whatever happens.',
@@ -705,16 +705,17 @@ export default function PricingPage() {
               </thead>
               <tbody>
                 {/* Fee summary rows */}
-                <tr className="pr-fee-row pr-fee-onetime">
-                  <td className="pr-svc pr-fee-label">One-Time Fee</td>
-                  {PACKAGES.map((p, i) => (
-                    <td key={p.id} className={`pr-fee-cell${i === HOT ? ' pr-hot' : ''}`}>{p.setupFee}</td>
-                  ))}
-                </tr>
+                {/* The ongoing percentage leads: it is our main management fee. */}
                 <tr className="pr-fee-row pr-fee-ongoing">
                   <td className="pr-svc pr-fee-label">Ongoing Fee</td>
                   {PACKAGES.map((p, i) => (
-                    <td key={p.id} className={`pr-fee-cell${i === HOT ? ' pr-hot' : ''}`}>{p.mgmtFee || 'None'}</td>
+                    <td key={p.id} className={`pr-fee-cell${i === HOT ? ' pr-hot' : ''}`}>{p.mgmtFee ? `${p.mgmtFee} of rent` : 'None'}</td>
+                  ))}
+                </tr>
+                <tr className="pr-fee-row pr-fee-onetime">
+                  <td className="pr-svc pr-fee-label">One Time Fee</td>
+                  {PACKAGES.map((p, i) => (
+                    <td key={p.id} className={`pr-fee-cell${i === HOT ? ' pr-hot' : ''}`}>{p.setupFee}</td>
                   ))}
                 </tr>
                 {MATRIX_SECTIONS.map((section, s) => {
@@ -800,9 +801,19 @@ export default function PricingPage() {
               </div>
               <span className="pr-mc-name">{PACKAGES[mobileTab].label}</span>
               <p className="pr-mc-best">Best for {PACKAGES[mobileTab].bestForLead} {PACKAGES[mobileTab].bestForRest}.</p>
+              {/* The ongoing percentage leads: it is our main management fee. */}
               <div className="pr-mc-fees">
-                <div><span>One-time</span><b>{PACKAGES[mobileTab].setupFee}</b></div>
-                <div><span>Ongoing</span><b>{PACKAGES[mobileTab].mgmtFee ? `${PACKAGES[mobileTab].mgmtFee} of rent` : 'None'}</b></div>
+                {PACKAGES[mobileTab].mgmtFee ? (
+                  <>
+                    <div><span>Ongoing fee</span><b>{PACKAGES[mobileTab].mgmtFee} of rent</b></div>
+                    <div><span>One time fee</span><b>{PACKAGES[mobileTab].setupFee}</b></div>
+                  </>
+                ) : (
+                  <>
+                    <div><span>One time fee</span><b>{PACKAGES[mobileTab].setupFee}</b></div>
+                    <div><span>Ongoing fee</span><b>None</b></div>
+                  </>
+                )}
               </div>
             </div>
 
@@ -904,11 +915,14 @@ export default function PricingPage() {
                       {p.badge && <span className="pr-vis-badge">Most Popular</span>}
                     </div>
                     <div className="pr-vis-name">{p.label}</div>
+                    {/* The ongoing percentage leads: it is our main management fee. */}
                     <div className="pr-vis-price">
-                      <span className="pr-vis-fee">{p.setupFee}</span>
-                      <span className="pr-vis-per">one-time</span>
+                      <span className="pr-vis-fee">{p.mgmtFee || p.setupFee}</span>
+                      <span className="pr-vis-per">{p.mgmtFee ? 'of rent' : 'one time fee'}</span>
                     </div>
-                    <div className={`pr-vis-ongoing${p.mgmtFee ? '' : ' pr-vis-none'}`}>{p.ongoing}</div>
+                    <div className={`pr-vis-ongoing${p.mgmtFee ? '' : ' pr-vis-none'}`}>
+                      {p.mgmtFee ? `${p.setupFee} one time fee` : 'No ongoing fee'}
+                    </div>
                     <div className="pr-vis-div" />
                     <div className="pr-vis-label">What&apos;s included</div>
                     <ul className="pr-vis-list">

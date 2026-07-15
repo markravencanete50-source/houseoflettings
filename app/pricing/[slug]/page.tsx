@@ -26,8 +26,8 @@ export function generateMetadata({ params }: { params: { slug: string } }): Meta
   const b = BUNDLES.find((x) => x.id === params.slug);
   if (!b) return { title: 'Package not found | House of Lettings' };
   const price = b.mgmtFee
-    ? `${b.setupFee} one-time then ${b.mgmtFee} of rent`
-    : `${b.setupFee} one-time, no ongoing fee`;
+    ? `${b.mgmtFee} of rent ongoing, plus a ${b.setupFee} one time fee`
+    : `${b.setupFee} one time fee, no ongoing fee`;
   return {
     title: `${b.label} | Landlord Package | House of Lettings`,
     description: `${b.label}: ${price}, inclusive of VAT. See every service included and what each one means for landlords in Leeds and Manchester.`,
@@ -157,17 +157,33 @@ export default function PackageDetailPage({ params }: { params: { slug: string }
                 <h1 className={styles.title}>{bundle.label}</h1>
                 <p className={styles.best}>Best for {bundle.bestForLead} {bundle.bestForRest}.</p>
 
+                {/* The ongoing percentage leads: it is our main management fee.
+                    Tenant-find packages have no percentage, so the one-time fee
+                    leads there instead. */}
                 <div className={styles.priceRow}>
-                  <div className={styles.priceItem}>
-                    <span className={styles.priceLabel}>One-time</span>
-                    <span className={styles.priceVal}>{bundle.setupFee}</span>
-                  </div>
-                  <div className={styles.priceItem}>
-                    <span className={styles.priceLabel}>Ongoing</span>
-                    <span className={styles.priceVal}>
-                      {bundle.mgmtFee ? <>{bundle.mgmtFee}<small>of rent</small></> : 'None'}
-                    </span>
-                  </div>
+                  {bundle.mgmtFee ? (
+                    <>
+                      <div className={styles.priceItem}>
+                        <span className={styles.priceLabel}>Ongoing fee</span>
+                        <span className={styles.priceVal}>{bundle.mgmtFee}<small>of rent</small></span>
+                      </div>
+                      <div className={styles.priceItem}>
+                        <span className={styles.priceLabel}>One time fee</span>
+                        <span className={styles.priceVal}>{bundle.setupFee}</span>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <div className={styles.priceItem}>
+                        <span className={styles.priceLabel}>One time fee</span>
+                        <span className={styles.priceVal}>{bundle.setupFee}</span>
+                      </div>
+                      <div className={styles.priceItem}>
+                        <span className={styles.priceLabel}>Ongoing fee</span>
+                        <span className={styles.priceVal}>None</span>
+                      </div>
+                    </>
+                  )}
                 </div>
 
                 <div className={styles.cta}>
@@ -188,9 +204,19 @@ export default function PackageDetailPage({ params }: { params: { slug: string }
                   />
                 </div>
                 <div className={styles.priceFloat}>
-                  <span className={styles.priceFloatLabel}>From</span>
-                  <span className={styles.priceFloatVal}>{bundle.setupFee}</span>
-                  <span className={styles.priceFloatSub}>{bundle.ongoing} · inc. VAT</span>
+                  {bundle.mgmtFee ? (
+                    <>
+                      <span className={styles.priceFloatLabel}>Ongoing fee</span>
+                      <span className={styles.priceFloatVal}>{bundle.mgmtFee}</span>
+                      <span className={styles.priceFloatSub}>of rent · {bundle.setupFee} one time fee · inc. VAT</span>
+                    </>
+                  ) : (
+                    <>
+                      <span className={styles.priceFloatLabel}>One time fee</span>
+                      <span className={styles.priceFloatVal}>{bundle.setupFee}</span>
+                      <span className={styles.priceFloatSub}>No ongoing fee · inc. VAT</span>
+                    </>
+                  )}
                 </div>
               </div>
             </div>
@@ -201,16 +227,29 @@ export default function PackageDetailPage({ params }: { params: { slug: string }
         <div className={styles.container}>
           <div className={styles.statsWrap}>
             <div className={styles.stats}>
-              <div className={styles.stat}>
-                <span className={styles.statK}>{bundle.setupFee}</span>
-                <span className={styles.statV}>One-time setup fee</span>
-              </div>
-              <div className={styles.stat}>
-                <span className={styles.statK}>
-                  {bundle.mgmtFee ? <>{bundle.mgmtFee} <small>of rent</small></> : '£0'}
-                </span>
-                <span className={styles.statV}>{bundle.mgmtFee ? 'Ongoing, on rent collected' : 'No ongoing fee'}</span>
-              </div>
+              {bundle.mgmtFee ? (
+                <>
+                  <div className={styles.stat}>
+                    <span className={styles.statK}>{bundle.mgmtFee} <small>of rent</small></span>
+                    <span className={styles.statV}>Ongoing fee, on rent collected</span>
+                  </div>
+                  <div className={styles.stat}>
+                    <span className={styles.statK}>{bundle.setupFee}</span>
+                    <span className={styles.statV}>One time fee</span>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className={styles.stat}>
+                    <span className={styles.statK}>{bundle.setupFee}</span>
+                    <span className={styles.statV}>One time fee</span>
+                  </div>
+                  <div className={styles.stat}>
+                    <span className={styles.statK}>£0</span>
+                    <span className={styles.statV}>No ongoing fee</span>
+                  </div>
+                </>
+              )}
               <div className={styles.stat}>
                 <span className={styles.statK}>{totalIncluded}<small> / {TOTAL_SERVICES}</small></span>
                 <span className={styles.statV}>Services included</span>

@@ -65,7 +65,7 @@ const offerCatalogSchema = {
       category: b.kind,
       priceCurrency: 'GBP',
       price: b.setupFee.replace(/[^0-9.]/g, ''),
-      description: b.mgmtFee ? `${b.setupFee} one-time, then ${b.mgmtFee} of monthly rent. Inclusive of VAT.` : `${b.setupFee} one-time, no ongoing fee. Inclusive of VAT.`,
+      description: b.mgmtFee ? `${b.mgmtFee} of monthly rent ongoing, plus a ${b.setupFee} one time fee. Inclusive of VAT.` : `${b.setupFee} one time fee, no ongoing fee. Inclusive of VAT.`,
     })),
   },
 };

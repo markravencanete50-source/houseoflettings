@@ -10,6 +10,7 @@ import { getProperties } from '@/services/property';
 import { Property } from '@/lib/types';
 import GoogleReviews from '@/components/GoogleReviews';
 import Footer from '@/components/layout/Footer';
+import { BUNDLES } from '@/lib/bundles';
 
 // ── SCROLL REVEAL HOOK ────────────────────────────────────────────────────────
 function useScrollReveal() {
@@ -1381,43 +1382,49 @@ export default function HomePage() {
             </p>
           </div>
 
+          {/* Driven by lib/bundles.ts so the teaser can never quote a price the
+              rest of the site disagrees with. The ongoing percentage leads: it
+              is our main management fee. Tenant-find packages have no
+              percentage, so the one time fee leads there instead. */}
           <div className="pricing-teaser-grid">
-            {[
-              { price: '£499', label: 'Virtual Tenant Find', type: 'One time fee', popular: false },
-              { price: '£799', label: 'Expert Tenant Find', type: 'One time fee', popular: false },
-              { price: '6%',   label: 'Rent Collection',    type: 'Monthly',       popular: false },
-              { price: '8%',   label: 'Full Management',    type: 'Monthly',       popular: true },
-              { price: '10%',  label: 'Comprehensive Management', type: 'Monthly', popular: false },
-            ].map((pkg, i) => (
-              <Link
-                key={pkg.label}
-                href="/pricing"
-                className={`pricing-teaser-card reveal reveal-delay-${i + 1}${pkg.popular ? ' popular' : ''}`}
-              >
-                {pkg.popular && (
-                  <div style={{
-                    position: 'absolute', top: -13, left: '50%', transform: 'translateX(-50%)',
-                    background: '#2563eb', color: '#fff', fontSize: 9, fontWeight: 800,
-                    letterSpacing: 2, textTransform: 'uppercase', padding: '4px 14px', borderRadius: 20,
-                    whiteSpace: 'nowrap',
-                  }}>
-                    Most Popular
+            {BUNDLES.map((b, i) => {
+              const isMgmt = !!b.mgmtFee;
+              const popular = !!b.badge;
+              return (
+                <Link
+                  key={b.id}
+                  href="/pricing"
+                  className={`pricing-teaser-card reveal reveal-delay-${i + 1}${popular ? ' popular' : ''}`}
+                >
+                  {popular && (
+                    <div style={{
+                      position: 'absolute', top: -13, left: '50%', transform: 'translateX(-50%)',
+                      background: '#2563eb', color: '#fff', fontSize: 9, fontWeight: 800,
+                      letterSpacing: 2, textTransform: 'uppercase', padding: '4px 14px', borderRadius: 20,
+                      whiteSpace: 'nowrap',
+                    }}>
+                      Most Popular
+                    </div>
+                  )}
+                  <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.65)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 10, fontFamily: "'Poppins', sans-serif" }}>
+                    {isMgmt ? 'Ongoing fee' : 'One time fee'}
                   </div>
-                )}
-                <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.65)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 10, fontFamily: "'Poppins', sans-serif" }}>
-                  {pkg.type}
-                </div>
-                <div style={{ fontFamily: "'Poppins', sans-serif", fontSize: 'clamp(28px,3vw,40px)', fontWeight: 700, color: pkg.popular ? '#4a90d9' : '#fff', lineHeight: 1, marginBottom: 12 }}>
-                  {pkg.price}
-                </div>
-                <div style={{ fontFamily: "'Poppins', sans-serif", fontSize: 13, fontWeight: 700, color: '#fff', lineHeight: 1.4 }}>
-                  {pkg.label}
-                </div>
-                <div style={{ marginTop: 16, fontSize: 11, color: '#4a90d9', fontWeight: 600, letterSpacing: 0.5, textTransform: 'uppercase' }}>
-                  View details &rarr;
-                </div>
-              </Link>
-            ))}
+                  <div style={{ fontFamily: "'Poppins', sans-serif", fontSize: 'clamp(28px,3vw,40px)', fontWeight: 700, color: popular ? '#4a90d9' : '#fff', lineHeight: 1, marginBottom: 6 }}>
+                    {isMgmt ? b.mgmtFee : b.setupFee}
+                    {isMgmt && <span style={{ fontSize: 14, fontWeight: 600, marginLeft: 5 }}>of rent</span>}
+                  </div>
+                  <div style={{ fontFamily: "'Poppins', sans-serif", fontSize: 11.5, color: 'rgba(255,255,255,0.6)', marginBottom: 12 }}>
+                    {isMgmt ? `${b.setupFee} one time fee` : 'No ongoing fee'}
+                  </div>
+                  <div style={{ fontFamily: "'Poppins', sans-serif", fontSize: 13, fontWeight: 700, color: '#fff', lineHeight: 1.4 }}>
+                    {b.label}
+                  </div>
+                  <div style={{ marginTop: 16, fontSize: 11, color: '#4a90d9', fontWeight: 600, letterSpacing: 0.5, textTransform: 'uppercase' }}>
+                    View details &rarr;
+                  </div>
+                </Link>
+              );
+            })}
           </div>
 
           <div style={{ textAlign: 'center' }}>

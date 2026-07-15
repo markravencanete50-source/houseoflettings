@@ -109,15 +109,16 @@ export default function LandlordRegistrationPage() {
               <div className="hol-eyebrow" style={{ color: '#4a90d9' }}>Our Bundles</div>
               <h2 className="hol-h2" style={{ color: '#fff' }}>Services you can request</h2>
               <p style={{ fontSize: 15, color: 'rgba(255,255,255,0.5)', maxWidth: 580, margin: '14px auto 0', lineHeight: 1.7 }}>
-                Each bundle pairs a one-time tenant-find fee with an ongoing monthly management fee. Pick the one that fits your portfolio when you register.
+                Each management bundle is charged as an ongoing percentage of the monthly rent, with a smaller one time fee to get started. Pick the one that fits your portfolio when you register.
               </p>
             </div>
             <div className="hol-pkg-grid hol-pkg-grid--2">
               {BUNDLES.map(b => (
                 <div key={b.id} className="hol-pkg-card">
                   {b.badge && <div style={{ display: 'inline-block', fontSize: 10, fontWeight: 800, letterSpacing: 1, textTransform: 'uppercase', color: '#0f1f3d', background: '#4a90d9', padding: '3px 10px', borderRadius: 20, marginBottom: 12 }}>{b.badge}</div>}
+                  {/* The ongoing percentage leads: it is our main management fee. */}
                   <div style={{ fontSize: 'clamp(24px,3vw,32px)', fontWeight: 800, color: '#4a90d9', lineHeight: 1, marginBottom: 6 }}>
-                    {b.setupFee} <span style={{ fontSize: 15, fontWeight: 600, color: 'rgba(255,255,255,0.55)' }}>{b.mgmtFee ? `+ ${b.mgmtFee}/mo` : 'one-time'}</span>
+                    {b.mgmtFee || b.setupFee} <span style={{ fontSize: 15, fontWeight: 600, color: 'rgba(255,255,255,0.55)' }}>{b.mgmtFee ? `of rent + ${b.setupFee} one time fee` : 'one time fee'}</span>
                   </div>
                   <div style={{ fontSize: 15, fontWeight: 700, color: '#fff', marginBottom: 8 }}>{b.label}</div>
                   <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.55)', lineHeight: 1.65, margin: 0 }}>{b.blurb}</p>

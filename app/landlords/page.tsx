@@ -359,9 +359,10 @@ export default function LandlordsPage() {
                     <span className="ll-price-nm">{b.short}{b.badge && <em>Popular</em>}</span>
                     <span className="ll-price-kd">{b.kind}</span>
                   </div>
+                  {/* The ongoing percentage leads: it is our main management fee. */}
                   <div className="ll-price-fig">
-                    <b>{b.setupFee}</b>
-                    <span>{b.mgmtFee ? `+ ${b.mgmtFee} of rent` : 'one-time'}</span>
+                    <b>{b.mgmtFee || b.setupFee}</b>
+                    <span>{b.mgmtFee ? `of rent + ${b.setupFee} one time fee` : 'one time fee'}</span>
                   </div>
                 </li>
               ))}
@@ -506,7 +507,7 @@ export default function LandlordsPage() {
                 >
                   {b.badge && <span className="ll-svc-tab-dot" aria-hidden />}
                   <span className="ll-svc-tab-name">{b.short}</span>
-                  <span className="ll-svc-tab-fee">{b.setupFee}{b.mgmtFee ? ` + ${b.mgmtFee}` : ''}</span>
+                  <span className="ll-svc-tab-fee">{b.mgmtFee ? `${b.mgmtFee} + ${b.setupFee}` : b.setupFee}</span>
                 </button>
               ))}
             </div>
@@ -525,16 +526,35 @@ export default function LandlordsPage() {
                     <h3 className="ll-svc-name">{b.label}</h3>
                     <p className="ll-svc-best">Best for {b.bestForLead} {b.bestForRest}.</p>
                     <p className="ll-svc-blurb">{b.blurb}</p>
+                    {/* The ongoing percentage leads: it is our main management fee.
+                        Tenant-find packages have no percentage, so the one-time
+                        fee leads there instead. */}
                     <div className="ll-svc-price">
-                      <div>
-                        <b>{b.setupFee}</b>
-                        <span>{isMgmt ? 'setup' : 'one-time'}</span>
-                      </div>
-                      <div className="ll-svc-price-sep" aria-hidden />
-                      <div>
-                        <b className={b.mgmtFee ? 'accent' : ''}>{b.mgmtFee || '£0'}</b>
-                        <span>{b.mgmtFee ? 'of rent / month' : 'ongoing fee'}</span>
-                      </div>
+                      {isMgmt ? (
+                        <>
+                          <div>
+                            <b className="accent">{b.mgmtFee}</b>
+                            <span>of rent / month</span>
+                          </div>
+                          <div className="ll-svc-price-sep" aria-hidden />
+                          <div>
+                            <b>{b.setupFee}</b>
+                            <span>one time fee</span>
+                          </div>
+                        </>
+                      ) : (
+                        <>
+                          <div>
+                            <b>{b.setupFee}</b>
+                            <span>one time fee</span>
+                          </div>
+                          <div className="ll-svc-price-sep" aria-hidden />
+                          <div>
+                            <b>£0</b>
+                            <span>ongoing fee</span>
+                          </div>
+                        </>
+                      )}
                     </div>
                     <div className="ll-svc-cta">
                       <Link href="/book-valuation" className="ll-svc-btn primary">Book a Free Valuation</Link>

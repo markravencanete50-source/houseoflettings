@@ -641,7 +641,7 @@ export default function LandlordRegistrationApplyPage() {
                 {/* STEP 4 — SERVICE / BUNDLE */}
                 {step === 3 && (
                   <div>
-                    <p style={{ fontSize: 13, color: '#6b7280', margin: '0 0 16px' }}>Choose a management bundle. Our management fee is the percentage of the monthly rent shown in green, with a smaller one-time setup fee to get started. You can discuss and change this with your agent later.</p>
+                    <p style={{ fontSize: 13, color: '#6b7280', margin: '0 0 16px' }}>Choose a management bundle. Our management fee is the ongoing percentage of the monthly rent shown in green, with a smaller one time fee to get started. You can discuss and change this with your agent later.</p>
                     <div className="hol-pkg-list">
                       {BUNDLES.map(b => {
                         const on = form.selectedPackage === b.label;
@@ -660,12 +660,12 @@ export default function LandlordRegistrationApplyPage() {
                                     {b.mgmtFee ? (
                                       <>
                                         <span className="hol-pkg-fee-main">{b.mgmtFee}<span className="hol-pkg-fee-unit">of rent</span></span>
-                                        <span className="hol-pkg-fee-sub">{b.setupFee} one-time setup</span>
+                                        <span className="hol-pkg-fee-sub">{b.setupFee} one time fee</span>
                                       </>
                                     ) : (
                                       <>
-                                        <span className="hol-pkg-fee-main">{b.setupFee}</span>
-                                        <span className="hol-pkg-fee-sub">one-time, no ongoing fee</span>
+                                        <span className="hol-pkg-fee-main">{b.setupFee}<span className="hol-pkg-fee-unit">one time fee</span></span>
+                                        <span className="hol-pkg-fee-sub">No ongoing fee</span>
                                       </>
                                     )}
                                   </span>

@@ -143,7 +143,9 @@
   text-transform: uppercase; color: #6b7280; margin-bottom: 3px;
 }
 .priceFloatVal { font-size: 22px; font-weight: 800; line-height: 1; color: var(--price-green); }
-.priceFloatSub { font-size: 12px; font-weight: 700; color: var(--price-green-ink); margin-top: 4px; display: block; }
+.priceFloatSub { font-size: 12px; font-weight: 600; color: #6b7280; margin-top: 4px; display: block; }
+/* Only the figure is green; the words around it are not. */
+.priceFloatSub b { font-weight: 800; color: var(--price-green-ink); }
 
 /* ── Stat strip (overlaps hero) ───────────────────────── */
 .statsWrap { position: relative; z-index: 3; margin-top: clamp(-58px, -7vw, -44px); }

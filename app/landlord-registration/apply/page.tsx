@@ -660,7 +660,7 @@ export default function LandlordRegistrationApplyPage() {
                                     {b.mgmtFee ? (
                                       <>
                                         <span className="hol-pkg-fee-main">{b.mgmtFee}<span className="hol-pkg-fee-unit">of rent</span></span>
-                                        <span className="hol-pkg-fee-sub">{b.setupFee} one time fee</span>
+                                        <span className="hol-pkg-fee-sub"><b>{b.setupFee}</b> one time fee</span>
                                       </>
                                     ) : (
                                       <>
@@ -1192,8 +1192,9 @@ const PAGE_CSS = `
   .hol-pkg-main{display:flex;align-items:flex-start;gap:12px;cursor:pointer;}
   .hol-pkg-fee{display:flex;flex-direction:column;align-items:flex-end;gap:1px;white-space:nowrap;text-align:right;}
   .hol-pkg-fee-main{font-weight:800;font-size:22px;line-height:1.1;color:var(--price-green);letter-spacing:-.01em;}
-  .hol-pkg-fee-unit{font-size:11px;font-weight:600;color:var(--price-green-ink);margin-left:3px;}
-  .hol-pkg-fee-sub{font-size:11px;font-weight:700;color:var(--price-green-ink);}
+  .hol-pkg-fee-unit{font-size:11px;font-weight:600;color:#6b7280;margin-left:3px;}
+  .hol-pkg-fee-sub{font-size:11px;font-weight:500;color:#6b7280;}
+  .hol-pkg-fee-sub b{font-weight:800;color:var(--price-green-ink);}
   @media(max-width:480px){ .hol-pkg-fee-main{font-size:19px;} .hol-pkg-fee-unit,.hol-pkg-fee-sub{font-size:10.5px;} }
   .hol-readmore{background:none;border:none;padding:0;margin:10px 0 0 32px;font-family:'Poppins',sans-serif;font-size:12px;font-weight:700;color:var(--logo-blue);cursor:pointer;}
   .hol-readmore:hover{text-decoration:underline;}

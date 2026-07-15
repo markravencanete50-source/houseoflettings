@@ -306,6 +306,12 @@ export default function PricingPage() {
         .pr-hero2-btn--solid:hover { background:#1d4ed8; box-shadow:0 14px 28px -12px rgba(37,99,235,.6); }
         .pr-hero2-btn--ghost { background:transparent; color:#fff; border-color:rgba(255,255,255,.4); }
         .pr-hero2-btn--ghost:hover { border-color:#fff; background:rgba(255,255,255,.06); }
+        /* Mobile: stack full width so both hero buttons are the same size,
+           matching every other hero (components/layout/ServiceHero.module.css). */
+        @media(max-width:600px){
+          .pr-hero2-cta { flex-direction:column; align-items:stretch; }
+          .pr-hero2-btn { width:100%; }
+        }
         .pr-hero2-media { position:relative; }
         .pr-hero2-imgwrap { position:relative; border-radius:20px; overflow:hidden; aspect-ratio:4/3;
           box-shadow:0 40px 80px -34px rgba(4,10,26,.85); border:1px solid rgba(255,255,255,.1); }
@@ -377,6 +383,8 @@ export default function PricingPage() {
         .pr-fee-onetime .pr-fee-label { background:#dbe8fb !important; }
         .pr-fee-onetime .pr-fee-cell { background:#e8f0fb; }
         .pr-fee-ongoing .pr-fee-cell { color:var(--price-green-ink); }
+        /* Only the figure is green; the unit words beside it are not. */
+        .pr-fee-unit { font-style:normal; font-size:12px; font-weight:600; color:#6b7280; margin-left:4px; }
         .pr-fee-cell.pr-hot { background:#d6e6ff !important; }
         thead th.pr-hot { background:#1c3a63 !important; }
         .pr-hot { background:#eff5ff !important; }
@@ -451,6 +459,7 @@ export default function PricingPage() {
           border-radius:10px; padding:10px 12px; }
         .pr-mc-fees span { display:block; font-size:10.5px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:#a9c4ea; margin-bottom:3px; }
         .pr-mc-fees b { font-size:18px; font-weight:800; color:var(--price-green-bright); }
+        .pr-mc-fees b i { font-style:normal; font-size:11.5px; font-weight:600; color:#a9c4ea; margin-left:4px; }
         .pr-mc-body { padding:20px 20px 4px; }
         .pr-mc-blurb { font-size:14px; color:#5b6472; line-height:1.75; margin:0 0 20px; }
         .pr-mc-sublabel { display:flex; align-items:baseline; justify-content:space-between; gap:10px;
@@ -547,7 +556,8 @@ export default function PricingPage() {
         .pr-vis-price { position:relative; display:flex; align-items:baseline; gap:9px; }
         .pr-vis-fee { font-size:clamp(34px,4.4vw,44px); font-weight:800; letter-spacing:-.02em; line-height:1; color:var(--price-green); }
         .pr-vis-per { font-size:12.5px; font-weight:500; color:#a9c4ea; }
-        .pr-vis-ongoing { position:relative; font-size:13px; font-weight:700; color:var(--price-green-bright); margin-top:8px; }
+        .pr-vis-ongoing { position:relative; font-size:13px; font-weight:600; color:#a9c4ea; margin-top:8px; }
+        .pr-vis-ongoing b { font-weight:800; color:var(--price-green-bright); }
         .pr-vis-ongoing.pr-vis-none { color:#8fa6c9; font-weight:600; }
         .pr-vis-div { position:relative; height:1px; background:rgba(255,255,255,.12); margin:20px 0 16px; }
         .pr-vis-label { position:relative; font-size:10.5px; font-weight:700; letter-spacing:.12em; text-transform:uppercase;
@@ -560,7 +570,7 @@ export default function PricingPage() {
         .pr-vis-tick svg { width:11px; height:11px; stroke:#4ade80; stroke-width:3; fill:none; stroke-linecap:round; stroke-linejoin:round; }
         /* The Most Popular panel's gradient starts at brand blue, and the standard
            price green on blue measures 1.6:1. Use the bright shade there. */
-        .pr-vis--hot .pr-vis-fee, .pr-vis--hot .pr-vis-ongoing { color:var(--price-green-bright); }
+        .pr-vis--hot .pr-vis-fee, .pr-vis--hot .pr-vis-ongoing b { color:var(--price-green-bright); }
         .pr-vis--hot .pr-vis-tick { background:rgba(255,255,255,.18); }
         .pr-vis--hot .pr-vis-tick svg { stroke:#fff; }
 
@@ -713,7 +723,7 @@ export default function PricingPage() {
                 <tr className="pr-fee-row pr-fee-ongoing">
                   <td className="pr-svc pr-fee-label">Ongoing Fee</td>
                   {PACKAGES.map((p, i) => (
-                    <td key={p.id} className={`pr-fee-cell${i === HOT ? ' pr-hot' : ''}`}>{p.mgmtFee ? `${p.mgmtFee} of rent` : 'None'}</td>
+                    <td key={p.id} className={`pr-fee-cell${i === HOT ? ' pr-hot' : ''}`}>{p.mgmtFee ? <>{p.mgmtFee}<i className="pr-fee-unit">of rent</i></> : <i className="pr-fee-unit">None</i>}</td>
                   ))}
                 </tr>
                 <tr className="pr-fee-row pr-fee-onetime">
@@ -809,7 +819,7 @@ export default function PricingPage() {
               <div className="pr-mc-fees">
                 {PACKAGES[mobileTab].mgmtFee ? (
                   <>
-                    <div><span>Ongoing fee</span><b>{PACKAGES[mobileTab].mgmtFee} of rent</b></div>
+                    <div><span>Ongoing fee</span><b>{PACKAGES[mobileTab].mgmtFee}<i>of rent</i></b></div>
                     <div><span>One time fee</span><b>{PACKAGES[mobileTab].setupFee}</b></div>
                   </>
                 ) : (
@@ -925,7 +935,7 @@ export default function PricingPage() {
                       <span className="pr-vis-per">{p.mgmtFee ? 'of rent' : 'one time fee'}</span>
                     </div>
                     <div className={`pr-vis-ongoing${p.mgmtFee ? '' : ' pr-vis-none'}`}>
-                      {p.mgmtFee ? `${p.setupFee} one time fee` : 'No ongoing fee'}
+                      {p.mgmtFee ? <><b>{p.setupFee}</b> one time fee</> : 'No ongoing fee'}
                     </div>
                     <div className="pr-vis-div" />
                     <div className="pr-vis-label">What&apos;s included</div>

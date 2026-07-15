@@ -297,7 +297,7 @@ export default function PackageDetailPage({ params }: { params: { slug: string }
                     <>
                       <span className={styles.priceFloatLabel}>Ongoing fee</span>
                       <span className={styles.priceFloatVal}>{bundle.mgmtFee}</span>
-                      <span className={styles.priceFloatSub}>of rent · {bundle.setupFee} one time fee · inc. VAT</span>
+                      <span className={styles.priceFloatSub}>of rent · <b>{bundle.setupFee}</b> one time fee · inc. VAT</span>
                     </>
                   ) : (
                     <>

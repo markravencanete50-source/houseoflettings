@@ -269,7 +269,7 @@ export default function InstantValuationPage() {
           transition: color 0.2s;
         }
         .iv-back-link:hover { color: #0f1f3d; }
-        .iv-logo-text { font-size: 1rem; font-weight: 700; color: #2563eb; letter-spacing: 0.02em; }
+        .iv-logo-text { font-size: 1rem; font-weight: 700; color: var(--logo-blue); letter-spacing: 0.02em; }
 
         .iv-progress { width: 100%; max-width: 680px; margin-bottom: 1.75rem; }
         .iv-progress__track { display: flex; gap: 0.5rem; align-items: center; margin-bottom: 0.5rem; }
@@ -295,7 +295,7 @@ export default function InstantValuationPage() {
         }
         .iv-step-head__eyebrow {
           font-size: 0.6875rem; font-weight: 700; letter-spacing: 0.1em;
-          text-transform: uppercase; color: #2563eb; margin: 0 0 0.5rem;
+          text-transform: uppercase; color: var(--logo-blue); margin: 0 0 0.5rem;
         }
         .iv-step-head__title { font-size: 1.375rem; font-weight: 800; color: #0f1f3d; margin: 0; }
 

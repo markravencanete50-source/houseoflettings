@@ -542,7 +542,7 @@ export default function TenantEnquiryModal({
               {propertyTitle && (
                 <p className="hol-modal__subtitle">
                   Enquiring about: <strong style={{ color: "#0f1f3d" }}>{propertyTitle}</strong>
-                  {propertyPrice && propertyPrice > 0 && <span style={{ marginLeft: 8, color: "#2563a8", fontWeight: 600 }}>£{propertyPrice.toLocaleString()} pcm</span>}
+                  {propertyPrice && propertyPrice > 0 && <span style={{ marginLeft: 8, color: "var(--logo-blue)", fontWeight: 600 }}>£{propertyPrice.toLocaleString()} pcm</span>}
                 </p>
               )}
               {!propertyTitle && (
@@ -1120,7 +1120,7 @@ const MODAL_CSS = `
   .hol-avail-chip{padding:9px 14px;border:1.5px solid #2563a8;border-radius:999px;background:#fff;color:#1a3c5e;font-family:'Poppins',sans-serif;font-size:13px;font-weight:600;cursor:pointer;transition:all .15s;white-space:nowrap;}
   .hol-avail-chip:hover{background:#2563a8;color:#fff;transform:translateY(-1px);box-shadow:0 3px 10px rgba(37,99,168,.3);}
   .hol-avail-chip--on{background:#2563a8;color:#fff;box-shadow:0 3px 10px rgba(37,99,168,.3);}
-  .hol-own-toggle{display:inline-block;background:none;border:none;padding:0;margin:0;color:#2563a8;font-family:'Poppins',sans-serif;font-size:13px;font-weight:600;cursor:pointer;text-align:left;text-decoration:underline;text-underline-offset:2px;}
+  .hol-own-toggle{display:inline-block;background:none;border:none;padding:0;margin:0;color:var(--logo-blue);font-family:'Poppins',sans-serif;font-size:13px;font-weight:600;cursor:pointer;text-align:left;text-decoration:underline;text-underline-offset:2px;}
   .hol-own-toggle:hover{color:#1a3c5e;}
   .hol-own-panel{background:#f8f9ff;border:1.5px solid #dbeafe;border-radius:12px;padding:16px 16px 18px;display:flex;flex-direction:column;gap:14px;}
   .hol-multichip{padding:9px 6px;border:1.5px solid #d7dce6;border-radius:9px;background:#fff;color:#1a3c5e;font-family:'Poppins',sans-serif;font-size:13px;font-weight:600;cursor:pointer;transition:all .15s;}

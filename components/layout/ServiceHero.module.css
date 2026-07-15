@@ -92,7 +92,7 @@
   text-transform: uppercase; color: #6b7280; margin-bottom: 3px;
 }
 .floatVal { font-size: 22px; font-weight: 800; line-height: 1; }
-.floatSub { display: block; font-size: 12px; font-weight: 600; color: #2563eb; margin-top: 4px; }
+.floatSub { display: block; font-size: 12px; font-weight: 600; color: var(--logo-blue); margin-top: 4px; }
 
 @media (min-width: 940px) {
   .grid { grid-template-columns: 1.05fr .95fr; }

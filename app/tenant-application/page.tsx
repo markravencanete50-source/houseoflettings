@@ -323,7 +323,7 @@ function FileUpload({
                 <button type="button" onClick={e => { e.stopPropagation(); removeFile(i); }} style={{ background: 'none', border: 'none', color: '#dc2626', fontWeight: 700, fontSize: 12, cursor: 'pointer', padding: 0 }}>✕ remove</button>
               </p>
             ))}
-            {!full && <p style={{ color: '#2563eb', fontSize: 12.5, fontWeight: 700, marginTop: 6 }}>➕ Add another document{maxFiles > 1 ? ` (up to ${maxFiles})` : ''}</p>}
+            {!full && <p style={{ color: 'var(--logo-blue)', fontSize: 12.5, fontWeight: 700, marginTop: 6 }}>➕ Add another document{maxFiles > 1 ? ` (up to ${maxFiles})` : ''}</p>}
           </div>
         ) : (
           <div>
@@ -355,7 +355,7 @@ function PropertySummaryCard({ property }: { property: Property }) {
 
   return (
     <div style={{ background: '#f3f4f6', border: '1px solid #e5e7eb', borderRadius: 12, padding: '16px 20px' }}>
-      <div style={{ fontSize: 12, fontWeight: 700, color: '#2563eb', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 16 }}>
+      <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--logo-blue)', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 16 }}>
         Property You're Applying For
       </div>
       {items.map((item, i) => (
@@ -366,7 +366,7 @@ function PropertySummaryCard({ property }: { property: Property }) {
           padding: '10px 0',
           borderBottom: i < items.length - 1 ? '1px solid #e5e7eb' : 'none',
         }}>
-          <span style={{ fontSize: 11, fontWeight: 700, color: '#2563eb', letterSpacing: '0.06em', textTransform: 'uppercase' }}>{item.label}</span>
+          <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--logo-blue)', letterSpacing: '0.06em', textTransform: 'uppercase' }}>{item.label}</span>
           <span style={{ fontSize: 15, color: '#111827', fontWeight: 700 }}>{item.value}</span>
         </div>
       ))}
@@ -855,7 +855,7 @@ export default function TenantApplicationPage() {
             {step === 1 && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
                 <div>
-                  <h2 style={{ ...sectionHeadingStyle, color: '#2563eb' }}>Select Property</h2>
+                  <h2 style={{ ...sectionHeadingStyle, color: 'var(--logo-blue)' }}>Select Property</h2>
                   <p style={sectionSubStyle}>Choose the property you'd like to apply for.</p>
                 </div>
                 <input
@@ -882,7 +882,7 @@ export default function TenantApplicationPage() {
                             <div style={{ fontWeight: 700, fontSize: 14, color: '#111827', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.location}</div>
                             <div style={{ fontSize: 12, color: '#6b7280', marginTop: 2 }}>{formatGBP(p.price)} pcm · {p.bedrooms === 0 ? 'Studio' : `${p.bedrooms} bed`}</div>
                           </div>
-                          {isSelected && <span style={{ color: '#2563eb', fontSize: 18, flexShrink: 0 }}>✓</span>}
+                          {isSelected && <span style={{ color: 'var(--logo-blue)', fontSize: 18, flexShrink: 0 }}>✓</span>}
                         </div>
                       );
                     })}

@@ -251,7 +251,7 @@ export default function TenantsPage() {
                 style={{
                   fontSize: 11,
                   fontWeight: 700,
-                  color: "#2563eb",
+                  color: "var(--logo-blue)",
                   letterSpacing: "0.1em",
                   marginBottom: 12,
                   textTransform: "uppercase",
@@ -511,7 +511,7 @@ export default function TenantsPage() {
                   {faq.q}
                   <span
                     style={{
-                      color: "#2563eb",
+                      color: "var(--logo-blue)",
                       fontSize: 22,
                       flexShrink: 0,
                       lineHeight: 1,

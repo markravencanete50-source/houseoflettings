@@ -1148,7 +1148,7 @@ const PAGE_CSS = `
   .hol-page-bg { background: linear-gradient(135deg, #eef2ff 0%, #f0f4ff 25%, #e8f0fe 50%, #f7f8fa 75%, #eef2ff 100%); background-size: 400% 400%; animation: hol-bg-shift 12s ease infinite; }
 
   .hol-back-link { font-size:12px; color:#6b7280; text-decoration:none; font-weight:600; }
-  .hol-back-link:hover { color:#2563eb; }
+  .hol-back-link:hover { color:var(--logo-blue); }
 
   .hol-steps { display:flex; justify-content:space-between; gap:4px; margin:20px 0 10px; }
   .hol-step-item { display:flex; flex-direction:column; align-items:center; gap:6px; flex:1; text-align:center; }
@@ -1156,7 +1156,7 @@ const PAGE_CSS = `
   .hol-step-dot.active { background:#2563a8; color:#fff; box-shadow:0 0 0 4px rgba(37,99,168,.14); }
   .hol-step-dot.done { background:#1a3c5e; color:#fff; }
   .hol-step-label { font-size:10.5px; font-weight:600; color:#9ca3af; letter-spacing:.02em; }
-  .hol-step-label.active { color:#2563a8; }
+  .hol-step-label.active { color:var(--logo-blue); }
   @media(max-width:540px){ .hol-step-label{display:none;} }
 
   .hol-progress { height:4px; background:#eef0f5; border-radius:4px; overflow:hidden; margin-top:8px; }
@@ -1177,13 +1177,13 @@ const PAGE_CSS = `
 
   .hol-prop-card{border:1.5px solid #e5e7eb;border-radius:12px;padding:18px;background:#fdfdff;}
   .hol-prop-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
-  .hol-prop-badge{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#2563a8;background:#eef4ff;padding:4px 10px;border-radius:20px;}
+  .hol-prop-badge{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--logo-blue);background:#eef4ff;padding:4px 10px;border-radius:20px;}
   .hol-prop-remove{background:none;border:none;color:#dc2626;font-size:12px;font-weight:600;cursor:pointer;padding:0;}
   .hol-prop-remove:hover{text-decoration:underline;}
-  .hol-add-property{display:inline-flex;align-items:center;gap:8px;margin-top:14px;padding:11px 18px;border:1.5px dashed #b9c9e6;border-radius:10px;background:#f5f9ff;color:#2563a8;font-family:'Poppins',sans-serif;font-size:13px;font-weight:600;cursor:pointer;transition:all .15s;}
+  .hol-add-property{display:inline-flex;align-items:center;gap:8px;margin-top:14px;padding:11px 18px;border:1.5px dashed #b9c9e6;border-radius:10px;background:#f5f9ff;color:var(--logo-blue);font-family:'Poppins',sans-serif;font-size:13px;font-weight:600;cursor:pointer;transition:all .15s;}
   .hol-add-property:hover{border-color:#2563a8;background:#eaf2ff;}
   .hol-occupied{border:1px solid #dbe6fb;background:#f5f9ff;border-radius:10px;padding:14px 16px;}
-  .hol-occupied-head{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#2563a8;margin-bottom:12px;}
+  .hol-occupied-head{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--logo-blue);margin-bottom:12px;}
 
   .hol-pkg-list{display:flex;flex-direction:column;gap:10px;}
   .hol-pkg{border:1.5px solid #e5e7eb;border-radius:12px;padding:14px 16px;transition:border-color .15s,background .15s;background:#fff;}
@@ -1195,7 +1195,7 @@ const PAGE_CSS = `
   .hol-pkg-fee-unit{font-size:11px;font-weight:600;color:var(--price-green-ink);margin-left:3px;}
   .hol-pkg-fee-sub{font-size:11px;font-weight:700;color:var(--price-green-ink);}
   @media(max-width:480px){ .hol-pkg-fee-main{font-size:19px;} .hol-pkg-fee-unit,.hol-pkg-fee-sub{font-size:10.5px;} }
-  .hol-readmore{background:none;border:none;padding:0;margin:10px 0 0 32px;font-family:'Poppins',sans-serif;font-size:12px;font-weight:700;color:#2563eb;cursor:pointer;}
+  .hol-readmore{background:none;border:none;padding:0;margin:10px 0 0 32px;font-family:'Poppins',sans-serif;font-size:12px;font-weight:700;color:var(--logo-blue);cursor:pointer;}
   .hol-readmore:hover{text-decoration:underline;}
   .hol-pkg-details{margin:10px 0 2px 32px;border-top:1px dashed #dbe3f0;padding-top:4px;}
   .hol-pkg-details-head{font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#1a3c5e;margin:10px 0 4px;}
@@ -1208,7 +1208,7 @@ const PAGE_CSS = `
   .hol-owner-card{text-align:left;background:#fff;border:1.5px solid #e5e7eb;border-radius:14px;padding:20px 18px;cursor:pointer;font-family:'Poppins',sans-serif;transition:border-color .15s,background .15s,box-shadow .15s;}
   .hol-owner-card:hover{border-color:#bcd0ee;}
   .hol-owner-card--on{border-color:#2563a8;background:#f5f9ff;box-shadow:0 0 0 3px rgba(37,99,168,.12);}
-  .hol-owner-icon{display:flex;align-items:center;justify-content:center;width:48px;height:48px;border-radius:12px;background:#eef4ff;color:#2563a8;margin-bottom:12px;}
+  .hol-owner-icon{display:flex;align-items:center;justify-content:center;width:48px;height:48px;border-radius:12px;background:#eef4ff;color:var(--logo-blue);margin-bottom:12px;}
   .hol-owner-card--on .hol-owner-icon{background:#2563a8;color:#fff;}
 
   .hol-terms-note{margin:22px 0 0;padding:14px 16px;border:1px solid #e5e7eb;border-radius:12px;background:#fafbff;font-size:12.5px;color:#6b7280;line-height:1.65;}
@@ -1216,7 +1216,7 @@ const PAGE_CSS = `
   .hol-radio{flex-shrink:0;width:20px;height:20px;border-radius:50%;border:1.5px solid #cbd5e1;display:flex;align-items:center;justify-content:center;margin-top:2px;background:#fff;transition:all .15s;}
   .hol-pkg--on .hol-radio{border-color:#2563a8;}
   .hol-radio-dot{width:10px;height:10px;border-radius:50%;background:#2563a8;}
-  .hol-pkg-badge{display:inline-block;margin-left:8px;font-size:9px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#2563a8;background:#e8f0ff;padding:2px 7px;border-radius:20px;vertical-align:middle;}
+  .hol-pkg-badge{display:inline-block;margin-left:8px;font-size:9px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--logo-blue);background:#e8f0ff;padding:2px 7px;border-radius:20px;vertical-align:middle;}
 
   .hol-doc{border:1.5px solid #e5e7eb;border-radius:12px;padding:16px 18px;background:#fff;}
   .hol-doc--error{border-color:#f7b6b6;}
@@ -1224,11 +1224,11 @@ const PAGE_CSS = `
   .hol-yesno-btn{flex:1;min-width:140px;padding:10px 14px;border:1.5px solid #e5e7eb;border-radius:9px;background:#fff;color:#374151;font-family:'Poppins',sans-serif;font-size:13px;font-weight:600;cursor:pointer;transition:all .15s;}
   .hol-yesno-btn:hover{border-color:#bcd0ee;}
   .hol-yesno-btn.on{border-color:#2563a8;background:#2563a8;color:#fff;}
-  .hol-upload{display:flex;align-items:center;justify-content:center;gap:8px;padding:12px 16px;border:1.5px dashed #cbd5e1;border-radius:9px;cursor:pointer;font-size:13px;font-weight:600;color:#2563a8;background:#f8fafc;transition:all .15s;}
+  .hol-upload{display:flex;align-items:center;justify-content:center;gap:8px;padding:12px 16px;border:1.5px dashed #cbd5e1;border-radius:9px;cursor:pointer;font-size:13px;font-weight:600;color:var(--logo-blue);background:#f8fafc;transition:all .15s;}
   .hol-upload:hover{border-color:#2563a8;background:#f0f6ff;}
   .hol-upload.is-loading{cursor:wait;color:#6b7280;}
   .hol-uploaded{display:flex;align-items:center;gap:10px;padding:10px 14px;border:1.5px solid #bbf7d0;background:#f0fdf4;border-radius:9px;font-size:13px;color:#166534;font-weight:600;}
-  .hol-view-link{color:#2563eb;font-size:12px;font-weight:600;text-decoration:none;}
+  .hol-view-link{color:var(--logo-blue);font-size:12px;font-weight:600;text-decoration:none;}
   .hol-remove{background:none;border:none;color:#dc2626;font-size:12px;font-weight:600;cursor:pointer;padding:0;}
 
   .hol-summary{border:1px solid #eef0f5;border-radius:12px;overflow:hidden;}

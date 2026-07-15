@@ -389,7 +389,7 @@ export default function TermsAndConditions() {
           font-size: 11px;
           font-weight: 800;
           letter-spacing: 0.12em;
-          color: #1a56db;
+          color: var(--logo-blue);
           min-width: 28px;
         }
         .hol-section-title {

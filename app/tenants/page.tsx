@@ -291,7 +291,7 @@ export default function TenantsPage() {
                 className="t-card t-reveal"
                 style={{ animationDelay: `${i * 55}ms` }}
               >
-                <div style={{ fontSize: 11, fontWeight: 700, color: "#2563eb", letterSpacing: "0.1em", marginBottom: 12, textTransform: "uppercase" }}>
+                <div style={{ fontSize: 11, fontWeight: 700, color: "var(--logo-blue)", letterSpacing: "0.1em", marginBottom: 12, textTransform: "uppercase" }}>
                   {step.num}
                 </div>
                 <h3 style={{ fontSize: 17, fontWeight: 700, marginBottom: 10, color: "#111827" }}>{step.title}</h3>
@@ -457,7 +457,7 @@ export default function TenantsPage() {
                   style={{ width: "100%", background: "none", border: "none", color: "#0f172a", textAlign: "left", padding: "20px 0", display: "flex", justifyContent: "space-between", alignItems: "center", cursor: "pointer", fontSize: 16, fontWeight: 600, gap: 16 }}
                 >
                   {faq.q}
-                  <span style={{ color: "#2563eb", fontSize: 22, flexShrink: 0, lineHeight: 1, transform: openFaq === i ? "rotate(45deg)" : "none", transition: "transform 0.2s" }}>+</span>
+                  <span style={{ color: "var(--logo-blue)", fontSize: 22, flexShrink: 0, lineHeight: 1, transform: openFaq === i ? "rotate(45deg)" : "none", transition: "transform 0.2s" }}>+</span>
                 </button>
                 {openFaq === i && (
                   <p style={{ color: "#475569", fontSize: 15, lineHeight: 1.7, paddingBottom: 20, margin: 0 }}>{faq.a}</p>

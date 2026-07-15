@@ -369,7 +369,7 @@ export default function BookValuationPage() {
               { icon: '✓', text: 'Leeds & Manchester experts' },
             ].map(item => (
               <div key={item.text} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, color: '#6b7280' }}>
-                <span style={{ color: '#2563eb', fontWeight: 700 }}>{item.icon}</span>
+                <span style={{ color: 'var(--logo-blue)', fontWeight: 700 }}>{item.icon}</span>
                 {item.text}
               </div>
             ))}

@@ -144,7 +144,7 @@ function FileUpload({
                 >✕ remove</button>
               </p>
             ))}
-            {!full && <p style={{ color: '#2563eb', fontSize: 12, marginTop: 6 }}>➕ Tap to add more (up to {maxFiles})</p>}
+            {!full && <p style={{ color: 'var(--logo-blue)', fontSize: 12, marginTop: 6 }}>➕ Tap to add more (up to {maxFiles})</p>}
           </div>
         ) : (
           <div>

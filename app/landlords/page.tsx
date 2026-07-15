@@ -299,7 +299,7 @@ export default function LandlordsPage() {
           <div>
             <div style={{
               fontSize: 11, fontWeight: 700, letterSpacing: 3,
-              textTransform: 'uppercase', color: '#2563eb', marginBottom: 16,
+              textTransform: 'uppercase', color: 'var(--logo-blue)', marginBottom: 16,
               fontFamily: "'Poppins', sans-serif",
             }}>
               Why Choose Us
@@ -623,7 +623,7 @@ export default function LandlordsPage() {
         <div style={{ textAlign: 'center', marginBottom: 52, maxWidth: 620, marginLeft: 'auto', marginRight: 'auto' }}>
           <div style={{
             fontSize: 11, fontWeight: 700, letterSpacing: 3,
-            textTransform: 'uppercase', color: '#2563eb', marginBottom: 14,
+            textTransform: 'uppercase', color: 'var(--logo-blue)', marginBottom: 14,
             fontFamily: "'Poppins', sans-serif",
           }}>
             Pay As You Go
@@ -665,9 +665,9 @@ export default function LandlordsPage() {
           .ll-as-list { list-style:none; margin:0 0 18px; padding:0; display:flex; flex-direction:column; gap:11px; flex:1; }
           .ll-as-item { display:flex; align-items:baseline; justify-content:space-between; gap:12px; }
           .ll-as-item span { font-family:'Poppins',sans-serif; font-size:13.5px; color:#4b5563; line-height:1.4; }
-          .ll-as-item b { flex:none; font-family:'Poppins',sans-serif; font-size:13.5px; font-weight:800; color:#2563eb; white-space:nowrap; }
+          .ll-as-item b { flex:none; font-family:'Poppins',sans-serif; font-size:13.5px; font-weight:800; color:var(--logo-blue); white-space:nowrap; }
           .ll-as-more { font-family:'Poppins',sans-serif; font-size:12px; font-weight:700;
-            letter-spacing:.4px; text-transform:uppercase; color:#2563eb; }
+            letter-spacing:.4px; text-transform:uppercase; color:var(--logo-blue); }
         `}</style>
         <div className="ll-as-grid">
           {SERVICE_CATEGORIES.map((cat, i) => (
@@ -707,7 +707,7 @@ export default function LandlordsPage() {
         <div style={{ textAlign: 'center', marginBottom: 56 }}>
           <div style={{
             fontSize: 11, fontWeight: 700, letterSpacing: 3,
-            textTransform: 'uppercase', color: '#2563eb', marginBottom: 14,
+            textTransform: 'uppercase', color: 'var(--logo-blue)', marginBottom: 14,
             fontFamily: "'Poppins', sans-serif",
           }}>
             Getting Started
@@ -745,7 +745,7 @@ export default function LandlordsPage() {
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 margin: '0 auto 20px',
                 fontFamily: "'Poppins', sans-serif",
-                fontSize: 18, fontWeight: 800, color: '#2563eb',
+                fontSize: 18, fontWeight: 800, color: 'var(--logo-blue)',
               }}>{step.n}</div>
               <h3 style={{
                 fontFamily: "'Poppins', sans-serif",
@@ -770,7 +770,7 @@ export default function LandlordsPage() {
         <div style={{ textAlign: 'center', marginBottom: 52, maxWidth: 640, marginLeft: 'auto', marginRight: 'auto' }}>
           <div style={{
             fontSize: 11, fontWeight: 700, letterSpacing: 3,
-            textTransform: 'uppercase', color: '#2563eb', marginBottom: 14,
+            textTransform: 'uppercase', color: 'var(--logo-blue)', marginBottom: 14,
             fontFamily: "'Poppins', sans-serif",
           }}>
             Know Your Obligations
@@ -966,7 +966,7 @@ export default function LandlordsPage() {
           .rgi-slide img { display: block; width: 100%; height: auto; }
           .rgi-controls { display: flex; align-items: center; justify-content: center; gap: 18px; }
           .rgi-arrow { width: 44px; height: 44px; border-radius: 50%; border: 1.5px solid #cdd6ea;
-            background: #fff; color: #2563eb; display: inline-flex; align-items: center; justify-content: center;
+            background: #fff; color: var(--logo-blue); display: inline-flex; align-items: center; justify-content: center;
             cursor: pointer; transition: all .2s ease; box-shadow: 0 6px 16px -8px rgba(15,31,61,.3); flex: none; }
           .rgi-arrow:hover { background: #2563eb; color: #fff; border-color: #2563eb; }
           .rgi-dots { display: flex; align-items: center; gap: 8px; }
@@ -982,14 +982,14 @@ export default function LandlordsPage() {
           .rgi-btn.primary { background: #2563eb; color: #fff; border-color: #2563eb; }
           .rgi-btn.primary:hover { background: #1d4ed8; border-color: #1d4ed8; }
           .rgi-btn.ghost { background: #fff; color: #0f1f3d; border-color: #cdd6ea; }
-          .rgi-btn.ghost:hover { border-color: #2563eb; color: #2563eb; }
+          .rgi-btn.ghost:hover { border-color: #2563eb; color: var(--logo-blue); }
           @media (max-width: 600px) { .rgi-btn { width: 100%; } }
         `}</style>
         <div className="rgi">
           <div style={{ textAlign: 'center', maxWidth: 640, margin: '0 auto 40px', padding: '0 8px' }}>
             <div style={{
               fontSize: 11, fontWeight: 700, letterSpacing: 3, textTransform: 'uppercase',
-              color: '#2563eb', marginBottom: 14, fontFamily: "'Poppins', sans-serif",
+              color: 'var(--logo-blue)', marginBottom: 14, fontFamily: "'Poppins', sans-serif",
             }}>
               Protect Your Income
             </div>
@@ -1053,7 +1053,7 @@ export default function LandlordsPage() {
         <div style={{ maxWidth: 760, margin: '0 auto' }}>
           <div style={{
             textAlign: 'center', fontSize: 11, fontWeight: 700, letterSpacing: 3,
-            textTransform: 'uppercase', color: '#2563eb', marginBottom: 14,
+            textTransform: 'uppercase', color: 'var(--logo-blue)', marginBottom: 14,
             fontFamily: "'Poppins', sans-serif",
           }}>
             Common Questions
@@ -1079,7 +1079,7 @@ export default function LandlordsPage() {
                 >
                   {faq.q}
                   <span style={{
-                    color: '#2563eb', fontSize: 22, flexShrink: 0, lineHeight: 1,
+                    color: 'var(--logo-blue)', fontSize: 22, flexShrink: 0, lineHeight: 1,
                     transform: openFaq === i ? 'rotate(45deg)' : 'none', transition: 'transform 0.2s',
                   }}>+</span>
                 </button>

@@ -277,7 +277,7 @@ export default function PricingPage() {
       <style>{`
         .pr-scope, .pr-scope * { font-family: 'Poppins', sans-serif; box-sizing: border-box; }
         .pr-eyebrow { display:inline-block; font-size:12px; font-weight:700; letter-spacing:.14em;
-          text-transform:uppercase; color:#2563eb; margin-bottom:12px; }
+          text-transform:uppercase; color:var(--logo-blue); margin-bottom:12px; }
         .pr-head { max-width:760px; margin:0 auto 30px; text-align:center; }
         .pr-head h2 { font-size:clamp(24px,3vw,34px); font-weight:700; color:#0f1f3d; margin:0 0 10px; line-height:1.15; }
         .pr-head p { color:#6b7280; font-size:15px; line-height:1.65; margin:0; }
@@ -318,7 +318,7 @@ export default function PricingPage() {
         .pr-hero2-float-label { display:block; font-size:10px; font-weight:700; letter-spacing:.08em;
           text-transform:uppercase; color:#6b7280; margin-bottom:3px; }
         .pr-hero2-float-val { font-size:22px; font-weight:800; line-height:1; }
-        .pr-hero2-float-sub { display:block; font-size:12px; font-weight:600; color:#2563eb; margin-top:4px; }
+        .pr-hero2-float-sub { display:block; font-size:12px; font-weight:600; color:var(--logo-blue); margin-top:4px; }
         @media(min-width:940px){ .pr-hero2-grid { grid-template-columns:1.05fr .95fr; } }
 
         /* ---------- Trust strip ---------- */
@@ -397,7 +397,7 @@ export default function PricingPage() {
         .pr-dash svg { width:11px; height:11px; stroke:#b6c0cf; stroke-width:3; fill:none; stroke-linecap:round; }
         .pr-more-row td { border-top:1px solid #eef1f5; padding:0; background:#fff; position:sticky; left:0; }
         .pr-more-btn { width:100%; border:0; background:transparent; cursor:pointer; font-size:12.5px; font-weight:700;
-          color:#2563eb; padding:11px 18px; text-align:left; display:flex; align-items:center; gap:9px; }
+          color:var(--logo-blue); padding:11px 18px; text-align:left; display:flex; align-items:center; gap:9px; }
         .pr-more-btn:hover { background:#f2f5fb; }
         .pr-chev { display:inline-block; width:8px; height:8px; border-right:2px solid #2563eb;
           border-bottom:2px solid #2563eb; transform:rotate(45deg) translateY(-1px); transition:transform .15s ease; }
@@ -407,7 +407,7 @@ export default function PricingPage() {
         .pr-btn { display:inline-flex; align-items:center; justify-content:center; gap:9px;
           box-sizing:border-box; min-height:48px; line-height:1.2;
           font-size:13.5px; font-weight:700; padding:14px 28px; border-radius:9px;
-          border:1.5px solid #2563eb; color:#2563eb; background:transparent; transition:all .15s ease;
+          border:1.5px solid #2563eb; color:var(--logo-blue); background:transparent; transition:all .15s ease;
           white-space:nowrap; cursor:pointer; text-transform:uppercase; letter-spacing:.02em; }
         .pr-btn:hover { background:#2563eb; color:#fff; }
         .pr-btn.pr-solid { background:#2563eb; color:#fff; }
@@ -456,21 +456,21 @@ export default function PricingPage() {
         .pr-mc-sublabel { display:flex; align-items:baseline; justify-content:space-between; gap:10px;
           font-size:10.5px; font-weight:800; letter-spacing:.12em; text-transform:uppercase; color:#8b96a5;
           margin:0 0 12px; }
-        .pr-mc-sub-n { font-size:11px; font-weight:700; letter-spacing:0; text-transform:none; color:#2563eb; }
+        .pr-mc-sub-n { font-size:11px; font-weight:700; letter-spacing:0; text-transform:none; color:var(--logo-blue); }
         .pr-mc-hl { list-style:none; margin:0 0 22px; padding:0; display:flex; flex-direction:column; gap:10px; }
         .pr-mc-hl li { display:flex; gap:11px; align-items:flex-start; font-size:14px; color:#374151; line-height:1.5; }
         .pr-mc-hl .pr-tick { flex:none; margin-top:1px; }
         .pr-mc-covs { display:flex; flex-direction:column; gap:13px; margin-bottom:6px; }
         .pr-mc-cov-top { display:flex; align-items:baseline; justify-content:space-between; gap:10px; margin-bottom:6px; }
         .pr-mc-cov-top span { font-size:12.5px; font-weight:600; color:#374151; line-height:1.35; }
-        .pr-mc-cov-top b { flex:none; font-size:11.5px; font-weight:700; color:#2563eb; }
+        .pr-mc-cov-top b { flex:none; font-size:11.5px; font-weight:700; color:var(--logo-blue); }
         .pr-mc-cov-top b.pr-mc-cov-zero { color:#9ca3af; font-weight:600; }
         .pr-mc-bar { height:6px; border-radius:999px; background:#e8eef7; overflow:hidden; }
         .pr-mc-bar i { display:block; height:100%; border-radius:999px;
           background:linear-gradient(90deg,#2563eb,#4a90d9); transition:width .35s ease; }
         .pr-mc-all { display:flex; align-items:center; justify-content:center; gap:9px; margin:20px 0 4px;
           box-sizing:border-box; min-height:48px; line-height:1.2;
-          padding:14px 28px; border:1.5px solid #2563eb; border-radius:9px; color:#2563eb;
+          padding:14px 28px; border:1.5px solid #2563eb; border-radius:9px; color:var(--logo-blue);
           font-size:13.5px; font-weight:700; letter-spacing:.02em; text-transform:uppercase;
           text-decoration:none; text-align:center; }
         .pr-mc-all svg { flex:none; }
@@ -496,7 +496,7 @@ export default function PricingPage() {
 
         /* copy side */
         .pr-svc-kicker { display:inline-flex; flex-wrap:wrap; gap:10px; align-items:center; font-size:12px; font-weight:700;
-          letter-spacing:.12em; text-transform:uppercase; color:#2563eb; margin-bottom:14px; }
+          letter-spacing:.12em; text-transform:uppercase; color:var(--logo-blue); margin-bottom:14px; }
         .pr-svc-kicker .pr-pop { background:#2563eb; color:#fff; border-radius:999px; padding:3px 11px; font-size:9.5px; letter-spacing:.08em; }
         .pr-svc-copy h3 { font-size:clamp(24px,2.7vw,32px); font-weight:800; color:#0f1f3d; margin:0 0 14px; line-height:1.16; letter-spacing:-.01em; }
         .pr-svc-lead { font-size:16.5px; font-weight:700; color:#0f1f3d; margin:0 0 12px; line-height:1.55; }
@@ -513,7 +513,7 @@ export default function PricingPage() {
         .pr-svc-btn { display:inline-flex; align-items:center; justify-content:center; gap:9px;
           box-sizing:border-box; min-height:48px; line-height:1.2;
           padding:14px 28px; border-radius:9px; border:1.5px solid #2563eb;
-          background:transparent; color:#2563eb; font-size:13.5px; font-weight:700; letter-spacing:.02em;
+          background:transparent; color:var(--logo-blue); font-size:13.5px; font-weight:700; letter-spacing:.02em;
           text-transform:uppercase; text-decoration:none; cursor:pointer; transition:all .18s ease; }
         /* The whole spec panel is a link to the package's individual page. */
         .pr-svc-visual { text-decoration:none; color:inherit; display:block; cursor:pointer; }
@@ -609,7 +609,7 @@ export default function PricingPage() {
         .pr-fees-in { background:#f2f5f9; border:1px solid #e5e7eb; border-radius:14px; padding:30px 28px;
           display:grid; grid-template-columns:repeat(3,1fr); gap:26px; }
         .pr-fees-in h3 { font-size:15.5px; font-weight:700; color:#0f1f3d; margin:0 0 6px; display:flex; align-items:center; gap:9px; }
-        .pr-fees-in h3 .n { font-size:11px; font-weight:800; color:#2563eb; background:#fff; border:1px solid #dbe2ea;
+        .pr-fees-in h3 .n { font-size:11px; font-weight:800; color:var(--logo-blue); background:#fff; border:1px solid #dbe2ea;
           width:24px; height:24px; border-radius:50%; display:inline-flex; align-items:center; justify-content:center; flex:none; }
         .pr-fees-in p { font-size:13.5px; color:#6b7280; margin:0; line-height:1.6; }
         @media(max-width:820px){ .pr-fees-in{ grid-template-columns:1fr; gap:18px; } }
@@ -1078,7 +1078,7 @@ export default function PricingPage() {
               }}>
                 {['Takes less than two minutes', 'We&apos;ll match you with the right package', 'No commitment until you speak to us'].map((text, i) => (
                   <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                    <span style={{ color: '#2563eb', fontSize: 14, fontWeight: 700 }}>✓</span>
+                    <span style={{ color: 'var(--logo-blue)', fontSize: 14, fontWeight: 700 }}>✓</span>
                     <span style={{ fontFamily: "'Poppins', sans-serif", fontSize: 13, color: '#374151' }}
                       dangerouslySetInnerHTML={{ __html: text }} />
                   </div>

@@ -301,7 +301,7 @@ function ImageGallery() {
       <div style={{ padding: '0 5%', marginBottom: 48 }}>
         <div style={{
           fontSize: 11, fontWeight: 700, letterSpacing: 3, textTransform: 'uppercase',
-          color: '#2563eb', marginBottom: 14,
+          color: 'var(--logo-blue)', marginBottom: 14,
         }}>
           Properties We Love
         </div>
@@ -778,7 +778,7 @@ export default function HomePage() {
 
         /* copy side */
         .hp-svc-kicker { display: inline-block; font-family: 'Poppins', sans-serif; font-size: 12px; font-weight: 700;
-          letter-spacing: .14em; text-transform: uppercase; color: #2563eb; margin-bottom: 14px; }
+          letter-spacing: .14em; text-transform: uppercase; color: var(--logo-blue); margin-bottom: 14px; }
         .hp-svc-title { font-family: 'Poppins', sans-serif; font-size: clamp(26px, 3.4vw, 42px); font-weight: 700;
           color: #0f1f3d; margin: 0 0 16px; line-height: 1.16; letter-spacing: -.01em; }
         .hp-svc-lead { font-family: 'Poppins', sans-serif; font-size: 17px; font-weight: 600; color: #0f1f3d;
@@ -1078,7 +1078,7 @@ export default function HomePage() {
         <div className="hcw-grid-lines" />
 
         <div style={{ marginBottom: 56, textAlign: 'center', position: 'relative', zIndex: 1 }}>
-          <div style={{ fontSize: 12, fontWeight: 700, letterSpacing: 3, textTransform: 'uppercase', color: '#2563eb', marginBottom: 14 }}>
+          <div style={{ fontSize: 12, fontWeight: 700, letterSpacing: 3, textTransform: 'uppercase', color: 'var(--logo-blue)', marginBottom: 14 }}>
             Our Services
           </div>
           <h2 style={{ fontFamily: "'Poppins', sans-serif", fontSize: 'clamp(28px,4vw,48px)', fontWeight: 700, color: '#0f1f3d', margin: 0 }}>
@@ -1153,7 +1153,7 @@ export default function HomePage() {
               <p style={{ fontSize: 14, color: '#4b5563', lineHeight: 1.8, margin: '0 0 20px', position: 'relative', zIndex: 1 }}>
                 {card.body}
               </p>
-              <span style={{ fontSize: 13, color: '#2563eb', fontWeight: 600, letterSpacing: 0.5, position: 'relative', zIndex: 1 }}>
+              <span style={{ fontSize: 13, color: 'var(--logo-blue)', fontWeight: 600, letterSpacing: 0.5, position: 'relative', zIndex: 1 }}>
                 Learn more <span className="learn-more-arrow">{'->'}</span>
               </span>
             </Link>
@@ -1193,7 +1193,7 @@ export default function HomePage() {
           font-family: 'Poppins', sans-serif;
           font-size: 11px; font-weight: 700;
           letter-spacing: 0.18em; text-transform: uppercase;
-          color: #2563eb; margin-bottom: 16px;
+          color: var(--logo-blue); margin-bottom: 16px;
         }
         .split-title {
           font-family: 'Poppins', sans-serif;
@@ -1216,7 +1216,7 @@ export default function HomePage() {
           font-size: 14px; color: #374151;
         }
         .split-check {
-          color: #2563eb; font-weight: 700;
+          color: var(--logo-blue); font-weight: 700;
           font-size: 16px; line-height: 1.4; flex-shrink: 0;
         }
         @media (max-width: 768px) {
@@ -1290,7 +1290,7 @@ export default function HomePage() {
       <p style={{
         fontFamily: "'Poppins', sans-serif",
         fontSize: 11, fontWeight: 700, letterSpacing: 3,
-        textTransform: 'uppercase', color: '#2563eb', marginBottom: 20,
+        textTransform: 'uppercase', color: 'var(--logo-blue)', marginBottom: 20,
       }}>
         What you get
       </p>
@@ -1508,7 +1508,7 @@ export default function HomePage() {
             <span>Search Properties</span>
             {(location || minPrice || maxPrice || bedrooms) && (
               <span style={{
-                fontSize: 12, color: '#2563eb', fontWeight: 600, letterSpacing: 0.5,
+                fontSize: 12, color: 'var(--logo-blue)', fontWeight: 600, letterSpacing: 0.5,
                 background: '#eff6ff', padding: '4px 12px', borderRadius: 20,
                 textTransform: 'none', animation: 'fadeSlideIn 0.25s ease',
               }}>
@@ -1613,7 +1613,7 @@ export default function HomePage() {
       <section style={{ padding: 'clamp(60px, 8vw, 90px) clamp(20px, 5%, 5%)' }}>
         <div className="listings-header">
           <div>
-            <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 3, textTransform: 'uppercase', color: '#2563eb', marginBottom: 14 }}>
+            <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 3, textTransform: 'uppercase', color: 'var(--logo-blue)', marginBottom: 14 }}>
               Latest Listings
             </div>
             <h2 style={{ fontFamily: "'Poppins', sans-serif", fontSize: 'clamp(32px,4vw,52px)', fontWeight: 700, lineHeight: 1.1, letterSpacing: '-0.5px', color: '#0f1f3d' }}>
@@ -1689,7 +1689,7 @@ export default function HomePage() {
       `}</style>
       <section style={{ padding: 'clamp(60px, 8vw, 90px) clamp(20px, 5%, 5%)', background: '#f7f8fa' }}>
         <div style={{ marginBottom: 56 }}>
-          <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 3, textTransform: 'uppercase', color: '#2563eb', marginBottom: 14 }}>
+          <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 3, textTransform: 'uppercase', color: 'var(--logo-blue)', marginBottom: 14 }}>
             How It Works
           </div>
           <h2 style={{ fontFamily: "'Poppins', sans-serif", fontSize: 'clamp(32px,4vw,52px)', fontWeight: 700, color: '#0f1f3d' }}>

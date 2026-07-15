@@ -18,6 +18,11 @@ html {
   --blue:        #2563eb;
   --blue-dark:   #1d4ed8;
 
+  /* The blue from the House of Lettings logo mark (sampled from
+     public/images/logo_HOL.png). Every blue WORD and NUMBER uses this.
+     Buttons, borders and gradients keep --blue: this is a text colour only. */
+  --logo-blue:   #2672d2;
+
   /* Price figures. --price-green is the additional-services green and is the
      colour every price is shown in. At small sizes it is too low-contrast to
      read (16px bold on the pricing table measures 2.9:1, against the 4.5:1
@@ -181,7 +186,7 @@ ul, ol { list-style: none; }
 .status-badge.active    { background: #e8f5e9; color: #2e7d32; }
 .status-badge.inactive  { background: #fce4ec; color: #c62828; }
 .status-badge.pending   { background: #fff8e1; color: #f57f17; }
-.status-badge.landlord  { background: #e3f2fd; color: #1565c0; }
+.status-badge.landlord  { background: #e3f2fd; color: var(--logo-blue); }
 .status-badge.tenant    { background: #f3e5f5; color: #6a1b9a; }
 .status-badge.admin     { background: rgba(0,184,160,0.12); color: #009b87; }
 

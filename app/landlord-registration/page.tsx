@@ -156,7 +156,7 @@ export default function LandlordRegistrationPage() {
               ))}
             </ol>
             <p style={{ fontSize: 13, color: '#9ca3af', textAlign: 'center', marginTop: 24 }}>
-              Full terms are available on our <Link href="/terms" style={{ color: '#2563eb', fontWeight: 600 }}>Terms &amp; Conditions</Link> page.
+              Full terms are available on our <Link href="/terms" style={{ color: 'var(--logo-blue)', fontWeight: 600 }}>Terms &amp; Conditions</Link> page.
             </p>
           </div>
         </section>
@@ -173,7 +173,7 @@ export default function LandlordRegistrationPage() {
                 <div key={i} style={{ borderTop: '1px solid rgba(15,31,61,0.12)', borderBottom: i === REGISTRATION_FAQS.length - 1 ? '1px solid rgba(15,31,61,0.12)' : 'none' }}>
                   <button onClick={() => setOpenFaq(openFaq === i ? null : i)} style={{ width: '100%', background: 'none', border: 'none', color: '#0f1f3d', textAlign: 'left', padding: '22px 0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer', fontFamily: "'Poppins', sans-serif", fontSize: 16, fontWeight: 700, gap: 16 }}>
                     {faq.q}
-                    <span style={{ color: '#2563eb', fontSize: 22, flexShrink: 0, lineHeight: 1, transform: openFaq === i ? 'rotate(45deg)' : 'none', transition: 'transform 0.2s' }}>+</span>
+                    <span style={{ color: 'var(--logo-blue)', fontSize: 22, flexShrink: 0, lineHeight: 1, transform: openFaq === i ? 'rotate(45deg)' : 'none', transition: 'transform 0.2s' }}>+</span>
                   </button>
                   {openFaq === i && (<p style={{ color: '#4b5563', fontSize: 14, lineHeight: 1.8, paddingBottom: 24, margin: 0 }}>{faq.a}</p>)}
                 </div>
@@ -208,7 +208,7 @@ export default function LandlordRegistrationPage() {
 const PAGE_CSS = `
   @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap');
 
-  .hol-eyebrow { font-size:11px; font-weight:700; letter-spacing:3px; text-transform:uppercase; color:#2563eb; margin-bottom:14px; font-family:'Poppins',sans-serif; }
+  .hol-eyebrow { font-size:11px; font-weight:700; letter-spacing:3px; text-transform:uppercase; color:var(--logo-blue); margin-bottom:14px; font-family:'Poppins',sans-serif; }
   .hol-h2 { font-family:'Poppins',sans-serif; font-size:clamp(26px,3.6vw,42px); font-weight:700; color:#0f1f3d; line-height:1.2; margin:0; }
 
   .hol-hero-cta { display:inline-flex; align-items:center; justify-content:center; gap:9px; box-sizing:border-box; min-height:48px; line-height:1.2; background:#2563eb; color:#fff; text-decoration:none; font-family:'Poppins',sans-serif; font-size:13.5px; font-weight:700; letter-spacing:.02em; text-transform:uppercase; padding:14px 28px; border:1.5px solid transparent; border-radius:9px; transition:background .2s,transform .2s; }

@@ -63,7 +63,7 @@ function ReviewCard({ review }: { review: Review }) {
       }}
     >
       {/* Quote mark */}
-      <div style={{ color: '#2563eb', fontSize: 36, lineHeight: 1, fontFamily: 'Georgia, serif', marginBottom: -8 }}>&ldquo;</div>
+      <div style={{ color: 'var(--logo-blue)', fontSize: 36, lineHeight: 1, fontFamily: 'Georgia, serif', marginBottom: -8 }}>&ldquo;</div>
 
       {/* Review text */}
       <p style={{
@@ -77,7 +77,7 @@ function ReviewCard({ review }: { review: Review }) {
             onClick={() => setExpanded(!expanded)}
             style={{
               background: 'none', border: 'none', cursor: 'pointer',
-              color: '#2563eb', fontSize: 13, fontWeight: 600,
+              color: 'var(--logo-blue)', fontSize: 13, fontWeight: 600,
               padding: '0 0 0 4px', fontFamily: "'Poppins', sans-serif",
             }}
           >
@@ -220,7 +220,7 @@ export default function GoogleReviews() {
         }
         .reviews-tab.inactive:hover {
           border-color: #2563eb;
-          color: #2563eb;
+          color: var(--logo-blue);
         }
         @keyframes reviews-shimmer {
           0% { background-position: -400px 0; }
@@ -239,7 +239,7 @@ export default function GoogleReviews() {
 
       {/* Header */}
       <div style={{ padding: '0 clamp(20px, 5%, 5%)', marginBottom: 40 }}>
-        <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 3, textTransform: 'uppercase', color: '#2563eb', marginBottom: 14 }}>
+        <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 3, textTransform: 'uppercase', color: 'var(--logo-blue)', marginBottom: 14 }}>
           Customer Reviews
         </div>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: 20 }}>

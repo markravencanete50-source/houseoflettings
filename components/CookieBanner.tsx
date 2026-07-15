@@ -79,7 +79,7 @@ export default function CookieBanner() {
           max-width: 380px;
         }
         .hol-cookie-body a {
-          color: #2563a8;
+          color: var(--logo-blue);
           font-weight: 600;
           text-decoration: underline;
           text-underline-offset: 2px;

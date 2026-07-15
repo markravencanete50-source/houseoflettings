@@ -119,7 +119,7 @@ function FileUpload({
                 <button type="button" onClick={e => { e.stopPropagation(); removeFile(i); }} style={{ background: 'none', border: 'none', color: '#dc2626', fontWeight: 700, fontSize: 12, cursor: 'pointer', padding: 0 }}>✕ remove</button>
               </p>
             ))}
-            {!full && <p style={{ color: '#2563eb', fontSize: 12.5, fontWeight: 700, marginTop: 6 }}>➕ Add another document{maxFiles > 1 ? ` (up to ${maxFiles})` : ''}</p>}
+            {!full && <p style={{ color: 'var(--logo-blue)', fontSize: 12.5, fontWeight: 700, marginTop: 6 }}>➕ Add another document{maxFiles > 1 ? ` (up to ${maxFiles})` : ''}</p>}
           </div>
         ) : (
           <div>
@@ -451,7 +451,7 @@ export default function GuarantorPage() {
         .g-step.g-step-active .g-step-circle { border-color: #2563eb; background: #2563eb; color: #fff; }
         .g-step.g-step-done .g-step-circle { border-color: #16a34a; background: #16a34a; color: #fff; }
         .g-step-label { font-size: 11px; font-weight: 600; color: #9ca3af; text-align: center; white-space: nowrap; }
-        .g-step.g-step-active .g-step-label { color: #2563eb; }
+        .g-step.g-step-active .g-step-label { color: var(--logo-blue); }
         .g-step.g-step-done .g-step-label { color: #16a34a; }
         .g-step-line { position: absolute; top: 16px; left: 50%; width: 100%; height: 2px; background: #e5e7eb; z-index: 0; }
         .g-step.g-step-done .g-step-line, .g-step.g-step-active .g-step-line { background: #86efac; }
@@ -544,7 +544,7 @@ export default function GuarantorPage() {
                             <div style={{ fontWeight: 700, fontSize: 14, color: '#111827', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.location || p.title}</div>
                             <div style={{ fontSize: 12, color: '#6b7280', marginTop: 2 }}>{formatGBP(p.price)} pcm · {p.bedrooms === 0 ? 'Studio' : `${p.bedrooms} bed`}</div>
                           </div>
-                          {isSelected && <span style={{ color: '#2563eb', fontSize: 18, flexShrink: 0 }}>✓</span>}
+                          {isSelected && <span style={{ color: 'var(--logo-blue)', fontSize: 18, flexShrink: 0 }}>✓</span>}
                         </div>
                       );
                     })}

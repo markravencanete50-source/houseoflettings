@@ -36,73 +36,162 @@ export function generateMetadata({ params }: { params: { slug: string } }): Meta
 }
 
 /* ── Service icons ────────────────────────────────────────────────────────
-   Each included service gets a line icon chosen by keyword from its label, so
-   the card grid reads visually like the template rather than as a flat list.
-   Order matters: more specific keywords are tested before generic ones. */
-type IconKey =
-  | 'camera' | 'layout' | 'chart' | 'megaphone' | 'eye' | 'chat' | 'userCheck'
-  | 'shieldCheck' | 'shieldId' | 'doc' | 'users' | 'bolt' | 'key' | 'pound'
-  | 'activity' | 'trend' | 'wrench' | 'alert' | 'clipboard' | 'umbrella'
-  | 'refresh' | 'calendar' | 'check';
+   Every service gets its OWN icon, mapped from its exact label in
+   lib/pricingMatrix.ts. This used to guess by keyword, which collapsed ten
+   different services onto one wrench (every label containing "maintenance",
+   "repair" or "contractor") and eight onto one document.
+
+   Paths are Lucide's (ISC), inlined rather than imported from lucide-react so
+   the grid stays plain server-rendered SVG with no client JS. To add a service:
+   add its exact label to SERVICE_ICONS, and its paths to ICON_PATHS if the icon
+   is not already here. ICON_KEYWORDS is only a fallback for a label we have not
+   mapped yet. */
+type IconKey = keyof typeof ICON_PATHS;
+
+const ICON_PATHS = {
+  'activity': <><path d="M22 12h-2.48a2 2 0 0 0-1.93 1.46l-2.35 8.36a.25.25 0 0 1-.48 0L9.24 2.18a.25.25 0 0 0-.48 0l-2.35 8.36A2 2 0 0 1 4.49 12H2" /></>,
+  'badge-check': <><path d="M3.85 8.62a4 4 0 0 1 4.78-4.77 4 4 0 0 1 6.74 0 4 4 0 0 1 4.78 4.78 4 4 0 0 1 0 6.74 4 4 0 0 1-4.77 4.78 4 4 0 0 1-6.75 0 4 4 0 0 1-4.78-4.77 4 4 0 0 1 0-6.76Z" /><path d="m9 12 2 2 4-4" /></>,
+  'banknote': <><rect width="20" height="12" x="2" y="6" rx="2" /><circle cx="12" cy="12" r="2" /><path d="M6 12h.01M18 12h.01" /></>,
+  'bell-ring': <><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" /><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" /><path d="M4 2C2.8 3.7 2 5.7 2 8" /><path d="M22 8c0-2.3-.8-4.3-2-6" /></>,
+  'briefcase': <><path d="M16 20V4a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" /><rect width="20" height="14" x="2" y="6" rx="2" /></>,
+  'calendar-check': <><path d="M8 2v4" /><path d="M16 2v4" /><rect width="18" height="18" x="3" y="4" rx="2" /><path d="M3 10h18" /><path d="m9 16 2 2 4-4" /></>,
+  'calendar-clock': <><path d="M21 7.5V6a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h3.5" /><path d="M16 2v4" /><path d="M8 2v4" /><path d="M3 10h5" /><path d="M17.5 17.5 16 16.3V14" /><circle cx="16" cy="16" r="6" /></>,
+  'camera': <><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z" /><circle cx="12" cy="13" r="3" /></>,
+  'clipboard-check': <><rect width="8" height="4" x="8" y="2" rx="1" ry="1" /><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" /><path d="m9 14 2 2 4-4" /></>,
+  'clipboard-list': <><rect width="8" height="4" x="8" y="2" rx="1" ry="1" /><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" /><path d="M12 11h4" /><path d="M12 16h4" /><path d="M8 11h.01" /><path d="M8 16h.01" /></>,
+  'clipboard-pen': <><rect width="8" height="4" x="8" y="2" rx="1" /><path d="M10.4 12.6a2 2 0 0 1 3 3L8 21l-4 1 1-4Z" /><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-5.5" /><path d="M4 13.5V6a2 2 0 0 1 2-2h2" /></>,
+  'contact': <><path d="M17 18a2 2 0 0 0-2-2H9a2 2 0 0 0-2 2" /><rect width="18" height="18" x="3" y="4" rx="2" /><circle cx="12" cy="10" r="2" /><line x1="8" x2="8" y1="2" y2="4" /><line x1="16" x2="16" y1="2" y2="4" /></>,
+  'door-open': <><path d="M13 4h3a2 2 0 0 1 2 2v14" /><path d="M2 20h3" /><path d="M13 20h9" /><path d="M10 12v.01" /><path d="M13 4.562v16.157a1 1 0 0 1-1.242.97L5 20V5.562a2 2 0 0 1 1.515-1.94l4-1A2 2 0 0 1 13 4.561Z" /></>,
+  'file-badge': <><path d="M12 22h6a2 2 0 0 0 2-2V7l-5-5H6a2 2 0 0 0-2 2v3" /><path d="M14 2v4a2 2 0 0 0 2 2h4" /><path d="M5 17a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" /><path d="M7 16.5 8 22l-3-1-3 1 1-5.5" /></>,
+  'file-check': <><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z" /><path d="M14 2v4a2 2 0 0 0 2 2h4" /><path d="m9 15 2 2 4-4" /></>,
+  'file-clock': <><path d="M16 22h2a2 2 0 0 0 2-2V7l-5-5H6a2 2 0 0 0-2 2v3" /><path d="M14 2v4a2 2 0 0 0 2 2h4" /><circle cx="8" cy="16" r="6" /><path d="M9.5 17.5 8 16.25V14" /></>,
+  'file-spreadsheet': <><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z" /><path d="M14 2v4a2 2 0 0 0 2 2h4" /><path d="M8 13h2" /><path d="M14 13h2" /><path d="M8 17h2" /><path d="M14 17h2" /></>,
+  'gantt-chart': <><path d="M8 6h10" /><path d="M6 12h9" /><path d="M11 18h7" /></>,
+  'gauge': <><path d="m12 14 4-4" /><path d="M3.34 19a10 10 0 1 1 17.32 0" /></>,
+  'hand-coins': <><path d="M11 15h2a2 2 0 1 0 0-4h-3c-.6 0-1.1.2-1.4.6L3 17" /><path d="m7 21 1.6-1.4c.3-.4.8-.6 1.4-.6h4c1.1 0 2.1-.4 2.8-1.2l4.6-4.4a2 2 0 0 0-2.75-2.91l-4.2 3.9" /><path d="m2 16 6 6" /><circle cx="16" cy="9" r="2.9" /><circle cx="6" cy="5" r="3" /></>,
+  'hard-hat': <><path d="M2 18a1 1 0 0 0 1 1h18a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1H3a1 1 0 0 0-1 1v2z" /><path d="M10 10V5a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v5" /><path d="M4 15v-3a6 6 0 0 1 6-6h0" /><path d="M14 6h0a6 6 0 0 1 6 6v3" /></>,
+  'images': <><path d="M18 22H4a2 2 0 0 1-2-2V6" /><path d="m22 13-1.296-1.296a2.41 2.41 0 0 0-3.408 0L11 18" /><circle cx="12" cy="8" r="2" /><rect width="16" height="16" x="6" y="2" rx="2" /></>,
+  'inbox': <><polyline points="22 12 16 12 14 15 10 15 8 12 2 12" /><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z" /></>,
+  'key-round': <><path d="M2 18v3c0 .6.4 1 1 1h4v-3h3v-3h2l1.4-1.4a6.5 6.5 0 1 0-4-4Z" /><circle cx="16.5" cy="7.5" r=".5" fill="currentColor" /></>,
+  'landmark': <><line x1="3" x2="21" y1="22" y2="22" /><line x1="6" x2="6" y1="18" y2="11" /><line x1="10" x2="10" y1="18" y2="11" /><line x1="14" x2="14" y1="18" y2="11" /><line x1="18" x2="18" y1="18" y2="11" /><polygon points="12 2 20 7 4 7" /></>,
+  'layout-grid': <><rect width="7" height="7" x="3" y="3" rx="1" /><rect width="7" height="7" x="14" y="3" rx="1" /><rect width="7" height="7" x="14" y="14" rx="1" /><rect width="7" height="7" x="3" y="14" rx="1" /></>,
+  'line-chart': <><path d="M3 3v18h18" /><path d="m19 9-5 5-4-4-3 3" /></>,
+  'megaphone': <><path d="m3 11 18-5v12L3 14v-3z" /><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6" /></>,
+  'message-square-quote': <><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" /><path d="M8 12a2 2 0 0 0 2-2V8H8" /><path d="M14 12a2 2 0 0 0 2-2V8h-2" /></>,
+  'messages-square': <><path d="M14 9a2 2 0 0 1-2 2H6l-4 4V4c0-1.1.9-2 2-2h8a2 2 0 0 1 2 2z" /><path d="M18 9h2a2 2 0 0 1 2 2v11l-4-4h-6a2 2 0 0 1-2-2v-1" /></>,
+  'package-check': <><path d="m16 16 2 2 4-4" /><path d="M21 10V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l2-1.14" /><path d="m7.5 4.27 9 5.15" /><polyline points="3.29 7 12 12 20.71 7" /><line x1="12" x2="12" y1="22" y2="12" /></>,
+  'pie-chart': <><path d="M21.21 15.89A10 10 0 1 1 8 2.83" /><path d="M22 12A10 10 0 0 0 12 2v10z" /></>,
+  'receipt': <><path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1Z" /><path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8" /><path d="M12 17.5v-11" /></>,
+  'receipt-text': <><path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1Z" /><path d="M14 8H8" /><path d="M16 12H8" /><path d="M13 16H8" /></>,
+  'refresh-cw': <><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" /><path d="M21 3v5h-5" /><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" /><path d="M8 16H3v5" /></>,
+  'scale': <><path d="m16 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z" /><path d="m2 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z" /><path d="M7 21h10" /><path d="M12 3v18" /><path d="M3 7h2c2 0 5-1 7-2 2 1 5 2 7 2h2" /></>,
+  'scan-search': <><path d="M3 7V5a2 2 0 0 1 2-2h2" /><path d="M17 3h2a2 2 0 0 1 2 2v2" /><path d="M21 17v2a2 2 0 0 1-2 2h-2" /><path d="M7 21H5a2 2 0 0 1-2-2v-2" /><circle cx="12" cy="12" r="3" /><path d="m16 16-1.9-1.9" /></>,
+  'scroll-text': <><path d="M15 12h-5" /><path d="M15 8h-5" /><path d="M19 17V5a2 2 0 0 0-2-2H4" /><path d="M8 21h12a2 2 0 0 0 2-2v-1a1 1 0 0 0-1-1H11a1 1 0 0 0-1 1v1a2 2 0 1 1-4 0V5a2 2 0 1 0-4 0v2a1 1 0 0 0 1 1h3" /></>,
+  'search-check': <><path d="m8 11 2 2 4-4" /><circle cx="11" cy="11" r="8" /><path d="m21 21-4.3-4.3" /></>,
+  'shield-check': <><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z" /><path d="m9 12 2 2 4-4" /></>,
+  'siren': <><path d="M7 18v-6a5 5 0 1 1 10 0v6" /><path d="M5 21a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-1a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2z" /><path d="M21 12h1" /><path d="M18.5 4.5 18 5" /><path d="M2 12h1" /><path d="M12 2v1" /><path d="m4.929 4.929.707.707" /><path d="M12 12v6" /></>,
+  'thumbs-up': <><path d="M7 10v12" /><path d="M15 5.88 14 10h5.83a2 2 0 0 1 1.92 2.56l-2.33 8A2 2 0 0 1 17.5 22H4a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2h2.76a2 2 0 0 0 1.79-1.11L12 2h0a3.13 3.13 0 0 1 3 3.88Z" /></>,
+  'timer': <><line x1="10" x2="14" y1="2" y2="2" /><line x1="12" x2="15" y1="14" y2="11" /><circle cx="12" cy="14" r="8" /></>,
+  'trending-up': <><polyline points="22 7 13.5 15.5 8.5 10.5 2 17" /><polyline points="16 7 22 7 22 13" /></>,
+  'umbrella': <><path d="M22 12a10.06 10.06 1 0 0-20 0Z" /><path d="M12 12v8a2 2 0 0 0 4 0" /><path d="M12 2v1" /></>,
+  'user-check': <><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><polyline points="16 11 18 13 22 9" /></>,
+  'users': <><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M22 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" /></>,
+  'vault': <><rect width="18" height="18" x="3" y="3" rx="2" /><circle cx="7.5" cy="7.5" r=".5" fill="currentColor" /><path d="m7.9 7.9 2.7 2.7" /><circle cx="16.5" cy="7.5" r=".5" fill="currentColor" /><path d="m13.4 10.6 2.7-2.7" /><circle cx="7.5" cy="16.5" r=".5" fill="currentColor" /><path d="m7.9 16.1 2.7-2.7" /><circle cx="16.5" cy="16.5" r=".5" fill="currentColor" /><path d="m13.4 13.4 2.7 2.7" /><circle cx="12" cy="12" r="2" /></>,
+  'wallet': <><path d="M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1" /><path d="M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4" /></>,
+  'zap': <><path d="M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 10h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14z" /></>,
+} as const;
+
+// Exact service label -> icon. Labels must match lib/pricingMatrix.ts.
+const SERVICE_ICONS: Record<string, IconKey> = {
+  'Property Valuation': 'line-chart',
+  'Professional Property Photography': 'camera',
+  'Floor Plan': 'layout-grid',
+  'Advertising on Major Property Portals': 'megaphone',
+  'Enquiry Management & Applicant Screening': 'inbox',
+  'Agent-Led (Accompanied) Property Viewings': 'door-open',
+  'Viewing Feedback & Negotiation': 'message-square-quote',
+  'Tenant Application Processing': 'clipboard-pen',
+  'Collection of Holding Deposit': 'hand-coins',
+  'Right to Rent Checks': 'contact',
+  'Credit & Affordability Checks': 'gauge',
+  'Employment & Landlord References': 'briefcase',
+  'Guarantor Referencing (Where Applicable)': 'user-check',
+  'Preparation of Tenancy Agreement': 'scroll-text',
+  'Collection of First Month\'s Rent & Deposit': 'banknote',
+  'Utility & Council Tax Notifications': 'zap',
+  'Tenant Handover & Property Demonstration': 'key-round',
+  'Transfer of Funds to the Landlord': 'landmark',
+  'Key Holding & Management Service': 'vault',
+  'Deposit Registration & Prescribed Information': 'file-badge',
+  'Compliance Monitoring (Gas Safety, EICR, EPC)': 'shield-check',
+  'Monthly Rent Collection': 'wallet',
+  'Monthly Landlord Statements': 'file-spreadsheet',
+  'Rent Payment Monitoring': 'activity',
+  'Annual Rental Income Summary': 'pie-chart',
+  'Rent Review Guidance': 'trending-up',
+  'Arrears Chasing & Reminders': 'bell-ring',
+  'Tenancy Continuation & Re-Marketing Management': 'refresh-cw',
+  'End-of-Tenancy Administration': 'file-check',
+  'Day-to-Day Tenant Communication': 'messages-square',
+  'Dedicated Property Management Team': 'users',
+  'Contractor Coordination': 'hard-hat',
+  'Repair Quotation Management': 'receipt',
+  'Emergency Maintenance Support': 'siren',
+  'Maintenance Issue Assessment': 'search-check',
+  'Landlord Maintenance Authorisation': 'thumbs-up',
+  'Maintenance Progress Updates': 'gantt-chart',
+  'Before & After Maintenance Reports': 'images',
+  'Detailed Maintenance Reporting': 'clipboard-list',
+  'Repair Completion Verification': 'badge-check',
+  'Contractor Invoice Verification': 'receipt-text',
+  'Check In & Check Out Inventory': 'package-check',
+  'Gas Safety, EICR & EPC Compliance Tracking': 'file-clock',
+  'Annual Property Maintenance Schedule & Reminders': 'calendar-check',
+  'Rent Recovery & Legal / Eviction Protection': 'scale',
+  'Rent Guarantee Cover': 'umbrella',
+  'Priority Contractor Response': 'timer',
+  'Enhanced Periodic Property Inspections': 'scan-search',
+  'Property Inspections with Report': 'clipboard-check',
+  'Routine Inspection Every 6 Months': 'calendar-clock',
+};
+
+// Fallback only: used when a label is not in SERVICE_ICONS (e.g. a new service
+// added to the matrix but not mapped here yet), so a card never renders blank.
+const ICON_KEYWORDS: [string, IconKey][] = [
+  ['photograph', 'camera'],
+  ['floor plan', 'layout-grid'],
+  ['valuation', 'line-chart'],
+  ['advertis', 'megaphone'],
+  ['portal', 'megaphone'],
+  ['viewing', 'door-open'],
+  ['inventory', 'package-check'],
+  ['inspection', 'clipboard-check'],
+  ['emergency', 'siren'],
+  ['contractor', 'hard-hat'],
+  ['quotation', 'receipt'],
+  ['invoice', 'receipt-text'],
+  ['maintenance', 'gantt-chart'],
+  ['repair', 'badge-check'],
+  ['legal', 'scale'],
+  ['eviction', 'scale'],
+  ['guarantee', 'umbrella'],
+  ['compliance', 'shield-check'],
+  ['deposit', 'file-badge'],
+  ['rent', 'wallet'],
+  ['reference', 'briefcase'],
+  ['agreement', 'scroll-text'],
+  ['statement', 'file-spreadsheet'],
+  ['report', 'clipboard-list'],
+  ['key', 'key-round'],
+];
 
 function iconKeyFor(label: string): IconKey {
+  const exact = SERVICE_ICONS[label];
+  if (exact) return exact;
   const l = label.toLowerCase();
-  if (l.includes('photograph')) return 'camera';
-  if (l.includes('floor plan')) return 'layout';
-  if (l.includes('valuation')) return 'chart';
-  if (l.includes('advertis') || l.includes('portal')) return 'megaphone';
-  if (l.includes('viewing')) return 'eye';
-  if (l.includes('feedback') || l.includes('negotiation') || l.includes('communication')) return 'chat';
-  if (l.includes('enquiry') || l.includes('screening') || l.includes('application')) return 'userCheck';
-  if (l.includes('compliance') || l.includes('gas safety') || l.includes('eicr') || l.includes('epc')) return 'shieldCheck';
-  if (l.includes('right to rent') || l.includes('prescribed') || l.includes('registration')) return 'shieldId';
-  if (l.includes('credit') || l.includes('affordability')) return 'chart';
-  if (l.includes('reference') || l.includes('employment')) return 'doc';
-  if (l.includes('guarantor') || l.includes('team') || l.includes('dedicated')) return 'users';
-  if (l.includes('agreement')) return 'doc';
-  if (l.includes('utility') || l.includes('council tax')) return 'bolt';
-  if (l.includes('handover') || l.includes('demonstration') || l.includes('key holding')) return 'key';
-  if (l.includes('rent collection') || l.includes('first month') || l.includes('holding deposit') || l.includes('transfer of funds') || l.includes('deposit')) return 'pound';
-  if (l.includes('statement') || l.includes('summary') || l.includes('administration') || l.includes('reporting') || l.includes('report')) return 'doc';
-  if (l.includes('arrears')) return 'alert';
-  if (l.includes('monitoring')) return 'activity';
-  if (l.includes('rent review') || l.includes('recovery')) return 'trend';
-  if (l.includes('maintenance') || l.includes('repair') || l.includes('contractor') || l.includes('quotation')) return 'wrench';
-  if (l.includes('emergency')) return 'alert';
-  if (l.includes('inspection')) return 'clipboard';
-  if (l.includes('legal') || l.includes('eviction') || l.includes('protection') || l.includes('guarantee') || l.includes('cover')) return 'umbrella';
-  if (l.includes('priority')) return 'bolt';
-  if (l.includes('continuation') || l.includes('re-marketing')) return 'refresh';
-  if (l.includes('schedule') || l.includes('reminder')) return 'calendar';
-  if (l.includes('verification') || l.includes('authorisation') || l.includes('assessment')) return 'clipboard';
-  return 'check';
+  for (const [kw, key] of ICON_KEYWORDS) if (l.includes(kw)) return key;
+  return 'badge-check';
 }
-
-const ICON_PATHS: Record<IconKey, JSX.Element> = {
-  camera: <><path d="M3 8h3l2-2h8l2 2h3v11H3z" /><circle cx="12" cy="13" r="3.4" /></>,
-  layout: <><rect x="3" y="3" width="18" height="18" rx="2" /><path d="M3 9h18M9 9v12" /></>,
-  chart: <><path d="M3 3v18h18" /><path d="M7 15l3-3 3 2 5-6" /></>,
-  megaphone: <><path d="M3 11v2l14 5V6L3 11z" /><path d="M17 8.5a3.5 3.5 0 010 7" /></>,
-  eye: <><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7-10-7-10-7z" /><circle cx="12" cy="12" r="3" /></>,
-  chat: <><path d="M4 5h16v11H8l-4 4z" /></>,
-  userCheck: <><circle cx="9" cy="8" r="3.4" /><path d="M3 20a6 6 0 0112 0" /><path d="M15.5 12.5l2 2 4-4" /></>,
-  shieldCheck: <><path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6l8-3z" /><path d="M8.5 12l2.5 2.5 5-5" /></>,
-  shieldId: <><path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6l8-3z" /><circle cx="12" cy="10" r="1.9" /><path d="M8.5 16a3.5 3.5 0 017 0" /></>,
-  doc: <><path d="M6 2h8l4 4v16H6z" /><path d="M14 2v4h4" /><path d="M9 13h6M9 17h4" /></>,
-  users: <><circle cx="8" cy="9" r="3" /><path d="M2 20a6 6 0 0112 0" /><path d="M16 6.2a3 3 0 010 5.6M22 20a6 6 0 00-6-6" /></>,
-  bolt: <><path d="M13 2L4 14h6l-1 8 9-12h-6z" /></>,
-  key: <><circle cx="8" cy="8" r="4" /><path d="M11 11l9 9M17 17l2-2M14.5 19.5l2-2" /></>,
-  pound: <><circle cx="12" cy="12" r="9" /><path d="M9.5 16.5h5M9 12.5h4.5M13.7 8.4a2.5 2.5 0 00-4.2 1.8c0 3-1 4.6-1.3 4.9" /></>,
-  activity: <><path d="M3 12h4l2 6 4-12 2 6h6" /></>,
-  trend: <><path d="M3 17l6-6 4 4 8-8" /><path d="M15 7h6v6" /></>,
-  wrench: <><path d="M21 4a5 5 0 01-6.5 6.5L6 19a2.1 2.1 0 01-3-3l8.5-8.5A5 5 0 0116 4h5z" /></>,
-  alert: <><path d="M12 3l10 18H2z" /><path d="M12 10v5M12 18h.01" /></>,
-  clipboard: <><rect x="6" y="4" width="12" height="17" rx="2" /><path d="M9.5 4V3h5v1" /><path d="M9 12l2 2 4-4" /></>,
-  umbrella: <><path d="M12 3v2M3 12a9 9 0 0118 0z M12 12v6.5a2 2 0 01-4 0" /></>,
-  refresh: <><path d="M20.5 11a8.5 8.5 0 10-2 6" /><path d="M20.5 4.5V11H14" /></>,
-  calendar: <><rect x="3" y="5" width="18" height="16" rx="2" /><path d="M3 10h18M8 3v4M16 3v4" /></>,
-  check: <><circle cx="12" cy="12" r="9" /><path d="M8 12l3 3 5-6" /></>,
-};
 
 function ServiceIcon({ label }: { label: string }) {
   return (

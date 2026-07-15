@@ -1409,11 +1409,11 @@ export default function HomePage() {
                   <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.65)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 10, fontFamily: "'Poppins', sans-serif" }}>
                     {isMgmt ? 'Ongoing fee' : 'One time fee'}
                   </div>
-                  <div style={{ fontFamily: "'Poppins', sans-serif", fontSize: 'clamp(28px,3vw,40px)', fontWeight: 700, color: popular ? '#4a90d9' : '#fff', lineHeight: 1, marginBottom: 6 }}>
+                  <div style={{ fontFamily: "'Poppins', sans-serif", fontSize: 'clamp(28px,3vw,40px)', fontWeight: 700, color: 'var(--price-green)', lineHeight: 1, marginBottom: 6 }}>
                     {isMgmt ? b.mgmtFee : b.setupFee}
-                    {isMgmt && <span style={{ fontSize: 14, fontWeight: 600, marginLeft: 5 }}>of rent</span>}
+                    {isMgmt && <span style={{ fontSize: 14, fontWeight: 700, marginLeft: 5, color: 'var(--price-green-bright)' }}>of rent</span>}
                   </div>
-                  <div style={{ fontFamily: "'Poppins', sans-serif", fontSize: 11.5, color: 'rgba(255,255,255,0.6)', marginBottom: 12 }}>
+                  <div style={{ fontFamily: "'Poppins', sans-serif", fontSize: 11.5, fontWeight: 700, color: 'var(--price-green-bright)', marginBottom: 12 }}>
                     {isMgmt ? `${b.setupFee} one time fee` : 'No ongoing fee'}
                   </div>
                   <div style={{ fontFamily: "'Poppins', sans-serif", fontSize: 13, fontWeight: 700, color: '#fff', lineHeight: 1.4 }}>

@@ -371,11 +371,12 @@ export default function PricingPage() {
         .pr-fee-row td { border-top:1px solid #e5e7eb; }
         .pr-fee-label { font-weight:700 !important; color:#0f1f3d !important; font-size:11.5px !important;
           text-transform:uppercase; letter-spacing:.05em; background:#e8f0fb !important; }
-        .pr-fee-cell { width:112px; min-width:112px; text-align:center; font-weight:800; color:#0f1f3d;
+        /* Price figures are the additional-services green (#16a34a) site-wide. */
+        .pr-fee-cell { width:112px; min-width:112px; text-align:center; font-weight:800; color:var(--price-green-ink);
           font-size:16px; padding:12px 0; border-left:1px solid #e5e7eb; background:#f0f6ff; }
         .pr-fee-onetime .pr-fee-label { background:#dbe8fb !important; }
         .pr-fee-onetime .pr-fee-cell { background:#e8f0fb; }
-        .pr-fee-ongoing .pr-fee-cell { color:#2563eb; }
+        .pr-fee-ongoing .pr-fee-cell { color:var(--price-green-ink); }
         .pr-fee-cell.pr-hot { background:#d6e6ff !important; }
         thead th.pr-hot { background:#1c3a63 !important; }
         .pr-hot { background:#eff5ff !important; }
@@ -429,9 +430,9 @@ export default function PricingPage() {
           border:1.5px solid #dbe2ea; background:#fff; color:#374151;
           border-radius:14px; padding:9px 16px 8px; cursor:pointer; white-space:nowrap; text-align:center; transition:all .15s ease; }
         .pr-mc-pill-name { display:block; font-size:13.5px; font-weight:700; line-height:1.2; }
-        .pr-mc-pill-fee { display:block; font-size:10.5px; font-weight:600; opacity:.6; margin-top:2px; }
+        .pr-mc-pill-fee { display:block; font-size:10.5px; font-weight:700; color:var(--price-green-ink); margin-top:2px; }
         .pr-mc-pill.active { background:#2563eb; border-color:#2563eb; color:#fff; box-shadow:0 8px 18px -8px rgba(37,99,235,.6); }
-        .pr-mc-pill.active .pr-mc-pill-fee { opacity:.85; }
+        .pr-mc-pill.active .pr-mc-pill-fee { color:#fff; opacity:.9; }
         .pr-mc-dot { position:absolute; top:6px; right:9px; width:6px; height:6px; border-radius:50%; background:#f59e0b; }
         .pr-mc-pill.active .pr-mc-dot { background:#fff; }
         .pr-mc-card { background:#fff; border:1px solid #e5e7eb; border-radius:16px; overflow:hidden;
@@ -449,7 +450,7 @@ export default function PricingPage() {
         .pr-mc-fees > div { flex:1; background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.14);
           border-radius:10px; padding:10px 12px; }
         .pr-mc-fees span { display:block; font-size:10.5px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:#a9c4ea; margin-bottom:3px; }
-        .pr-mc-fees b { font-size:18px; font-weight:800; }
+        .pr-mc-fees b { font-size:18px; font-weight:800; color:var(--price-green-bright); }
         .pr-mc-body { padding:20px 20px 4px; }
         .pr-mc-blurb { font-size:14px; color:#5b6472; line-height:1.75; margin:0 0 20px; }
         .pr-mc-sublabel { display:flex; align-items:baseline; justify-content:space-between; gap:10px;
@@ -544,9 +545,9 @@ export default function PricingPage() {
           background:#fff; border-radius:999px; padding:4px 11px; }
         .pr-vis-name { position:relative; font-size:clamp(20px,2.2vw,25px); font-weight:800; line-height:1.15; margin-bottom:16px; }
         .pr-vis-price { position:relative; display:flex; align-items:baseline; gap:9px; }
-        .pr-vis-fee { font-size:clamp(34px,4.4vw,44px); font-weight:800; letter-spacing:-.02em; line-height:1; }
+        .pr-vis-fee { font-size:clamp(34px,4.4vw,44px); font-weight:800; letter-spacing:-.02em; line-height:1; color:var(--price-green); }
         .pr-vis-per { font-size:12.5px; font-weight:500; color:#a9c4ea; }
-        .pr-vis-ongoing { position:relative; font-size:13px; font-weight:700; color:#7db4f0; margin-top:8px; }
+        .pr-vis-ongoing { position:relative; font-size:13px; font-weight:700; color:var(--price-green-bright); margin-top:8px; }
         .pr-vis-ongoing.pr-vis-none { color:#8fa6c9; font-weight:600; }
         .pr-vis-div { position:relative; height:1px; background:rgba(255,255,255,.12); margin:20px 0 16px; }
         .pr-vis-label { position:relative; font-size:10.5px; font-weight:700; letter-spacing:.12em; text-transform:uppercase;
@@ -557,6 +558,9 @@ export default function PricingPage() {
         .pr-vis-tick { flex:none; width:20px; height:20px; border-radius:50%; background:rgba(74,222,128,.16);
           display:inline-flex; align-items:center; justify-content:center; margin-top:1px; }
         .pr-vis-tick svg { width:11px; height:11px; stroke:#4ade80; stroke-width:3; fill:none; stroke-linecap:round; stroke-linejoin:round; }
+        /* The Most Popular panel's gradient starts at brand blue, and the standard
+           price green on blue measures 1.6:1. Use the bright shade there. */
+        .pr-vis--hot .pr-vis-fee, .pr-vis--hot .pr-vis-ongoing { color:var(--price-green-bright); }
         .pr-vis--hot .pr-vis-tick { background:rgba(255,255,255,.18); }
         .pr-vis--hot .pr-vis-tick svg { stroke:#fff; }
 
@@ -787,7 +791,7 @@ export default function PricingPage() {
                 onClick={() => setMobileTab(i)}
               >
                 <span className="pr-mc-pill-name">{p.short}</span>
-                <span className="pr-mc-pill-fee">{p.setupFee}{p.mgmtFee ? ` + ${p.mgmtFee}` : ''}</span>
+                <span className="pr-mc-pill-fee">{p.mgmtFee ? `${p.mgmtFee} + ${p.setupFee}` : p.setupFee}</span>
                 {p.badge && <span className="pr-mc-dot" aria-hidden />}
               </button>
             ))}

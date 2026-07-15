@@ -340,7 +340,8 @@ export default function PackageDetailPage({ params }: { params: { slug: string }
                 </>
               )}
               <div className={styles.stat}>
-                <span className={styles.statK}>{totalIncluded}<small> / {TOTAL_SERVICES}</small></span>
+                {/* A count, not a price, so it keeps the navy rather than the green. */}
+                <span className={`${styles.statK} ${styles.statKPlain}`}>{totalIncluded}<small> / {TOTAL_SERVICES}</small></span>
                 <span className={styles.statV}>Services included</span>
               </div>
             </div>

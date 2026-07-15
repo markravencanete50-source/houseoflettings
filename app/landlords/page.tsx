@@ -288,7 +288,8 @@ export default function LandlordsPage() {
             text-transform:uppercase; background:#2563eb; color:#fff; border-radius:999px; padding:2px 8px; }
           .ll-price-kd { display:block; font-family:'Poppins',sans-serif; font-size:11.5px; color:#8fa6c9; margin-top:3px; }
           .ll-price-fig { text-align:right; flex:none; }
-          .ll-price-fig b { display:block; font-family:'Poppins',sans-serif; font-size:18px; font-weight:800; color:#fff; }
+          /* Price figures are the additional-services green (#16a34a) site-wide. */
+          .ll-price-fig b { display:block; font-family:'Poppins',sans-serif; font-size:18px; font-weight:800; color:var(--price-green-bright); }
           .ll-price-fig span { font-family:'Poppins',sans-serif; font-size:11px; color:#a9c4ea; }
           .ll-price-cta { display:inline-block; margin-top:20px; font-family:'Poppins',sans-serif;
             font-size:13px; font-weight:700; color:#4a90d9; text-decoration:none; }
@@ -428,8 +429,8 @@ export default function LandlordsPage() {
             .ll-svc-tab.active { background: linear-gradient(135deg,#2563eb,#1d4ed8);
               border-color: #2563eb; color: #fff; box-shadow: 0 12px 26px -12px rgba(37,99,235,.7); }
             .ll-svc-tab-name { font-size: 14px; font-weight: 700; }
-            .ll-svc-tab-fee { font-size: 11px; font-weight: 600; opacity: .68; }
-            .ll-svc-tab.active .ll-svc-tab-fee { opacity: .9; }
+            .ll-svc-tab-fee { font-size: 11px; font-weight: 700; color: var(--price-green-bright); }
+            .ll-svc-tab.active .ll-svc-tab-fee { color: #fff; opacity: .9; }
             .ll-svc-tab-dot { position: absolute; top: 8px; right: 10px; width: 6px; height: 6px;
               border-radius: 50%; background: #f59e0b; }
             .ll-svc-tab.active .ll-svc-tab-dot { background: #fff; }
@@ -457,8 +458,8 @@ export default function LandlordsPage() {
               line-height: 1.8; margin: 0 0 24px; }
             .ll-svc-price { display: flex; align-items: center; gap: 20px; margin-bottom: 26px; }
             .ll-svc-price > div { display: flex; flex-direction: column; }
-            .ll-svc-price b { font-family: 'Poppins', sans-serif; font-size: 30px; font-weight: 800; color: #fff; line-height: 1; }
-            .ll-svc-price b.accent { color: #4a90d9; }
+            .ll-svc-price b { font-family: 'Poppins', sans-serif; font-size: 30px; font-weight: 800; color: var(--price-green); line-height: 1; }
+            .ll-svc-price b.accent { color: var(--price-green); }
             .ll-svc-price span { font-family: 'Poppins', sans-serif; font-size: 11px; font-weight: 600; letter-spacing: .04em;
               text-transform: uppercase; color: rgba(255,255,255,.5); margin-top: 6px; }
             .ll-svc-price-sep { width: 1px; height: 42px; background: rgba(255,255,255,.14); }

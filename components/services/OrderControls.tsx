@@ -12,11 +12,22 @@ import {
 const BLUE = '#2563eb';
 const GREEN = '#16a34a';
 
+// The site-standard CTA size, matching components/layout/ServiceHero.module.css
+// (.btn), so "Add to order" matches every other button on the page.
+const CTA_STYLE: React.CSSProperties = {
+  display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 9,
+  boxSizing: 'border-box', minHeight: 48, lineHeight: 1.2,
+  padding: '14px 28px', border: '1.5px solid transparent', borderRadius: 9,
+  fontFamily: "'Poppins', sans-serif", fontSize: 13.5, fontWeight: 700,
+  letterSpacing: '.02em', textTransform: 'uppercase',
+};
+
 function Stepper({ value, min, max, onChange }: { value: number; min: number; max: number; onChange: (v: number) => void }) {
+  // Square icon buttons, sized to the 44px tap-target minimum.
   const btn: React.CSSProperties = {
-    width: 30, height: 30, borderRadius: 7, border: '1.5px solid #dbe2ea', background: '#fff',
+    width: 44, height: 44, borderRadius: 9, border: '1.5px solid #dbe2ea', background: '#fff',
     color: '#0a162f', fontSize: 17, fontWeight: 700, cursor: 'pointer', lineHeight: 1, display: 'flex',
-    alignItems: 'center', justifyContent: 'center',
+    alignItems: 'center', justifyContent: 'center', boxSizing: 'border-box', flexShrink: 0,
   };
   return (
     <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
@@ -122,9 +133,8 @@ export default function OrderControls({ serviceId }: { serviceId: string }) {
           </div>
         </div>
         <button type="button" onClick={add} style={{
-          padding: '13px 26px', background: added ? '#15803d' : GREEN, color: '#fff', border: 'none',
-          borderRadius: 9, fontSize: 14, fontWeight: 700, cursor: 'pointer', letterSpacing: '0.02em',
-          transition: 'background .18s', fontFamily: "'Poppins', sans-serif",
+          ...CTA_STYLE, background: added ? '#15803d' : GREEN, color: '#fff',
+          cursor: 'pointer', transition: 'background .18s',
         }}>
           {added ? 'Added to order ✓' : 'Add to order'}
         </button>

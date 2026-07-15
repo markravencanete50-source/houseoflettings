@@ -125,7 +125,7 @@ export default function LandlordRegistrationPage() {
               ))}
             </div>
             <div style={{ textAlign: 'center', marginTop: 40 }}>
-              <Link href="/pricing" style={{ display: 'inline-block', padding: '13px 32px', background: 'transparent', color: '#fff', border: '1.5px solid rgba(255,255,255,0.4)', borderRadius: 6, fontSize: 13, fontWeight: 700, letterSpacing: '0.5px', textTransform: 'uppercase', textDecoration: 'none' }}>
+              <Link href="/pricing" className="hol-hero-cta" style={{ background: 'transparent', borderColor: 'rgba(255,255,255,0.4)' }}>
                 Compare All Bundles
               </Link>
             </div>
@@ -210,7 +210,7 @@ const PAGE_CSS = `
   .hol-eyebrow { font-size:11px; font-weight:700; letter-spacing:3px; text-transform:uppercase; color:#2563eb; margin-bottom:14px; font-family:'Poppins',sans-serif; }
   .hol-h2 { font-family:'Poppins',sans-serif; font-size:clamp(26px,3.6vw,42px); font-weight:700; color:#0f1f3d; line-height:1.2; margin:0; }
 
-  .hol-hero-cta { display:inline-flex; align-items:center; gap:8px; background:#2563eb; color:#fff; text-decoration:none; font-family:'Poppins',sans-serif; font-size:14px; font-weight:700; letter-spacing:.5px; text-transform:uppercase; padding:15px 34px; border-radius:8px; transition:background .2s,transform .2s; }
+  .hol-hero-cta { display:inline-flex; align-items:center; justify-content:center; gap:9px; box-sizing:border-box; min-height:48px; line-height:1.2; background:#2563eb; color:#fff; text-decoration:none; font-family:'Poppins',sans-serif; font-size:13.5px; font-weight:700; letter-spacing:.02em; text-transform:uppercase; padding:14px 28px; border:1.5px solid transparent; border-radius:9px; transition:background .2s,transform .2s; }
   .hol-hero-cta:hover { background:#1d4ed8; transform:translateY(-2px); }
 
   .hol-why-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:22px; }

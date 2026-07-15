@@ -6,6 +6,17 @@ import Link from 'next/link';
 import { useCart } from '@/components/services/CartProvider';
 import { anyFrom, formatGBP } from '@/lib/serviceCart';
 
+// The site-standard CTA size, matching components/layout/ServiceHero.module.css
+// (.btn). Both bar buttons share it so they measure the same side by side.
+const CTA_STYLE: React.CSSProperties = {
+  display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 9,
+  boxSizing: 'border-box', minHeight: 48, lineHeight: 1.2,
+  padding: '14px 28px', border: '1.5px solid transparent', borderRadius: 9,
+  fontFamily: "'Poppins', sans-serif", fontSize: 13.5, fontWeight: 700,
+  letterSpacing: '.02em', textTransform: 'uppercase', textDecoration: 'none',
+  whiteSpace: 'nowrap',
+};
+
 export default function CartBar() {
   const { items, count, total, ready, clear } = useCart();
   if (!ready || count === 0) return null;
@@ -39,17 +50,15 @@ export default function CartBar() {
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexShrink: 0 }}>
           <button type="button" onClick={cancel} style={{
+            ...CTA_STYLE,
             background: 'transparent', color: '#fff', cursor: 'pointer',
-            border: '1.5px solid rgba(255,255,255,0.35)', borderRadius: 9,
-            padding: '13px 20px', fontSize: 14, fontWeight: 600, letterSpacing: '0.02em',
-            whiteSpace: 'nowrap', fontFamily: "'Poppins', sans-serif",
+            borderColor: 'rgba(255,255,255,0.35)',
           }}>
             Cancel order
           </button>
           <Link href="/additional-services/checkout" style={{
-            background: '#16a34a', color: '#fff', textDecoration: 'none',
-            padding: '14px 30px', borderRadius: 9, fontSize: 14.5, fontWeight: 700, letterSpacing: '0.02em',
-            whiteSpace: 'nowrap',
+            ...CTA_STYLE,
+            background: '#16a34a', color: '#fff',
           }}>
             Proceed to checkout →
           </Link>

@@ -194,11 +194,16 @@ function ListingsContent() {
         .lst-field { display:flex; flex-direction:column; gap:6px; min-width:0; }
         .lst-field--wide { grid-column:span 2; }
         .lst-actions { display:flex; gap:12px; flex-wrap:wrap; align-items:center; margin-top:16px; }
-        .lst-btn { padding:12px 24px; border:none; border-radius:4px; font-size:13px; font-weight:600;
-          text-transform:uppercase; letter-spacing:.5px; cursor:pointer; }
+        /* Site-standard CTA size (as components/layout/ServiceHero.module.css .btn).
+           The transparent border keeps apply/ghost exactly the same height. */
+        .lst-btn { display:inline-flex; align-items:center; justify-content:center; gap:9px;
+          box-sizing:border-box; min-height:48px; line-height:1.2;
+          padding:14px 28px; border:1.5px solid transparent; border-radius:9px;
+          font-size:13.5px; font-weight:700;
+          text-transform:uppercase; letter-spacing:.02em; cursor:pointer; }
         .lst-btn--apply { background:var(--black); color:#fff; transition:background .2s; }
         .lst-btn--apply:hover { background:var(--red); }
-        .lst-btn--ghost { background:transparent; color:var(--gray-600); border:1px solid var(--gray-200); }
+        .lst-btn--ghost { background:transparent; color:var(--gray-600); border-color:var(--gray-200); }
         .lst-more { background:none; border:none; color:var(--red); font-size:13px; font-weight:600;
           cursor:pointer; display:inline-flex; align-items:center; gap:6px; padding:12px 4px; }
         .lst-hint { font-size:12px; color:var(--gray-400); margin-top:4px; }

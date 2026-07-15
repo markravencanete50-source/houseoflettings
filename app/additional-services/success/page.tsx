@@ -5,6 +5,16 @@ import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import Navbar from '@/components/layout/Navbar';
 
+// The site-standard CTA size, matching components/layout/ServiceHero.module.css
+// (.btn). Every call-to-action is this size.
+const CTA_STYLE: React.CSSProperties = {
+  display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 9,
+  boxSizing: 'border-box', minHeight: 48, lineHeight: 1.2,
+  padding: '14px 28px', border: '1.5px solid transparent', borderRadius: 9,
+  fontFamily: "'Poppins', sans-serif", fontSize: 13.5, fontWeight: 700,
+  letterSpacing: '.02em', textTransform: 'uppercase', textDecoration: 'none',
+};
+
 function SuccessInner() {
   const params = useSearchParams();
   const ref = params.get('ref') || '';
@@ -19,8 +29,8 @@ function SuccessInner() {
           </p>
           {ref && <p style={{ color: '#64748b', fontSize: 13, margin: '0 0 26px' }}>Your reference: <strong style={{ color: '#0a162f' }}>{ref}</strong></p>}
           <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
-            <Link href="/additional-services" style={{ background: '#2563eb', color: '#fff', textDecoration: 'none', padding: '13px 26px', borderRadius: 9, fontSize: 14, fontWeight: 700 }}>Order more services</Link>
-            <Link href="/" style={{ background: 'transparent', color: '#0a162f', textDecoration: 'none', padding: '13px 26px', borderRadius: 9, fontSize: 14, fontWeight: 700, border: '1.5px solid #dbe2ea' }}>Back to home</Link>
+            <Link href="/additional-services" style={{ ...CTA_STYLE, background: '#2563eb', color: '#fff' }}>Order more services</Link>
+            <Link href="/" style={{ ...CTA_STYLE, background: 'transparent', color: '#0a162f', borderColor: '#dbe2ea' }}>Back to home</Link>
           </div>
         </div>
       </div>

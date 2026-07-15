@@ -146,10 +146,12 @@ export default function BookValuationPage() {
                 Our team will be in touch within 24 hours to confirm your appointment.
               </p>
               <Link href="/" style={{
-                display: 'inline-block', padding: '13px 28px',
+                display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 9,
+                boxSizing: 'border-box', minHeight: 48, lineHeight: 1.2,
+                padding: '14px 28px', border: '1.5px solid transparent', borderRadius: 9,
                 background: 'linear-gradient(135deg,#1a3c5e 0%,#2563a8 100%)',
-                color: '#fff', borderRadius: 10, fontSize: 14, fontWeight: 600,
-                textDecoration: 'none',
+                color: '#fff', fontSize: 13.5, fontWeight: 700,
+                letterSpacing: '.02em', textTransform: 'uppercase', textDecoration: 'none',
               }}>
                 Back to Home
               </Link>

@@ -400,7 +400,7 @@ export default function LandlordRegistrationApplyPage() {
                 {properties.length > 1 ? ` and ${properties.length - 1} other propert${properties.length - 1 === 1 ? 'y' : 'ies'}` : ''}.
               </p>
               <p style={{ fontSize: 13, color: '#9ca3af', marginBottom: 28 }}>Our lettings team will be in touch within 24-48 hours with your tailored proposal.</p>
-              <Link href="/" style={{ display: 'inline-block', padding: '13px 28px', background: 'linear-gradient(135deg,#1a3c5e 0%,#2563a8 100%)', color: '#fff', borderRadius: 10, fontSize: 14, fontWeight: 600, textDecoration: 'none' }}>Back to Home</Link>
+              <Link href="/" className="hol-submit" style={{ margin: '0 auto' }}>Back to Home</Link>
             </div>
           ) : (
             <div style={{ background: '#fff', borderRadius: 16, boxShadow: '0 4px 32px rgba(0,0,0,0.07)', overflow: 'hidden' }}>
@@ -1244,9 +1244,11 @@ const PAGE_CSS = `
   .hol-terms-accept:has(input:checked) .hol-checkbox{background:#2563a8;border-color:#2563a8;}
 
   .hol-wizard-nav{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-top:28px;padding-top:22px;border-top:1px solid #f1f3f7;}
-  .hol-btn-ghost{background:none;border:1.5px solid #e5e7eb;border-radius:10px;padding:12px 20px;font-family:'Poppins',sans-serif;font-size:14px;font-weight:600;color:#374151;cursor:pointer;transition:all .15s;}
+  /* Back / Continue are a pair: both carry the site-standard CTA size so they
+     measure identically side by side (as components/layout/ServiceHero .btn). */
+  .hol-btn-ghost{display:inline-flex;align-items:center;justify-content:center;gap:9px;box-sizing:border-box;min-height:48px;line-height:1.2;background:none;border:1.5px solid #e5e7eb;border-radius:9px;padding:14px 28px;font-family:'Poppins',sans-serif;font-size:13.5px;font-weight:700;letter-spacing:.02em;text-transform:uppercase;color:#374151;cursor:pointer;transition:all .15s;}
   .hol-btn-ghost:hover:not(:disabled){border-color:#cbd5e1;background:#f9fafb;}
-  .hol-submit{display:inline-flex;align-items:center;gap:8px;background:linear-gradient(135deg,#1a3c5e 0%,#2563a8 100%);color:#fff;border:none;border-radius:10px;font-family:'Poppins',sans-serif;font-size:14px;font-weight:600;padding:13px 26px;cursor:pointer;transition:opacity .15s,transform .15s,box-shadow .15s;box-shadow:0 4px 16px rgba(37,99,168,.35);white-space:nowrap;margin-left:auto;}
+  .hol-submit{display:inline-flex;align-items:center;justify-content:center;gap:9px;box-sizing:border-box;min-height:48px;line-height:1.2;background:linear-gradient(135deg,#1a3c5e 0%,#2563a8 100%);color:#fff;border:1.5px solid transparent;border-radius:9px;font-family:'Poppins',sans-serif;font-size:13.5px;font-weight:700;letter-spacing:.02em;text-transform:uppercase;padding:14px 28px;cursor:pointer;transition:opacity .15s,transform .15s,box-shadow .15s;box-shadow:0 4px 16px rgba(37,99,168,.35);white-space:nowrap;margin-left:auto;}
   .hol-submit:hover:not(:disabled){opacity:.92;transform:translateY(-1px);box-shadow:0 6px 20px rgba(37,99,168,.45);}
   .hol-submit:disabled{opacity:.7;cursor:not-allowed;}
   .hol-spinner{animation:hol-spin .8s linear infinite;}

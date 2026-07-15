@@ -6,6 +6,16 @@ import Navbar from '@/components/layout/Navbar';
 import { getAllProperties } from '@/services/admin';
 import { Property } from '@/lib/types';
 
+// The site-standard CTA size, matching components/layout/ServiceHero.module.css
+// (.btn). Back / Continue / Submit all share it so they measure identically.
+const CTA_STYLE: React.CSSProperties = {
+  display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 9,
+  boxSizing: 'border-box', minHeight: 48, lineHeight: 1.2,
+  padding: '14px 28px', border: '1.5px solid transparent', borderRadius: 9,
+  fontFamily: "'Poppins', sans-serif", fontSize: 13.5, fontWeight: 700,
+  letterSpacing: '.02em', textTransform: 'uppercase',
+};
+
 const inputStyle: React.CSSProperties = {
   width: '100%',
   background: '#fff',
@@ -1280,12 +1290,9 @@ export default function TenantApplicationPage() {
                 <button
                   onClick={goPrev}
                   style={{
-                    padding: '13px 24px',
+                    ...CTA_STYLE,
                     background: '#f9fafb',
-                    border: '1.5px solid #e5e7eb',
-                    borderRadius: 8,
-                    fontSize: 14,
-                    fontWeight: 600,
+                    borderColor: '#e5e7eb',
                     color: '#374151',
                     cursor: 'pointer',
                     flex: isMobile ? 1 : undefined,
@@ -1299,12 +1306,8 @@ export default function TenantApplicationPage() {
                 <button
                   onClick={goNext}
                   style={{
-                    padding: '13px 28px',
+                    ...CTA_STYLE,
                     background: '#2563eb',
-                    border: 'none',
-                    borderRadius: 8,
-                    fontSize: 14,
-                    fontWeight: 700,
                     color: '#fff',
                     cursor: 'pointer',
                     flex: isMobile ? 1 : undefined,
@@ -1317,12 +1320,8 @@ export default function TenantApplicationPage() {
                   onClick={handleSubmit}
                   disabled={submitting}
                   style={{
-                    padding: '13px 28px',
+                    ...CTA_STYLE,
                     background: submitting ? '#93c5fd' : '#16a34a',
-                    border: 'none',
-                    borderRadius: 8,
-                    fontSize: 14,
-                    fontWeight: 700,
                     color: '#fff',
                     cursor: submitting ? 'not-allowed' : 'pointer',
                     flex: isMobile ? 1 : undefined,

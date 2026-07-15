@@ -90,10 +90,14 @@ export default function CookieBanner() {
           justify-content: center;
           flex-wrap: wrap;
         }
+        /* Site-standard CTA size (as ServiceHero .btn). The pill radius is kept:
+           it is this overlay's own look, only the size is standardised. */
         .hol-cookie-btn {
-          padding: 14px 36px;
+          display: inline-flex; align-items: center; justify-content: center;
+          box-sizing: border-box; min-height: 48px; line-height: 1.2;
+          padding: 14px 28px;
           border-radius: 999px;
-          font-size: 15px; font-weight: 600;
+          font-size: 13.5px; font-weight: 700; letter-spacing: .02em;
           cursor: pointer;
           transition: background 0.18s, color 0.18s, border-color 0.18s, transform 0.15s;
           min-width: 140px;

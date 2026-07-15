@@ -502,9 +502,13 @@ export default function MaintenanceReportPage() {
               onClick={handleSubmit}
               disabled={submitting || photos.uploading || videos.uploading}
               style={{
-                marginTop: 8, width: '100%', padding: '15px 28px',
+                display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 9,
+                boxSizing: 'border-box', minHeight: 48, lineHeight: 1.2,
+                marginTop: 8, width: '100%', padding: '14px 28px',
                 background: (submitting || photos.uploading || videos.uploading) ? '#93c5fd' : '#16a34a',
-                border: 'none', borderRadius: 8, fontSize: 15, fontWeight: 700, color: '#fff',
+                border: '1.5px solid transparent', borderRadius: 9,
+                fontFamily: "'Poppins', sans-serif", fontSize: 13.5, fontWeight: 700,
+                letterSpacing: '.02em', textTransform: 'uppercase', color: '#fff',
                 cursor: (submitting || photos.uploading || videos.uploading) ? 'not-allowed' : 'pointer',
               }}
             >

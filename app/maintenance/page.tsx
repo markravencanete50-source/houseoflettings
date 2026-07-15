@@ -198,8 +198,12 @@ export default function MaintenancePage() {
           <a
             href="/maintenance/report"
             style={{
-              display: 'inline-block', background: '#2563eb', color: '#fff', padding: '15px 38px', borderRadius: 8,
-              fontWeight: 700, fontSize: 15, textDecoration: 'none', letterSpacing: '0.02em',
+              display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 9,
+              boxSizing: 'border-box', minHeight: 48, lineHeight: 1.2,
+              background: '#2563eb', color: '#fff', padding: '14px 28px',
+              border: '1.5px solid transparent', borderRadius: 9,
+              fontWeight: 700, fontSize: 13.5, textDecoration: 'none',
+              letterSpacing: '0.02em', textTransform: 'uppercase',
             }}
           >
             🔧 Report a Maintenance Issue

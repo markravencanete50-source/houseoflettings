@@ -293,16 +293,22 @@ export default function BookViewingPage() {
                       style={{
                         background: loading ? "#93c5fd" : "#1e3a5f",
                         color: "#fff",
-                        border: "none",
-                        borderRadius: 8,
-                        padding: "13px 28px",
-                        fontSize: 15,
+                        border: "1.5px solid transparent",
+                        borderRadius: 9,
+                        boxSizing: "border-box",
+                        minHeight: 48,
+                        lineHeight: 1.2,
+                        padding: "14px 28px",
+                        fontSize: 13.5,
                         fontWeight: 700,
+                        letterSpacing: ".02em",
+                        textTransform: "uppercase",
                         cursor: loading ? "not-allowed" : "pointer",
                         transition: "background 0.2s",
-                        display: "flex",
+                        display: "inline-flex",
                         alignItems: "center",
-                        gap: 8,
+                        justifyContent: "center",
+                        gap: 9,
                       }}
                     >
                       {!loading && <span>→</span>}

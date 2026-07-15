@@ -403,8 +403,9 @@ export default function PricingPage() {
         .pr-chev.up { transform:rotate(-135deg) translateY(-1px); }
         .pr-cta-row td { padding:16px 10px 20px; text-align:center; border-top:2px solid #eef1f5; background:#fff; }
         .pr-cta-row td:first-child { position:sticky; left:0; background:#fff; }
-        .pr-btn { display:inline-flex; align-items:center; justify-content:center;
-          box-sizing:border-box; min-height:44px; font-size:12px; font-weight:700; padding:9px 16px; border-radius:8px;
+        .pr-btn { display:inline-flex; align-items:center; justify-content:center; gap:9px;
+          box-sizing:border-box; min-height:48px; line-height:1.2;
+          font-size:13.5px; font-weight:700; padding:14px 28px; border-radius:9px;
           border:1.5px solid #2563eb; color:#2563eb; background:transparent; transition:all .15s ease;
           white-space:nowrap; cursor:pointer; text-transform:uppercase; letter-spacing:.02em; }
         .pr-btn:hover { background:#2563eb; color:#fff; }
@@ -466,14 +467,18 @@ export default function PricingPage() {
         .pr-mc-bar { height:6px; border-radius:999px; background:#e8eef7; overflow:hidden; }
         .pr-mc-bar i { display:block; height:100%; border-radius:999px;
           background:linear-gradient(90deg,#2563eb,#4a90d9); transition:width .35s ease; }
-        .pr-mc-all { display:flex; align-items:center; justify-content:center; gap:8px; margin:20px 0 4px;
-          padding:13px 16px; border:1.5px solid #2563eb; border-radius:9px; color:#2563eb;
-          font-size:13.5px; font-weight:700; text-decoration:none; text-align:center; line-height:1.3; }
+        .pr-mc-all { display:flex; align-items:center; justify-content:center; gap:9px; margin:20px 0 4px;
+          box-sizing:border-box; min-height:48px; line-height:1.2;
+          padding:14px 28px; border:1.5px solid #2563eb; border-radius:9px; color:#2563eb;
+          font-size:13.5px; font-weight:700; letter-spacing:.02em; text-transform:uppercase;
+          text-decoration:none; text-align:center; }
         .pr-mc-all svg { flex:none; }
         .pr-mc-all:hover { background:#2563eb; color:#fff; }
         .pr-mc-cta { padding:18px; }
-        .pr-mc-cta button { width:100%; padding:15px; background:#2563eb; color:#fff; border:none; border-radius:9px;
-          font-size:14px; font-weight:700; text-transform:uppercase; letter-spacing:.03em; cursor:pointer; transition:background .18s ease; }
+        .pr-mc-cta button { display:inline-flex; align-items:center; justify-content:center; gap:9px;
+          width:100%; box-sizing:border-box; min-height:48px; line-height:1.2;
+          padding:14px 28px; background:#2563eb; color:#fff; border:1.5px solid transparent; border-radius:9px;
+          font-size:13.5px; font-weight:700; text-transform:uppercase; letter-spacing:.02em; cursor:pointer; transition:background .18s ease; }
         .pr-mc-cta button:hover { background:#1d4ed8; }
         .pr-mc-foot { text-align:center; font-size:12px; color:#9ca3af; margin:14px 4px 0; line-height:1.6; }
 

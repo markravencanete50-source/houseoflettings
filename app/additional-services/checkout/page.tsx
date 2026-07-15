@@ -22,6 +22,16 @@ const INSPECTION_SERVICE_IDS = new Set([
 type Prop = { postcode: string; address: string };
 type Insp = { date: string; time: string; city?: City | null };
 
+// The site-standard CTA size, matching components/layout/ServiceHero.module.css
+// (.btn). Every call-to-action is this size.
+const CTA_STYLE: React.CSSProperties = {
+  display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 9,
+  boxSizing: 'border-box', minHeight: 48, lineHeight: 1.2,
+  padding: '14px 28px', border: '1.5px solid transparent', borderRadius: 9,
+  fontFamily: "'Poppins', sans-serif", fontSize: 13.5, fontWeight: 700,
+  letterSpacing: '.02em', textTransform: 'uppercase',
+};
+
 const input: React.CSSProperties = {
   width: '100%', padding: '12px 14px', background: '#fff', border: '1.5px solid #e5e7eb',
   borderRadius: 8, color: '#111827', fontSize: 14, fontFamily: "'Poppins', sans-serif",
@@ -405,7 +415,7 @@ export default function CheckoutPage() {
               <div style={{ fontSize: 46, marginBottom: 12 }}>🛒</div>
               <h2 style={{ fontSize: 22, fontWeight: 700, color: '#0a162f', marginBottom: 8 }}>Your order is empty</h2>
               <p style={{ color: '#64748b', fontSize: 15, marginBottom: 22 }}>Add one or more services to get started.</p>
-              <Link href="/additional-services" style={{ background: BLUE, color: '#fff', textDecoration: 'none', padding: '13px 28px', borderRadius: 9, fontSize: 14, fontWeight: 700 }}>Browse services</Link>
+              <Link href="/additional-services" style={{ ...CTA_STYLE, background: BLUE, color: '#fff' }}>Browse services</Link>
             </div>
           ) : (
             <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1.4fr) minmax(0,1fr)', gap: 24, alignItems: 'start' }} className="co-grid">
@@ -550,8 +560,9 @@ export default function CheckoutPage() {
                   {error && <div style={{ marginTop: 14, background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 8, padding: '11px 14px', color: '#dc2626', fontSize: 13 }}>{error}</div>}
 
                   <button onClick={submit} disabled={submitting} style={{
-                    marginTop: 16, width: '100%', padding: '15px', background: submitting ? '#86efac' : GREEN, color: '#fff', border: 'none',
-                    borderRadius: 9, fontSize: 15, fontWeight: 700, cursor: submitting ? 'wait' : 'pointer', letterSpacing: '0.02em',
+                    ...CTA_STYLE, marginTop: 16, width: '100%',
+                    background: submitting ? '#86efac' : GREEN, color: '#fff',
+                    cursor: submitting ? 'wait' : 'pointer',
                   }}>
                     {submitting ? 'Placing your order…' : `Place order · ${formatGBP(total)}`}
                   </button>
@@ -572,7 +583,10 @@ export default function CheckoutPage() {
   );
 }
 
+// Square icon buttons, sized to the 44px tap-target minimum.
 const stepBtn: React.CSSProperties = {
-  width: 28, height: 28, borderRadius: 7, border: '1.5px solid #dbe2ea', background: '#fff',
+  width: 44, height: 44, borderRadius: 9, border: '1.5px solid #dbe2ea', background: '#fff',
   color: '#0a162f', fontSize: 16, fontWeight: 700, cursor: 'pointer', lineHeight: 1,
+  boxSizing: 'border-box', flexShrink: 0,
+  display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
 };

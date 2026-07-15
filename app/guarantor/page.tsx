@@ -9,6 +9,16 @@ import { Property } from '@/lib/types';
 
 const formatGBP = (n: number) => `£${n.toLocaleString('en-GB')}`;
 
+// The site-standard CTA size, matching components/layout/ServiceHero.module.css
+// (.btn). Back / Continue / Submit all share it so they measure identically.
+const CTA_STYLE: React.CSSProperties = {
+  display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 9,
+  boxSizing: 'border-box', minHeight: 48, lineHeight: 1.2,
+  padding: '14px 28px', border: '1.5px solid transparent', borderRadius: 9,
+  fontFamily: "'Poppins', sans-serif", fontSize: 13.5, fontWeight: 700,
+  letterSpacing: '.02em', textTransform: 'uppercase',
+};
+
 /* ── shared styles (matched to the tenant-application form) ── */
 const inputStyle: React.CSSProperties = {
   width: '100%', background: '#fff', border: '1.5px solid #d1d5db', borderRadius: 8,
@@ -662,9 +672,8 @@ export default function GuarantorPage() {
                   onClick={goBack}
                   type="button"
                   style={{
-                    flex: '0 0 auto', padding: '14px 24px', background: '#fff',
-                    border: '1.5px solid #d1d5db', borderRadius: 8, fontSize: 15, fontWeight: 700,
-                    color: '#374151', cursor: 'pointer',
+                    ...CTA_STYLE, flex: '0 0 auto', background: '#fff',
+                    borderColor: '#d1d5db', color: '#374151', cursor: 'pointer',
                   }}
                 >
                   ← Back
@@ -675,8 +684,8 @@ export default function GuarantorPage() {
                   onClick={goNext}
                   type="button"
                   style={{
-                    flex: 1, padding: '14px 24px', background: '#2563eb',
-                    border: 'none', borderRadius: 8, fontSize: 15, fontWeight: 700, color: '#fff', cursor: 'pointer',
+                    ...CTA_STYLE, flex: 1, background: '#2563eb',
+                    color: '#fff', cursor: 'pointer',
                   }}
                 >
                   Continue →
@@ -687,9 +696,9 @@ export default function GuarantorPage() {
                   disabled={submitting || anyUploading}
                   type="button"
                   style={{
-                    flex: 1, padding: '14px 24px',
+                    ...CTA_STYLE, flex: 1,
                     background: (submitting || anyUploading) ? '#93c5fd' : '#16a34a',
-                    border: 'none', borderRadius: 8, fontSize: 15, fontWeight: 700, color: '#fff',
+                    color: '#fff',
                     cursor: (submitting || anyUploading) ? 'not-allowed' : 'pointer',
                   }}
                 >

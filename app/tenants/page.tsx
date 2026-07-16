@@ -47,11 +47,9 @@ const reviews = [
   { tag: "Maintenance", quote: "Our boiler played up in winter. I reported it with a couple of photos and they had someone out fast. Felt genuinely looked after.", name: "Tomasz K.", detail: "Suburban flat · Leeds" },
 ];
 
-const areas = [
-  { name: "Northern Quarter", desc: "Coffee shops, bars & a lively city feel", img: "/images/areas/northern-quarter.webp" },
-  { name: "Castlefield", desc: "Central but quieter, scenic canalside", img: "/images/areas/castlefield.webp" },
-  { name: "Salford Quays", desc: "Waterside apartment living & transport links", img: "/images/areas/salford-quays.webp" },
-  { name: "Deansgate", desc: "Restaurants, bars & city-centre convenience", img: "/images/areas/deansgate.webp" },
+const cities = [
+  { name: "Manchester", desc: "Browse available homes across Manchester", img: "/images/areas/deansgate.webp", href: "/listings?location=Manchester" },
+  { name: "Leeds", desc: "Browse available homes across Leeds", img: "/images/areas/leeds-city.webp", href: "/listings?location=Leeds" },
 ];
 
 const maintSteps = [
@@ -375,22 +373,31 @@ export default function TenantsPage() {
         </div>
       </section>
 
-      {/* ── 6 · EXPLORE MANCHESTER ── */}
+      {/* ── 6 · EXPLORE CITIES (Manchester + Leeds → browse properties) ── */}
       <section>
+        <style>{`
+          .city-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 24px; }
+          .city-card { height: 340px; }
+          .city-card .area-txt { left: 24px; right: 24px; bottom: 22px; }
+          @media (max-width: 700px) { .city-grid { grid-template-columns: 1fr; } .city-card { height: 260px; } }
+        `}</style>
         <div className="tp-wrap">
           <div className="reveal" style={{ marginBottom: 36 }}>
-            <p className="tp-kicker">Explore Manchester</p>
-            <h2 className="tp-h2">Find the area that suits your lifestyle.</h2>
+            <p className="tp-kicker">Explore Our Cities</p>
+            <h2 className="tp-h2">Find the city that suits your lifestyle.</h2>
           </div>
-          <div className="area-grid">
-            {areas.map((a, i) => (
-              <a key={a.name} href="/listings" className="area-card reveal" style={{ animationDelay: `${i * 60}ms` }}>
+          <div className="city-grid">
+            {cities.map((c, i) => (
+              <a key={c.name} href={c.href} className="area-card city-card reveal" style={{ animationDelay: `${i * 70}ms` }}>
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={a.img} alt={`${a.name}, Manchester`} loading="lazy" />
+                <img src={c.img} alt={`${c.name} city centre`} loading="lazy" />
                 <span className="area-ov" />
                 <span className="area-txt">
-                  <span style={{ display: "block", fontSize: 19, fontWeight: 800, marginBottom: 5 }}>{a.name}</span>
-                  <span style={{ display: "block", fontSize: 13, color: "rgba(255,255,255,0.9)", lineHeight: 1.45 }}>{a.desc}</span>
+                  <span style={{ display: "block", fontSize: 26, fontWeight: 800, marginBottom: 6 }}>{c.name}</span>
+                  <span style={{ display: "inline-flex", alignItems: "center", gap: 7, fontSize: 14, fontWeight: 600, color: "rgba(255,255,255,0.92)" }}>
+                    {c.desc}
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
+                  </span>
                 </span>
               </a>
             ))}

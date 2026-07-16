@@ -1,13 +1,9 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect } from "react";
 import Navbar from "@/components/layout/Navbar";
 import ServiceHero from "@/components/layout/ServiceHero";
 import Footer from "@/components/layout/Footer";
-import PropertyCard from "@/components/property/PropertyCard";
-import { useActiveProperties } from "@/components/branches/useActiveProperties";
-import { listingMatchesCity } from "@/lib/branches";
-import { propertyAvailability } from "@/lib/types";
 import { guidesByDate } from "@/lib/guides";
 
 /* ─────────────────────────────────────────────────────────────────────────
@@ -91,20 +87,6 @@ const faqs = [
 
 export default function TenantsPage() {
   const [openFaq, setOpenFaq] = useState<number>(0);
-  const { props, loading } = useActiveProperties();
-
-  // Up to 4 real Leeds homes from Browse Properties — available first, must have
-  // a photo, most recently listed first.
-  const leedsHomes = useMemo(() => {
-    return props
-      .filter((p) => p.images?.length && listingMatchesCity(p.location, "Leeds"))
-      .sort((a, b) => {
-        const av = propertyAvailability(a) === "let-agreed" ? 1 : 0;
-        const bv = propertyAvailability(b) === "let-agreed" ? 1 : 0;
-        return av - bv;
-      })
-      .slice(0, 4);
-  }, [props]);
 
   // JS-gated scroll reveal — content stays visible if scripting is unavailable.
   useEffect(() => {
@@ -128,7 +110,7 @@ export default function TenantsPage() {
     );
     els.forEach((el) => io.observe(el));
     return () => io.disconnect();
-  }, [leedsHomes.length]);
+  }, []);
 
   return (
     <>
@@ -246,6 +228,17 @@ export default function TenantsPage() {
           .area-card { height: 240px; }
           .tp-btn { width: 100%; }
           .tp-h1 { font-size: 40px !important; }
+          /* A Place to Call Home becomes one self-contained card:
+             image on top → text → buttons (pricing-card style). */
+          .tp-aptc {
+            padding: 0 !important; margin: 40px 20px; max-width: none; gap: 0 !important;
+            background: #fff; border: 1px solid ${HAIR}; border-radius: 18px; overflow: hidden;
+            box-shadow: 0 16px 38px -16px rgba(24,33,53,0.2);
+          }
+          .tp-aptc .tp-imgframe { border-radius: 0 !important; box-shadow: none !important; height: 210px; }
+          .tp-aptc > div:last-child { padding: 24px 22px 28px; }
+          /* Our Commitment pills sit to the left on mobile */
+          .tp-promise-row { justify-content: flex-start !important; }
         }
         @media (prefers-reduced-motion: reduce) {
           .tp-card, .tp-card:hover, .area-card, .area-card:hover, .area-card img, .tp-pillar, .tp-pillar:hover,
@@ -275,7 +268,7 @@ export default function TenantsPage() {
 
       {/* ── 2 · A PLACE TO CALL HOME ── */}
       <section style={{ background: ALT_BG }}>
-        <div className="tp-wrap tp-2col">
+        <div className="tp-wrap tp-2col tp-aptc">
           <div className="reveal">
             <div className="tp-imgframe" style={{ borderRadius: 24, overflow: "hidden", boxShadow: "0 26px 60px -20px rgba(24,33,53,0.32)", height: 400 }}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -290,7 +283,7 @@ export default function TenantsPage() {
               renting simple, transparent and stress-free.
             </p>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 12, marginBottom: 28 }}>
-              {["Warm local team", "No agency fees", "Support that lasts"].map((t) => (
+              {["Expert local team", "No agency fees", "Support that lasts"].map((t) => (
                 <span key={t} className="tp-chip">
                   <span style={{ width: 20, height: 20, borderRadius: 999, background: "rgba(74,222,128,0.16)", display: "grid", placeItems: "center", flexShrink: 0 }}>
                     <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#4ade80" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="m5 13 4 4L19 7" /></svg>
@@ -340,7 +333,7 @@ export default function TenantsPage() {
             </p>
             <p style={{ color: BODY, fontSize: 16, lineHeight: 1.75, marginBottom: 22 }}>
               So we rebuilt the whole experience around you. Every step lives <span style={{ fontWeight: 700 }}>online</span> —
-              booking a viewing, applying, reporting a repair — and behind it sits a warm local team who actually pick up when it matters.
+              booking a viewing, applying, reporting a repair — and behind it sits an expert local team who actually pick up when it matters.
             </p>
             <p style={{ color: INK, fontSize: 18, fontWeight: 700, lineHeight: 1.5, margin: 0 }}>
               Renting shouldn&apos;t feel like chasing. <span style={{ color: GREEN }}>It should feel like coming home.</span>
@@ -405,44 +398,6 @@ export default function TenantsPage() {
         </div>
       </section>
 
-      {/* ── 7 · EXPLORE LEEDS (live homes) ── */}
-      <section style={{ background: ALT_BG }}>
-        <div className="tp-wrap">
-          <div className="reveal" style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", gap: 20, flexWrap: "wrap", marginBottom: 36 }}>
-            <div>
-              <p className="tp-kicker">Explore Leeds</p>
-              <h2 className="tp-h2">Homes available now in Leeds.</h2>
-            </div>
-            <a href="/listings?location=Leeds" style={{ color: BLUE_SM, fontWeight: 700, fontSize: 15, textDecoration: "none", whiteSpace: "nowrap" }}>
-              View all Leeds homes →
-            </a>
-          </div>
-
-          {loading ? (
-            <div className="leeds-grid">
-              {[0, 1, 2, 3].map((i) => (
-                <div key={i} style={{ height: 360, borderRadius: 8, background: "#e8edf3", animation: "tp-floaty 2.2s ease-in-out infinite" }} />
-              ))}
-            </div>
-          ) : leedsHomes.length > 0 ? (
-            <div className="leeds-grid">
-              {leedsHomes.map((p) => (
-                <div key={p.id} className="reveal">
-                  <PropertyCard property={p} />
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div style={{ background: "#fff", border: `1px solid ${HAIR}`, borderRadius: 18, padding: "48px 32px", textAlign: "center" }}>
-              <p style={{ fontSize: 16, color: BODY, margin: "0 0 20px" }}>
-                No Leeds homes are live right now — new listings go up regularly.
-              </p>
-              <a href="/listings?location=Leeds" className="tp-btn tp-blue" style={{ display: "inline-flex" }}>Browse all properties</a>
-            </div>
-          )}
-        </div>
-      </section>
-
       {/* ── 8 · REPORTING MAINTENANCE ── */}
       <section id="maintenance">
         <div className="tp-wrap tp-2col">
@@ -476,7 +431,7 @@ export default function TenantsPage() {
         <div className="tp-wrap" style={{ textAlign: "center" }}>
           <p className="tp-kicker reveal" style={{ color: GREEN_DEEP }}>Our Commitment</p>
           <h2 className="tp-h2 reveal" style={{ marginBottom: 32 }}>Our Promise to Every Tenant</h2>
-          <div className="reveal" style={{ display: "flex", flexWrap: "wrap", justifyContent: "center", gap: 14 }}>
+          <div className="reveal tp-promise-row" style={{ display: "flex", flexWrap: "wrap", justifyContent: "center", gap: 14 }}>
             {promises.map((p) => (
               <span key={p} className="tp-promise">
                 <span style={{ width: 20, height: 20, borderRadius: 999, background: "rgba(74,222,128,0.16)", display: "grid", placeItems: "center", flexShrink: 0 }}>

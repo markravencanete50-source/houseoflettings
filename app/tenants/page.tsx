@@ -173,7 +173,7 @@ export default function TenantsPage() {
 
         /* Chips / pills — dark-blue background with a green tick, lift on hover */
         .tp-chip { display: inline-flex; align-items: center; gap: 9px; font-size: 14px; font-weight: 700;
-          color: #fff; background: linear-gradient(135deg, #1c2b4d 0%, #101a30 100%);
+          color: #e7eefb; background: linear-gradient(135deg, #1c2b4d 0%, #101a30 100%);
           border: 1px solid rgba(255,255,255,0.08); border-radius: 999px; padding: 10px 18px;
           box-shadow: 0 10px 24px -10px rgba(16,26,48,0.7); transition: transform .22s ease, box-shadow .22s ease; }
         .tp-chip:hover { transform: translateY(-2px); box-shadow: 0 16px 30px -10px rgba(16,26,48,0.85); }
@@ -181,7 +181,7 @@ export default function TenantsPage() {
         /* Promise pills — dark-blue background with a green tick (matches the chips) */
         .tp-promise { display: inline-flex; align-items: center; gap: 10px;
           background: linear-gradient(135deg, #1c2b4d 0%, #101a30 100%);
-          border: 1px solid rgba(255,255,255,0.08); border-radius: 999px; padding: 12px 20px; font-size: 15px; font-weight: 700; color: #fff;
+          border: 1px solid rgba(255,255,255,0.08); border-radius: 999px; padding: 12px 20px; font-size: 15px; font-weight: 700; color: #e7eefb;
           box-shadow: 0 10px 24px -10px rgba(16,26,48,0.7); transition: transform .25s cubic-bezier(.22,1,.36,1), box-shadow .25s ease; }
         .tp-promise:hover { transform: translateY(-4px); box-shadow: 0 18px 34px -12px rgba(16,26,48,0.85); }
 
@@ -292,8 +292,8 @@ export default function TenantsPage() {
             <div style={{ display: "flex", flexWrap: "wrap", gap: 12, marginBottom: 28 }}>
               {["Warm local team", "No agency fees", "Support that lasts"].map((t) => (
                 <span key={t} className="tp-chip">
-                  <span style={{ width: 20, height: 20, borderRadius: 999, background: GREEN, display: "grid", placeItems: "center", flexShrink: 0, boxShadow: "0 4px 9px -3px rgba(98,157,42,0.6)" }}>
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="3.4" strokeLinecap="round" strokeLinejoin="round"><path d="m5 13 4 4L19 7" /></svg>
+                  <span style={{ width: 20, height: 20, borderRadius: 999, background: "rgba(74,222,128,0.16)", display: "grid", placeItems: "center", flexShrink: 0 }}>
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#4ade80" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="m5 13 4 4L19 7" /></svg>
                   </span>
                   {t}
                 </span>
@@ -479,8 +479,8 @@ export default function TenantsPage() {
           <div className="reveal" style={{ display: "flex", flexWrap: "wrap", justifyContent: "center", gap: 14 }}>
             {promises.map((p) => (
               <span key={p} className="tp-promise">
-                <span style={{ width: 24, height: 24, borderRadius: 999, background: GREEN, display: "grid", placeItems: "center", flexShrink: 0, boxShadow: "0 6px 12px -4px rgba(98,157,42,0.6)" }}>
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="m5 13 4 4L19 7" /></svg>
+                <span style={{ width: 20, height: 20, borderRadius: 999, background: "rgba(74,222,128,0.16)", display: "grid", placeItems: "center", flexShrink: 0 }}>
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#4ade80" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="m5 13 4 4L19 7" /></svg>
                 </span>
                 {p}
               </span>

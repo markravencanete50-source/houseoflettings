@@ -263,7 +263,7 @@ export default function TenantsPage() {
           <div className="tp-media-right reveal">
             <div style={{ borderRadius: 24, overflow: "hidden", boxShadow: "0 24px 56px rgba(24,33,53,0.18)", height: 380 }}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/images/areas/salford-quays.webp" alt="Waterside city living across Leeds and Manchester" style={{ display: "block", width: "100%", height: "100%", objectFit: "cover" }} loading="lazy" />
+              <img src="/images/family-kitchen.webp" alt="A family enjoying a meal together in their kitchen" style={{ display: "block", width: "100%", height: "100%", objectFit: "cover" }} loading="lazy" />
             </div>
           </div>
         </div>

@@ -1034,15 +1034,6 @@ export default function HomePage() {
         .service-card:hover .learn-more-arrow {
           transform: translateX(6px);
         }
-        .svc-learn {
-          display: inline-flex; align-items: center; gap: 7px;
-          background: #629D2A; color: #fff; font-size: 13px; font-weight: 700;
-          letter-spacing: 0.3px; padding: 10px 20px; border-radius: 999px;
-          position: relative; z-index: 1;
-          transition: background 0.25s ease, box-shadow 0.25s ease, transform 0.25s ease;
-          box-shadow: 0 8px 18px -10px rgba(98,157,42,0.7);
-        }
-        .service-card:hover .svc-learn { background: #4F8221; box-shadow: 0 12px 22px -10px rgba(79,130,33,0.75); transform: translateY(-1px); }
         @keyframes hcw-shimmer {
           0%   { left: -80%; }
           100% { left: 140%; }
@@ -1162,7 +1153,7 @@ export default function HomePage() {
               <p style={{ fontSize: 14, color: '#4b5563', lineHeight: 1.8, margin: '0 0 20px', position: 'relative', zIndex: 1 }}>
                 {card.body}
               </p>
-              <span className="svc-learn">
+              <span style={{ fontSize: 13, color: 'var(--logo-blue)', fontWeight: 600, letterSpacing: 0.5, position: 'relative', zIndex: 1 }}>
                 Learn more <span className="learn-more-arrow">{'->'}</span>
               </span>
             </Link>

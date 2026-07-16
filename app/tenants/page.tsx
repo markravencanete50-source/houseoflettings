@@ -1,124 +1,53 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import Navbar from "@/components/layout/Navbar";
-import ServiceHero from "@/components/layout/ServiceHero";
+import PropertyCard from "@/components/property/PropertyCard";
+import { useActiveProperties } from "@/components/branches/useActiveProperties";
+import { listingMatchesCity } from "@/lib/branches";
+import { propertyAvailability } from "@/lib/types";
 
-const faqs = [
-  {
-    q: "Is it free to rent through House of Lettings?",
-    a: "Yes, there are no agency fees for tenants. The only payment before moving in is a holding deposit to secure the property, which is deducted from your first month's rent. You're not losing anything.",
-  },
-  {
-    q: "What is the holding deposit?",
-    a: "A holding deposit reserves the property while your application is processed. It's fully deducted from your first rent payment, so it comes straight off what you'd pay anyway.",
-  },
-  {
-    q: "How quickly can I book a viewing?",
-    a: "Once you send an enquiry and answer a few quick questions, we arrange the viewing as fast as possible, usually within a few days.",
-  },
-  {
-    q: "What checks do you run?",
-    a: "Standard referencing: employment/income checks and a previous landlord reference where applicable. We keep it straightforward, no unnecessary hoops.",
-  },
-  {
-    q: "Which areas do you cover?",
-    a: "We operate across Leeds and Manchester, covering a wide range of property types from city centre apartments to family homes.",
-  },
-  {
-    q: "Can I apply if I'm self employed or a student?",
-    a: "Yes. We assess applications individually and work with a range of tenant profiles. Get in touch and we'll let you know what we need from you.",
-  },
+/* ─────────────────────────────────────────────────────────────────────────
+   Tenant page — hi-fi redesign.
+   Palette: blue is the lead colour, green the warm secondary, black/white the
+   base, and a single yellow-orange accent reserved for the maintenance CTA.
+   Blue TEXT rule: #0A46EF for small text (kickers/meta), #253996 for big/bold.
+   ───────────────────────────────────────────────────────────────────────── */
+const BLUE_SM = "#0A46EF";   // small blue text + primary buttons
+const BLUE_LG = "#253996";   // big/bold blue text + button hover
+const INK = "#182135";       // headings / near-black
+const BODY = "#4b5568";      // paragraph copy
+const GREEN = "#629D2A";
+const GREEN_DEEP = "#4a7a1f";
+const GREEN_TINT = "#eef5e3";
+const GREEN_BORDER = "#d6e8bd";
+const YELLOW = "#F5A623";
+const ALT_BG = "#f4f7fc";
+const HAIR = "#eceff4";
+
+const journey = [
+  { num: "01", title: "Browse Properties", desc: "Search homes across Leeds & Manchester by price, area and bedrooms." },
+  { num: "02", title: "Book Your Viewing Online", desc: "Pick a time that works for you and confirm instantly — fully online." },
+  { num: "03", title: "View the Home", desc: "Meet our local team at the property and take your time looking around." },
+  { num: "04", title: "Apply Online", desc: "Submit your application digitally and upload documents securely." },
+  { num: "05", title: "Referencing & Checks", desc: "Identity, right to rent, credit and employment — all handled digitally." },
+  { num: "06", title: "Pay the Holding Deposit", desc: "Takes the home off the market — deducted from your first month's rent." },
+  { num: "07", title: "Sign Your Tenancy", desc: "Review and e-sign your agreement from any device." },
+  { num: "08", title: "Collect Keys & Move In", desc: "We hand over the keys and help you settle into your new home." },
 ];
 
-const whyCards = [
-  {
-    icon: (
-      <svg width="28" height="28" fill="none" stroke="#0A46EF" strokeWidth="2" viewBox="0 0 24 24">
-        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-      </svg>
-    ),
-    title: "No agency fees",
-    body: "Renting through us costs you nothing extra. The holding deposit is the only upfront payment, and it comes off your first rent.",
-  },
-  {
-    icon: (
-      <svg width="28" height="28" fill="none" stroke="#0A46EF" strokeWidth="2" viewBox="0 0 24 24">
-        <circle cx="12" cy="12" r="10" />
-        <polyline points="12 6 12 12 16 14" />
-      </svg>
-    ),
-    title: "Fast, simple process",
-    body: "Send an enquiry, answer a few questions, book your viewing. No lengthy forms, no waiting weeks to hear back.",
-  },
-  {
-    icon: (
-      <svg width="28" height="28" fill="none" stroke="#0A46EF" strokeWidth="2" viewBox="0 0 24 24">
-        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-        <circle cx="9" cy="7" r="4" />
-        <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
-        <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-      </svg>
-    ),
-    title: "Direct landlord contact",
-    body: "We work closely with our landlords, no middlemen, no miscommunication. Questions get answered quickly.",
-  },
-  {
-    icon: (
-      <svg width="28" height="28" fill="none" stroke="#0A46EF" strokeWidth="2" viewBox="0 0 24 24">
-        <rect x="3" y="3" width="18" height="18" rx="2" />
-        <path d="M3 9h18M9 21V9" />
-      </svg>
-    ),
-    title: "Leeds & Manchester",
-    body: "City centre flats, suburban houses, and everything in between, across two of the UK's most in demand rental markets.",
-  },
+const pillars = [
+  { icon: "💻", title: "Online, start to finish", desc: "Viewings, applications and maintenance — no calls, no messages, no emails." },
+  { icon: "📍", title: "A real local team", desc: "People in Leeds and Manchester who know the streets you're searching." },
+  { icon: "🤝", title: "Help & Support", desc: "Repairs coordinated with the right contractor, fast — and you're kept updated." },
 ];
 
-const steps = [
-  {
-    num: "01",
-    title: "Send an enquiry",
-    body: "Tell us what you're looking for, property type, area, move in date. No long forms.",
-  },
-  {
-    num: "02",
-    title: "Answer a few quick questions",
-    body: "We ask a handful of straightforward questions to match you with the right property.",
-  },
-  {
-    num: "03",
-    title: "Book your viewing",
-    body: "We arrange the viewing fast. See the property in person before committing to anything.",
-  },
-  {
-    num: "04",
-    title: "Secure it with a holding deposit",
-    body: "To take the property off the market, pay a holding deposit, deducted from your first month's rent.",
-  },
-  {
-    num: "05",
-    title: "Submit your application",
-    body: "Our team guides you through the full application process, referencing, ID checks, and everything in between.",
-  },
-  {
-    num: "06",
-    title: "Credit and right to rent check",
-    body: "We run a credit check and verify your right to rent in the UK as part of your referencing.",
-  },
-  {
-    num: "07",
-    title: "Payment",
-    body: "Once you're approved, you'll settle your first month's rent and any agreed fees ahead of moving in.",
-  },
-  {
-    num: "08",
-    title: "Move in",
-    body: "Referencing done, paperwork signed, keys in hand. Welcome home.",
-  },
+const reviews = [
+  { tag: "Viewing", quote: "Booked a viewing online in about two minutes and had the keys within the fortnight. Easily the smoothest rental I've ever done.", name: "Aisha R.", detail: "City centre apartment · Leeds" },
+  { tag: "Application", quote: "The whole application was online. I uploaded my documents from my phone on a lunch break and got approved quickly. No paperwork stress.", name: "Daniel & Megan", detail: "Two-bed house · Manchester" },
+  { tag: "Maintenance", quote: "Our boiler played up in winter. I reported it with a couple of photos and they had someone out fast. Felt genuinely looked after.", name: "Tomasz K.", detail: "Suburban flat · Leeds" },
 ];
 
-/* Popular Manchester rental areas — lifestyle photography, links to listings */
 const areas = [
   { name: "Northern Quarter", desc: "Coffee shops, bars & a lively city feel", img: "/images/areas/northern-quarter.webp" },
   { name: "Castlefield", desc: "Central but quieter, scenic canalside", img: "/images/areas/castlefield.webp" },
@@ -126,314 +55,328 @@ const areas = [
   { name: "Deansgate", desc: "Restaurants, bars & city-centre convenience", img: "/images/areas/deansgate.webp" },
 ];
 
-export default function TenantsPage() {
-  const [openFaq, setOpenFaq] = useState<number | null>(null);
+const maintSteps = [
+  { num: "1", title: "Tell Us The Issue", desc: "Answer a couple of quick questions online" },
+  { num: "2", title: "Send a Picture", desc: "Show us exactly what's wrong" },
+  { num: "3", title: "We Coordinate Contractors", desc: "The right trade, arranged as soon as possible" },
+  { num: "4", title: "Receive Updates", desc: "Kept in the loop until it's fixed" },
+];
 
-  // Staggered scroll-reveal for the feature cards. JS-gated (adds `t-js` to
-  // <body>) so the cards stay fully visible if scripting is ever unavailable.
+const promises = [
+  "Honest communication",
+  "Transparent process",
+  "Fast maintenance support",
+  "Professional property management",
+  "Friendly local team",
+];
+
+const feeRows = [
+  { label: "Agency fees", desc: "Always free for tenants", value: "£0" },
+  { label: "Holding deposit", desc: "Deducted from first month's rent", value: "Varies" },
+  { label: "Application forms", desc: "Quick and fully digital", value: "Online" },
+  { label: "Viewing fee", desc: "No charge to view a property", value: "£0" },
+];
+
+const faqs = [
+  { q: "Is it free to rent through House of Lettings?", a: "Yes, there are no agency fees for tenants. The only payment before moving in is a holding deposit to secure the property, which is deducted from your first month's rent." },
+  { q: "What is the holding deposit?", a: "A holding deposit reserves the property while your application is processed. It's fully deducted from your first rent payment, so it comes straight off what you'd pay anyway." },
+  { q: "How quickly can I book a viewing?", a: "You can book online in minutes. Choose a time that suits you and confirm your viewing instantly, no phone calls or waiting for a callback." },
+  { q: "What checks do you run?", a: "Standard referencing: identity, right to rent, employment/income and a previous landlord reference where applicable. All handled digitally." },
+  { q: "Which areas do you cover?", a: "We operate across Leeds and Manchester, covering a wide range of property types from city centre apartments to family homes." },
+  { q: "Can I apply if I'm self employed or a student?", a: "Yes. We assess applications individually and work with a range of tenant profiles. Get in touch and we'll let you know what we need from you." },
+];
+
+export default function TenantsPage() {
+  const [openFaq, setOpenFaq] = useState<number>(0);
+  const { props, loading } = useActiveProperties();
+
+  // Up to 4 real Leeds homes from Browse Properties — available first, must have
+  // a photo, most recently listed first.
+  const leedsHomes = useMemo(() => {
+    return props
+      .filter((p) => p.images?.length && listingMatchesCity(p.location, "Leeds"))
+      .sort((a, b) => {
+        const av = propertyAvailability(a) === "let-agreed" ? 1 : 0;
+        const bv = propertyAvailability(b) === "let-agreed" ? 1 : 0;
+        return av - bv;
+      })
+      .slice(0, 4);
+  }, [props]);
+
+  // JS-gated scroll reveal — content stays visible if scripting is unavailable.
   useEffect(() => {
-    document.body.classList.add("t-js");
-    const els = Array.from(document.querySelectorAll(".t-reveal"));
+    document.body.classList.add("tp-js");
+    const els = Array.from(document.querySelectorAll(".reveal"));
     if (!els.length) return;
     if (!("IntersectionObserver" in window)) {
-      els.forEach((el) => el.classList.add("t-in"));
+      els.forEach((el) => el.classList.add("in"));
       return;
     }
     const io = new IntersectionObserver(
       (entries) => {
         entries.forEach((e) => {
           if (e.isIntersecting) {
-            e.target.classList.add("t-in");
+            e.target.classList.add("in");
             io.unobserve(e.target);
           }
         });
       },
-      { threshold: 0.15, rootMargin: "0px 0px -8% 0px" }
+      { threshold: 0.12, rootMargin: "0px 0px -6% 0px" }
     );
     els.forEach((el) => io.observe(el));
     return () => io.disconnect();
-  }, []);
+  }, [leedsHomes.length]);
 
   return (
-    <main
-      style={{
-        background: "#f3f4f6",
-        minHeight: "100vh",
-        color: "#111827",
-        fontFamily: "'Poppins', 'Inter', sans-serif",
-      }}
-    >
+    <main style={{ background: "#fff", color: INK, fontFamily: "'Poppins', 'Inter', sans-serif", overflowX: "hidden" }}>
       <style>{`
-        @keyframes t-float-slow {
-          0%, 100% { transform: translateY(0px) scale(1); opacity: 0.18; }
-          50% { transform: translateY(-28px) scale(1.06); opacity: 0.28; }
-        }
-        @keyframes t-float-med {
-          0%, 100% { transform: translateY(0px) scale(1); opacity: 0.12; }
-          50% { transform: translateY(-18px) scale(1.04); opacity: 0.22; }
-        }
-        @keyframes t-pulse-ring {
-          0% { transform: scale(0.85); opacity: 0.6; }
-          50% { transform: scale(1.15); opacity: 0.15; }
-          100% { transform: scale(0.85); opacity: 0.6; }
-        }
-        @keyframes t-drift {
-          0% { transform: translateX(0) translateY(0) rotate(0deg); opacity: 0.08; }
-          33% { transform: translateX(12px) translateY(-8px) rotate(5deg); opacity: 0.14; }
-          66% { transform: translateX(-8px) translateY(6px) rotate(-3deg); opacity: 0.10; }
-          100% { transform: translateX(0) translateY(0) rotate(0deg); opacity: 0.08; }
-        }
-        @keyframes t-shimmer {
-          0%, 100% { opacity: 0.04; }
-          50% { opacity: 0.12; }
-        }
-        @keyframes t-cta-pulse {
-          0%, 100% { box-shadow: 0 0 0 0 rgba(37,99,235,0.0), inset 0 0 40px rgba(37,99,235,0.06); }
-          50% { box-shadow: 0 0 60px 10px rgba(37,99,235,0.12), inset 0 0 80px rgba(37,99,235,0.12); }
-        }
-        @keyframes t-orb-move {
-          0%, 100% { transform: translate(0, 0); }
-          25% { transform: translate(30px, -20px); }
-          50% { transform: translate(-20px, 30px); }
-          75% { transform: translate(20px, 20px); }
-        }
-        @keyframes t-line-grow {
-          0% { width: 0; opacity: 0; }
-          100% { width: 60px; opacity: 1; }
-        }
-        /* Uniform hero action buttons (equal width on desktop, full-width stacked
-           on mobile). Sized to the site-standard CTA, as ServiceHero .btn. */
-        .t-hero-btn {
-          display: inline-flex; align-items: center; justify-content: center; gap: 9px;
-          box-sizing: border-box; min-width: 240px; min-height: 48px; padding: 14px 28px;
-          background: #2563eb; color: #fff; border: 1.5px solid #2563eb; border-radius: 9px;
-          font-weight: 700; font-size: 13.5px; line-height: 1.2; letter-spacing: 0.02em;
-          text-decoration: none; transition: background .2s ease, border-color .2s ease;
-        }
-        .t-hero-btn:hover { background: #1d4ed8; border-color: #1d4ed8; }
-        @media (max-width: 600px) {
-          .t-hero-btns { flex-direction: column; align-items: center; }
-          .t-hero-btn { width: 100%; max-width: 340px; min-width: 0; }
-        }
+        .tp-wrap { max-width: 1200px; margin: 0 auto; padding: 88px 48px; }
+        .tp-kicker { font-size: 13px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: ${BLUE_SM}; margin: 0 0 14px; }
+        .tp-h2 { font-size: clamp(28px, 4vw, 40px); font-weight: 800; letter-spacing: -0.01em; line-height: 1.14; color: ${INK}; margin: 0; }
+        .tp-lead { font-size: 16px; line-height: 1.7; color: ${BODY}; }
+        .tp-2col { display: grid; grid-template-columns: 1.05fr 1fr; gap: 60px; align-items: center; }
 
-        /* Feature / step cards: depth, hover lift, top-accent bar */
-        .t-card {
-          position: relative;
-          background: #ffffff;
-          border: 1px solid #eef1f5;
-          border-radius: 18px;
-          padding: 30px 26px;
-          box-shadow: 0 6px 18px -8px rgba(15,31,61,0.14), 0 2px 6px -2px rgba(15,31,61,0.08);
-          transition: transform .35s cubic-bezier(.22,1,.36,1), box-shadow .35s ease, border-color .35s ease;
-          will-change: transform;
-        }
-        .t-card::before {
-          content: "";
-          position: absolute; top: 0; left: 0; right: 0; height: 3px;
-          background: linear-gradient(90deg, #253996, #0A46EF);
-          border-radius: 18px 18px 0 0;
-          transform: scaleX(0); transform-origin: left;
-          transition: transform .38s cubic-bezier(.22,1,.36,1);
-        }
-        .t-card:hover {
-          transform: translateY(-10px) scale(1.015);
-          box-shadow: 0 34px 60px -24px rgba(15,31,61,0.4), 0 14px 26px -14px rgba(10,70,239,0.28);
-          border-color: #c3d4fb;
-        }
-        .t-card:hover::before { transform: scaleX(1); }
-        /* Icon chip inside cards gets a gentle wobble on card hover */
-        .t-card .t-ic { transition: transform .4s cubic-bezier(.34,1.56,.64,1); }
-        .t-card:hover .t-ic { transform: translateY(-3px) rotate(-4deg) scale(1.08); }
+        /* Buttons — uniform pill sizing */
+        .tp-btn { height: 54px; min-width: 225px; padding: 0 34px; border-radius: 999px;
+          font-size: 16px; font-weight: 700; display: inline-flex; align-items: center; justify-content: center;
+          gap: 10px; text-decoration: none; box-sizing: border-box; cursor: pointer; border: 1.5px solid transparent;
+          transition: transform .22s ease, box-shadow .22s ease, background .22s ease, border-color .22s ease; }
+        .tp-btn.sm { height: 50px; }
+        .tp-blue { background: ${BLUE_SM}; color: #fff; box-shadow: 0 12px 26px rgba(10,70,239,0.28); }
+        .tp-blue:hover { background: ${BLUE_LG}; transform: translateY(-2px); box-shadow: 0 18px 34px rgba(10,70,239,0.36); }
+        .tp-yellow { background: ${YELLOW}; color: ${INK}; box-shadow: 0 12px 26px rgba(245,166,35,0.32); }
+        .tp-yellow:hover { background: #e2951a; transform: translateY(-2px); box-shadow: 0 18px 34px rgba(245,166,35,0.4); }
+        .tp-ink { background: ${INK}; color: #fff; }
+        .tp-ink:hover { background: #0e1626; transform: translateY(-2px); }
+        .tp-ghost { background: transparent; color: #fff; border-color: rgba(255,255,255,0.5); }
+        .tp-ghost:hover { border-color: #fff; background: rgba(255,255,255,0.08); }
 
-        /* CTA buttons — hover lift + deeper shadow */
-        .t-cta-btn { transition: transform .22s ease, box-shadow .22s ease, background .22s ease, border-color .22s ease; }
-        .t-cta-btn:hover { transform: translateY(-3px); }
+        /* Cards */
+        .tp-card { background: #fff; border: 1px solid ${HAIR}; border-radius: 18px; padding: 26px;
+          box-shadow: 0 10px 26px rgba(24,33,53,0.05);
+          transition: transform .32s cubic-bezier(.22,1,.36,1), box-shadow .32s ease, border-color .32s ease; }
+        .tp-card:hover { transform: translateY(-8px); border-color: #bdd2fa; box-shadow: 0 18px 40px rgba(29,78,216,0.14); }
 
-        /* Animated heading underline accent */
-        .t-accent { position: relative; display: inline-block; }
-        .t-accent::after {
-          content: ""; position: absolute; left: 0; bottom: -14px; height: 4px; width: 0;
-          border-radius: 4px; background: linear-gradient(90deg, #253996, #0A46EF);
+        .tp-numchip { width: 46px; height: 46px; border-radius: 12px; background: #e8effd; color: ${BLUE_LG};
+          font-size: 15px; font-weight: 800; display: inline-grid; place-items: center; transition: transform .3s cubic-bezier(.34,1.56,.64,1), background .3s; }
+        .tp-card:hover .tp-numchip { transform: scale(1.1); background: #dbe7fd; }
+
+        /* Chips / pills */
+        .tp-chip { display: inline-flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 700;
+          color: ${GREEN_DEEP}; background: ${GREEN_TINT}; border: 1px solid ${GREEN_BORDER}; border-radius: 999px; padding: 9px 16px; }
+
+        /* Area cards */
+        .area-grid, .leeds-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
+        .area-card { position: relative; display: block; overflow: hidden; border-radius: 20px; height: 300px;
+          text-decoration: none; box-shadow: 0 16px 36px -14px rgba(24,33,53,0.22);
+          transition: transform .35s cubic-bezier(.22,1,.36,1), box-shadow .35s ease; }
+        .area-card img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transition: transform .6s cubic-bezier(.22,1,.36,1); }
+        .area-card:hover { transform: translateY(-8px); box-shadow: 0 34px 60px -22px rgba(24,33,53,0.4); }
+        .area-card:hover img { transform: scale(1.08); }
+        .area-ov { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(24,33,53,0) 34%, rgba(24,33,53,0.82) 100%); }
+        .area-txt { position: absolute; left: 18px; right: 18px; bottom: 16px; color: #fff; z-index: 1; }
+
+        /* Pillars (dark section) */
+        .tp-pillar { display: flex; gap: 16px; align-items: flex-start; background: rgba(255,255,255,0.05);
+          border: 1px solid rgba(255,255,255,0.1); border-radius: 16px; padding: 20px 22px;
+          transition: transform .3s ease, background .3s ease, border-color .3s ease; }
+        .tp-pillar:hover { transform: translateX(6px); background: rgba(255,255,255,0.08); border-color: rgba(255,255,255,0.2); }
+        .tp-pillar-ic { flex-shrink: 0; width: 48px; height: 48px; border-radius: 12px; background: ${BLUE_SM};
+          display: grid; place-items: center; font-size: 22px; box-shadow: 0 8px 18px rgba(10,70,239,0.4); }
+
+        /* Maintenance timeline */
+        .tp-timeline { display: flex; flex-direction: column; gap: 14px; }
+        .tp-tl-row { display: flex; gap: 16px; align-items: flex-start; }
+        .tp-tl-num { flex-shrink: 0; width: 40px; height: 40px; border-radius: 999px; background: ${BLUE_SM}; color: #fff;
+          font-weight: 800; display: grid; place-items: center; box-shadow: 0 8px 16px rgba(10,70,239,0.35); }
+
+        /* Reveal */
+        .tp-js .reveal { opacity: 0; }
+        .tp-js .reveal.in { animation: tp-rise .65s cubic-bezier(.22,1,.36,1) forwards; }
+        @keyframes tp-rise { from { opacity: 0; transform: translateY(26px); } to { opacity: 1; transform: none; } }
+        @keyframes tp-floaty { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+        .tp-float { animation: tp-floaty 4s ease-in-out infinite; }
+
+        /* Responsive */
+        @media (max-width: 980px) {
+          .tp-2col { grid-template-columns: 1fr; gap: 40px; }
+          .tp-2col .tp-media-right { order: -1; }
+          .area-grid, .leeds-grid { grid-template-columns: repeat(2, 1fr); }
+          .tp-journey { grid-template-columns: repeat(2, 1fr) !important; }
+          .tp-reviews { grid-template-columns: 1fr !important; }
+          .tp-pillars-wrap { grid-template-columns: 1fr !important; }
         }
-        .t-js .t-accent.t-in::after { animation: t-underline 1s cubic-bezier(.22,1,.36,1) .15s backwards; width: 64px; }
-        @keyframes t-underline { from { width: 0; opacity: 0; } to { width: 64px; opacity: 1; } }
-
-        /* Heading fade-up on scroll */
-        .t-js .t-head.t-in { animation: t-rise .7s cubic-bezier(.22,1,.36,1) backwards; }
-
-        /* Step-number badge pop */
-        .t-num {
-          display: inline-flex; align-items: center; justify-content: center;
-          font-size: 12px; font-weight: 800; letter-spacing: 0.08em; color: #0A46EF;
-          background: #eef3ff; border: 1px solid #d9e4ff; border-radius: 8px;
-          padding: 5px 9px; transition: transform .3s cubic-bezier(.34,1.56,.64,1), background .3s ease;
-        }
-        .t-card:hover .t-num { transform: scale(1.1); background: #e2ebff; }
-
-        /* Scroll-reveal entrance — only engaged once JS marks body as t-js,
-           so cards remain fully visible if scripting is unavailable. Uses a
-           keyframe with backwards fill (not a transition) so the per-card
-           stagger delay never leaks into the hover-lift transition. */
-        .t-js .t-reveal.t-in {
-          animation: t-rise .6s cubic-bezier(.22,1,.36,1) backwards;
-        }
-        @keyframes t-rise {
-          from { opacity: 0; transform: translateY(24px); }
-          to { opacity: 1; transform: none; }
-        }
-
-        /* Mobile: tighter vertical rhythm, comfortable tap targets */
         @media (max-width: 640px) {
-          .t-sec { padding-top: 52px !important; padding-bottom: 52px !important; }
-          .t-card { padding: 24px 20px; border-radius: 16px; }
-          .t-cta-btn { width: 100%; max-width: 360px; }
-          .t-accent::after, .t-js .t-accent.t-in::after { bottom: -10px; }
+          .tp-wrap { padding: 56px 20px; }
+          .area-grid, .leeds-grid, .tp-journey { grid-template-columns: 1fr !important; }
+          .area-card { height: 240px; }
+          .tp-btn { width: 100%; }
+          .tp-h1 { font-size: 40px !important; }
         }
-
         @media (prefers-reduced-motion: reduce) {
-          .t-card, .t-card::before, .t-ic, .t-cta-btn, .t-num { transition: none; }
-          .t-card:hover, .t-card:hover .t-ic, .t-card:hover .t-num, .t-cta-btn:hover { transform: none; }
-          .t-js .t-reveal.t-in, .t-js .t-head.t-in, .t-js .t-accent.t-in::after { animation: none; }
+          .tp-card, .tp-card:hover, .area-card, .area-card:hover, .area-card img, .tp-pillar, .tp-btn, .tp-numchip, .tp-float { transition: none; animation: none; transform: none; }
+          .tp-js .reveal { opacity: 1; }
+          .tp-js .reveal.in { animation: none; }
         }
       `}</style>
 
       <Navbar />
 
-      {/* ── HERO ── */}
-      <ServiceHero
-        eyebrow="For Tenants · Leeds & Manchester"
-        title={<>Looking for your next home? <span style={{ color: '#253996' }}>House of Lettings holds the key.</span></>}
-        subtitle="No agency fees. No endless forms. Send an enquiry, answer a few quick questions, and we'll get you in for a viewing."
-        image="/images/heropage.webp"
-        imageAlt="Happy family holding the keys to their new rented home"
-        ctas={[
-          { label: 'Book a Viewing', href: '/book-viewing' },
-          { label: 'Browse Properties', href: '/listings', variant: 'ghost' },
-          { label: 'Tenant Application', href: '/tenant-application', variant: 'ghost' },
-          { label: 'Guarantor Form', href: '/guarantor', variant: 'ghost' },
-        ]}
-        float={{ label: 'Tenant fees', value: '£0', sub: 'No agency fees, ever' }}
-      />
+      {/* ── 1 · HERO ── */}
+      <section style={{ borderBottom: `1px solid ${HAIR}` }}>
+        <div className="tp-wrap tp-2col" style={{ paddingTop: 96 }}>
+          <div className="reveal">
+            <h1 className="tp-h1" style={{ fontSize: "clamp(40px, 5.4vw, 56px)", fontWeight: 800, lineHeight: 1.06, letterSpacing: "-0.02em", color: INK, margin: "0 0 20px" }}>
+              Renting <span style={{ color: BLUE_LG }}>Made Simple.</span>
+            </h1>
+            <p className="tp-lead" style={{ maxWidth: 520, marginBottom: 28 }}>
+              Browse available homes, book viewings online and manage maintenance in a few taps.
+              A calmer, fully-digital way to rent across Leeds &amp; Manchester.
+            </p>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 14, marginBottom: 22 }}>
+              <a href="/listings" className="tp-btn tp-blue">Browse Properties</a>
+              <a href="/maintenance/report" className="tp-btn tp-yellow">🔧 Report a Maintenance</a>
+            </div>
+            <span className="tp-chip">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={GREEN} strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round"><path d="m5 13 4 4L19 7" /></svg>
+              £0 tenant fees — no agency fees, ever
+            </span>
+          </div>
 
-      {/* ── HOW IT WORKS ── */}
-      <section
-        style={{
-          position: "relative",
-          overflow: "hidden",
-          background: "#f3f4f6",
-        }}
-      >
-        <div className="t-sec" style={{ position: "relative", zIndex: 1, maxWidth: 1100, margin: "0 auto", padding: "60px 24px 80px" }}>
-          <h2 className="t-head t-reveal" style={{ fontSize: "clamp(1.6rem, 4vw, 2.4rem)", fontWeight: 700, marginBottom: 48, letterSpacing: "-0.02em", color: "#111827", fontFamily: "'Barlow Condensed', sans-serif" }}>
-            <span className="t-accent t-reveal">From enquiry to keys, eight steps.</span>
-          </h2>
+          <div className="tp-media-right reveal" style={{ position: "relative" }}>
+            <div style={{ borderRadius: 24, overflow: "hidden", boxShadow: "0 24px 56px rgba(24,33,53,0.18)" }}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/images/heropage.webp" alt="A family holding the keys to their new rented home" style={{ display: "block", width: "100%", height: "100%", objectFit: "cover" }} />
+            </div>
+            <div className="tp-float" style={{ position: "absolute", left: 20, bottom: -18, background: "#fff", borderRadius: 999, padding: "12px 20px", boxShadow: "0 16px 30px rgba(24,33,53,0.2)", display: "flex", alignItems: "center", gap: 10, fontWeight: 700, fontSize: 14, color: INK }}>
+              <span style={{ width: 10, height: 10, borderRadius: 999, background: GREEN }} />
+              Feels like home.
+            </div>
+          </div>
+        </div>
+      </section>
 
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 20 }}>
-            {steps.map((step, i) => (
-              <div
-                key={step.num}
-                className="t-card t-reveal"
-                style={{ animationDelay: `${i * 55}ms` }}
-              >
-                <div style={{ marginBottom: 14 }}>
-                  <span className="t-num">{step.num}</span>
+      {/* ── 2 · A PLACE TO CALL HOME ── */}
+      <section style={{ background: ALT_BG }}>
+        <div className="tp-wrap tp-2col">
+          <div className="reveal">
+            <p className="tp-kicker">A Place to Call Home</p>
+            <h2 className="tp-h2" style={{ marginBottom: 18 }}>More Than a Property.<br />A Place to Call Home.</h2>
+            <p className="tp-lead" style={{ maxWidth: 520, marginBottom: 24 }}>
+              Whether you&apos;re moving across the city or starting a new chapter, we&apos;re here to make
+              renting simple, transparent and stress-free.
+            </p>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 12, marginBottom: 28 }}>
+              {["Warm local team", "No agency fees", "Support that lasts"].map((t) => (
+                <span key={t} className="tp-chip">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke={GREEN} strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round"><path d="m5 13 4 4L19 7" /></svg>
+                  {t}
+                </span>
+              ))}
+            </div>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 12 }}>
+              <span className="tp-btn sm tp-ink" style={{ cursor: "default" }}>Homes across Leeds &amp; Manchester</span>
+              <a href="/listings" className="tp-btn sm tp-blue">Ready to find your next home? →</a>
+            </div>
+          </div>
+          <div className="tp-media-right reveal">
+            <div style={{ borderRadius: 24, overflow: "hidden", boxShadow: "0 24px 56px rgba(24,33,53,0.18)", height: 380 }}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/images/areas/salford-quays.webp" alt="Waterside city living across Leeds and Manchester" style={{ display: "block", width: "100%", height: "100%", objectFit: "cover" }} loading="lazy" />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── 3 · YOUR JOURNEY HOME ── */}
+      <section>
+        <div className="tp-wrap">
+          <div className="reveal" style={{ marginBottom: 44 }}>
+            <p className="tp-kicker">Your Journey Home</p>
+            <h2 className="tp-h2">Your journey <span style={{ color: BLUE_LG }}>in eight simple steps.</span></h2>
+          </div>
+          <div className="tp-journey" style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 20 }}>
+            {journey.map((s, i) => (
+              <div key={s.num} className="tp-card reveal" style={{ animationDelay: `${i * 50}ms` }}>
+                <span className="tp-numchip">{s.num}</span>
+                <h3 style={{ fontSize: 17, fontWeight: 800, color: INK, margin: "16px 0 8px" }}>{s.title}</h3>
+                <p style={{ fontSize: 14, color: BODY, lineHeight: 1.6, margin: 0 }}>{s.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── 4 · WHAT MAKES US DIFFERENT (dark) ── */}
+      <section style={{ background: INK }}>
+        <div className="tp-wrap tp-2col">
+          <div className="reveal">
+            <p className="tp-kicker" style={{ color: "#7aa2ff" }}>What Makes Us Different</p>
+            <h2 className="tp-h2" style={{ color: "#fff", marginBottom: 22 }}>We got tired of renting feeling like a chase.</h2>
+            <p style={{ color: "rgba(255,255,255,0.7)", fontSize: 16, lineHeight: 1.75, marginBottom: 18 }}>
+              Endless phone calls that go unanswered. Emails lost in someone&apos;s inbox. Agents who vanish
+              the day you sign. That&apos;s the renting most people know — and it&apos;s exactly what we set out to end.
+            </p>
+            <p style={{ color: "rgba(255,255,255,0.7)", fontSize: 16, lineHeight: 1.75, marginBottom: 22 }}>
+              So we rebuilt the whole experience around you. Every step lives online — booking a viewing,
+              applying, reporting a repair — and behind it sits a warm local team who actually pick up when it matters.
+            </p>
+            <p style={{ color: "#fff", fontSize: 18, fontWeight: 700, lineHeight: 1.5, margin: 0 }}>
+              Renting shouldn&apos;t feel like chasing. It should feel like coming home.
+            </p>
+          </div>
+          <div className="tp-pillars-wrap reveal" style={{ display: "grid", gap: 16 }}>
+            {pillars.map((p) => (
+              <div key={p.title} className="tp-pillar">
+                <span className="tp-pillar-ic">{p.icon}</span>
+                <div>
+                  <h3 style={{ fontSize: 16, fontWeight: 800, color: "#fff", margin: "2px 0 6px" }}>{p.title}</h3>
+                  <p style={{ fontSize: 14, color: "rgba(255,255,255,0.65)", lineHeight: 1.6, margin: 0 }}>{p.desc}</p>
                 </div>
-                <h3 style={{ fontSize: 17, fontWeight: 700, marginBottom: 10, color: "#111827" }}>{step.title}</h3>
-                <p style={{ fontSize: 14, color: "#4b5563", lineHeight: 1.65 }}>{step.body}</p>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* ── WHY RENT WITH US ── */}
-      <section
-        style={{
-          background: "#e8eaed",
-          borderTop: "1px solid rgba(37,99,235,0.15)",
-          borderBottom: "1px solid rgba(37,99,235,0.15)",
-        }}
-      >
-        <div className="t-sec" style={{ maxWidth: 1100, margin: "0 auto", padding: "80px 24px" }}>
-          <h2 className="t-head t-reveal" style={{ fontSize: "clamp(1.6rem, 4vw, 2.4rem)", fontWeight: 700, marginBottom: 48, letterSpacing: "-0.02em", color: "#111827", fontFamily: "'Barlow Condensed', sans-serif" }}>
-            <span className="t-accent t-reveal">What makes us different.</span>
-          </h2>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 20 }}>
-            {whyCards.map((card, i) => (
-              <div key={card.title} className="t-card t-reveal" style={{ animationDelay: `${i * 55}ms` }}>
-                <div className="t-ic" style={{ marginBottom: 16, display: "inline-flex", padding: 12, borderRadius: 14, background: "#eef3ff", border: "1px solid #dbe6ff" }}>{card.icon}</div>
-                <h3 style={{ fontSize: 17, fontWeight: 700, marginBottom: 10, color: "#111827" }}>{card.title}</h3>
-                <p style={{ fontSize: 14, color: "#4b5563", lineHeight: 1.65 }}>{card.body}</p>
+      {/* ── 5 · LOVED BY TENANTS ── */}
+      <section style={{ background: ALT_BG }}>
+        <div className="tp-wrap">
+          <div className="reveal" style={{ textAlign: "center", marginBottom: 44 }}>
+            <p className="tp-kicker">Loved by Tenants</p>
+            <h2 className="tp-h2">Renting people actually enjoyed.</h2>
+          </div>
+          <div className="tp-reviews" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 20 }}>
+            {reviews.map((r, i) => (
+              <div key={r.name} className="tp-card reveal" style={{ animationDelay: `${i * 60}ms`, display: "flex", flexDirection: "column", gap: 14 }}>
+                <span style={{ alignSelf: "flex-start", fontSize: 11, fontWeight: 800, letterSpacing: "0.06em", textTransform: "uppercase", color: BLUE_LG, background: "#dbe7fd", borderRadius: 999, padding: "5px 12px" }}>{r.tag}</span>
+                <p style={{ fontSize: 15, color: INK, lineHeight: 1.7, margin: 0, flexGrow: 1 }}>&ldquo;{r.quote}&rdquo;</p>
+                <div style={{ borderTop: `1px solid ${HAIR}`, paddingTop: 12 }}>
+                  <div style={{ fontSize: 14, fontWeight: 800, color: INK }}>{r.name}</div>
+                  <div style={{ fontSize: 12.5, color: BODY, marginTop: 2 }}>{r.detail}</div>
+                </div>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* ── EXPLORE MANCHESTER ── */}
-      <section style={{ background: "#f3f4f6", borderTop: "1px solid rgba(37,99,235,0.15)" }}>
-        <style>{`
-          .area-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
-          .area-card {
-            position: relative; display: block; border-radius: 20px; overflow: hidden;
-            height: 300px; text-decoration: none;
-            box-shadow: 0 16px 36px -14px rgba(24,33,53,0.22);
-            transition: transform .35s cubic-bezier(.22,1,.36,1), box-shadow .35s ease;
-            will-change: transform;
-          }
-          .area-card img {
-            position: absolute; inset: 0; width: 100%; height: 100%;
-            object-fit: cover; object-position: center;
-            transition: transform .6s cubic-bezier(.22,1,.36,1);
-          }
-          .area-card:hover { transform: translateY(-8px); box-shadow: 0 34px 60px -22px rgba(24,33,53,0.4); }
-          .area-card:hover img { transform: scale(1.08); }
-          .area-overlay { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(24,33,53,0) 34%, rgba(24,33,53,0.82) 100%); }
-          .area-text { position: absolute; left: 18px; right: 18px; bottom: 16px; color: #fff; z-index: 1; }
-          .area-name { font-size: 19px; font-weight: 800; letter-spacing: -0.01em; margin-bottom: 5px; }
-          .area-desc { font-size: 13px; color: rgba(255,255,255,0.9); line-height: 1.45; }
-          .area-cta {
-            display: inline-flex; align-items: center; gap: 6px; margin-top: 12px;
-            font-size: 12.5px; font-weight: 700; color: #fff;
-            background: rgba(10,70,239,0.9); border-radius: 999px; padding: 7px 14px;
-            opacity: 0; transform: translateY(6px); transition: opacity .3s ease, transform .3s ease, background .2s ease;
-          }
-          .area-card:hover .area-cta { opacity: 1; transform: translateY(0); }
-          @media (max-width: 900px) { .area-grid { grid-template-columns: repeat(2, 1fr); } }
-          @media (max-width: 480px) {
-            .area-grid { grid-template-columns: 1fr; }
-            .area-card { height: 240px; }
-            .area-cta { opacity: 1; transform: none; }
-          }
-          @media (prefers-reduced-motion: reduce) {
-            .area-card, .area-card img, .area-cta { transition: none; }
-            .area-card:hover { transform: none; }
-            .area-card:hover img { transform: none; }
-          }
-        `}</style>
-        <div className="t-sec" style={{ maxWidth: 1200, margin: "0 auto", padding: "80px 24px" }}>
-          <p style={{ color: "#0A46EF", fontSize: 12, letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 12, fontWeight: 800 }}>
-            Explore Manchester
-          </p>
-          <h2 className="t-head t-reveal" style={{ fontSize: "clamp(1.6rem, 4vw, 2.4rem)", fontWeight: 700, marginBottom: 16, letterSpacing: "-0.02em", color: "#111827", fontFamily: "'Barlow Condensed', sans-serif" }}>
-            <span className="t-accent t-reveal">Find the area that suits your lifestyle.</span>
-          </h2>
-          <p style={{ fontSize: 15, color: "#4b5563", lineHeight: 1.65, maxWidth: 560, marginBottom: 40 }}>
-            Not sure where to start? Here&apos;s a quick feel for four of Manchester&apos;s most popular places to rent.
-          </p>
+      {/* ── 6 · EXPLORE MANCHESTER ── */}
+      <section>
+        <div className="tp-wrap">
+          <div className="reveal" style={{ marginBottom: 36 }}>
+            <p className="tp-kicker">Explore Manchester</p>
+            <h2 className="tp-h2">Find the area that suits your lifestyle.</h2>
+          </div>
           <div className="area-grid">
             {areas.map((a, i) => (
-              <a key={a.name} href="/listings" className="area-card t-reveal" style={{ animationDelay: `${i * 70}ms` }}>
+              <a key={a.name} href="/listings" className="area-card reveal" style={{ animationDelay: `${i * 60}ms` }}>
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={a.img} alt={`${a.name}, Manchester`} loading="lazy" />
-                <span className="area-overlay" />
-                <span className="area-text">
-                  <span className="area-name" style={{ display: "block" }}>{a.name}</span>
-                  <span className="area-desc" style={{ display: "block" }}>{a.desc}</span>
-                  <span className="area-cta">
-                    Browse homes
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
-                  </span>
+                <span className="area-ov" />
+                <span className="area-txt">
+                  <span style={{ display: "block", fontSize: 19, fontWeight: 800, marginBottom: 5 }}>{a.name}</span>
+                  <span style={{ display: "block", fontSize: 13, color: "rgba(255,255,255,0.9)", lineHeight: 1.45 }}>{a.desc}</span>
                 </span>
               </a>
             ))}
@@ -441,115 +384,65 @@ export default function TenantsPage() {
         </div>
       </section>
 
-      {/* ── HOLDING DEPOSIT EXPLAINER — animated ── */}
-      <section style={{ position: "relative", overflow: "hidden", background: "#0a162f" }}>
-        {/* Animated background */}
-        <div style={{ position: "absolute", inset: 0, pointerEvents: "none", zIndex: 0 }}>
-          {[0, 1, 2].map(i => (
-            <div key={i} style={{
-              position: "absolute",
-              width: 300 + i * 160,
-              height: 300 + i * 160,
-              borderRadius: "50%",
-              border: `1px solid rgba(37,99,235,${0.10 - i * 0.03})`,
-              top: "50%", left: "50%",
-              transform: "translate(-50%, -50%)",
-              animation: `t-pulse-ring ${6 + i * 2}s ease-in-out ${i * 1.5}s infinite`,
-            }} />
-          ))}
-          <div style={{
-            position: "absolute", width: 500, height: 500, borderRadius: "50%",
-            background: "radial-gradient(circle, rgba(37,99,235,0.08) 0%, transparent 65%)",
-            top: "-100px", right: "-150px",
-            animation: "t-orb-move 16s ease-in-out infinite",
-          }} />
-          <div style={{
-            position: "absolute", width: 350, height: 350, borderRadius: "50%",
-            background: "radial-gradient(circle, rgba(96,165,250,0.06) 0%, transparent 65%)",
-            bottom: "-80px", left: "-100px",
-            animation: "t-orb-move 12s ease-in-out infinite reverse",
-          }} />
-          {[
-            { top: "15%", left: "4%", delay: "0s" },
-            { top: "65%", left: "7%", delay: "2.5s" },
-            { top: "25%", right: "4%", delay: "1s" },
-            { top: "70%", right: "6%", delay: "3s" },
-          ].map((pos, i) => (
-            <div key={i} style={{
-              position: "absolute", ...pos as any, fontSize: 22,
-              color: "rgba(96,165,250,0.25)",
-              fontWeight: 700,
-              animation: `t-float-med 8s ease-in-out ${pos.delay} infinite`,
-            }}>
-              {i % 2 === 0 ? "£" : "🔑"}
-            </div>
-          ))}
-          <div style={{
-            position: "absolute", inset: 0,
-            background: "repeating-linear-gradient(135deg, transparent 0px, transparent 60px, rgba(37,99,235,0.025) 60px, rgba(37,99,235,0.025) 61px)",
-            animation: "t-shimmer 8s ease-in-out infinite",
-          }} />
-        </div>
-
-        <div style={{ position: "relative", zIndex: 1, maxWidth: 1100, margin: "0 auto", padding: "80px 24px" }}>
-          <style>{`
-            @media (max-width: 700px) {
-              .deposit-grid { grid-template-columns: 1fr !important; gap: 32px !important; }
-            }
-          `}</style>
-          <div className="deposit-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 48, alignItems: "center" }}>
+      {/* ── 7 · EXPLORE LEEDS (live homes) ── */}
+      <section style={{ background: ALT_BG }}>
+        <div className="tp-wrap">
+          <div className="reveal" style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", gap: 20, flexWrap: "wrap", marginBottom: 36 }}>
             <div>
-              <h2 style={{ fontSize: "clamp(1.6rem, 4vw, 2.2rem)", fontWeight: 700, marginBottom: 20, letterSpacing: "-0.02em", lineHeight: 1.2, color: "#fff", fontFamily: "'Barlow Condensed', sans-serif" }}>
-                The holding deposit explained.
-              </h2>
-              <p style={{ color: "rgba(255,255,255,0.65)", fontSize: 15, lineHeight: 1.75, marginBottom: 20 }}>
-                When you've seen the property and want to move forward, a holding deposit takes it off the market while your application is processed.
-              </p>
-              <p style={{ color: "rgba(255,255,255,0.65)", fontSize: 15, lineHeight: 1.75, marginBottom: 32 }}>
-                That deposit is{" "}
-                <span style={{ color: "#fff", fontWeight: 600 }}>deducted from your first month's rent</span>{" "}
-                , so you're not paying it on top of anything. It's just paying your rent a little early.
-              </p>
-
-              {/* ── MAINTENANCE CTA ── */}
-              <div style={{ border: "1px solid rgba(37,99,235,0.4)", borderRadius: 14, padding: "20px 24px", background: "rgba(37,99,235,0.08)", display: "flex", flexDirection: "column", gap: 12 }}>
-                <div>
-                  <div style={{ color: "#fff", fontWeight: 700, fontSize: 16, marginBottom: 4 }}>Already renting with us? Something broken?</div>
-                  <p style={{ color: "rgba(255,255,255,0.6)", fontSize: 14, lineHeight: 1.6, margin: 0 }}>
-                    If you have a maintenance issue or fault in your property, report it here with a few photos and we&apos;ll get it sorted.
-                  </p>
-                </div>
-                <a
-                  href="/maintenance/report"
-                  className="t-cta-btn"
-                  style={{
-                    display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 9,
-                    boxSizing: "border-box", minHeight: 48, lineHeight: 1.2,
-                    alignSelf: "flex-start", background: "#0A46EF", color: "#fff", fontWeight: 700,
-                    fontSize: 13.5, padding: "14px 28px", border: "1.5px solid transparent",
-                    borderRadius: 10, textDecoration: "none",
-                    letterSpacing: "0.02em",
-                    boxShadow: "0 12px 24px -10px rgba(10,70,239,0.6)",
-                  }}
-                >
-                  🔧 Report a maintenance issue →
-                </a>
-              </div>
+              <p className="tp-kicker">Explore Leeds</p>
+              <h2 className="tp-h2">Homes available now in Leeds.</h2>
             </div>
+            <a href="/listings?location=Leeds" style={{ color: BLUE_SM, fontWeight: 700, fontSize: 15, textDecoration: "none", whiteSpace: "nowrap" }}>
+              View all Leeds homes →
+            </a>
+          </div>
 
-            <div style={{ border: "1px solid rgba(245,245,240,0.22)", borderRadius: 16, padding: "36px 32px", background: "rgba(10,24,56,0.85)", backdropFilter: "blur(12px)", animation: "t-cta-pulse 6s ease-in-out infinite" }}>
-              {[
-                { label: "Agency fees", value: "£0", sub: "Always free for tenants" },
-                { label: "Holding deposit", value: "Varies", sub: "Deducted from first month's rent" },
-                { label: "Application forms", value: "None", sub: "Just a quick conversation" },
-                { label: "Viewing fee", value: "£0", sub: "No charge to view a property" },
-              ].map((row, i) => (
-                <div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", padding: "16px 0", borderBottom: i < 3 ? "1px solid rgba(255,255,255,0.07)" : "none" }}>
+          {loading ? (
+            <div className="leeds-grid">
+              {[0, 1, 2, 3].map((i) => (
+                <div key={i} style={{ height: 360, borderRadius: 8, background: "#e8edf3", animation: "tp-floaty 2.2s ease-in-out infinite" }} />
+              ))}
+            </div>
+          ) : leedsHomes.length > 0 ? (
+            <div className="leeds-grid">
+              {leedsHomes.map((p) => (
+                <div key={p.id} className="reveal">
+                  <PropertyCard property={p} />
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div style={{ background: "#fff", border: `1px solid ${HAIR}`, borderRadius: 18, padding: "48px 32px", textAlign: "center" }}>
+              <p style={{ fontSize: 16, color: BODY, margin: "0 0 20px" }}>
+                No Leeds homes are live right now — new listings go up regularly.
+              </p>
+              <a href="/listings?location=Leeds" className="tp-btn tp-blue" style={{ display: "inline-flex" }}>Browse all properties</a>
+            </div>
+          )}
+        </div>
+      </section>
+
+      {/* ── 8 · REPORTING MAINTENANCE ── */}
+      <section id="maintenance">
+        <div className="tp-wrap tp-2col">
+          <div className="reveal">
+            <p className="tp-kicker" style={{ color: GREEN_DEEP }}>Already Renting With Us?</p>
+            <h2 className="tp-h2" style={{ marginBottom: 18 }}>Need Help? Reporting Maintenance Is Easy.</h2>
+            <p className="tp-lead" style={{ maxWidth: 500, marginBottom: 28 }}>
+              It&apos;s fully online — answer a couple of questions, send a picture and submit your request.
+              We&apos;ll coordinate it with the right contractor as soon as possible and keep you updated throughout.
+            </p>
+            <a href="/maintenance/report" className="tp-btn tp-yellow">🔧 Report a Maintenance Issue</a>
+          </div>
+          <div className="reveal">
+            <div className="tp-timeline">
+              {maintSteps.map((m) => (
+                <div key={m.num} className="tp-card tp-tl-row" style={{ padding: "18px 20px" }}>
+                  <span className="tp-tl-num">{m.num}</span>
                   <div>
-                    <div style={{ fontWeight: 600, fontSize: 15, color: "#d1d5db" }}>{row.label}</div>
-                    <div style={{ color: "rgba(209,213,219,0.55)", fontSize: 12, marginTop: 3 }}>{row.sub}</div>
+                    <h3 style={{ fontSize: 16, fontWeight: 800, color: INK, margin: "6px 0 4px" }}>{m.title}</h3>
+                    <p style={{ fontSize: 13.5, color: BODY, lineHeight: 1.5, margin: 0 }}>{m.desc}</p>
                   </div>
-                  <div style={{ color: "#d1d5db", fontWeight: 700, fontSize: 16, flexShrink: 0, marginLeft: 16 }}>{row.value}</div>
                 </div>
               ))}
             </div>
@@ -557,27 +450,74 @@ export default function TenantsPage() {
         </div>
       </section>
 
-      {/* ── FAQ ── */}
-      <section style={{ background: "#f3f4f6", borderTop: "1px solid rgba(37,99,235,0.15)" }}>
-        <div className="t-sec" style={{ maxWidth: 760, margin: "0 auto", padding: "80px 24px" }}>
-          <p style={{ color: "#0A46EF", fontSize: 12, letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 12, fontWeight: 800 }}>
-            Common Questions
-          </p>
-          <h2 className="t-head t-reveal" style={{ fontSize: "clamp(1.6rem, 4vw, 2.4rem)", fontWeight: 700, marginBottom: 40, letterSpacing: "-0.02em", color: "#0f172a" }}>
-            <span className="t-accent t-reveal">FAQs</span>
-          </h2>
-          <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
+      {/* ── 9 · OUR PROMISE ── */}
+      <section style={{ background: GREEN_TINT, borderTop: `1px solid ${GREEN_BORDER}`, borderBottom: `1px solid ${GREEN_BORDER}` }}>
+        <div className="tp-wrap" style={{ textAlign: "center" }}>
+          <p className="tp-kicker reveal" style={{ color: GREEN_DEEP }}>Our Commitment</p>
+          <h2 className="tp-h2 reveal" style={{ marginBottom: 32 }}>Our Promise to Every Tenant</h2>
+          <div className="reveal" style={{ display: "flex", flexWrap: "wrap", justifyContent: "center", gap: 14 }}>
+            {promises.map((p) => (
+              <span key={p} style={{ display: "inline-flex", alignItems: "center", gap: 10, background: "#fff", border: `1px solid ${GREEN_BORDER}`, borderRadius: 999, padding: "12px 20px", fontSize: 15, fontWeight: 600, color: INK }}>
+                <span style={{ width: 24, height: 24, borderRadius: 999, background: GREEN, display: "grid", placeItems: "center", flexShrink: 0 }}>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="m5 13 4 4L19 7" /></svg>
+                </span>
+                {p}
+              </span>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── 10 · HOLDING DEPOSIT EXPLAINED ── */}
+      <section>
+        <div className="tp-wrap tp-2col">
+          <div className="reveal">
+            <p className="tp-kicker">The Small Print, Made Clear</p>
+            <h2 className="tp-h2" style={{ marginBottom: 18 }}>The holding deposit explained.</h2>
+            <p className="tp-lead" style={{ marginBottom: 16 }}>
+              When you&apos;ve seen the property and want to move forward, a holding deposit takes it off the
+              market while your application is processed.
+            </p>
+            <p className="tp-lead" style={{ margin: 0 }}>
+              That deposit is <strong style={{ color: INK }}>deducted from your first month&apos;s rent</strong>, so
+              you&apos;re not paying it on top of anything. It&apos;s just paying your rent a little early.
+            </p>
+          </div>
+          <div className="reveal">
+            <div className="tp-card" style={{ padding: "8px 26px" }}>
+              {feeRows.map((f, i) => (
+                <div key={f.label} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "18px 0", borderBottom: i < feeRows.length - 1 ? `1px solid ${HAIR}` : "none" }}>
+                  <div>
+                    <div style={{ fontSize: 15, fontWeight: 700, color: INK }}>{f.label}</div>
+                    <div style={{ fontSize: 12.5, color: BODY, marginTop: 2 }}>{f.desc}</div>
+                  </div>
+                  <div style={{ fontSize: 18, fontWeight: 800, color: BLUE_LG, flexShrink: 0, marginLeft: 16 }}>{f.value}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── 11 · FAQs ── */}
+      <section style={{ background: ALT_BG }}>
+        <div className="tp-wrap" style={{ maxWidth: 820 }}>
+          <div className="reveal" style={{ textAlign: "center", marginBottom: 36 }}>
+            <p className="tp-kicker">Common Questions</p>
+            <h2 className="tp-h2">FAQs</h2>
+          </div>
+          <div className="reveal" style={{ display: "flex", flexDirection: "column", gap: 12 }}>
             {faqs.map((faq, i) => (
-              <div key={i} style={{ borderTop: "1px solid rgba(0,0,0,0.25)", borderBottom: i === faqs.length - 1 ? "1px solid rgba(0,0,0,0.25)" : "none" }}>
+              <div key={i} className="tp-card" style={{ padding: "4px 24px" }}>
                 <button
-                  onClick={() => setOpenFaq(openFaq === i ? null : i)}
-                  style={{ width: "100%", background: "none", border: "none", color: "#0f172a", textAlign: "left", padding: "20px 0", display: "flex", justifyContent: "space-between", alignItems: "center", cursor: "pointer", fontSize: 16, fontWeight: 600, gap: 16 }}
+                  onClick={() => setOpenFaq(openFaq === i ? -1 : i)}
+                  style={{ width: "100%", background: "none", border: "none", color: INK, textAlign: "left", padding: "20px 0", display: "flex", justifyContent: "space-between", alignItems: "center", cursor: "pointer", fontSize: 16, fontWeight: 700, gap: 16 }}
                 >
                   {faq.q}
-                  <span style={{ color: "#0A46EF", fontSize: 22, flexShrink: 0, lineHeight: 1, transform: openFaq === i ? "rotate(45deg)" : "none", transition: "transform 0.25s cubic-bezier(.34,1.56,.64,1)" }}>+</span>
+                  <span style={{ color: BLUE_SM, fontSize: 24, flexShrink: 0, lineHeight: 1, transform: openFaq === i ? "rotate(45deg)" : "none", transition: "transform 0.25s cubic-bezier(.34,1.56,.64,1)" }}>+</span>
                 </button>
                 {openFaq === i && (
-                  <p style={{ color: "#475569", fontSize: 15, lineHeight: 1.7, paddingBottom: 20, margin: 0 }}>{faq.a}</p>
+                  <p style={{ color: BODY, fontSize: 15, lineHeight: 1.7, padding: "0 0 20px", margin: 0 }}>{faq.a}</p>
                 )}
               </div>
             ))}
@@ -585,86 +525,20 @@ export default function TenantsPage() {
         </div>
       </section>
 
-      {/* ── CTA BANNER — animated ── */}
-      <section style={{ position: "relative", overflow: "hidden", maxWidth: 1100, margin: "0 auto", padding: "80px 24px 100px" }}>
-        <div
-          style={{
-            position: "relative",
-            border: "2px solid #253996",
-            borderRadius: 18,
-            padding: "60px 40px",
-            background: "rgba(4,10,24,0.94)",
-            textAlign: "center",
-            overflow: "hidden",
-            animation: "t-cta-pulse 5s ease-in-out infinite",
-          }}
-        >
-          <div style={{ position: "absolute", inset: 0, pointerEvents: "none" }}>
-            <div style={{
-              position: "absolute", width: 400, height: 400, borderRadius: "50%",
-              background: "radial-gradient(circle, rgba(37,99,235,0.12) 0%, transparent 65%)",
-              top: "-150px", left: "-100px",
-              animation: "t-orb-move 10s ease-in-out infinite",
-            }} />
-            <div style={{
-              position: "absolute", width: 300, height: 300, borderRadius: "50%",
-              background: "radial-gradient(circle, rgba(96,165,250,0.08) 0%, transparent 65%)",
-              bottom: "-100px", right: "-80px",
-              animation: "t-orb-move 14s ease-in-out infinite reverse",
-            }} />
-            {[
-              { top: "20%", left: "8%" }, { top: "70%", left: "12%" },
-              { top: "30%", right: "10%" }, { top: "65%", right: "15%" },
-              { top: "50%", left: "25%" }, { top: "25%", right: "28%" },
-            ].map((pos, i) => (
-              <div key={i} style={{
-                position: "absolute", ...pos as any,
-                width: 4, height: 4, borderRadius: "50%",
-                background: `rgba(96,165,250,${0.3 + (i % 3) * 0.1})`,
-                animation: `t-float-slow ${5 + i}s ease-in-out ${i * 0.7}s infinite`,
-              }} />
-            ))}
-            <div style={{
-              position: "absolute", left: "50%", top: 0, bottom: 0, width: 1,
-              background: "linear-gradient(180deg, transparent, rgba(37,99,235,0.15), transparent)",
-              animation: "t-shimmer 4s ease-in-out infinite",
-            }} />
-          </div>
-
-          <div style={{ position: "relative", zIndex: 1 }}>
-            <h2 style={{ fontSize: "clamp(1.6rem, 4vw, 2.4rem)", fontWeight: 700, marginBottom: 16, letterSpacing: "-0.02em", fontFamily: "'Barlow Condensed', sans-serif", color: "#ffffff" }}>
-              Ready to find your next home?
-            </h2>
-            <p style={{ color: "#ffffff", fontSize: 16, marginBottom: 36, maxWidth: 460, margin: "0 auto 36px", lineHeight: 1.65 }}>
-              Send us an enquiry and we'll take it from there. No forms, no fees, no hassle.
-            </p>
-            <a
-              href="/book-viewing"
-              className="t-cta-btn"
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                justifyContent: "center",
-                gap: 9,
-                boxSizing: "border-box",
-                minHeight: 48,
-                lineHeight: 1.2,
-                background: "#0A46EF",
-                color: "#fff",
-                padding: "14px 30px",
-                borderRadius: 10,
-                fontWeight: 700,
-                fontSize: 13.5,
-                textDecoration: "none",
-                letterSpacing: "0.02em",
-                textTransform: "uppercase",
-                border: "1.5px solid rgba(255,255,255,0.18)",
-                marginTop: 8,
-                boxShadow: "0 14px 30px -12px rgba(10,70,239,0.7)",
-              }}
-            >
-              Send an Enquiry
-            </a>
+      {/* ── 12 · FINAL CTA ── */}
+      <section id="browse" style={{ position: "relative", overflow: "hidden" }}>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/images/areas/salford-quays.webp" alt="" aria-hidden style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }} loading="lazy" />
+        <div style={{ position: "absolute", inset: 0, background: "linear-gradient(180deg, rgba(20,36,90,0.92), rgba(24,33,53,0.94))" }} />
+        <div className="tp-wrap reveal" style={{ position: "relative", zIndex: 1, textAlign: "center" }}>
+          <h2 className="tp-h2" style={{ color: "#fff", fontSize: "clamp(30px, 4.5vw, 44px)", marginBottom: 16 }}>Ready to Find Your Next Home?</h2>
+          <p style={{ color: "rgba(255,255,255,0.82)", fontSize: 17, lineHeight: 1.65, maxWidth: 560, margin: "0 auto 32px" }}>
+            Whether you&apos;re relocating, starting a new job or simply looking for a better place to live,
+            we&apos;re here to help you find a place you&apos;ll love coming home to.
+          </p>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 14, justifyContent: "center" }}>
+            <a href="/listings" className="tp-btn tp-blue">Browse Properties</a>
+            <a href="/maintenance/report" className="tp-btn tp-ghost">🔧 Report a Maintenance</a>
           </div>
         </div>
       </section>

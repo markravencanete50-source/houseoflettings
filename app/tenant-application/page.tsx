@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from 'react';
 import jsPDF from 'jspdf';
 import Navbar from '@/components/layout/Navbar';
+import Footer from '@/components/layout/Footer';
 import { getAllProperties } from '@/services/admin';
 import { Property } from '@/lib/types';
 
@@ -1346,6 +1347,7 @@ export default function TenantApplicationPage() {
           </div>
         </div>
       </section>
+      <Footer />
     </main>
   );
 }

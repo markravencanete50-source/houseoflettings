@@ -2,6 +2,7 @@
 
 import { useState, useCallback } from "react";
 import Navbar from "@/components/layout/Navbar";
+import Footer from "@/components/layout/Footer";
 import PostcodeLookup, { type AddressResult } from "@/components/PostcodeLookup";
 
 export default function BookViewingPage() {
@@ -339,6 +340,7 @@ export default function BookViewingPage() {
           </div>
         </div>
       </section>
+      <Footer />
     </main>
   );
 }

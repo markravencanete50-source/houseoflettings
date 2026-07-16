@@ -4,6 +4,7 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import Navbar from '@/components/layout/Navbar';
+import Footer from '@/components/layout/Footer';
 import PostcodeLookup, { type AddressResult } from '@/components/PostcodeLookup';
 import { BUNDLES } from '@/lib/bundles';
 
@@ -844,6 +845,7 @@ export default function LandlordRegistrationApplyPage() {
           )}
         </div>
       </div>
+      <Footer />
     </>
   );
 }

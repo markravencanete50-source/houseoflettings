@@ -5,6 +5,7 @@
 // /maintenance/report.
 import { useState } from 'react';
 import Navbar from '@/components/layout/Navbar';
+import Footer from '@/components/layout/Footer';
 
 const steps = [
   {
@@ -210,6 +211,7 @@ export default function MaintenancePage() {
           </a>
         </div>
       </section>
+      <Footer />
     </main>
   );
 }

@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import jsPDF from 'jspdf';
 import Navbar from '@/components/layout/Navbar';
+import Footer from '@/components/layout/Footer';
 import PostcodeLookup, { type AddressResult } from '@/components/PostcodeLookup';
 
 /* ────────────────────────────────────────────────────────────
@@ -521,6 +522,7 @@ export default function MaintenanceReportPage() {
           </div>
         </div>
       </section>
+      <Footer />
     </main>
   );
 }

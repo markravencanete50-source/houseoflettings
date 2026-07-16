@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Navbar from '@/components/layout/Navbar';
+import Footer from '@/components/layout/Footer';
 import { getProperty } from '@/services/property';
 import { getOrCreateChat } from '@/services/chat';
 import { getUserProfile } from '@/services/auth';
@@ -944,6 +945,7 @@ export default function PropertyDetailClient() {
         propertyCity={detectedCity}
         propertyAddress={property.location}
       />
+      <Footer />
     </>
   );
 }

@@ -4,6 +4,7 @@ import { Suspense } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import Navbar from '@/components/layout/Navbar';
+import Footer from '@/components/layout/Footer';
 
 // The site-standard CTA size, matching components/layout/ServiceHero.module.css
 // (.btn). Every call-to-action is this size.
@@ -45,6 +46,7 @@ export default function SuccessPage() {
       <Suspense fallback={<div style={{ paddingTop: 96 }} />}>
         <SuccessInner />
       </Suspense>
+      <Footer />
     </>
   );
 }

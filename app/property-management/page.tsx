@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useState } from 'react';
 import Navbar from '@/components/layout/Navbar';
+import Footer from '@/components/layout/Footer';
 import ServiceHero from '@/components/layout/ServiceHero';
 import RevealCards from '@/components/RevealCards';
 
@@ -649,6 +650,7 @@ export default function PropertyManagementPage() {
         </div>
       </section>
 
+      <Footer />
     </div>
   );
 }

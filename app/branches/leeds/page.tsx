@@ -4,6 +4,7 @@
 // page while /branches/headingley etc. still render the area pages.
 import type { Metadata } from 'next';
 import BranchOffice from '@/components/branches/BranchOffice';
+import Footer from '@/components/layout/Footer';
 import { CITY_CONTENT } from '@/lib/branches';
 
 const BASE = 'https://www.houseoflettings.uk';
@@ -25,5 +26,5 @@ export const metadata: Metadata = {
 };
 
 export default function LeedsBranchPage() {
-  return <BranchOffice city="Leeds" />;
+  return (<><BranchOffice city="Leeds" /><Footer /></>);
 }

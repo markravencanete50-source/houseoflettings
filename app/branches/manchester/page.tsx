@@ -3,6 +3,7 @@
 // dynamic [slug] neighbourhood route.
 import type { Metadata } from 'next';
 import BranchOffice from '@/components/branches/BranchOffice';
+import Footer from '@/components/layout/Footer';
 import { CITY_CONTENT } from '@/lib/branches';
 
 const BASE = 'https://www.houseoflettings.uk';
@@ -24,5 +25,5 @@ export const metadata: Metadata = {
 };
 
 export default function ManchesterBranchPage() {
-  return <BranchOffice city="Manchester" />;
+  return (<><BranchOffice city="Manchester" /><Footer /></>);
 }

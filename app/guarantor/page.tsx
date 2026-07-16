@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import jsPDF from 'jspdf';
 import Navbar from '@/components/layout/Navbar';
+import Footer from '@/components/layout/Footer';
 import PostcodeLookup, { type AddressResult } from '@/components/PostcodeLookup';
 import { getAllProperties } from '@/services/admin';
 import { Property } from '@/lib/types';
@@ -709,6 +710,7 @@ export default function GuarantorPage() {
           </div>
         </div>
       </section>
+      <Footer />
     </main>
   );
 }

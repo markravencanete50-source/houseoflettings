@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Navbar from '@/components/layout/Navbar';
+import Footer from '@/components/layout/Footer';
 import PropertyCard from '@/components/property/PropertyCard';
 import { subscribeToProperties } from '@/services/property';
 import { Property, SearchFilters } from '@/lib/types';
@@ -405,6 +406,7 @@ export default function ListingsPage() {
       <Suspense fallback={<div style={{ paddingTop: 68 }}>Loading...</div>}>
         <ListingsContent />
       </Suspense>
+      <Footer />
     </>
   );
 }

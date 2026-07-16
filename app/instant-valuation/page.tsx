@@ -2,6 +2,7 @@
 
 import { useState, useCallback } from 'react';
 import Link from 'next/link';
+import Footer from '@/components/layout/Footer';
 import { lookupPostcode, isOperatingArea, TIER_PRICING_2026 } from '@/lib/valuation/operatingAreaPostcodes';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
@@ -815,6 +816,7 @@ export default function InstantValuationPage() {
         )}
 
       </div>
+      <Footer />
     </>
   );
 }

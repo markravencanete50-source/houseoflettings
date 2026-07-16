@@ -516,33 +516,7 @@ export default function TenantsPage() {
         </div>
       </section>
 
-      {/* ── 11 · FAQs ── */}
-      <section style={{ background: ALT_BG }}>
-        <div className="tp-wrap" style={{ maxWidth: 820 }}>
-          <div className="reveal" style={{ textAlign: "center", marginBottom: 36 }}>
-            <p className="tp-kicker">Common Questions</p>
-            <h2 className="tp-h2">FAQs</h2>
-          </div>
-          <div className="reveal" style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-            {faqs.map((faq, i) => (
-              <div key={i} className="tp-card" style={{ padding: "4px 24px" }}>
-                <button
-                  onClick={() => setOpenFaq(openFaq === i ? -1 : i)}
-                  style={{ width: "100%", background: "none", border: "none", color: INK, textAlign: "left", padding: "20px 0", display: "flex", justifyContent: "space-between", alignItems: "center", cursor: "pointer", fontSize: 16, fontWeight: 700, gap: 16 }}
-                >
-                  {faq.q}
-                  <span style={{ color: BLUE_SM, fontSize: 24, flexShrink: 0, lineHeight: 1, transform: openFaq === i ? "rotate(45deg)" : "none", transition: "transform 0.25s cubic-bezier(.34,1.56,.64,1)" }}>+</span>
-                </button>
-                {openFaq === i && (
-                  <p style={{ color: BODY, fontSize: 15, lineHeight: 1.7, padding: "0 0 20px", margin: 0 }}>{faq.a}</p>
-                )}
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ── 11b · RENTING GUIDES ── */}
+      {/* ── 11 · RENTING GUIDES ── */}
       <section>
         <style>{`
           .g-teaser-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 22px; }
@@ -584,6 +558,32 @@ export default function TenantsPage() {
 
           <div style={{ textAlign: "center", marginTop: 40 }}>
             <a href="/guides" className="tp-btn tp-blue" style={{ display: "inline-flex" }}>View all guides</a>
+          </div>
+        </div>
+      </section>
+
+      {/* ── 12 · FAQs (last) ── */}
+      <section style={{ background: ALT_BG }}>
+        <div className="tp-wrap" style={{ maxWidth: 820 }}>
+          <div className="reveal" style={{ textAlign: "center", marginBottom: 36 }}>
+            <p className="tp-kicker">Common Questions</p>
+            <h2 className="tp-h2">FAQs</h2>
+          </div>
+          <div className="reveal" style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+            {faqs.map((faq, i) => (
+              <div key={i} className="tp-card" style={{ padding: "4px 24px" }}>
+                <button
+                  onClick={() => setOpenFaq(openFaq === i ? -1 : i)}
+                  style={{ width: "100%", background: "none", border: "none", color: INK, textAlign: "left", padding: "20px 0", display: "flex", justifyContent: "space-between", alignItems: "center", cursor: "pointer", fontSize: 16, fontWeight: 700, gap: 16 }}
+                >
+                  {faq.q}
+                  <span style={{ color: BLUE_SM, fontSize: 24, flexShrink: 0, lineHeight: 1, transform: openFaq === i ? "rotate(45deg)" : "none", transition: "transform 0.25s cubic-bezier(.34,1.56,.64,1)" }}>+</span>
+                </button>
+                {openFaq === i && (
+                  <p style={{ color: BODY, fontSize: 15, lineHeight: 1.7, padding: "0 0 20px", margin: 0 }}>{faq.a}</p>
+                )}
+              </div>
+            ))}
           </div>
         </div>
       </section>

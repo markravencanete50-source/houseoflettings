@@ -32,6 +32,10 @@ export interface Property {
   featured?: boolean;
   letAgreed?: boolean;    // legacy flag, kept in sync with `availability` for the public site
   availability?: 'available' | 'pending' | 'let-agreed'; // listing state the admin controls
+  // The listing's reference on each portal, recorded by staff after they upload
+  // it there. Lets /api/portal-lookup resolve an inbound enquiry to this doc
+  // exactly, instead of guessing from the address. Absent on older listings.
+  portalRef?: { zoopla?: string; onthemarket?: string };
   furnished?: 'furnished' | 'unfurnished' | 'part-furnished';
   availableFrom?: string;
 

@@ -68,8 +68,8 @@ const promises = [
   "Honest communication",
   "Transparent process",
   "Fast maintenance support",
-  "Professional property management",
   "Friendly local team",
+  "Professional property management",
 ];
 
 const feeRows = [
@@ -153,19 +153,35 @@ export default function TenantsPage() {
         .tp-ghost { background: transparent; color: #fff; border-color: rgba(255,255,255,0.5); }
         .tp-ghost:hover { border-color: #fff; background: rgba(255,255,255,0.08); }
 
-        /* Cards */
-        .tp-card { background: #fff; border: 1px solid ${HAIR}; border-radius: 18px; padding: 26px;
-          box-shadow: 0 10px 26px rgba(24,33,53,0.05);
-          transition: transform .32s cubic-bezier(.22,1,.36,1), box-shadow .32s ease, border-color .32s ease; }
-        .tp-card:hover { transform: translateY(-8px); border-color: #bdd2fa; box-shadow: 0 18px 40px rgba(29,78,216,0.14); }
+        /* Cards — soft depth over flat borders */
+        .tp-card { background: #fff; border: 1px solid rgba(24,33,53,0.05); border-radius: 18px; padding: 26px;
+          box-shadow: 0 14px 34px -14px rgba(24,33,53,0.16), 0 3px 10px -4px rgba(24,33,53,0.08);
+          transition: transform .34s cubic-bezier(.22,1,.36,1), box-shadow .34s ease, border-color .34s ease; }
+        .tp-card:hover { transform: translateY(-10px) scale(1.012); border-color: rgba(29,78,216,0.28);
+          box-shadow: 0 30px 56px -20px rgba(29,78,216,0.28), 0 10px 22px -12px rgba(24,33,53,0.18); }
 
         .tp-numchip { width: 46px; height: 46px; border-radius: 12px; background: #e8effd; color: ${BLUE_LG};
-          font-size: 15px; font-weight: 800; display: inline-grid; place-items: center; transition: transform .3s cubic-bezier(.34,1.56,.64,1), background .3s; }
-        .tp-card:hover .tp-numchip { transform: scale(1.1); background: #dbe7fd; }
+          font-size: 15px; font-weight: 800; display: inline-grid; place-items: center;
+          box-shadow: 0 8px 18px -8px rgba(10,70,239,0.35);
+          transition: transform .3s cubic-bezier(.34,1.56,.64,1), background .3s; }
+        .tp-card:hover .tp-numchip { transform: scale(1.12) rotate(-4deg); background: #dbe7fd; }
 
-        /* Chips / pills */
+        /* Chips / pills — lift + shadow on hover */
         .tp-chip { display: inline-flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 700;
-          color: ${GREEN_DEEP}; background: ${GREEN_TINT}; border: 1px solid ${GREEN_BORDER}; border-radius: 999px; padding: 9px 16px; }
+          color: ${GREEN_DEEP}; background: ${GREEN_TINT}; border: 1px solid ${GREEN_BORDER}; border-radius: 999px; padding: 9px 16px;
+          box-shadow: 0 6px 16px -8px rgba(98,157,42,0.35); transition: transform .22s ease, box-shadow .22s ease; }
+        .tp-chip:hover { transform: translateY(-2px); box-shadow: 0 12px 22px -8px rgba(98,157,42,0.45); }
+
+        /* Promise pills */
+        .tp-promise { display: inline-flex; align-items: center; gap: 10px; background: #fff;
+          border: 1px solid ${GREEN_BORDER}; border-radius: 999px; padding: 12px 20px; font-size: 15px; font-weight: 600; color: ${INK};
+          box-shadow: 0 10px 24px -12px rgba(98,157,42,0.4); transition: transform .25s cubic-bezier(.22,1,.36,1), box-shadow .25s ease; }
+        .tp-promise:hover { transform: translateY(-4px); box-shadow: 0 18px 34px -14px rgba(98,157,42,0.5); }
+
+        /* Image frames — subtle zoom on hover */
+        .tp-imgframe { transition: box-shadow .35s ease; }
+        .tp-imgframe img { transition: transform .7s cubic-bezier(.22,1,.36,1); }
+        .tp-imgframe:hover img { transform: scale(1.05); }
 
         /* Area cards */
         .area-grid, .leeds-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
@@ -178,13 +194,18 @@ export default function TenantsPage() {
         .area-ov { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(24,33,53,0) 34%, rgba(24,33,53,0.82) 100%); }
         .area-txt { position: absolute; left: 18px; right: 18px; bottom: 16px; color: #fff; z-index: 1; }
 
-        /* Pillars (dark section) */
-        .tp-pillar { display: flex; gap: 16px; align-items: flex-start; background: rgba(255,255,255,0.05);
-          border: 1px solid rgba(255,255,255,0.1); border-radius: 16px; padding: 20px 22px;
-          transition: transform .3s ease, background .3s ease, border-color .3s ease; }
-        .tp-pillar:hover { transform: translateX(6px); background: rgba(255,255,255,0.08); border-color: rgba(255,255,255,0.2); }
-        .tp-pillar-ic { flex-shrink: 0; width: 48px; height: 48px; border-radius: 12px; background: ${BLUE_SM};
-          display: grid; place-items: center; font-size: 22px; box-shadow: 0 8px 18px rgba(10,70,239,0.4); }
+        /* Pillars (light section) — white cards with depth */
+        .tp-pillar { display: flex; gap: 16px; align-items: flex-start; background: #fff;
+          border: 1px solid rgba(29,78,216,0.08); border-radius: 16px; padding: 20px 22px;
+          box-shadow: 0 14px 32px -16px rgba(24,33,53,0.16);
+          transition: transform .32s cubic-bezier(.22,1,.36,1), box-shadow .32s ease, border-color .32s ease; }
+        .tp-pillar:hover { transform: translateX(6px) translateY(-3px); border-color: rgba(29,78,216,0.28);
+          box-shadow: 0 24px 44px -18px rgba(29,78,216,0.28); }
+        .tp-pillar-ic { flex-shrink: 0; width: 48px; height: 48px; border-radius: 12px;
+          background: linear-gradient(140deg, ${BLUE_SM}, ${BLUE_LG});
+          display: grid; place-items: center; font-size: 22px; box-shadow: 0 10px 20px -8px rgba(10,70,239,0.5);
+          transition: transform .35s cubic-bezier(.34,1.56,.64,1); }
+        .tp-pillar:hover .tp-pillar-ic { transform: scale(1.08) rotate(-4deg); }
 
         /* Maintenance timeline */
         .tp-timeline { display: flex; flex-direction: column; gap: 14px; }
@@ -216,7 +237,10 @@ export default function TenantsPage() {
           .tp-h1 { font-size: 40px !important; }
         }
         @media (prefers-reduced-motion: reduce) {
-          .tp-card, .tp-card:hover, .area-card, .area-card:hover, .area-card img, .tp-pillar, .tp-btn, .tp-numchip, .tp-float { transition: none; animation: none; transform: none; }
+          .tp-card, .tp-card:hover, .area-card, .area-card:hover, .area-card img, .tp-pillar, .tp-pillar:hover,
+          .tp-pillar-ic, .tp-btn, .tp-numchip, .tp-chip, .tp-promise, .tp-imgframe img, .tp-float {
+            transition: none !important; animation: none !important; transform: none !important;
+          }
           .tp-js .reveal { opacity: 1; }
           .tp-js .reveal.in { animation: none; }
         }
@@ -227,7 +251,7 @@ export default function TenantsPage() {
       {/* ── 1 · HERO (previous design — Browse Properties highlighted + Report a Maintenance) ── */}
       <ServiceHero
         eyebrow="For Tenants · Leeds & Manchester"
-        title={<>Looking for your next home? <span style={{ color: BLUE_LG }}>House of Lettings holds the key.</span></>}
+        title={<>Looking for your next home? <span style={{ color: "#6ea8ff" }}>House of Lettings holds the key.</span></>}
         subtitle="No agency fees. No endless forms. Browse available homes, book viewings online and manage maintenance in a few taps."
         image="/images/heropage.webp"
         imageAlt="Happy family holding the keys to their new rented home"
@@ -241,6 +265,12 @@ export default function TenantsPage() {
       {/* ── 2 · A PLACE TO CALL HOME ── */}
       <section style={{ background: ALT_BG }}>
         <div className="tp-wrap tp-2col">
+          <div className="reveal">
+            <div className="tp-imgframe" style={{ borderRadius: 24, overflow: "hidden", boxShadow: "0 26px 60px -20px rgba(24,33,53,0.32)", height: 400 }}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/images/family-kitchen.webp" alt="A family enjoying a meal together in their kitchen" style={{ display: "block", width: "100%", height: "100%", objectFit: "cover" }} loading="lazy" />
+            </div>
+          </div>
           <div className="reveal">
             <p className="tp-kicker">A Place to Call Home</p>
             <h2 className="tp-h2" style={{ marginBottom: 18 }}>More Than a Property.<br />A Place to Call Home.</h2>
@@ -259,12 +289,6 @@ export default function TenantsPage() {
             <div style={{ display: "flex", flexWrap: "wrap", gap: 12 }}>
               <span className="tp-btn sm tp-ink" style={{ cursor: "default" }}>Homes across Leeds &amp; Manchester</span>
               <a href="/listings" className="tp-btn sm tp-blue">Ready to find your next home? →</a>
-            </div>
-          </div>
-          <div className="tp-media-right reveal">
-            <div style={{ borderRadius: 24, overflow: "hidden", boxShadow: "0 24px 56px rgba(24,33,53,0.18)", height: 380 }}>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/images/family-kitchen.webp" alt="A family enjoying a meal together in their kitchen" style={{ display: "block", width: "100%", height: "100%", objectFit: "cover" }} loading="lazy" />
             </div>
           </div>
         </div>
@@ -289,22 +313,24 @@ export default function TenantsPage() {
         </div>
       </section>
 
-      {/* ── 4 · WHAT MAKES US DIFFERENT (dark) ── */}
-      <section style={{ background: INK }}>
+      {/* ── 4 · WHAT MAKES US DIFFERENT (light) ── */}
+      <section style={{ background: "linear-gradient(160deg, #eef3ff 0%, #f7f9fd 100%)", borderTop: "1px solid #e3ebfb", borderBottom: "1px solid #e3ebfb" }}>
         <div className="tp-wrap tp-2col">
           <div className="reveal">
-            <p className="tp-kicker" style={{ color: "#7aa2ff" }}>What Makes Us Different</p>
-            <h2 className="tp-h2" style={{ color: "#fff", marginBottom: 22 }}>We got tired of renting feeling like a chase.</h2>
-            <p style={{ color: "rgba(255,255,255,0.7)", fontSize: 16, lineHeight: 1.75, marginBottom: 18 }}>
+            <p className="tp-kicker">What Makes Us Different</p>
+            <h2 className="tp-h2" style={{ marginBottom: 22 }}>
+              We got tired of renting feeling like <span style={{ color: BLUE_LG }}>a chase.</span>
+            </h2>
+            <p style={{ color: BODY, fontSize: 16, lineHeight: 1.75, marginBottom: 18 }}>
               Endless phone calls that go unanswered. Emails lost in someone&apos;s inbox. Agents who vanish
               the day you sign. That&apos;s the renting most people know — and it&apos;s exactly what we set out to end.
             </p>
-            <p style={{ color: "rgba(255,255,255,0.7)", fontSize: 16, lineHeight: 1.75, marginBottom: 22 }}>
-              So we rebuilt the whole experience around you. Every step lives online — booking a viewing,
-              applying, reporting a repair — and behind it sits a warm local team who actually pick up when it matters.
+            <p style={{ color: BODY, fontSize: 16, lineHeight: 1.75, marginBottom: 22 }}>
+              So we rebuilt the whole experience around you. Every step lives <span style={{ color: BLUE_SM, fontWeight: 700 }}>online</span> —
+              booking a viewing, applying, reporting a repair — and behind it sits a warm local team who actually pick up when it matters.
             </p>
-            <p style={{ color: "#fff", fontSize: 18, fontWeight: 700, lineHeight: 1.5, margin: 0 }}>
-              Renting shouldn&apos;t feel like chasing. It should feel like coming home.
+            <p style={{ color: INK, fontSize: 18, fontWeight: 700, lineHeight: 1.5, margin: 0 }}>
+              Renting shouldn&apos;t feel like chasing. <span style={{ color: BLUE_LG }}>It should feel like coming home.</span>
             </p>
           </div>
           <div className="tp-pillars-wrap reveal" style={{ display: "grid", gap: 16 }}>
@@ -312,8 +338,8 @@ export default function TenantsPage() {
               <div key={p.title} className="tp-pillar">
                 <span className="tp-pillar-ic">{p.icon}</span>
                 <div>
-                  <h3 style={{ fontSize: 16, fontWeight: 800, color: "#fff", margin: "2px 0 6px" }}>{p.title}</h3>
-                  <p style={{ fontSize: 14, color: "rgba(255,255,255,0.65)", lineHeight: 1.6, margin: 0 }}>{p.desc}</p>
+                  <h3 style={{ fontSize: 16, fontWeight: 800, color: INK, margin: "2px 0 6px" }}>{p.title}</h3>
+                  <p style={{ fontSize: 14, color: BODY, lineHeight: 1.6, margin: 0 }}>{p.desc}</p>
                 </div>
               </div>
             ))}
@@ -439,8 +465,8 @@ export default function TenantsPage() {
           <h2 className="tp-h2 reveal" style={{ marginBottom: 32 }}>Our Promise to Every Tenant</h2>
           <div className="reveal" style={{ display: "flex", flexWrap: "wrap", justifyContent: "center", gap: 14 }}>
             {promises.map((p) => (
-              <span key={p} style={{ display: "inline-flex", alignItems: "center", gap: 10, background: "#fff", border: `1px solid ${GREEN_BORDER}`, borderRadius: 999, padding: "12px 20px", fontSize: 15, fontWeight: 600, color: INK }}>
-                <span style={{ width: 24, height: 24, borderRadius: 999, background: GREEN, display: "grid", placeItems: "center", flexShrink: 0 }}>
+              <span key={p} className="tp-promise">
+                <span style={{ width: 24, height: 24, borderRadius: 999, background: GREEN, display: "grid", placeItems: "center", flexShrink: 0, boxShadow: "0 6px 12px -4px rgba(98,157,42,0.6)" }}>
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="m5 13 4 4L19 7" /></svg>
                 </span>
                 {p}

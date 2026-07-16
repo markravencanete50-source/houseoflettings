@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useMemo } from "react";
 import Navbar from "@/components/layout/Navbar";
+import ServiceHero from "@/components/layout/ServiceHero";
 import PropertyCard from "@/components/property/PropertyCard";
 import { useActiveProperties } from "@/components/branches/useActiveProperties";
 import { listingMatchesCity } from "@/lib/branches";
@@ -222,39 +223,19 @@ export default function TenantsPage() {
 
       <Navbar />
 
-      {/* ── 1 · HERO ── */}
-      <section style={{ borderBottom: `1px solid ${HAIR}` }}>
-        <div className="tp-wrap tp-2col" style={{ paddingTop: 96 }}>
-          <div className="reveal">
-            <h1 className="tp-h1" style={{ fontSize: "clamp(40px, 5.4vw, 56px)", fontWeight: 800, lineHeight: 1.06, letterSpacing: "-0.02em", color: INK, margin: "0 0 20px" }}>
-              Renting <span style={{ color: BLUE_LG }}>Made Simple.</span>
-            </h1>
-            <p className="tp-lead" style={{ maxWidth: 520, marginBottom: 28 }}>
-              Browse available homes, book viewings online and manage maintenance in a few taps.
-              A calmer, fully-digital way to rent across Leeds &amp; Manchester.
-            </p>
-            <div style={{ display: "flex", flexWrap: "wrap", gap: 14, marginBottom: 22 }}>
-              <a href="/listings" className="tp-btn tp-blue">Browse Properties</a>
-              <a href="/maintenance/report" className="tp-btn tp-yellow">🔧 Report a Maintenance</a>
-            </div>
-            <span className="tp-chip">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={GREEN} strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round"><path d="m5 13 4 4L19 7" /></svg>
-              £0 tenant fees — no agency fees, ever
-            </span>
-          </div>
-
-          <div className="tp-media-right reveal" style={{ position: "relative" }}>
-            <div style={{ borderRadius: 24, overflow: "hidden", boxShadow: "0 24px 56px rgba(24,33,53,0.18)" }}>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/images/heropage.webp" alt="A family holding the keys to their new rented home" style={{ display: "block", width: "100%", height: "100%", objectFit: "cover" }} />
-            </div>
-            <div className="tp-float" style={{ position: "absolute", left: 20, bottom: -18, background: "#fff", borderRadius: 999, padding: "12px 20px", boxShadow: "0 16px 30px rgba(24,33,53,0.2)", display: "flex", alignItems: "center", gap: 10, fontWeight: 700, fontSize: 14, color: INK }}>
-              <span style={{ width: 10, height: 10, borderRadius: 999, background: GREEN }} />
-              Feels like home.
-            </div>
-          </div>
-        </div>
-      </section>
+      {/* ── 1 · HERO (previous design — Browse Properties highlighted + Report a Maintenance) ── */}
+      <ServiceHero
+        eyebrow="For Tenants · Leeds & Manchester"
+        title={<>Looking for your next home? <span style={{ color: BLUE_LG }}>House of Lettings holds the key.</span></>}
+        subtitle="No agency fees. No endless forms. Browse available homes, book viewings online and manage maintenance in a few taps."
+        image="/images/heropage.webp"
+        imageAlt="Happy family holding the keys to their new rented home"
+        ctas={[
+          { label: "Browse Properties", href: "/listings" },
+          { label: "Report a Maintenance", href: "/maintenance/report", variant: "ghost" },
+        ]}
+        float={{ label: "Tenant fees", value: "£0", sub: "No agency fees, ever" }}
+      />
 
       {/* ── 2 · A PLACE TO CALL HOME ── */}
       <section style={{ background: ALT_BG }}>

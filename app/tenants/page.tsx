@@ -290,7 +290,9 @@ export default function TenantsPage() {
             <div style={{ display: "flex", flexWrap: "wrap", gap: 12, marginBottom: 28 }}>
               {["Warm local team", "No agency fees", "Support that lasts"].map((t) => (
                 <span key={t} className="tp-chip">
-                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke={GREEN} strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round"><path d="m5 13 4 4L19 7" /></svg>
+                  <span style={{ width: 20, height: 20, borderRadius: 999, background: GREEN, display: "grid", placeItems: "center", flexShrink: 0, boxShadow: "0 4px 9px -3px rgba(98,157,42,0.6)" }}>
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="3.4" strokeLinecap="round" strokeLinejoin="round"><path d="m5 13 4 4L19 7" /></svg>
+                  </span>
                   {t}
                 </span>
               ))}

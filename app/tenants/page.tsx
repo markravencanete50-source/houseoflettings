@@ -118,6 +118,14 @@ const steps = [
   },
 ];
 
+/* Popular Manchester rental areas — lifestyle photography, links to listings */
+const areas = [
+  { name: "Northern Quarter", desc: "Coffee shops, bars & a lively city feel", img: "/images/areas/northern-quarter.webp" },
+  { name: "Castlefield", desc: "Central but quieter, scenic canalside", img: "/images/areas/castlefield.webp" },
+  { name: "Salford Quays", desc: "Waterside apartment living & transport links", img: "/images/areas/salford-quays.webp" },
+  { name: "Deansgate", desc: "Restaurants, bars & city-centre convenience", img: "/images/areas/deansgate.webp" },
+];
+
 export default function TenantsPage() {
   const [openFaq, setOpenFaq] = useState<number | null>(null);
 
@@ -357,6 +365,77 @@ export default function TenantsPage() {
                 <h3 style={{ fontSize: 17, fontWeight: 700, marginBottom: 10, color: "#111827" }}>{card.title}</h3>
                 <p style={{ fontSize: 14, color: "#4b5563", lineHeight: 1.65 }}>{card.body}</p>
               </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── EXPLORE MANCHESTER ── */}
+      <section style={{ background: "#f3f4f6", borderTop: "1px solid rgba(37,99,235,0.15)" }}>
+        <style>{`
+          .area-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
+          .area-card {
+            position: relative; display: block; border-radius: 20px; overflow: hidden;
+            height: 300px; text-decoration: none;
+            box-shadow: 0 16px 36px -14px rgba(24,33,53,0.22);
+            transition: transform .35s cubic-bezier(.22,1,.36,1), box-shadow .35s ease;
+            will-change: transform;
+          }
+          .area-card img {
+            position: absolute; inset: 0; width: 100%; height: 100%;
+            object-fit: cover; object-position: center;
+            transition: transform .6s cubic-bezier(.22,1,.36,1);
+          }
+          .area-card:hover { transform: translateY(-8px); box-shadow: 0 34px 60px -22px rgba(24,33,53,0.4); }
+          .area-card:hover img { transform: scale(1.08); }
+          .area-overlay { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(24,33,53,0) 34%, rgba(24,33,53,0.82) 100%); }
+          .area-text { position: absolute; left: 18px; right: 18px; bottom: 16px; color: #fff; z-index: 1; }
+          .area-name { font-size: 19px; font-weight: 800; letter-spacing: -0.01em; margin-bottom: 5px; }
+          .area-desc { font-size: 13px; color: rgba(255,255,255,0.9); line-height: 1.45; }
+          .area-cta {
+            display: inline-flex; align-items: center; gap: 6px; margin-top: 12px;
+            font-size: 12.5px; font-weight: 700; color: #fff;
+            background: rgba(10,70,239,0.9); border-radius: 999px; padding: 7px 14px;
+            opacity: 0; transform: translateY(6px); transition: opacity .3s ease, transform .3s ease, background .2s ease;
+          }
+          .area-card:hover .area-cta { opacity: 1; transform: translateY(0); }
+          @media (max-width: 900px) { .area-grid { grid-template-columns: repeat(2, 1fr); } }
+          @media (max-width: 480px) {
+            .area-grid { grid-template-columns: 1fr; }
+            .area-card { height: 240px; }
+            .area-cta { opacity: 1; transform: none; }
+          }
+          @media (prefers-reduced-motion: reduce) {
+            .area-card, .area-card img, .area-cta { transition: none; }
+            .area-card:hover { transform: none; }
+            .area-card:hover img { transform: none; }
+          }
+        `}</style>
+        <div className="t-sec" style={{ maxWidth: 1200, margin: "0 auto", padding: "80px 24px" }}>
+          <p style={{ color: "#0A46EF", fontSize: 12, letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 12, fontWeight: 800 }}>
+            Explore Manchester
+          </p>
+          <h2 className="t-head t-reveal" style={{ fontSize: "clamp(1.6rem, 4vw, 2.4rem)", fontWeight: 700, marginBottom: 16, letterSpacing: "-0.02em", color: "#111827", fontFamily: "'Barlow Condensed', sans-serif" }}>
+            <span className="t-accent t-reveal">Find the area that suits your lifestyle.</span>
+          </h2>
+          <p style={{ fontSize: 15, color: "#4b5563", lineHeight: 1.65, maxWidth: 560, marginBottom: 40 }}>
+            Not sure where to start? Here&apos;s a quick feel for four of Manchester&apos;s most popular places to rent.
+          </p>
+          <div className="area-grid">
+            {areas.map((a, i) => (
+              <a key={a.name} href="/listings" className="area-card t-reveal" style={{ animationDelay: `${i * 70}ms` }}>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={a.img} alt={`${a.name}, Manchester`} loading="lazy" />
+                <span className="area-overlay" />
+                <span className="area-text">
+                  <span className="area-name" style={{ display: "block" }}>{a.name}</span>
+                  <span className="area-desc" style={{ display: "block" }}>{a.desc}</span>
+                  <span className="area-cta">
+                    Browse homes
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
+                  </span>
+                </span>
+              </a>
             ))}
           </div>
         </div>

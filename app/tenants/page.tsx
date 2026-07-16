@@ -178,11 +178,12 @@ export default function TenantsPage() {
           box-shadow: 0 10px 24px -10px rgba(16,26,48,0.7); transition: transform .22s ease, box-shadow .22s ease; }
         .tp-chip:hover { transform: translateY(-2px); box-shadow: 0 16px 30px -10px rgba(16,26,48,0.85); }
 
-        /* Promise pills */
-        .tp-promise { display: inline-flex; align-items: center; gap: 10px; background: #fff;
-          border: 1px solid ${GREEN_BORDER}; border-radius: 999px; padding: 12px 20px; font-size: 15px; font-weight: 600; color: ${INK};
-          box-shadow: 0 10px 24px -12px rgba(98,157,42,0.4); transition: transform .25s cubic-bezier(.22,1,.36,1), box-shadow .25s ease; }
-        .tp-promise:hover { transform: translateY(-4px); box-shadow: 0 18px 34px -14px rgba(98,157,42,0.5); }
+        /* Promise pills — dark-blue background with a green tick (matches the chips) */
+        .tp-promise { display: inline-flex; align-items: center; gap: 10px;
+          background: linear-gradient(135deg, #1c2b4d 0%, #101a30 100%);
+          border: 1px solid rgba(255,255,255,0.08); border-radius: 999px; padding: 12px 20px; font-size: 15px; font-weight: 700; color: #fff;
+          box-shadow: 0 10px 24px -10px rgba(16,26,48,0.7); transition: transform .25s cubic-bezier(.22,1,.36,1), box-shadow .25s ease; }
+        .tp-promise:hover { transform: translateY(-4px); box-shadow: 0 18px 34px -12px rgba(16,26,48,0.85); }
 
         /* Image frames — subtle zoom on hover */
         .tp-imgframe { transition: box-shadow .35s ease; }

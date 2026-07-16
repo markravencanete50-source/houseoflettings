@@ -7,6 +7,7 @@ import PropertyCard from "@/components/property/PropertyCard";
 import { useActiveProperties } from "@/components/branches/useActiveProperties";
 import { listingMatchesCity } from "@/lib/branches";
 import { propertyAvailability } from "@/lib/types";
+import { guidesByDate } from "@/lib/guides";
 
 /* ─────────────────────────────────────────────────────────────────────────
    Tenant page — hi-fi redesign.
@@ -502,6 +503,52 @@ export default function TenantsPage() {
                 )}
               </div>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── 11b · RENTING GUIDES ── */}
+      <section>
+        <style>{`
+          .g-teaser-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 22px; }
+          .g-teaser { display: flex; flex-direction: column; background: #fff; border: 1px solid ${HAIR};
+            border-radius: 18px; overflow: hidden; text-decoration: none; color: inherit;
+            box-shadow: 0 10px 26px rgba(24,33,53,0.05);
+            transition: transform .32s cubic-bezier(.22,1,.36,1), box-shadow .32s ease, border-color .32s ease; }
+          .g-teaser:hover { transform: translateY(-8px); border-color: #bdd2fa; box-shadow: 0 18px 40px rgba(29,78,216,0.14); }
+          .g-teaser-img { position: relative; height: 190px; overflow: hidden; }
+          .g-teaser-img img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform .5s ease; }
+          .g-teaser:hover .g-teaser-img img { transform: scale(1.06); }
+          @media (max-width: 900px) { .g-teaser-grid { grid-template-columns: 1fr; } }
+        `}</style>
+        <div className="tp-wrap">
+          <div className="reveal" style={{ textAlign: "center", marginBottom: 40 }}>
+            <p className="tp-kicker">Renting Guides</p>
+            <h2 className="tp-h2" style={{ marginBottom: 14 }}>Benefit from our expertise.</h2>
+            <p className="tp-lead" style={{ maxWidth: 620, margin: "0 auto" }}>
+              Practical guides covering the topics and tips that matter most to tenants — from holding
+              deposits to moving-in day.
+            </p>
+          </div>
+
+          <div className="g-teaser-grid">
+            {guidesByDate.slice(0, 3).map((g, i) => (
+              <a key={g.slug} href={`/guides/${g.slug}`} className="g-teaser reveal" style={{ animationDelay: `${i * 60}ms` }}>
+                <span className="g-teaser-img">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={g.image} alt={g.title} loading="lazy" />
+                </span>
+                <span style={{ padding: "20px 22px 22px", display: "flex", flexDirection: "column", gap: 8, flex: 1 }}>
+                  <span style={{ fontSize: 18, fontWeight: 800, color: INK, lineHeight: 1.3 }}>{g.title}</span>
+                  <span style={{ fontSize: 13.5, color: BODY, lineHeight: 1.55, flex: 1 }}>{g.excerpt}</span>
+                  <span style={{ fontSize: 12.5, color: "#7a889c", marginTop: 2 }}>{g.dateLabel} · {g.readMins} min read</span>
+                </span>
+              </a>
+            ))}
+          </div>
+
+          <div style={{ textAlign: "center", marginTop: 40 }}>
+            <a href="/guides" className="tp-btn tp-blue" style={{ display: "inline-flex" }}>View all guides</a>
           </div>
         </div>
       </section>

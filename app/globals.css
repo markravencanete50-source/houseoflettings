@@ -55,7 +55,19 @@ body {
   background-color: #ffffff;
   color: #0a162f;
   line-height: 1.6;
+  /* Sticky footer: on short pages the footer sits flush at the bottom of the
+     viewport instead of leaving a white gap beneath it. No effect on tall
+     pages (there is no free space to absorb). box-sizing keeps the 72px
+     navbar padding inside the 100vh so the page never overflows by that much. */
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  box-sizing: border-box;
 }
+/* Push a bottom-level footer to the base of the flex column. Applies when the
+   footer is a direct child of <body> (most pages); nested footers already sit
+   inside a min-height:100vh container. */
+body > .hol-ft { margin-top: auto; }
 
 @media (max-width: 640px) {
   body { padding-top: 60px !important; }

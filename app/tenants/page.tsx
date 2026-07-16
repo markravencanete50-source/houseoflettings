@@ -3,6 +3,7 @@
 import { useState, useEffect, useMemo } from "react";
 import Navbar from "@/components/layout/Navbar";
 import ServiceHero from "@/components/layout/ServiceHero";
+import Footer from "@/components/layout/Footer";
 import PropertyCard from "@/components/property/PropertyCard";
 import { useActiveProperties } from "@/components/branches/useActiveProperties";
 import { listingMatchesCity } from "@/lib/branches";
@@ -130,6 +131,7 @@ export default function TenantsPage() {
   }, [leedsHomes.length]);
 
   return (
+    <>
     <main style={{ background: "#fff", color: INK, fontFamily: "'Poppins', 'Inter', sans-serif", overflowX: "hidden" }}>
       <style>{`
         .tp-wrap { max-width: 1200px; margin: 0 auto; padding: 88px 48px; }
@@ -159,6 +161,9 @@ export default function TenantsPage() {
           transition: transform .34s cubic-bezier(.22,1,.36,1), box-shadow .34s ease, border-color .34s ease; }
         .tp-card:hover { transform: translateY(-10px) scale(1.012); border-color: rgba(29,78,216,0.28);
           box-shadow: 0 30px 56px -20px rgba(29,78,216,0.28), 0 10px 22px -12px rgba(24,33,53,0.18); }
+        /* Journey cards — extra blue-tinted depth so they never read as flat white */
+        .tp-journey .tp-card { box-shadow: 0 18px 40px -16px rgba(29,78,216,0.22), 0 4px 14px -4px rgba(24,33,53,0.12); }
+        .tp-journey .tp-card:hover { box-shadow: 0 34px 60px -20px rgba(29,78,216,0.34), 0 10px 22px -12px rgba(24,33,53,0.2); }
 
         .tp-numchip { width: 46px; height: 46px; border-radius: 12px; background: #e8effd; color: ${BLUE_LG};
           font-size: 15px; font-weight: 800; display: inline-grid; place-items: center;
@@ -184,7 +189,7 @@ export default function TenantsPage() {
         .tp-imgframe:hover img { transform: scale(1.05); }
 
         /* Area cards */
-        .area-grid, .leeds-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
+        .area-grid, .leeds-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; align-items: stretch; }
         .area-card { position: relative; display: block; overflow: hidden; border-radius: 20px; height: 300px;
           text-decoration: none; box-shadow: 0 16px 36px -14px rgba(24,33,53,0.22);
           transition: transform .35s cubic-bezier(.22,1,.36,1), box-shadow .35s ease; }
@@ -193,6 +198,10 @@ export default function TenantsPage() {
         .area-card:hover img { transform: scale(1.08); }
         .area-ov { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(24,33,53,0) 34%, rgba(24,33,53,0.82) 100%); }
         .area-txt { position: absolute; left: 18px; right: 18px; bottom: 16px; color: #fff; z-index: 1; }
+
+        /* Leeds property cards — stretch each to equal height so buttons align */
+        .leeds-grid > .reveal { display: flex; }
+        .leeds-grid > .reveal > * { flex: 1; }
 
         /* Pillars (light section) — white cards with depth */
         .tp-pillar { display: flex; gap: 16px; align-items: flex-start; background: #fff;
@@ -286,9 +295,9 @@ export default function TenantsPage() {
                 </span>
               ))}
             </div>
-            <div style={{ display: "flex", flexWrap: "wrap", gap: 12 }}>
-              <span className="tp-btn sm tp-ink" style={{ cursor: "default" }}>Homes across Leeds &amp; Manchester</span>
-              <a href="/listings" className="tp-btn sm tp-blue">Ready to find your next home? →</a>
+            <div style={{ display: "flex", flexDirection: "column", gap: 12, alignItems: "stretch", maxWidth: 380 }}>
+              <span className="tp-btn sm tp-ink" style={{ cursor: "default", width: "100%", minWidth: 0 }}>Homes across Leeds &amp; Manchester</span>
+              <a href="/listings" className="tp-btn sm tp-blue" style={{ width: "100%", minWidth: 0 }}>Ready to find your next home? →</a>
             </div>
           </div>
         </div>
@@ -319,18 +328,18 @@ export default function TenantsPage() {
           <div className="reveal">
             <p className="tp-kicker">What Makes Us Different</p>
             <h2 className="tp-h2" style={{ marginBottom: 22 }}>
-              We got tired of renting feeling like <span style={{ color: BLUE_LG }}>a chase.</span>
+              We got tired of renting feeling like a chase.
             </h2>
             <p style={{ color: BODY, fontSize: 16, lineHeight: 1.75, marginBottom: 18 }}>
               Endless phone calls that go unanswered. Emails lost in someone&apos;s inbox. Agents who vanish
               the day you sign. That&apos;s the renting most people know — and it&apos;s exactly what we set out to end.
             </p>
             <p style={{ color: BODY, fontSize: 16, lineHeight: 1.75, marginBottom: 22 }}>
-              So we rebuilt the whole experience around you. Every step lives <span style={{ color: BLUE_SM, fontWeight: 700 }}>online</span> —
+              So we rebuilt the whole experience around you. Every step lives <span style={{ fontWeight: 700 }}>online</span> —
               booking a viewing, applying, reporting a repair — and behind it sits a warm local team who actually pick up when it matters.
             </p>
             <p style={{ color: INK, fontSize: 18, fontWeight: 700, lineHeight: 1.5, margin: 0 }}>
-              Renting shouldn&apos;t feel like chasing. <span style={{ color: BLUE_LG }}>It should feel like coming home.</span>
+              Renting shouldn&apos;t feel like chasing. <span style={{ color: GREEN }}>It should feel like coming home.</span>
             </p>
           </div>
           <div className="tp-pillars-wrap reveal" style={{ display: "grid", gap: 16 }}>
@@ -356,8 +365,8 @@ export default function TenantsPage() {
           </div>
           <div className="tp-reviews" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 20 }}>
             {reviews.map((r, i) => (
-              <div key={r.name} className="tp-card reveal" style={{ animationDelay: `${i * 60}ms`, display: "flex", flexDirection: "column", gap: 14 }}>
-                <span style={{ alignSelf: "flex-start", fontSize: 11, fontWeight: 800, letterSpacing: "0.06em", textTransform: "uppercase", color: BLUE_LG, background: "#dbe7fd", borderRadius: 999, padding: "5px 12px" }}>{r.tag}</span>
+              <div key={r.name} className="tp-card reveal" style={{ animationDelay: `${i * 60}ms`, display: "flex", flexDirection: "column", gap: 14, border: `1px solid ${GREEN_BORDER}`, boxShadow: "0 16px 38px -14px rgba(98,157,42,0.24), 0 4px 14px -4px rgba(24,33,53,0.1)" }}>
+                <span style={{ alignSelf: "flex-start", fontSize: 11, fontWeight: 800, letterSpacing: "0.06em", textTransform: "uppercase", color: GREEN_DEEP, background: GREEN_TINT, border: `1px solid ${GREEN_BORDER}`, borderRadius: 999, padding: "5px 12px" }}>{r.tag}</span>
                 <p style={{ fontSize: 15, color: INK, lineHeight: 1.7, margin: 0, flexGrow: 1 }}>&ldquo;{r.quote}&rdquo;</p>
                 <div style={{ borderTop: `1px solid ${HAIR}`, paddingTop: 12 }}>
                   <div style={{ fontSize: 14, fontWeight: 800, color: INK }}>{r.name}</div>
@@ -579,23 +588,8 @@ export default function TenantsPage() {
         </div>
       </section>
 
-      {/* ── 12 · FINAL CTA ── */}
-      <section id="browse" style={{ position: "relative", overflow: "hidden" }}>
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/images/areas/salford-quays.webp" alt="" aria-hidden style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }} loading="lazy" />
-        <div style={{ position: "absolute", inset: 0, background: "linear-gradient(180deg, rgba(20,36,90,0.92), rgba(24,33,53,0.94))" }} />
-        <div className="tp-wrap reveal" style={{ position: "relative", zIndex: 1, textAlign: "center" }}>
-          <h2 className="tp-h2" style={{ color: "#fff", fontSize: "clamp(30px, 4.5vw, 44px)", marginBottom: 16 }}>Ready to Find Your Next Home?</h2>
-          <p style={{ color: "rgba(255,255,255,0.82)", fontSize: 17, lineHeight: 1.65, maxWidth: 560, margin: "0 auto 32px" }}>
-            Whether you&apos;re relocating, starting a new job or simply looking for a better place to live,
-            we&apos;re here to help you find a place you&apos;ll love coming home to.
-          </p>
-          <div style={{ display: "flex", flexWrap: "wrap", gap: 14, justifyContent: "center" }}>
-            <a href="/listings" className="tp-btn tp-blue">Browse Properties</a>
-            <a href="/maintenance/report" className="tp-btn tp-ghost">🔧 Report a Maintenance</a>
-          </div>
-        </div>
-      </section>
     </main>
+      <Footer />
+    </>
   );
 }

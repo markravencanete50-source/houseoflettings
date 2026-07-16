@@ -1036,13 +1036,13 @@ export default function HomePage() {
         }
         .svc-learn {
           display: inline-flex; align-items: center; gap: 7px;
-          background: #EDF5E1; color: #3f6b1a; font-size: 13px; font-weight: 700;
-          letter-spacing: 0.3px; padding: 9px 18px; border-radius: 999px;
-          border: 1px solid #d8ecc4;
+          background: #629D2A; color: #fff; font-size: 13px; font-weight: 700;
+          letter-spacing: 0.3px; padding: 10px 20px; border-radius: 999px;
           position: relative; z-index: 1;
-          transition: background 0.25s ease, border-color 0.25s ease, color 0.25s ease;
+          transition: background 0.25s ease, box-shadow 0.25s ease, transform 0.25s ease;
+          box-shadow: 0 8px 18px -10px rgba(98,157,42,0.7);
         }
-        .service-card:hover .svc-learn { background: #e2efd0; border-color: #c4e0a6; color: #35591a; }
+        .service-card:hover .svc-learn { background: #4F8221; box-shadow: 0 12px 22px -10px rgba(79,130,33,0.75); transform: translateY(-1px); }
         @keyframes hcw-shimmer {
           0%   { left: -80%; }
           100% { left: 140%; }

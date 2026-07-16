@@ -399,6 +399,64 @@ export default function TenantsPage() {
         </div>
       </section>
 
+      {/* ── WHAT MAKES US DIFFERENT ── */}
+      <section style={{ background: "#ffffff" }}>
+        <style>{`
+          .t-diff-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 26px; }
+          @media (max-width: 780px) { .t-diff-grid { grid-template-columns: 1fr; } }
+          .t-btn-outline {
+            display: inline-flex; align-items: center; justify-content: center; gap: 9px;
+            box-sizing: border-box; min-height: 48px; padding: 13px 26px;
+            background: transparent; color: ${GREEN_INK}; border: 1.6px solid ${GREEN};
+            border-radius: 999px; font-weight: 700; font-size: 13.5px; line-height: 1.2;
+            letter-spacing: 0.01em; text-decoration: none;
+            transition: background .22s ease, border-color .22s ease, color .22s ease, transform .22s ease;
+          }
+          .t-btn-outline:hover { background: ${GREEN_BG}; border-color: ${GREEN_HOVER}; color: ${GREEN_HOVER}; transform: translateY(-2px); }
+        `}</style>
+        <div style={{ maxWidth: 1120, margin: "0 auto", padding: "92px 24px" }}>
+          <div style={{ textAlign: "center", marginBottom: 56 }}>
+            <span className="t-eyebrow">What Makes Us Different</span>
+            <h2 className="t-h2">Renting, reimagined around you.</h2>
+          </div>
+
+          <div className="t-diff-grid">
+            {/* Card 1 — Book Your Viewing Online */}
+            <div className="t-card t-reveal" style={{ padding: "40px 36px", display: "flex", flexDirection: "column", gap: 16 }}>
+              <span style={{ width: 58, height: 58, borderRadius: 16, background: GREEN_BG, border: "1px solid #e0eecd", display: "grid", placeItems: "center" }}>
+                <svg width="26" height="26" fill="none" stroke={GREEN} strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+                  <rect x="3" y="4" width="18" height="18" rx="2" />
+                  <path d="M16 2v4M8 2v4M3 10h18" />
+                  <path d="m9 16 2 2 4-4" />
+                </svg>
+              </span>
+              <h3 style={{ fontSize: 21, fontWeight: 700, color: "#0f172a", margin: "8px 0 0" }}>Book Your Viewing Online</h3>
+              <p style={{ fontSize: 15, color: "#4b5563", lineHeight: 1.75, margin: 0 }}>
+                No phone calls. No emails. No waiting. Choose a viewing time online in just a few clicks.
+              </p>
+            </div>
+
+            {/* Card 2 — Maintenance Reporting Made Easy */}
+            <div className="t-card t-reveal" style={{ animationDelay: "70ms", padding: "40px 36px", display: "flex", flexDirection: "column", gap: 16 }}>
+              <span style={{ width: 58, height: 58, borderRadius: 16, background: GREEN_BG, border: "1px solid #e0eecd", display: "grid", placeItems: "center" }}>
+                <svg width="26" height="26" fill="none" stroke={GREEN} strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+                  <path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L3 18v3h3l6.3-6.3a4 4 0 0 0 5.4-5.4l-2.3 2.3-2-2 2.3-2.3z" />
+                </svg>
+              </span>
+              <h3 style={{ fontSize: 21, fontWeight: 700, color: "#0f172a", margin: "8px 0 0" }}>Maintenance Reporting Made Easy</h3>
+              <p style={{ fontSize: 15, color: "#4b5563", lineHeight: 1.75, margin: 0 }}>
+                Answer a few questions and upload photos. We&apos;ll coordinate directly with the appropriate
+                contractor and keep you updated throughout the process.
+              </p>
+              <a href="/maintenance/report" className="t-btn-outline" style={{ alignSelf: "flex-start", marginTop: 4 }}>
+                Report a Maintenance Issue
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
+              </a>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* ── TESTIMONIALS (placed high to build trust early) ── */}
       <section style={{ background: "#f6f8fb", borderTop: "1px solid #eceff3", borderBottom: "1px solid #eceff3" }}>
         <div style={{ maxWidth: 1120, margin: "0 auto", padding: "84px 24px" }}>

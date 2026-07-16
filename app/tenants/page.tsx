@@ -34,7 +34,7 @@ const faqs = [
 const whyCards = [
   {
     icon: (
-      <svg width="28" height="28" fill="none" stroke="#2563eb" strokeWidth="2" viewBox="0 0 24 24">
+      <svg width="28" height="28" fill="none" stroke="#0A46EF" strokeWidth="2" viewBox="0 0 24 24">
         <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
       </svg>
     ),
@@ -43,7 +43,7 @@ const whyCards = [
   },
   {
     icon: (
-      <svg width="28" height="28" fill="none" stroke="#2563eb" strokeWidth="2" viewBox="0 0 24 24">
+      <svg width="28" height="28" fill="none" stroke="#0A46EF" strokeWidth="2" viewBox="0 0 24 24">
         <circle cx="12" cy="12" r="10" />
         <polyline points="12 6 12 12 16 14" />
       </svg>
@@ -53,7 +53,7 @@ const whyCards = [
   },
   {
     icon: (
-      <svg width="28" height="28" fill="none" stroke="#2563eb" strokeWidth="2" viewBox="0 0 24 24">
+      <svg width="28" height="28" fill="none" stroke="#0A46EF" strokeWidth="2" viewBox="0 0 24 24">
         <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
         <circle cx="9" cy="7" r="4" />
         <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
@@ -65,7 +65,7 @@ const whyCards = [
   },
   {
     icon: (
-      <svg width="28" height="28" fill="none" stroke="#2563eb" strokeWidth="2" viewBox="0 0 24 24">
+      <svg width="28" height="28" fill="none" stroke="#0A46EF" strokeWidth="2" viewBox="0 0 24 24">
         <rect x="3" y="3" width="18" height="18" rx="2" />
         <path d="M3 9h18M9 21V9" />
       </svg>
@@ -213,26 +213,54 @@ export default function TenantsPage() {
           position: relative;
           background: #ffffff;
           border: 1px solid #eef1f5;
-          border-radius: 14px;
-          padding: 28px 24px;
-          box-shadow: 0 4px 14px -6px rgba(15,31,61,0.12), 0 2px 5px -2px rgba(15,31,61,0.08);
-          transition: transform .3s cubic-bezier(.22,1,.36,1), box-shadow .3s ease, border-color .3s ease;
+          border-radius: 18px;
+          padding: 30px 26px;
+          box-shadow: 0 6px 18px -8px rgba(15,31,61,0.14), 0 2px 6px -2px rgba(15,31,61,0.08);
+          transition: transform .35s cubic-bezier(.22,1,.36,1), box-shadow .35s ease, border-color .35s ease;
           will-change: transform;
         }
         .t-card::before {
           content: "";
           position: absolute; top: 0; left: 0; right: 0; height: 3px;
-          background: linear-gradient(90deg, #2563eb, #4a90d9);
-          border-radius: 14px 14px 0 0;
+          background: linear-gradient(90deg, #253996, #0A46EF);
+          border-radius: 18px 18px 0 0;
           transform: scaleX(0); transform-origin: left;
-          transition: transform .32s ease;
+          transition: transform .38s cubic-bezier(.22,1,.36,1);
         }
         .t-card:hover {
-          transform: translateY(-8px);
-          box-shadow: 0 28px 46px -20px rgba(15,31,61,0.34), 0 10px 20px -12px rgba(37,99,235,0.20);
-          border-color: #cfe0f7;
+          transform: translateY(-10px) scale(1.015);
+          box-shadow: 0 34px 60px -24px rgba(15,31,61,0.4), 0 14px 26px -14px rgba(10,70,239,0.28);
+          border-color: #c3d4fb;
         }
         .t-card:hover::before { transform: scaleX(1); }
+        /* Icon chip inside cards gets a gentle wobble on card hover */
+        .t-card .t-ic { transition: transform .4s cubic-bezier(.34,1.56,.64,1); }
+        .t-card:hover .t-ic { transform: translateY(-3px) rotate(-4deg) scale(1.08); }
+
+        /* CTA buttons — hover lift + deeper shadow */
+        .t-cta-btn { transition: transform .22s ease, box-shadow .22s ease, background .22s ease, border-color .22s ease; }
+        .t-cta-btn:hover { transform: translateY(-3px); }
+
+        /* Animated heading underline accent */
+        .t-accent { position: relative; display: inline-block; }
+        .t-accent::after {
+          content: ""; position: absolute; left: 0; bottom: -14px; height: 4px; width: 0;
+          border-radius: 4px; background: linear-gradient(90deg, #253996, #0A46EF);
+        }
+        .t-js .t-accent.t-in::after { animation: t-underline 1s cubic-bezier(.22,1,.36,1) .15s backwards; width: 64px; }
+        @keyframes t-underline { from { width: 0; opacity: 0; } to { width: 64px; opacity: 1; } }
+
+        /* Heading fade-up on scroll */
+        .t-js .t-head.t-in { animation: t-rise .7s cubic-bezier(.22,1,.36,1) backwards; }
+
+        /* Step-number badge pop */
+        .t-num {
+          display: inline-flex; align-items: center; justify-content: center;
+          font-size: 12px; font-weight: 800; letter-spacing: 0.08em; color: #0A46EF;
+          background: #eef3ff; border: 1px solid #d9e4ff; border-radius: 8px;
+          padding: 5px 9px; transition: transform .3s cubic-bezier(.34,1.56,.64,1), background .3s ease;
+        }
+        .t-card:hover .t-num { transform: scale(1.1); background: #e2ebff; }
 
         /* Scroll-reveal entrance — only engaged once JS marks body as t-js,
            so cards remain fully visible if scripting is unavailable. Uses a
@@ -246,10 +274,18 @@ export default function TenantsPage() {
           to { opacity: 1; transform: none; }
         }
 
+        /* Mobile: tighter vertical rhythm, comfortable tap targets */
+        @media (max-width: 640px) {
+          .t-sec { padding-top: 52px !important; padding-bottom: 52px !important; }
+          .t-card { padding: 24px 20px; border-radius: 16px; }
+          .t-cta-btn { width: 100%; max-width: 360px; }
+          .t-accent::after, .t-js .t-accent.t-in::after { bottom: -10px; }
+        }
+
         @media (prefers-reduced-motion: reduce) {
-          .t-card, .t-card::before { transition: none; }
-          .t-card:hover { transform: none; }
-          .t-js .t-reveal.t-in { animation: none; }
+          .t-card, .t-card::before, .t-ic, .t-cta-btn, .t-num { transition: none; }
+          .t-card:hover, .t-card:hover .t-ic, .t-card:hover .t-num, .t-cta-btn:hover { transform: none; }
+          .t-js .t-reveal.t-in, .t-js .t-head.t-in, .t-js .t-accent.t-in::after { animation: none; }
         }
       `}</style>
 
@@ -258,7 +294,7 @@ export default function TenantsPage() {
       {/* ── HERO ── */}
       <ServiceHero
         eyebrow="For Tenants · Leeds & Manchester"
-        title={<>Looking for your next home? <span style={{ color: '#4a90d9' }}>House of Lettings holds the key.</span></>}
+        title={<>Looking for your next home? <span style={{ color: '#253996' }}>House of Lettings holds the key.</span></>}
         subtitle="No agency fees. No endless forms. Send an enquiry, answer a few quick questions, and we'll get you in for a viewing."
         image="/images/heropage.webp"
         imageAlt="Happy family holding the keys to their new rented home"
@@ -279,9 +315,9 @@ export default function TenantsPage() {
           background: "#f3f4f6",
         }}
       >
-        <div style={{ position: "relative", zIndex: 1, maxWidth: 1100, margin: "0 auto", padding: "60px 24px 80px" }}>
-          <h2 style={{ fontSize: "clamp(1.6rem, 4vw, 2.4rem)", fontWeight: 700, marginBottom: 48, letterSpacing: "-0.02em", color: "#111827", fontFamily: "'Barlow Condensed', sans-serif" }}>
-            From enquiry to keys, eight steps.
+        <div className="t-sec" style={{ position: "relative", zIndex: 1, maxWidth: 1100, margin: "0 auto", padding: "60px 24px 80px" }}>
+          <h2 className="t-head t-reveal" style={{ fontSize: "clamp(1.6rem, 4vw, 2.4rem)", fontWeight: 700, marginBottom: 48, letterSpacing: "-0.02em", color: "#111827", fontFamily: "'Barlow Condensed', sans-serif" }}>
+            <span className="t-accent t-reveal">From enquiry to keys, eight steps.</span>
           </h2>
 
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 20 }}>
@@ -291,8 +327,8 @@ export default function TenantsPage() {
                 className="t-card t-reveal"
                 style={{ animationDelay: `${i * 55}ms` }}
               >
-                <div style={{ fontSize: 11, fontWeight: 700, color: "var(--logo-blue)", letterSpacing: "0.1em", marginBottom: 12, textTransform: "uppercase" }}>
-                  {step.num}
+                <div style={{ marginBottom: 14 }}>
+                  <span className="t-num">{step.num}</span>
                 </div>
                 <h3 style={{ fontSize: 17, fontWeight: 700, marginBottom: 10, color: "#111827" }}>{step.title}</h3>
                 <p style={{ fontSize: 14, color: "#4b5563", lineHeight: 1.65 }}>{step.body}</p>
@@ -310,14 +346,14 @@ export default function TenantsPage() {
           borderBottom: "1px solid rgba(37,99,235,0.15)",
         }}
       >
-        <div style={{ maxWidth: 1100, margin: "0 auto", padding: "80px 24px" }}>
-          <h2 style={{ fontSize: "clamp(1.6rem, 4vw, 2.4rem)", fontWeight: 700, marginBottom: 48, letterSpacing: "-0.02em", color: "#111827", fontFamily: "'Barlow Condensed', sans-serif" }}>
-            What makes us different.
+        <div className="t-sec" style={{ maxWidth: 1100, margin: "0 auto", padding: "80px 24px" }}>
+          <h2 className="t-head t-reveal" style={{ fontSize: "clamp(1.6rem, 4vw, 2.4rem)", fontWeight: 700, marginBottom: 48, letterSpacing: "-0.02em", color: "#111827", fontFamily: "'Barlow Condensed', sans-serif" }}>
+            <span className="t-accent t-reveal">What makes us different.</span>
           </h2>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 20 }}>
             {whyCards.map((card, i) => (
               <div key={card.title} className="t-card t-reveal" style={{ animationDelay: `${i * 55}ms` }}>
-                <div style={{ marginBottom: 16 }}>{card.icon}</div>
+                <div className="t-ic" style={{ marginBottom: 16, display: "inline-flex", padding: 12, borderRadius: 14, background: "#eef3ff", border: "1px solid #dbe6ff" }}>{card.icon}</div>
                 <h3 style={{ fontSize: 17, fontWeight: 700, marginBottom: 10, color: "#111827" }}>{card.title}</h3>
                 <p style={{ fontSize: 14, color: "#4b5563", lineHeight: 1.65 }}>{card.body}</p>
               </div>
@@ -406,13 +442,15 @@ export default function TenantsPage() {
                 </div>
                 <a
                   href="/maintenance/report"
+                  className="t-cta-btn"
                   style={{
                     display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 9,
                     boxSizing: "border-box", minHeight: 48, lineHeight: 1.2,
-                    alignSelf: "flex-start", background: "#2563eb", color: "#fff", fontWeight: 700,
+                    alignSelf: "flex-start", background: "#0A46EF", color: "#fff", fontWeight: 700,
                     fontSize: 13.5, padding: "14px 28px", border: "1.5px solid transparent",
-                    borderRadius: 9, textDecoration: "none",
+                    borderRadius: 10, textDecoration: "none",
                     letterSpacing: "0.02em",
+                    boxShadow: "0 12px 24px -10px rgba(10,70,239,0.6)",
                   }}
                 >
                   🔧 Report a maintenance issue →
@@ -442,12 +480,12 @@ export default function TenantsPage() {
 
       {/* ── FAQ ── */}
       <section style={{ background: "#f3f4f6", borderTop: "1px solid rgba(37,99,235,0.15)" }}>
-        <div style={{ maxWidth: 760, margin: "0 auto", padding: "80px 24px" }}>
-          <p style={{ color: "#0f1f3d", fontSize: 12, letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 12, fontWeight: 800 }}>
+        <div className="t-sec" style={{ maxWidth: 760, margin: "0 auto", padding: "80px 24px" }}>
+          <p style={{ color: "#0A46EF", fontSize: 12, letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 12, fontWeight: 800 }}>
             Common Questions
           </p>
-          <h2 style={{ fontSize: "clamp(1.6rem, 4vw, 2.4rem)", fontWeight: 700, marginBottom: 40, letterSpacing: "-0.02em", color: "#0f172a" }}>
-            FAQs
+          <h2 className="t-head t-reveal" style={{ fontSize: "clamp(1.6rem, 4vw, 2.4rem)", fontWeight: 700, marginBottom: 40, letterSpacing: "-0.02em", color: "#0f172a" }}>
+            <span className="t-accent t-reveal">FAQs</span>
           </h2>
           <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
             {faqs.map((faq, i) => (
@@ -457,7 +495,7 @@ export default function TenantsPage() {
                   style={{ width: "100%", background: "none", border: "none", color: "#0f172a", textAlign: "left", padding: "20px 0", display: "flex", justifyContent: "space-between", alignItems: "center", cursor: "pointer", fontSize: 16, fontWeight: 600, gap: 16 }}
                 >
                   {faq.q}
-                  <span style={{ color: "var(--logo-blue)", fontSize: 22, flexShrink: 0, lineHeight: 1, transform: openFaq === i ? "rotate(45deg)" : "none", transition: "transform 0.2s" }}>+</span>
+                  <span style={{ color: "#0A46EF", fontSize: 22, flexShrink: 0, lineHeight: 1, transform: openFaq === i ? "rotate(45deg)" : "none", transition: "transform 0.25s cubic-bezier(.34,1.56,.64,1)" }}>+</span>
                 </button>
                 {openFaq === i && (
                   <p style={{ color: "#475569", fontSize: 15, lineHeight: 1.7, paddingBottom: 20, margin: 0 }}>{faq.a}</p>
@@ -473,8 +511,8 @@ export default function TenantsPage() {
         <div
           style={{
             position: "relative",
-            border: "2px solid #2563eb",
-            borderRadius: 16,
+            border: "2px solid #253996",
+            borderRadius: 18,
             padding: "60px 40px",
             background: "rgba(4,10,24,0.94)",
             textAlign: "center",
@@ -523,6 +561,7 @@ export default function TenantsPage() {
             </p>
             <a
               href="/book-viewing"
+              className="t-cta-btn"
               style={{
                 display: "inline-flex",
                 alignItems: "center",
@@ -531,17 +570,18 @@ export default function TenantsPage() {
                 boxSizing: "border-box",
                 minHeight: 48,
                 lineHeight: 1.2,
-                background: "#060d1f",
+                background: "#0A46EF",
                 color: "#fff",
-                padding: "14px 28px",
-                borderRadius: 9,
+                padding: "14px 30px",
+                borderRadius: 10,
                 fontWeight: 700,
                 fontSize: 13.5,
                 textDecoration: "none",
                 letterSpacing: "0.02em",
                 textTransform: "uppercase",
-                border: "1.5px solid rgba(255,255,255,0.12)",
+                border: "1.5px solid rgba(255,255,255,0.18)",
                 marginTop: 8,
+                boxShadow: "0 14px 30px -12px rgba(10,70,239,0.7)",
               }}
             >
               Send an Enquiry

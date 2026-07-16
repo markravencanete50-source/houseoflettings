@@ -171,11 +171,12 @@ export default function TenantsPage() {
           transition: transform .3s cubic-bezier(.34,1.56,.64,1), background .3s; }
         .tp-card:hover .tp-numchip { transform: scale(1.12) rotate(-4deg); background: #dbe7fd; }
 
-        /* Chips / pills — lift + shadow on hover */
-        .tp-chip { display: inline-flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 700;
-          color: ${GREEN_DEEP}; background: ${GREEN_TINT}; border: 1px solid ${GREEN_BORDER}; border-radius: 999px; padding: 9px 16px;
-          box-shadow: 0 6px 16px -8px rgba(98,157,42,0.35); transition: transform .22s ease, box-shadow .22s ease; }
-        .tp-chip:hover { transform: translateY(-2px); box-shadow: 0 12px 22px -8px rgba(98,157,42,0.45); }
+        /* Chips / pills — dark-blue background with a green tick, lift on hover */
+        .tp-chip { display: inline-flex; align-items: center; gap: 9px; font-size: 14px; font-weight: 700;
+          color: #fff; background: linear-gradient(135deg, #1c2b4d 0%, #101a30 100%);
+          border: 1px solid rgba(255,255,255,0.08); border-radius: 999px; padding: 10px 18px;
+          box-shadow: 0 10px 24px -10px rgba(16,26,48,0.7); transition: transform .22s ease, box-shadow .22s ease; }
+        .tp-chip:hover { transform: translateY(-2px); box-shadow: 0 16px 30px -10px rgba(16,26,48,0.85); }
 
         /* Promise pills */
         .tp-promise { display: inline-flex; align-items: center; gap: 10px; background: #fff;

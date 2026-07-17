@@ -438,7 +438,7 @@ export default function TenantsPage() {
           <div className="reveal">
             <div className="tp-imgframe" style={{ borderRadius: 24, overflow: "hidden", boxShadow: "0 26px 60px -20px rgba(24,33,53,0.32)", height: 400 }}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/images/maintenance-tenant.webp" alt="A tenant reporting a maintenance issue from his phone at home" style={{ display: "block", width: "100%", height: "100%", objectFit: "cover" }} loading="lazy" />
+              <img src="/images/maintenance-tenant.webp" alt="A contractor repairing a wall thermostat while the tenants look on" style={{ display: "block", width: "100%", height: "100%", objectFit: "cover" }} loading="lazy" />
             </div>
           </div>
           <div className="reveal">

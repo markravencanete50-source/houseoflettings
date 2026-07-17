@@ -151,14 +151,16 @@ export default function TenantsPage() {
           transition: transform .3s cubic-bezier(.34,1.56,.64,1), background .3s; }
         .tp-card:hover .tp-numchip { transform: scale(1.12) rotate(-4deg); background: #dbe7fd; }
 
-        /* Chips / pills — dark-blue background with a green tick, lift on hover */
-        .tp-chip { display: inline-flex; align-items: center; gap: 9px; font-size: 14px; font-weight: 700;
-          color: #e7eefb; background: linear-gradient(135deg, #1c2b4d 0%, #101a30 100%);
-          border: 1px solid rgba(255,255,255,0.08); border-radius: 999px; padding: 10px 18px;
-          box-shadow: 0 10px 24px -10px rgba(16,26,48,0.7); transition: transform .22s ease, box-shadow .22s ease; }
-        .tp-chip:hover { transform: translateY(-2px); box-shadow: 0 16px 30px -10px rgba(16,26,48,0.85); }
+        /* Plain checklist, matching /pricing's "what's included" ticks: a green
+           tick on a pale circle, no pill of its own. The tick colours are the
+           light-background pair (.pr-tick), not the navy-panel pair. */
+        .tp-checklist { list-style: none; margin: 0 0 28px; padding: 0; display: flex; flex-direction: column; gap: 12px; }
+        .tp-checklist li { display: flex; gap: 11px; align-items: flex-start; font-size: 15px; color: #374151; line-height: 1.5; }
+        .tp-check { flex: none; width: 22px; height: 22px; border-radius: 50%; background: #e7f6ee;
+          display: inline-flex; align-items: center; justify-content: center; margin-top: 1px; }
+        .tp-check svg { width: 12px; height: 12px; stroke: #16a34a; stroke-width: 3; fill: none; stroke-linecap: round; stroke-linejoin: round; }
 
-        /* Promise pills — dark-blue background with a green tick (matches the chips) */
+        /* Promise pills — dark-blue background with a green tick */
         .tp-promise { display: inline-flex; align-items: center; gap: 10px;
           background: linear-gradient(135deg, #1c2b4d 0%, #101a30 100%);
           border: 1px solid rgba(255,255,255,0.08); border-radius: 999px; padding: 12px 20px; font-size: 15px; font-weight: 700; color: #e7eefb;
@@ -264,7 +266,7 @@ export default function TenantsPage() {
         }
         @media (prefers-reduced-motion: reduce) {
           .tp-card, .tp-card:hover, .area-card, .area-card:hover, .area-card img, .tp-pillar, .tp-pillar:hover,
-          .tp-pillar-ic, .tp-btn, .tp-numchip, .tp-chip, .tp-promise, .tp-imgframe img, .tp-float {
+          .tp-pillar-ic, .tp-btn, .tp-numchip, .tp-promise, .tp-imgframe img, .tp-float {
             transition: none !important; animation: none !important; transform: none !important;
           }
           .tp-js .reveal { opacity: 1; }
@@ -298,24 +300,24 @@ export default function TenantsPage() {
             </div>
           </div>
           <div className="reveal">
-            <p className="tp-kicker">A Place to Call Home</p>
+            {/* No kicker here: it repeated the heading word for word. */}
             <h2 className="tp-h2" style={{ marginBottom: 18 }}>More Than a Property.<br />A Place to Call Home.</h2>
             <p className="tp-lead" style={{ maxWidth: 520, marginBottom: 24 }}>
               Whether you&apos;re moving across the city or starting a new chapter, we&apos;re here to make
               renting simple, transparent and stress-free.
             </p>
-            <div style={{ display: "flex", flexWrap: "wrap", gap: 12, marginBottom: 28 }}>
+            <ul className="tp-checklist">
               {["Expert local team", "No agency fees", "Professional contractors"].map((t) => (
-                <span key={t} className="tp-chip">
-                  <span style={{ width: 20, height: 20, borderRadius: 999, background: "rgba(74,222,128,0.16)", display: "grid", placeItems: "center", flexShrink: 0 }}>
-                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#4ade80" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="m5 13 4 4L19 7" /></svg>
-                  </span>
-                  {t}
-                </span>
+                <li key={t}>
+                  <i className="tp-check" aria-hidden>
+                    <svg viewBox="0 0 24 24"><polyline points="4 13 10 19 20 6" /></svg>
+                  </i>
+                  <span>{t}</span>
+                </li>
               ))}
-            </div>
+            </ul>
             <div className="tp-btn-col" style={{ display: "flex", flexDirection: "column", gap: 12, alignItems: "stretch", maxWidth: 380 }}>
-              <span className="tp-btn sm tp-ink" style={{ cursor: "default", width: "100%", minWidth: 0 }}>Homes across Leeds &amp; Manchester</span>
+              <a href="/tenant-application" className="tp-btn sm tp-ink" style={{ width: "100%", minWidth: 0 }}>Tenant Application</a>
               <a href="/listings" className="tp-btn sm tp-blue" style={{ width: "100%", minWidth: 0 }}>Ready to find your next home? →</a>
             </div>
           </div>

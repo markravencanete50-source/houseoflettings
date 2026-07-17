@@ -162,7 +162,7 @@ export default function BranchesIndexPage() {
             maxWidth: 1000,
             margin: '0 auto',
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(min(320px,100%),1fr))',
             gap: 28,
           }}
         >

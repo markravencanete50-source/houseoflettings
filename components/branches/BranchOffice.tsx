@@ -153,7 +153,7 @@ export default function BranchOffice({ city }: { city: City }) {
         <section style={{ background: 'var(--gray-100)', padding: 'clamp(48px,6vw,80px) 5%' }}>
           <div style={{ maxWidth: 1080, margin: '0 auto' }}>
             <SectionHeading kicker="Our office" title={`Visit the ${city} branch`} sub={content.blurb} />
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(300px,1fr))', gap: 28, marginTop: 30, alignItems: 'stretch' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(min(300px,100%),1fr))', gap: 28, marginTop: 30, alignItems: 'stretch' }}>
               <Reveal>
                 <div style={{ background: '#fff', border: '1px solid var(--gray-200)', borderRadius: 16, padding: '30px 28px', boxShadow: '0 2px 14px rgba(15,31,61,0.06)', height: '100%' }}>
                   <div style={{ fontFamily: "'Poppins',sans-serif", fontWeight: 700, fontSize: 18, marginBottom: 18, color: 'var(--navy)' }}>
@@ -225,7 +225,7 @@ export default function BranchOffice({ city }: { city: City }) {
           <div
             style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit,minmax(320px,1fr))',
+              gridTemplateColumns: 'repeat(auto-fit,minmax(min(320px,100%),1fr))',
               gap: 'clamp(36px, 5vw, 72px)',
             }}
           >

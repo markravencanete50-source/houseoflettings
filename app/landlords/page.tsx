@@ -54,6 +54,12 @@ function LlxShared() {
       @media (max-width: 600px) {
         .llx-cta { width: 100%; }
       }
+      /* On very small screens a long lone label may simply not fit one line;
+         wrapping beats overflowing the page. Pairs are stacked by this width,
+         so no pair alignment is at stake. */
+      @media (max-width: 400px) {
+        .llx-cta { white-space: normal; text-align: center; }
+      }
       @media (prefers-reduced-motion: reduce) {
         [class*='llx'] { animation: none !important; transition: none !important; }
       }
@@ -119,7 +125,7 @@ function LlxInvestmentSmarter() {
     <section className="llx1-wrap" aria-labelledby="llx1-heading">
       <style>{`
         .llx1-wrap { position:relative; background:#fff; padding:clamp(64px,9vw,110px) clamp(20px,7%,100px); font-family:'Poppins',sans-serif; color:#0f1f3d; }
-        .llx1-grid { max-width:1120px; margin:0 auto; display:grid; grid-template-columns:repeat(auto-fit,minmax(320px,1fr)); gap:clamp(36px,5vw,64px); align-items:center; }
+        .llx1-grid { max-width:1120px; margin:0 auto; display:grid; grid-template-columns:repeat(auto-fit,minmax(min(320px,100%),1fr)); gap:clamp(36px,5vw,64px); align-items:center; }
         .llx1-eyebrow { display:inline-flex; align-items:center; gap:9px; font-size:11px; font-weight:700; letter-spacing:.18em; text-transform:uppercase; color:#2672d2; background:#eff6ff; border:1px solid #dbeafe; border-radius:999px; padding:8px 16px 8px 13px; margin-bottom:22px; }
         .llx1-dot { width:7px; height:7px; border-radius:50%; background:#2563eb; animation:llxPulse 2.4s ease-out infinite; flex:none; }
         .llx1-h2 { font-size:clamp(30px,4.2vw,52px); font-weight:800; line-height:1.08; letter-spacing:-.02em; margin:0 0 20px; color:#0f1f3d; text-wrap:balance; }
@@ -276,8 +282,8 @@ function LlxWhySwitch() {
         .llx7-tick { flex:none; width:22px; height:22px; border-radius:50%; background:#f0fdf4; color:var(--price-green);
           display:inline-flex; align-items:center; justify-content:center; margin-top:2px; }
         .llx7-solve { text-align:center; font-size:15px; font-weight:600; color:#0f1f3d; margin:0 0 26px; }
-        .llx7-ctas { display:grid; gap:12px; max-width:560px; margin:0 auto;
-          grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); }
+        .llx7-ctas { display:grid; gap:12px; max-width:560px; margin:0 auto; grid-template-columns:1fr 1fr; }
+        @media (max-width:700px) { .llx7-ctas { grid-template-columns:1fr; max-width:none; } }
         .llx7-cta-blue { background:#2563eb; color:#fff; box-shadow:0 14px 30px -14px rgba(37,99,235,.6); transition:all .22s ease; }
         .llx7-cta-blue:hover { background:#1d4ed8; color:#fff; transform:translateY(-2px); }
         .llx7-cta-ghost { background:transparent; color:#0f1f3d; transition:all .22s ease; }
@@ -804,7 +810,7 @@ function LlxIncomeCalculator() {
     <section className="llx11-sec">
       <style>{`
         .llx11-sec { background:#fff; padding:clamp(64px,9vw,110px) clamp(20px,7%,100px); font-family:'Poppins',sans-serif; }
-        .llx11-grid { max-width:1080px; margin:0 auto; display:grid; grid-template-columns:repeat(auto-fit,minmax(320px,1fr)); gap:clamp(36px,5vw,60px); align-items:center; }
+        .llx11-grid { max-width:1080px; margin:0 auto; display:grid; grid-template-columns:repeat(auto-fit,minmax(min(320px,100%),1fr)); gap:clamp(36px,5vw,60px); align-items:center; }
         .llx11-eyebrow { font-size:11px; font-weight:700; letter-spacing:.24em; text-transform:uppercase; color:var(--logo-blue); margin-bottom:14px; }
         .llx11-h2 { font-size:clamp(28px,3.8vw,46px); font-weight:700; color:#0f1f3d; line-height:1.15; margin:0 0 18px; text-wrap:balance; }
         .llx11-body { font-size:15px; font-weight:300; color:#4b5563; line-height:1.85; margin:0 0 26px; max-width:500px; text-wrap:pretty; }
@@ -1020,9 +1026,11 @@ function LlxChooseService() {
         .llx5-price b { font-size:30px; font-weight:800; color:var(--price-green-ink); line-height:1; }
         .llx5-price span { font-size:11px; font-weight:600; letter-spacing:.04em; text-transform:uppercase; color:#6b7280; margin-top:6px; }
         .llx5-price-sep { width:1px; height:42px; background:#e5e7eb; }
-        /* Both CTAs are the site-standard size in equal grid columns; auto-fit
-           stacks the pair before a one-line label would run out of room. */
-        .llx5-cta-pair { display:grid; gap:12px; grid-template-columns:repeat(auto-fit,minmax(225px,1fr)); }
+        /* Both CTAs are the site-standard size in equal grid columns. Stacked
+           by default; side by side only when the card's info column is wide
+           enough for two one-line labels (~1060px viewport and up). */
+        .llx5-cta-pair { display:grid; gap:12px; grid-template-columns:1fr; }
+        @media (min-width:1060px) { .llx5-cta-pair { grid-template-columns:1fr 1fr; } }
         .llx5-btn { display:inline-flex; align-items:center; justify-content:center; gap:9px;
           box-sizing:border-box; min-height:48px; line-height:1.2; white-space:nowrap;
           font-size:13.5px; font-weight:700; letter-spacing:.02em; text-transform:uppercase;
@@ -1497,11 +1505,15 @@ export default function LandlordsPage() {
             font-size:13px; font-weight:700; color:#4a90d9; text-decoration:none; }
           .ll-price-cta:hover { color:#fff; }
           /* The "Why choose us" CTA pair. Equal grid columns keep the two
-             buttons identical; auto-fit stacks them (still full width and
-             equal) as soon as a column would be too narrow for a one-line
-             label, so the text never wraps inside a button. */
-          .ll-why-ctas { display:grid; gap:12px; max-width:520px;
-            grid-template-columns:repeat(auto-fit,minmax(230px,1fr)); }
+             buttons identical; below 620px the pair stacks (still equal, still
+             full width) so a one-line label never wraps inside a button.
+             NOT auto-fit: inside the intro grid, auto-fit's min-content counts
+             two tracks and forced a 472px floor on the whole section, which is
+             what horizontally overflowed the page on phones. */
+          .ll-why-ctas { display:grid; gap:12px; max-width:520px; grid-template-columns:1fr 1fr; }
+          @media (max-width:620px) { .ll-why-ctas { grid-template-columns:1fr; max-width:none; } }
+          /* Grid items never dictate a min width to the section. */
+          .ll-intro-grid > * { min-width:0; }
         `}</style>
         <div className="ll-intro-grid">
           <div>
@@ -1683,7 +1695,7 @@ export default function LandlordsPage() {
           ))}
         </div>
         <div style={{ textAlign: 'center' }}>
-          <Link href="/additional-services" style={{
+          <Link href="/additional-services" className="llx-cta" style={{
             ...CTA_STYLE, background: '#0f1f3d', color: '#fff',
             transition: 'background 0.2s',
           }}

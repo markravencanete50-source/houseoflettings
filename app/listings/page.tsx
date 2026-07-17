@@ -388,7 +388,7 @@ function ListingsContent() {
             </button>
           </div>
         ) : (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(300px,1fr))', gap: 24 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(min(300px,100%),1fr))', gap: 24 }}>
             {displayProperties.map(p => (
               <PropertyCard key={p.id} property={p} distanceMiles={p._distanceMiles} />
             ))}

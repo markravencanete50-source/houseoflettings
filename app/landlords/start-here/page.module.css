@@ -111,13 +111,14 @@
   margin: 0 0 32px;
   text-wrap: pretty;
 }
-/* Button pairs sit in equal grid columns; auto-fit stacks them (still equal,
-   still full width) before a one-line label would run out of room, so a CTA
-   label never wraps inside its button. */
+/* Button pairs sit in equal grid columns; below 640px the pair stacks (still
+   equal, still full width) so a CTA label never wraps inside its button.
+   Explicit columns, not auto-fit: auto-fit's min-content sizing can count two
+   tracks and force a fixed floor wider than a phone. */
 .heroCtas {
   display: grid;
   gap: 12px;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  grid-template-columns: 1fr 1fr;
   max-width: 560px;
   margin-bottom: 44px;
 }
@@ -226,9 +227,14 @@
   color: #fff;
   transform: translateY(-2px);
 }
-@media (max-width: 600px) {
+@media (max-width: 640px) {
   .btn { width: 100%; }
-  .heroCtas, .ctaBtns { max-width: none; }
+  .heroCtas, .ctaBtns { grid-template-columns: 1fr; max-width: none; }
+}
+/* On very small screens a long label may not fit one line; wrapping beats
+   overflowing the page, and pairs are already stacked at this width. */
+@media (max-width: 400px) {
+  .btn { white-space: normal; text-align: center; }
 }
 
 /* ── Step timeline ────────────────────────────────────── */
@@ -529,7 +535,7 @@
 .ctaBtns {
   display: grid;
   gap: 12px;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  grid-template-columns: 1fr 1fr;
   max-width: 560px;
   margin: 0 auto;
 }

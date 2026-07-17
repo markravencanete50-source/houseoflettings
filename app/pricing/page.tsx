@@ -637,10 +637,13 @@ export default function PricingPage() {
           padding:14px 28px; border:1.5px solid transparent; border-radius:9px; text-decoration:none;
           box-shadow:0 12px 24px -12px rgba(0,0,0,.4); transition:transform .15s ease, box-shadow .15s ease; white-space:nowrap; }
         .pr-addl-btn:hover { transform:translateY(-2px); box-shadow:0 18px 30px -12px rgba(0,0,0,.5); }
+        /* On very small screens the label may not fit one line; wrapping beats
+           pushing the page wider than the phone. */
+        @media (max-width:400px) { .pr-addl-btn { flex:1 1 100%; white-space:normal; text-align:center; } }
 
         /* ---------- FAQ ---------- */
         .pr-faq-wrap { max-width:1000px; margin:0 auto; }
-        .pr-faq { display:grid; grid-template-columns:repeat(auto-fit,minmax(320px,1fr)); gap:28px; }
+        .pr-faq { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(320px,100%),1fr)); gap:28px; }
         .pr-faq div { border-left:3px solid #2563eb; padding-left:20px; }
         .pr-faq h3 { font-size:16px; font-weight:700; color:#0f1f3d; margin:0 0 8px; }
         .pr-faq p { font-size:14px; color:#6b7280; line-height:1.7; margin:0; }

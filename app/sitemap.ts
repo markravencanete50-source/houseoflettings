@@ -49,6 +49,18 @@ export default function sitemap(): MetadataRoute.Sitemap {
     },
     ...packageUrls,
     {
+      url: `${baseUrl}/landlords`,
+      lastModified: new Date(),
+      changeFrequency: 'monthly',
+      priority: 0.9,
+    },
+    {
+      url: `${baseUrl}/landlords/start-here`,
+      lastModified: new Date(),
+      changeFrequency: 'monthly',
+      priority: 0.8,
+    },
+    {
       url: `${baseUrl}/additional-services`,
       lastModified: new Date(),
       changeFrequency: 'monthly',

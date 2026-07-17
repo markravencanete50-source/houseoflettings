@@ -89,6 +89,7 @@ const landlordFaqs = [
 // Curated "what's included" highlights per package, mirroring the four shown on
 // /pricing so this landlord explainer stays consistent with the pricing page.
 // Indexed to BUNDLES order; the full lists live in lib/bundles.ts (groups).
+// Consumed by the package carousel (LlxChooseService).
 const PKG_HL: string[][] = [
   ['Advertising on major property portals', 'Full applicant referencing and Right to Rent checks', 'Tenancy agreement and deposit registration', "First month's rent and deposit collected"],
   ['Everything in Virtual Tenant Find', 'Professional photography and floor plan', 'Agent-led accompanied viewings', 'In-person tenant handover'],
@@ -599,120 +600,318 @@ function LlxLettingSimple() {
   );
 }
 
-function LlxWhichRoute() {
+// Package chooser carousel. Replaces both the old two-card "which route"
+// section and the tabbed "Services Built Around You" section below it: one
+// card per package, so a landlord meets all five in order (cheapest tenant
+// find through to full protection) instead of picking a lane and then meeting
+// the packages again further down the page. Desktop gets prev/next arrows,
+// touch devices swipe — scroll-snap drives both, so the swipe is native and
+// the arrows are just scrollTo calls, the same pattern as the RGI carousel
+// lower down this page. id="packages" is kept: it is the scroll target for
+// this section's own deep links.
+function LlxChooseService() {
+  const trackRef = useRef<HTMLDivElement>(null);
+  const [slide, setSlide] = useState(0);
+  const last = BUNDLES.length - 1;
+
+  // Measured rather than assumed, so the step stays correct at any card width.
+  const step = () => {
+    const t = trackRef.current;
+    const a = t?.children[0] as HTMLElement | undefined;
+    const b = t?.children[1] as HTMLElement | undefined;
+    return a && b ? b.offsetLeft - a.offsetLeft : a?.offsetWidth || 1;
+  };
+  const go = (i: number) => {
+    const t = trackRef.current;
+    if (!t) return;
+    const c = Math.max(0, Math.min(last, i));
+    // Move the index now rather than waiting for the scroll event to land:
+    // the controls stay in step with a fast double-click on the arrows, which
+    // would otherwise both compute their target from a stale index.
+    setSlide(c);
+    t.scrollTo({ left: c * step(), behavior: 'smooth' });
+  };
+  // Swipes never call go(), so the scroll position stays the source of truth.
+  const onScroll = () => {
+    const t = trackRef.current;
+    if (!t) return;
+    setSlide(Math.max(0, Math.min(last, Math.round(t.scrollLeft / step()))));
+  };
+
   return (
-    <section className="llx5-sec">
+    <section id="packages" className="llx5-sec">
       <style>{`
-        .llx5-sec { position:relative; overflow:hidden; background:linear-gradient(180deg,#0b1730 0%,#0f1f3d 55%,#0c1a33 100%); padding:clamp(64px,9vw,110px) clamp(20px,7%,100px); font-family:'Poppins',sans-serif; }
-        .llx5-glow { position:absolute; inset:0; pointer-events:none; background:radial-gradient(ellipse at 82% 8%,rgba(37,99,235,.2) 0%,transparent 55%),radial-gradient(ellipse at 12% 92%,rgba(74,144,217,.12) 0%,transparent 50%); }
-        .llx5-inner { position:relative; z-index:1; max-width:1180px; margin:0 auto; }
-        .llx5-head { text-align:center; margin-bottom:52px; }
-        .llx5-eyebrow { font-size:11px; font-weight:700; letter-spacing:.24em; text-transform:uppercase; color:#4a90d9; margin-bottom:14px; }
-        .llx5-h2 { font-size:clamp(28px,3.8vw,46px); font-weight:700; color:#fff; margin:0 0 16px; line-height:1.15; text-wrap:balance; }
-        .llx5-sub { font-size:15px; font-weight:300; color:rgba(255,255,255,.55); line-height:1.75; max-width:620px; margin:0 auto; text-wrap:pretty; }
-        .llx5-spectrum { max-width:560px; margin:0 auto 30px; text-align:center; }
-        .llx5-spec-label { display:block; font-size:11px; font-weight:700; letter-spacing:.12em; text-transform:uppercase; color:#8fa6c9; margin-bottom:14px; }
-        .llx5-track { position:relative; height:6px; border-radius:99px; background:rgba(255,255,255,.12); margin:0 12px; }
-        .llx5-fill { position:absolute; left:0; top:0; bottom:0; width:50%; border-radius:99px; background:linear-gradient(90deg,#4a90d9,#2563eb,#4a90d9); background-size:220% 100%; animation:llxShimmer 6.5s linear infinite; }
-        .llx5-knob { position:absolute; left:calc(50% - 9px); top:-6px; width:18px; height:18px; border-radius:50%; background:#fff; box-shadow:0 4px 14px rgba(0,0,0,.4),0 0 0 4px rgba(37,99,235,.35); animation:llxFloat 4s ease-in-out infinite; }
+        /* Grey band, deliberately a deeper grey than the #f7f8fa sections either
+           side of it, so it still reads as its own section without going back to
+           a dark blue. */
+        .llx5-sec { position:relative; overflow:hidden; scroll-margin-top:88px;
+          background:linear-gradient(180deg,#eceff5 0%,#e5e9f1 55%,#eceff5 100%);
+          padding:clamp(64px,9vw,110px) clamp(20px,7%,100px); font-family:'Poppins',sans-serif; }
+        .llx5-glow { position:absolute; inset:0; pointer-events:none;
+          background:radial-gradient(ellipse at 82% 6%,rgba(37,99,235,.09) 0%,transparent 55%),
+                     radial-gradient(ellipse at 12% 94%,rgba(15,31,61,.07) 0%,transparent 50%); }
+        .llx5-inner { position:relative; z-index:1; max-width:1080px; margin:0 auto; }
+        .llx5-head { text-align:center; margin-bottom:40px; }
+        .llx5-eyebrow { font-size:11px; font-weight:700; letter-spacing:.24em; text-transform:uppercase; color:var(--logo-blue); margin-bottom:14px; }
+        .llx5-h2 { font-size:clamp(28px,3.8vw,46px); font-weight:700; color:#0f1f3d; margin:0 0 16px; line-height:1.15; text-wrap:balance; }
+        .llx5-sub { font-size:15px; font-weight:300; color:#6b7280; line-height:1.75; max-width:620px; margin:0 auto; text-wrap:pretty; }
+
+        /* Hands-on spectrum: kept from the old section, but now it tracks the
+           carousel — the knob slides as you move through the packages, which is
+           exactly the axis they are ordered on. */
+        .llx5-spectrum { max-width:520px; margin:0 auto 34px; text-align:center; }
+        .llx5-spec-label { display:block; font-size:11px; font-weight:700; letter-spacing:.12em; text-transform:uppercase; color:#6b7280; margin-bottom:14px; }
+        .llx5-track-line { position:relative; height:6px; border-radius:99px; background:#d5dbe6; margin:0 12px; }
+        .llx5-fill { position:absolute; left:0; top:0; bottom:0; border-radius:99px; background:linear-gradient(90deg,#4a90d9,#2563eb); transition:width .45s cubic-bezier(.22,1,.36,1); }
+        .llx5-knob { position:absolute; top:-6px; width:18px; height:18px; border-radius:50%; background:#fff; box-shadow:0 3px 12px rgba(15,31,61,.28),0 0 0 4px rgba(37,99,235,.28); transition:left .45s cubic-bezier(.22,1,.36,1); }
         .llx5-ends { display:flex; justify-content:space-between; margin-top:12px; padding:0 4px; }
-        .llx5-end { font-size:11px; font-weight:600; color:rgba(255,255,255,.5); }
-        .llx5-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); gap:18px; max-width:900px; margin:0 auto 36px; align-items:stretch; }
-        .llx5-card { position:relative; display:flex; flex-direction:column; border-radius:20px; padding:clamp(26px,3vw,34px); transition:transform .3s cubic-bezier(.22,1,.36,1),box-shadow .3s ease,border-color .3s ease; }
-        .llx5-card-a { background:linear-gradient(160deg,rgba(22,41,76,.92) 0%,rgba(12,26,51,.92) 100%); border:1px solid rgba(255,255,255,.11); }
-        .llx5-card-a:hover { transform:translateY(-8px); border-color:rgba(74,144,217,.6); box-shadow:0 28px 50px -24px rgba(37,99,235,.5); }
-        .llx5-card-b { background:linear-gradient(160deg,rgba(30,58,112,.95) 0%,rgba(15,33,66,.95) 100%); border:1.5px solid rgba(37,99,235,.6); box-shadow:0 24px 50px -26px rgba(37,99,235,.55); }
-        .llx5-card-b:hover { transform:translateY(-8px); border-color:rgba(74,144,217,.85); box-shadow:0 30px 56px -22px rgba(37,99,235,.65); }
-        .llx5-badge { position:absolute; top:-11px; right:22px; font-size:9.5px; font-weight:800; letter-spacing:.08em; text-transform:uppercase; background:#2563eb; color:#fff; border-radius:999px; padding:4px 12px; white-space:nowrap; box-shadow:0 8px 18px -6px rgba(37,99,235,.7); }
-        .llx5-chip { display:inline-block; font-size:10px; font-weight:700; letter-spacing:.1em; text-transform:uppercase; border-radius:999px; padding:5px 12px; margin-bottom:18px; align-self:flex-start; transition:background .3s ease,border-color .3s ease; }
-        .llx5-chip-a { color:#a9c4ea; background:rgba(255,255,255,.07); border:1px solid rgba(255,255,255,.14); }
-        .llx5-card-a:hover .llx5-chip-a { background:rgba(255,255,255,.12); border-color:rgba(255,255,255,.26); }
-        .llx5-chip-b { color:#cbdcf6; background:rgba(37,99,235,.18); border:1px solid rgba(74,144,217,.35); }
-        .llx5-card-b:hover .llx5-chip-b { background:rgba(37,99,235,.28); border-color:rgba(74,144,217,.55); }
-        .llx5-title { font-size:20px; font-weight:800; color:#fff; margin:0 0 8px; line-height:1.25; }
-        .llx5-body { font-size:13.5px; font-weight:300; line-height:1.75; margin:0 0 20px; text-wrap:pretty; }
-        .llx5-body-a { color:rgba(255,255,255,.62); }
-        .llx5-body-b { color:rgba(255,255,255,.66); }
-        .llx5-list { list-style:none; margin:0 0 22px; padding:0; display:flex; flex-direction:column; gap:11px; }
-        .llx5-li { display:flex; gap:11px; align-items:flex-start; font-size:13px; color:#e7eefb; line-height:1.5; }
-        .llx5-tick { flex:none; width:20px; height:20px; border-radius:50%; background:rgba(74,222,128,.16); color:#4ade80; display:inline-flex; align-items:center; justify-content:center; margin-top:1px; transition:transform .3s cubic-bezier(.34,1.56,.64,1),background .3s ease; }
-        .llx5-card:hover .llx5-tick { transform:scale(1.18); background:rgba(74,222,128,.3); }
-        .llx5-foot { margin-top:auto; display:flex; flex-wrap:wrap; align-items:baseline; gap:8px; padding-top:18px; }
-        .llx5-foot-a { border-top:1px solid rgba(255,255,255,.09); }
-        .llx5-foot-b { border-top:1px solid rgba(255,255,255,.12); }
-        .llx5-foot-label { font-size:12px; font-weight:600; color:rgba(255,255,255,.5); }
-        .llx5-fig { font-size:24px; font-weight:800; color:#4ade80; line-height:1; }
-        .llx5-foot-sub { font-size:11px; font-weight:600; color:rgba(255,255,255,.5); }
-        .llx5-foot-b .llx5-foot-label, .llx5-foot-b .llx5-foot-sub { color:rgba(255,255,255,.55); }
-        .llx5-note { text-align:center; font-size:13px; font-weight:300; color:rgba(255,255,255,.5); line-height:1.7; max-width:620px; margin:0 auto 28px; text-wrap:pretty; }
+        .llx5-end { font-size:11px; font-weight:600; color:#8a93a3; }
+
+        /* Carousel */
+        .llx5-carousel { position:relative; }
+        .llx5-track { display:flex; gap:20px; overflow-x:auto; scroll-snap-type:x mandatory;
+          scrollbar-width:none; -ms-overflow-style:none; padding:4px; margin:-4px; }
+        .llx5-track::-webkit-scrollbar { display:none; }
+        .llx5-slide { flex:0 0 100%; scroll-snap-align:center; scroll-snap-stop:always; min-width:0; }
+
+        .llx5-card { display:grid; grid-template-columns:1.15fr 1fr; border-radius:20px; overflow:hidden;
+          background:#fff; border:1px solid #dfe4ec; box-shadow:0 26px 54px -34px rgba(15,31,61,.4); height:100%; }
+        .llx5-card.featured { border-color:#2563eb; box-shadow:0 30px 60px -32px rgba(37,99,235,.5); }
+        @media (max-width:820px) { .llx5-card { grid-template-columns:1fr; } }
+
+        .llx5-info { position:relative; padding:clamp(26px,3.2vw,40px); }
+        .llx5-chips { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:16px; padding-right:96px; }
+        .llx5-chip { font-size:10.5px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; border-radius:999px; padding:5px 11px; }
+        .llx5-chip-kind { color:#4b5563; background:#f3f4f6; border:1px solid #e5e7eb; }
+        .llx5-chip-you { color:var(--logo-blue); background:#eff6ff; border:1px solid #dbeafe; }
+        .llx5-badge { position:absolute; top:clamp(26px,3.2vw,40px); right:clamp(26px,3.2vw,40px);
+          font-size:9.5px; font-weight:800; letter-spacing:.08em; text-transform:uppercase;
+          background:#2563eb; color:#fff; border-radius:999px; padding:5px 12px; white-space:nowrap;
+          box-shadow:0 8px 18px -6px rgba(37,99,235,.6); }
+        .llx5-name { font-size:clamp(23px,2.5vw,31px); font-weight:800; color:#0f1f3d; line-height:1.15; margin:0 0 10px; }
+        .llx5-best { font-size:14px; font-weight:600; color:var(--logo-blue); margin:0 0 16px; line-height:1.5; }
+        .llx5-blurb { font-size:14.5px; font-weight:300; color:#4b5563; line-height:1.8; margin:0 0 24px; text-wrap:pretty; }
+        .llx5-price { display:flex; align-items:center; gap:20px; margin-bottom:26px; }
+        .llx5-price > div { display:flex; flex-direction:column; }
+        .llx5-price b { font-size:30px; font-weight:800; color:var(--price-green-ink); line-height:1; }
+        .llx5-price span { font-size:11px; font-weight:600; letter-spacing:.04em; text-transform:uppercase; color:#6b7280; margin-top:6px; }
+        .llx5-price-sep { width:1px; height:42px; background:#e5e7eb; }
+        /* Both CTAs are the site-standard size and share a row, so the pair is
+           identical on desktop and identically full-width on mobile. */
+        .llx5-cta-pair { display:flex; flex-wrap:wrap; gap:12px; }
+        .llx5-btn { display:inline-flex; align-items:center; justify-content:center; gap:9px;
+          box-sizing:border-box; min-height:48px; flex:1 1 190px; line-height:1.2;
+          font-size:13.5px; font-weight:700; letter-spacing:.02em; text-transform:uppercase;
+          text-decoration:none; padding:14px 24px; border:1.5px solid transparent; border-radius:9px;
+          transition:all .2s ease; }
+        .llx5-btn.primary { background:#2563eb; color:#fff; border-color:#2563eb; }
+        .llx5-btn.primary:hover { background:#1d4ed8; border-color:#1d4ed8; transform:translateY(-2px); }
+        .llx5-btn.ghost { background:transparent; color:#0f1f3d; border-color:#cbd5e1; }
+        .llx5-btn.ghost:hover { border-color:#0f1f3d; background:#0f1f3d; color:#fff; transform:translateY(-2px); }
+        .llx5-btn svg { transition:transform .2s ease; }
+        .llx5-btn:hover svg { transform:translateX(3px); }
+        @media (max-width:600px) { .llx5-btn { flex:1 1 100%; } }
+
+        .llx5-included { padding:clamp(26px,3.2vw,40px); background:#f7f9fc; border-left:1px solid #e9edf3; display:flex; flex-direction:column; }
+        @media (max-width:820px) { .llx5-included { border-left:0; border-top:1px solid #e9edf3; } }
+        .llx5-inc-label { font-size:11px; font-weight:700; letter-spacing:.12em; text-transform:uppercase; color:#6b7280; margin-bottom:18px; }
+        .llx5-list { list-style:none; margin:0 0 22px; padding:0; display:flex; flex-direction:column; gap:14px; }
+        .llx5-li { display:flex; gap:12px; align-items:flex-start; font-size:14px; color:#374151; line-height:1.5; }
+        .llx5-tick { flex:none; width:22px; height:22px; border-radius:50%; background:#f0fdf4; color:var(--price-green); display:inline-flex; align-items:center; justify-content:center; margin-top:1px; }
+        .llx5-inc-more { margin-top:auto; display:inline-flex; align-items:center; gap:7px; min-height:44px; font-size:12.5px; font-weight:700; color:var(--logo-blue); text-decoration:none; }
+        .llx5-inc-more:hover { color:#0f1f3d; }
+        .llx5-inc-more svg { transition:transform .2s ease; }
+        .llx5-inc-more:hover svg { transform:translateX(3px); }
+
+        /* Controls: arrows sit outside the card on wide screens and are hidden
+           on touch widths, where the track is swiped instead. */
+        .llx5-arrow { position:absolute; top:50%; transform:translateY(-50%); z-index:2;
+          width:48px; height:48px; border-radius:50%; background:#fff; border:1px solid #dfe4ec;
+          color:#0f1f3d; display:inline-flex; align-items:center; justify-content:center; cursor:pointer;
+          box-shadow:0 12px 28px -12px rgba(15,31,61,.45); transition:all .2s ease; }
+        .llx5-arrow:hover:not(:disabled) { background:#2563eb; border-color:#2563eb; color:#fff; box-shadow:0 16px 32px -12px rgba(37,99,235,.7); }
+        .llx5-arrow:disabled { opacity:.34; cursor:default; }
+        .llx5-arrow.prev { left:-24px; }
+        .llx5-arrow.next { right:-24px; }
+        @media (max-width:1180px) { .llx5-arrow.prev { left:8px; } .llx5-arrow.next { right:8px; } }
+        @media (max-width:820px) { .llx5-arrow { display:none; } }
+
+        .llx5-controls { display:flex; align-items:center; justify-content:center; gap:16px; margin-top:26px; }
+        .llx5-dots { display:flex; gap:8px; }
+        .llx5-dot { width:32px; height:32px; padding:0; border:0; background:none; cursor:pointer;
+          display:inline-flex; align-items:center; justify-content:center; }
+        .llx5-dot i { display:block; width:8px; height:8px; border-radius:50%; background:#c2cad8; transition:all .25s ease; }
+        .llx5-dot:hover i { background:#94a3b8; }
+        .llx5-dot.on i { width:26px; border-radius:99px; background:#2563eb; }
+        .llx5-count { font-size:12px; font-weight:600; color:#6b7280; font-variant-numeric:tabular-nums; }
+        .llx5-swipe { display:none; }
+        @media (max-width:820px) { .llx5-swipe { display:inline; font-size:11.5px; font-weight:500; color:#8a93a3; } }
+
+        .llx5-note { text-align:center; font-size:13px; font-weight:300; color:#6b7280; line-height:1.7; max-width:640px; margin:30px auto 26px; text-wrap:pretty; }
         .llx5-cta-row { text-align:center; }
-        .llx5-cta { background:#2563eb; color:#fff; box-shadow:0 14px 30px -14px rgba(37,99,235,.7); transition:all .22s ease; }
-        .llx5-cta:hover { background:#1d4ed8; transform:translateY(-2px); box-shadow:0 22px 42px -14px rgba(37,99,235,.9); }
+        .llx5-cta { background:#0f1f3d; color:#fff; transition:all .22s ease; }
+        .llx5-cta:hover { background:#162849; color:#fff; transform:translateY(-2px); box-shadow:0 16px 32px -16px rgba(15,31,61,.6); }
+        @media (prefers-reduced-motion: reduce) { .llx5-track { scroll-behavior:auto; } }
       `}</style>
       <div className="llx5-glow" aria-hidden="true" />
       <div className="llx5-inner">
         <div className="llx5-head hol-reveal">
           <div className="llx5-eyebrow">Compare Our Landlord Packages</div>
           <h2 className="llx5-h2">Choose the Right Service for Your Property</h2>
-          <p className="llx5-sub">Whether you need tenant find services or fully managed support, compare our packages to find the option that best suits your goals and budget.</p>
+          <p className="llx5-sub">From simply finding you a quality tenant through to fully protecting your rental income. Move through the packages to find the one that fits your goals and budget.</p>
         </div>
+
         <div className="llx5-spectrum hol-reveal" style={{ animationDelay: '60ms' }}>
           <span className="llx5-spec-label">How hands-on do you want to be?</span>
-          <div className="llx5-track">
-            <span className="llx5-fill" aria-hidden="true" />
-            <span className="llx5-knob" aria-hidden="true" />
+          <div className="llx5-track-line">
+            <span className="llx5-fill" style={{ width: `${(slide / last) * 100}%` }} aria-hidden="true" />
+            <span className="llx5-knob" style={{ left: `calc(${(slide / last) * 100}% - 9px)` }} aria-hidden="true" />
           </div>
           <div className="llx5-ends">
             <span className="llx5-end">{"I'll manage it myself"}</span>
             <span className="llx5-end">Handle everything for me</span>
           </div>
         </div>
-        <div className="llx5-grid">
-          <div className="llx5-card llx5-card-a hol-reveal" style={{ animationDelay: '120ms' }}>
-            <span className="llx5-chip llx5-chip-a">You manage · we find</span>
-            <h3 className="llx5-title">I want to stay hands-on</h3>
-            <p className="llx5-body llx5-body-a">You run the tenancy day to day. We find, vet and reference a quality tenant, then hand over a signed agreement.</p>
-            <ul className="llx5-list">
-              {['A single upfront fee, no ongoing charges', 'Full referencing and Right to Rent checks', 'Optional photography & agent-led viewings'].map((t, i) => (
-                <li key={t} className="llx5-li">
-                  <span className="llx5-tick" style={{ transitionDelay: `${i * 50}ms` }} aria-hidden="true">
-                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
-                  </span>
-                  {t}
-                </li>
-              ))}
-            </ul>
-            <div className="llx5-foot llx5-foot-a">
-              <span className="llx5-foot-label">Tenant Find from</span>
-              <span className="llx5-fig">{LOWEST_FIND_FEE}</span>
-              <span className="llx5-foot-sub">one time</span>
-            </div>
+
+        <div className="llx5-carousel hol-reveal" style={{ animationDelay: '120ms' }}>
+          <button
+            type="button"
+            className="llx5-arrow prev"
+            onClick={() => go(slide - 1)}
+            disabled={slide === 0}
+            aria-label="Previous package"
+          >
+            <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6" /></svg>
+          </button>
+          <div
+            className="llx5-track"
+            ref={trackRef}
+            onScroll={onScroll}
+            role="group"
+            aria-roledescription="carousel"
+            aria-label="Landlord packages"
+          >
+            {BUNDLES.map((b, i) => {
+              const isMgmt = b.kind === 'Management';
+              return (
+                <div
+                  key={b.id}
+                  className="llx5-slide"
+                  role="group"
+                  aria-roledescription="slide"
+                  aria-label={`${i + 1} of ${BUNDLES.length}: ${b.label}`}
+                  aria-hidden={slide !== i}
+                >
+                  <div className={`llx5-card${b.badge ? ' featured' : ''}`}>
+                    <div className="llx5-info">
+                      {b.badge && <span className="llx5-badge">{b.badge}</span>}
+                      <div className="llx5-chips">
+                        <span className="llx5-chip llx5-chip-kind">{b.kind}</span>
+                        <span className="llx5-chip llx5-chip-you">{b.youWe}</span>
+                      </div>
+                      <h3 className="llx5-name">{b.label}</h3>
+                      <p className="llx5-best">Best for {b.bestForLead} {b.bestForRest}.</p>
+                      <p className="llx5-blurb">{b.blurb}</p>
+                      {/* The ongoing percentage leads: it is our main management
+                          fee. Tenant-find packages have no percentage, so the
+                          one-time fee leads there instead. */}
+                      <div className="llx5-price">
+                        {isMgmt ? (
+                          <>
+                            <div>
+                              <b>{b.mgmtFee}</b>
+                              <span>management fees</span>
+                            </div>
+                            <div className="llx5-price-sep" aria-hidden="true" />
+                            <div>
+                              <b>{b.setupFee}</b>
+                              <span>set up fees</span>
+                            </div>
+                          </>
+                        ) : (
+                          <>
+                            <div>
+                              <b>{b.setupFee}</b>
+                              <span>set up fees</span>
+                            </div>
+                            <div className="llx5-price-sep" aria-hidden="true" />
+                            <div>
+                              <b>£0</b>
+                              <span>no management fees</span>
+                            </div>
+                          </>
+                        )}
+                      </div>
+                      <div className="llx5-cta-pair">
+                        <Link href="/book-valuation" className="llx5-btn primary" tabIndex={slide === i ? undefined : -1}>
+                          Book a Free Valuation
+                        </Link>
+                        <Link href={`/pricing/${b.id}`} className="llx5-btn ghost" tabIndex={slide === i ? undefined : -1}>
+                          See full details
+                          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
+                        </Link>
+                      </div>
+                    </div>
+                    <div className="llx5-included">
+                      <div className="llx5-inc-label">What&apos;s included</div>
+                      <ul className="llx5-list">
+                        {PKG_HL[i].map((h) => (
+                          <li key={h} className="llx5-li">
+                            <span className="llx5-tick" aria-hidden="true">
+                              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
+                            </span>
+                            {h}
+                          </li>
+                        ))}
+                      </ul>
+                      <Link href={`/pricing/${b.id}`} className="llx5-inc-more" tabIndex={slide === i ? undefined : -1}>
+                        See every service included
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
+                      </Link>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
           </div>
-          <div className="llx5-card llx5-card-b hol-reveal" style={{ animationDelay: '200ms' }}>
-            <span className="llx5-badge">Most Popular Route</span>
-            <span className="llx5-chip llx5-chip-b">We manage everything</span>
-            <h3 className="llx5-title">I want it fully managed</h3>
-            <p className="llx5-body llx5-body-b">Rent, tenants, maintenance and compliance handled by your local team, up to full rent guarantee and legal protection.</p>
-            <ul className="llx5-list">
-              {['Full tenant find included in every tier', 'Rent collection, arrears & compliance handled', 'Rent guarantee & legal cover available'].map((t, i) => (
-                <li key={t} className="llx5-li">
-                  <span className="llx5-tick" style={{ transitionDelay: `${i * 50}ms` }} aria-hidden="true">
-                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
-                  </span>
-                  {t}
-                </li>
-              ))}
-            </ul>
-            <div className="llx5-foot llx5-foot-b">
-              <span className="llx5-foot-label">Management from</span>
-              <span className="llx5-fig">{LOWEST_MGMT_FEE}</span>
-              <span className="llx5-foot-sub">monthly · rolling</span>
-            </div>
-          </div>
+          <button
+            type="button"
+            className="llx5-arrow next"
+            onClick={() => go(slide + 1)}
+            disabled={slide === last}
+            aria-label="Next package"
+          >
+            <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M9 18l6-6-6-6" /></svg>
+          </button>
         </div>
-        <p className="llx5-note hol-reveal" style={{ animationDelay: '80ms' }}>All prices inclusive of VAT. See the full package section below for everything included in each tier.</p>
-        <div className="llx5-cta-row hol-reveal" style={{ animationDelay: '140ms' }}>
-          <a href="#packages" className="llx-cta llx5-cta" style={{ ...CTA_STYLE }}>Compare Landlord Packages</a>
+
+        <div className="llx5-controls">
+          <div className="llx5-dots">
+            {BUNDLES.map((b, i) => (
+              <button
+                key={b.id}
+                type="button"
+                className={`llx5-dot${slide === i ? ' on' : ''}`}
+                onClick={() => go(i)}
+                aria-label={`Show ${b.label}`}
+                aria-current={slide === i}
+              >
+                <i />
+              </button>
+            ))}
+          </div>
+          <span className="llx5-count">
+            {slide + 1} / {BUNDLES.length}
+            <span className="llx5-swipe"> · swipe</span>
+          </span>
+        </div>
+
+        <p className="llx5-note">
+          All prices inclusive of VAT. Every management tier includes a full tenant find, and
+          management runs on a rolling monthly basis, so you can upgrade or cancel any time.
+        </p>
+        <div className="llx5-cta-row">
+          <Link href="/pricing" className="llx-cta llx5-cta" style={{ ...CTA_STYLE }}>Compare All Packages</Link>
         </div>
       </div>
     </section>
@@ -783,7 +982,6 @@ function LlxReadyToGrow() {
 
 export default function LandlordsPage() {
   const [openFaq, setOpenFaq] = useState<number | null>(null);
-  const [activePkg, setActivePkg] = useState(3); // default: Full Management (Most Popular)
   const rgiRef = useRef<HTMLDivElement>(null);
   const [rgiSlide, setRgiSlide] = useState(0);
   const rgiStep = () => {
@@ -995,22 +1193,40 @@ export default function LandlordsPage() {
           .ll-price-title { font-family:'Poppins',sans-serif; font-size:22px; font-weight:800; color:#fff; margin:7px 0 4px; }
           .ll-price-sub { font-family:'Poppins',sans-serif; font-size:12.5px; color:#a9c4ea; }
           .ll-price-list { list-style:none; margin:20px 0 0; padding:0; }
+          /* Each row is a link to that package's detail page, so the whole row
+             is one 44px+ tap target rather than a dead panel of text. */
           .ll-price-row { display:flex; align-items:center; justify-content:space-between; gap:14px;
-            padding:14px 12px; border-radius:10px; border-top:1px solid rgba(255,255,255,0.07); }
+            padding:14px 12px; border-radius:10px; border-top:1px solid rgba(255,255,255,0.07);
+            text-decoration:none; cursor:pointer; transition:background .2s ease, transform .2s ease; }
           .ll-price-row:first-child { border-top:0; }
           .ll-price-row.ll-hot { background:rgba(37,99,235,0.16); border-top-color:transparent; }
+          .ll-price-row:hover { background:rgba(255,255,255,0.09); transform:translateX(3px); }
+          .ll-price-row.ll-hot:hover { background:rgba(37,99,235,0.28); }
+          .ll-price-row:focus-visible { outline:2px solid #4a90d9; outline-offset:2px; }
+          .ll-price-arrow { flex:none; color:#4a90d9; opacity:0; transform:translateX(-4px);
+            transition:opacity .2s ease, transform .2s ease; }
+          .ll-price-row:hover .ll-price-arrow { opacity:1; transform:none; }
           .ll-price-nm { display:flex; align-items:center; gap:8px; font-family:'Poppins',sans-serif;
             font-size:14.5px; font-weight:700; color:#fff; }
           .ll-price-nm em { font-style:normal; font-size:9px; font-weight:800; letter-spacing:.08em;
             text-transform:uppercase; background:#2563eb; color:#fff; border-radius:999px; padding:2px 8px; }
           .ll-price-kd { display:block; font-family:'Poppins',sans-serif; font-size:11.5px; color:#8fa6c9; margin-top:3px; }
-          .ll-price-fig { text-align:right; flex:none; }
+          /* margin-left:auto keeps the figure hard against the arrow on the
+             right, rather than the row's space-between stranding it mid-row. */
+          .ll-price-fig { text-align:right; flex:none; margin-left:auto; }
           /* Price figures are the additional-services green (#16a34a) site-wide. */
           .ll-price-fig b { display:block; font-family:'Poppins',sans-serif; font-size:18px; font-weight:800; color:var(--price-green-bright); }
           .ll-price-fig span { font-family:'Poppins',sans-serif; font-size:11px; color:#a9c4ea; }
           .ll-price-cta { display:inline-block; margin-top:20px; font-family:'Poppins',sans-serif;
             font-size:13px; font-weight:700; color:#4a90d9; text-decoration:none; }
           .ll-price-cta:hover { color:#fff; }
+          /* The "Why choose us" CTA pair. Both buttons are the site-standard CTA
+             size and flex:1 within a shared max-width row, so they are identical
+             to each other on desktop and stack to the same full width on mobile
+             rather than sizing themselves to their label. */
+          .ll-why-ctas { display:flex; flex-wrap:wrap; gap:12px; max-width:440px; }
+          .ll-why-ctas > * { flex:1 1 190px; }
+          @media (max-width:600px) { .ll-why-ctas { max-width:none; } .ll-why-ctas > * { flex:1 1 100%; } }
         `}</style>
         <div className="ll-intro-grid">
           <div>
@@ -1054,16 +1270,38 @@ export default function LandlordsPage() {
                 </li>
               ))}
             </ul>
-            <Link href="/book-valuation"
-              style={{
-                ...CTA_STYLE, background: '#0f1f3d', color: '#fff',
-                cursor: 'pointer', transition: 'background 0.2s',
-              }}
-              onMouseEnter={e => (e.currentTarget.style.background = '#162849')}
-              onMouseLeave={e => (e.currentTarget.style.background = '#0f1f3d')}
-            >
-              Get a Free Valuation
-            </Link>
+            <div className="ll-why-ctas">
+              <Link href="/book-valuation"
+                style={{
+                  ...CTA_STYLE, background: '#0f1f3d', color: '#fff',
+                  cursor: 'pointer', transition: 'background 0.2s',
+                }}
+                onMouseEnter={e => (e.currentTarget.style.background = '#162849')}
+                onMouseLeave={e => (e.currentTarget.style.background = '#0f1f3d')}
+              >
+                Get a Free Valuation
+              </Link>
+              {/* Start Here → the full landlord explainer: process, pricing,
+                  paperwork and legal duties, for landlords who want to read
+                  before they book anything. */}
+              <Link href="/landlords/start-here"
+                style={{
+                  ...CTA_STYLE, background: 'transparent', color: '#0f1f3d',
+                  borderColor: '#0f1f3d', cursor: 'pointer',
+                  transition: 'background 0.2s, color 0.2s',
+                }}
+                onMouseEnter={e => {
+                  e.currentTarget.style.background = '#0f1f3d';
+                  e.currentTarget.style.color = '#fff';
+                }}
+                onMouseLeave={e => {
+                  e.currentTarget.style.background = 'transparent';
+                  e.currentTarget.style.color = '#0f1f3d';
+                }}
+              >
+                Start Here
+              </Link>
+            </div>
           </div>
           {/* Pricing snapshot (title + price only) in place of the old flyer image */}
           <div className="ll-price-panel">
@@ -1072,16 +1310,21 @@ export default function LandlordsPage() {
             <span className="ll-price-sub">Inclusive of VAT. No hidden fees, ever.</span>
             <ul className="ll-price-list">
               {BUNDLES.map(b => (
-                <li key={b.id} className={`ll-price-row${b.badge ? ' ll-hot' : ''}`}>
-                  <div>
-                    <span className="ll-price-nm">{b.short}{b.badge && <em>Popular</em>}</span>
-                    <span className="ll-price-kd">{b.kind}</span>
-                  </div>
-                  {/* The ongoing percentage leads: it is our main management fee. */}
-                  <div className="ll-price-fig">
-                    <b>{b.mgmtFee || b.setupFee}</b>
-                    <span>{b.mgmtFee ? `management fees + ${b.setupFee} set up fees` : 'set up fees'}</span>
-                  </div>
+                <li key={b.id}>
+                  <Link href={`/pricing/${b.id}`} className={`ll-price-row${b.badge ? ' ll-hot' : ''}`}>
+                    <div>
+                      <span className="ll-price-nm">{b.short}{b.badge && <em>Popular</em>}</span>
+                      <span className="ll-price-kd">{b.kind}</span>
+                    </div>
+                    {/* The ongoing percentage leads: it is our main management fee. */}
+                    <div className="ll-price-fig">
+                      <b>{b.mgmtFee || b.setupFee}</b>
+                      <span>{b.mgmtFee ? `management fees + ${b.setupFee} set up fees` : 'set up fees'}</span>
+                    </div>
+                    <svg className="ll-price-arrow" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                      <path d="M5 12h14M13 6l6 6-6 6" />
+                    </svg>
+                  </Link>
                 </li>
               ))}
             </ul>
@@ -1091,252 +1334,8 @@ export default function LandlordsPage() {
       </section>
 
 
-      {/* ── S5 · WHICH ROUTE FITS YOU (handoff) ─────────────── */}
-      <LlxWhichRoute />
-
-      {/* ── OUR SERVICES ────────────────────────────────────── */}
-      {/* id="packages" is the scroll target for the route-helper section's
-          "Compare Landlord Packages" CTA above. scrollMarginTop clears the
-          72px fixed navbar. */}
-      <section id="packages" style={{
-        padding: 'clamp(60px, 8vw, 100px) clamp(24px, 7%, 100px)',
-        background: 'linear-gradient(180deg, #0b1730 0%, #0f1f3d 55%, #0c1a33 100%)',
-        position: 'relative', overflow: 'hidden', scrollMarginTop: 88,
-      }}>
-        <div style={{
-          position: 'absolute', inset: 0, pointerEvents: 'none',
-          background:
-            'radial-gradient(ellipse at 82% 8%, rgba(37,99,235,0.20) 0%, transparent 55%),' +
-            'radial-gradient(ellipse at 12% 92%, rgba(74,144,217,0.12) 0%, transparent 50%)',
-        }} />
-        <div style={{ position: 'relative', zIndex: 1 }}>
-          <div style={{ textAlign: 'center', marginBottom: 56 }}>
-            <div style={{
-              fontSize: 11, fontWeight: 700, letterSpacing: 3,
-              textTransform: 'uppercase', color: '#4a90d9', marginBottom: 14,
-              fontFamily: "'Poppins', sans-serif",
-            }}>
-              Our Packages
-            </div>
-            <h2 style={{
-              fontFamily: "'Poppins', sans-serif",
-              fontSize: 'clamp(28px,4vw,48px)', fontWeight: 700,
-              color: '#fff', margin: '0 0 16px',
-            }}>
-              Services Built Around You
-            </h2>
-            <p style={{
-              fontFamily: "'Poppins', sans-serif",
-              fontSize: 15, color: 'rgba(255,255,255,0.5)',
-              maxWidth: 560, margin: '0 auto', lineHeight: 1.7, fontWeight: 300,
-            }}>
-              Not sure which fits? Pick a package below to see exactly what it does for you,
-              from simply finding a tenant to fully protecting your rental income.
-            </p>
-          </div>
-
-          <style>{`
-            /* Interactive package explainer: a tab selector drives a single
-               detail panel. A deliberately different structure from both the
-               old card grid and the /pricing alternating layout. */
-            .ll-svc { max-width: 1060px; margin: 0 auto 44px; }
-            .ll-svc-tabs { display: flex; gap: 10px; justify-content: center; flex-wrap: nowrap;
-              overflow-x: auto; padding: 4px 4px 14px; margin-bottom: 26px; scrollbar-width: none; }
-            .ll-svc-tabs::-webkit-scrollbar { display: none; }
-            .ll-svc-tab { position: relative; flex: 0 0 auto; cursor: pointer;
-              display: flex; flex-direction: column; align-items: center; gap: 3px;
-              padding: 12px 20px; border-radius: 12px; white-space: nowrap;
-              background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.12);
-              color: #cdddf5; font-family: 'Poppins', sans-serif; transition: all .2s ease; }
-            .ll-svc-tab:hover { background: rgba(255,255,255,.09); border-color: rgba(74,144,217,.5); }
-            .ll-svc-tab.active { background: linear-gradient(135deg,#2563eb,#1d4ed8);
-              border-color: #2563eb; color: #fff; box-shadow: 0 12px 26px -12px rgba(37,99,235,.7); }
-            .ll-svc-tab-name { font-size: 14px; font-weight: 700; }
-            .ll-svc-tab-fee { font-size: 11px; font-weight: 700; color: var(--price-green-bright); }
-            .ll-svc-tab.active .ll-svc-tab-fee { color: #fff; opacity: .9; }
-            .ll-svc-tab-dot { position: absolute; top: 8px; right: 10px; width: 6px; height: 6px;
-              border-radius: 50%; background: #f59e0b; }
-            .ll-svc-tab.active .ll-svc-tab-dot { background: #fff; }
-
-            .ll-svc-panel { display: grid; grid-template-columns: 1.15fr 1fr; border-radius: 20px;
-              overflow: hidden; border: 1px solid rgba(255,255,255,.1);
-              background: linear-gradient(160deg, rgba(22,41,76,.92) 0%, rgba(12,26,51,.92) 100%);
-              box-shadow: 0 30px 64px -34px rgba(0,0,0,.75); animation: ll-svc-fade .4s ease; }
-            .ll-svc-panel.featured { border-color: rgba(37,99,235,.5); box-shadow: 0 30px 64px -30px rgba(37,99,235,.5); }
-            @keyframes ll-svc-fade { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
-            @media (max-width: 820px) { .ll-svc-panel { grid-template-columns: 1fr; } }
-
-            .ll-svc-info { padding: clamp(28px,3.4vw,44px); }
-            .ll-svc-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
-            .ll-svc-kind, .ll-svc-you, .ll-svc-pop { font-family: 'Poppins', sans-serif; font-size: 10.5px;
-              font-weight: 700; letter-spacing: .08em; text-transform: uppercase; border-radius: 999px; padding: 5px 11px; }
-            .ll-svc-kind { color: #a9c4ea; background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.14); }
-            .ll-svc-you { color: #cbdcf6; background: rgba(37,99,235,.16); border: 1px solid rgba(74,144,217,.3); }
-            .ll-svc-pop { color: #fff; background: #2563eb; }
-            .ll-svc-name { font-family: 'Poppins', sans-serif; font-size: clamp(24px,2.6vw,32px); font-weight: 800;
-              color: #fff; line-height: 1.15; margin: 0 0 10px; }
-            .ll-svc-best { font-family: 'Poppins', sans-serif; font-size: 14px; font-weight: 600; color: #7db4f0;
-              margin: 0 0 16px; line-height: 1.5; }
-            .ll-svc-blurb { font-family: 'Poppins', sans-serif; font-size: 14.5px; color: rgba(255,255,255,.72);
-              line-height: 1.8; margin: 0 0 24px; }
-            .ll-svc-price { display: flex; align-items: center; gap: 20px; margin-bottom: 26px; }
-            .ll-svc-price > div { display: flex; flex-direction: column; }
-            .ll-svc-price b { font-family: 'Poppins', sans-serif; font-size: 30px; font-weight: 800; color: var(--price-green); line-height: 1; }
-            .ll-svc-price b.accent { color: var(--price-green); }
-            .ll-svc-price span { font-family: 'Poppins', sans-serif; font-size: 11px; font-weight: 600; letter-spacing: .04em;
-              text-transform: uppercase; color: rgba(255,255,255,.5); margin-top: 6px; }
-            .ll-svc-price-sep { width: 1px; height: 42px; background: rgba(255,255,255,.14); }
-            .ll-svc-cta { display: flex; gap: 12px; flex-wrap: wrap; }
-            .ll-svc-btn { display: inline-flex; align-items: center; justify-content: center; gap: 9px;
-              box-sizing: border-box; min-height: 48px; line-height: 1.2;
-              font-family: 'Poppins', sans-serif; font-size: 13.5px; font-weight: 700; letter-spacing: .02em;
-              text-transform: uppercase; text-decoration: none; padding: 14px 28px;
-              border: 1.5px solid transparent; border-radius: 9px; transition: all .2s ease; }
-            .ll-svc-btn.primary { background: #2563eb; color: #fff; border-color: #2563eb; }
-            .ll-svc-btn.primary:hover { background: #1d4ed8; border-color: #1d4ed8; transform: translateY(-2px); }
-            .ll-svc-btn.ghost { background: transparent; color: #cddffb; border-color: rgba(255,255,255,.28); }
-            .ll-svc-btn.ghost:hover { border-color: #fff; color: #fff; }
-            .ll-svc-btn.ghost svg { transition: transform .2s ease; }
-            .ll-svc-btn.ghost:hover svg { transform: translateX(3px); }
-
-            .ll-svc-included { padding: clamp(28px,3.4vw,44px); background: rgba(0,0,0,.18);
-              border-left: 1px solid rgba(255,255,255,.08); display: flex; flex-direction: column; }
-            @media (max-width: 820px) { .ll-svc-included { border-left: 0; border-top: 1px solid rgba(255,255,255,.08); } }
-            .ll-svc-inc-label { font-family: 'Poppins', sans-serif; font-size: 11px; font-weight: 700; letter-spacing: .12em;
-              text-transform: uppercase; color: #8fa6c9; margin-bottom: 18px; }
-            .ll-svc-inc-list { list-style: none; margin: 0 0 22px; padding: 0; display: flex; flex-direction: column; gap: 14px; }
-            .ll-svc-inc-list li { display: flex; gap: 12px; align-items: flex-start; font-family: 'Poppins', sans-serif;
-              font-size: 14px; color: #e7eefb; line-height: 1.45; }
-            .ll-svc-inc-tick { flex: none; width: 22px; height: 22px; border-radius: 50%; background: rgba(74,222,128,.16);
-              color: #4ade80; display: inline-flex; align-items: center; justify-content: center; margin-top: 1px; }
-            .ll-svc-inc-tick svg { width: 12px; height: 12px; }
-            .ll-svc-inc-more { margin-top: auto; display: inline-flex; align-items: center; gap: 7px; font-family: 'Poppins', sans-serif;
-              font-size: 12.5px; font-weight: 700; color: #4a90d9; text-decoration: none; }
-            .ll-svc-inc-more:hover { color: #7db4f0; }
-            .ll-svc-inc-more svg { transition: transform .2s ease; }
-            .ll-svc-inc-more:hover svg { transform: translateX(3px); }
-            @media (prefers-reduced-motion: reduce) { .ll-svc-panel { animation: none; } }
-          `}</style>
-
-          <div className="ll-svc">
-            <div className="ll-svc-tabs" role="tablist" aria-label="Choose a package">
-              {BUNDLES.map((b, i) => (
-                <button
-                  key={b.id}
-                  type="button"
-                  role="tab"
-                  aria-selected={activePkg === i}
-                  className={`ll-svc-tab${activePkg === i ? ' active' : ''}`}
-                  onClick={() => setActivePkg(i)}
-                >
-                  {b.badge && <span className="ll-svc-tab-dot" aria-hidden />}
-                  <span className="ll-svc-tab-name">{b.short}</span>
-                  <span className="ll-svc-tab-fee">{b.mgmtFee ? `${b.mgmtFee} + ${b.setupFee}` : b.setupFee}</span>
-                </button>
-              ))}
-            </div>
-
-            {(() => {
-              const b = BUNDLES[activePkg];
-              const isMgmt = b.kind === 'Management';
-              return (
-                <div className={`ll-svc-panel${b.badge ? ' featured' : ''}`}>
-                  <div className="ll-svc-info">
-                    <div className="ll-svc-chips">
-                      <span className="ll-svc-kind">{b.kind}</span>
-                      <span className="ll-svc-you">{b.youWe}</span>
-                      {b.badge && <span className="ll-svc-pop">Most Popular</span>}
-                    </div>
-                    <h3 className="ll-svc-name">{b.label}</h3>
-                    <p className="ll-svc-best">Best for {b.bestForLead} {b.bestForRest}.</p>
-                    <p className="ll-svc-blurb">{b.blurb}</p>
-                    {/* The ongoing percentage leads: it is our main management fee.
-                        Tenant-find packages have no percentage, so the one-time
-                        fee leads there instead. */}
-                    <div className="ll-svc-price">
-                      {isMgmt ? (
-                        <>
-                          <div>
-                            <b className="accent">{b.mgmtFee}</b>
-                            <span>management fees</span>
-                          </div>
-                          <div className="ll-svc-price-sep" aria-hidden />
-                          <div>
-                            <b>{b.setupFee}</b>
-                            <span>set up fees</span>
-                          </div>
-                        </>
-                      ) : (
-                        <>
-                          <div>
-                            <b>{b.setupFee}</b>
-                            <span>set up fees</span>
-                          </div>
-                          <div className="ll-svc-price-sep" aria-hidden />
-                          <div>
-                            <b>£0</b>
-                            <span>no management fees</span>
-                          </div>
-                        </>
-                      )}
-                    </div>
-                    <div className="ll-svc-cta">
-                      <Link href="/book-valuation" className="ll-svc-btn primary">Book a Free Valuation</Link>
-                      <Link href={`/pricing/${b.id}`} className="ll-svc-btn ghost">
-                        See full details
-                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-                          <path d="M5 12h14M13 6l6 6-6 6" />
-                        </svg>
-                      </Link>
-                    </div>
-                  </div>
-                  <div className="ll-svc-included">
-                    <div className="ll-svc-inc-label">What&apos;s included</div>
-                    <ul className="ll-svc-inc-list">
-                      {PKG_HL[activePkg].map((h) => (
-                        <li key={h}>
-                          <span className="ll-svc-inc-tick" aria-hidden>
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-                              <polyline points="20 6 9 17 4 12" />
-                            </svg>
-                          </span>
-                          {h}
-                        </li>
-                      ))}
-                    </ul>
-                    <Link href={`/pricing/${b.id}`} className="ll-svc-inc-more">
-                      See every service included
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-                        <path d="M5 12h14M13 6l6 6-6 6" />
-                      </svg>
-                    </Link>
-                  </div>
-                </div>
-              );
-            })()}
-          </div>
-          <p style={{
-            fontFamily: "'Poppins', sans-serif", textAlign: 'center',
-            fontSize: 13, color: 'rgba(255,255,255,0.5)', lineHeight: 1.7,
-            maxWidth: 640, margin: '0 auto 28px',
-          }}>
-            All prices inclusive of VAT. Every management tier includes a full tenant find, and
-            management runs on a rolling monthly basis, so you can upgrade or cancel any time.
-          </p>
-          <div style={{ textAlign: 'center' }}>
-            <Link href="/pricing" style={{
-              ...CTA_STYLE, background: '#2563eb', color: '#fff',
-              transition: 'background 0.2s',
-            }}
-              onMouseEnter={e => (e.currentTarget.style.background = '#1d4ed8')}
-              onMouseLeave={e => (e.currentTarget.style.background = '#2563eb')}
-            >
-              Compare All Packages
-            </Link>
-          </div>
-        </div>
-      </section>
-
+      {/* ── S5 · CHOOSE YOUR SERVICE (package carousel) ─────── */}
+      <LlxChooseService />
 
       {/* ── ADDITIONAL SERVICES ─────────────────────────────── */}
       <section style={{

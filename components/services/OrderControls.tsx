@@ -11,6 +11,7 @@ import {
 
 const BLUE = '#2563eb';
 const GREEN = '#16a34a';
+const GREEN_DEEP = '#15803d'; // the ticked, already-on-the-order state
 
 // The site-standard CTA size, matching components/layout/ServiceHero.module.css
 // (.btn), so "Add to order" matches every other button on the page.
@@ -42,20 +43,23 @@ function Stepper({ value, min, max, onChange }: { value: number; min: number; ma
 
 export default function OrderControls({ serviceId }: { serviceId: string }) {
   const cfg = SERVICE_ORDERS[serviceId];
-  const { addItem } = useCart();
+  const { addItem, items } = useCart();
   const [sel, setSel] = useState<OrderSelection>(() => newSelection(serviceId, ''));
-  const [added, setAdded] = useState(false);
 
   if (!cfg) return null;
   const line = priceLine({ ...sel, uid: 'preview' })!;
+
+  // Ticked state is derived from the basket, not from a timer, so it stays
+  // ticked for as long as the service is actually on the order — including
+  // after a reload, since the cart is persisted. The button stays live either
+  // way: a landlord can add the same service again for a second property.
+  const inOrder = items.some(it => it.serviceId === serviceId);
 
   const setAddon = (id: string, val: number) => setSel(s => ({ ...s, addOns: { ...s.addOns, [id]: val } }));
 
   const add = () => {
     addItem({ ...sel, uid: `${serviceId}-${Date.now()}-${Math.random().toString(36).slice(2, 7)}` });
     setSel(newSelection(serviceId, ''));
-    setAdded(true);
-    setTimeout(() => setAdded(false), 2600);
   };
 
   const label: React.CSSProperties = { fontSize: 12.5, fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.06em' };
@@ -133,12 +137,25 @@ export default function OrderControls({ serviceId }: { serviceId: string }) {
           </div>
         </div>
         <button type="button" onClick={add} style={{
-          ...CTA_STYLE, background: added ? '#15803d' : GREEN, color: '#fff',
+          ...CTA_STYLE, background: inOrder ? GREEN_DEEP : GREEN, color: '#fff',
           cursor: 'pointer', transition: 'background .18s',
         }}>
-          {added ? 'Added to order ✓' : 'Add to order'}
+          {inOrder ? (
+            <>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                strokeWidth="3.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <polyline points="20 6 9 17 4 12" />
+              </svg>
+              Added to order
+            </>
+          ) : 'Add to order'}
         </button>
       </div>
+      {inOrder && (
+        <p style={{ margin: '10px 0 0', fontSize: 11.5, color: '#166534', fontWeight: 600, lineHeight: 1.5 }}>
+          This service is on your order. Add it again to order it for another property.
+        </p>
+      )}
       {line.from && (
         <p style={{ margin: '10px 0 0', fontSize: 11.5, color: '#64748b', lineHeight: 1.5 }}>
           A &ldquo;from&rdquo; price is an estimate. We confirm the final cost before any work begins.

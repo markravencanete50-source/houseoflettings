@@ -785,10 +785,22 @@ export default function HomePage() {
           .hp-svc-row.hp-rev.is-in .hp-svc-copy { animation-name: hp-in-right; }
           .hp-svc-row.hp-rev.is-in .hp-svc-visual { animation-name: hp-in-left; }
         }
-        /* mobile: stack — panel on top, copy below, full-width CTA */
+        /* mobile: each row becomes ONE card, shaped like a pricing card —
+           navy spec panel as the header, copy and CTA in the body below.
+           gap:0 is what closes the seam between the two grid cells. */
         @media (max-width: 860px) {
-          .hp-svc-row { grid-template-columns: 1fr; gap: 30px; }
+          .hp-svc-row {
+            grid-template-columns: 1fr; gap: 0;
+            background: #fff; border: 1px solid #e9edf3; border-radius: 18px;
+            overflow: hidden; box-shadow: 0 16px 38px -16px rgba(15,31,61,.18);
+          }
           .hp-svc-visual { order: -1; }
+          /* The panel is now the card's header, so it loses its own rounding,
+             border and shadow — they'd otherwise draw a second box inside the
+             card. The gradient and orbs stay. */
+          .hp-vis { border-radius: 0; box-shadow: none; border: none; }
+          .hp-svc-row:hover .hp-vis { transform: none; box-shadow: none; }
+          .hp-svc-copy { padding: 26px 22px 28px; }
           .hp-svc-row.is-in { animation: hp-rise .55s cubic-bezier(.22,1,.36,1) backwards; }
           .hp-svc-body { max-width: 100%; }
           .hp-svc-cta { justify-content: center; }

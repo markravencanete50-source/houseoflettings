@@ -3,6 +3,7 @@ import type { Metadata } from 'next';
 import ReactDOM from 'react-dom';
 import { AuthProvider } from '@/hooks/useAuth';
 import CookieBanner from '@/components/CookieBanner';
+import MobileFAB from '@/components/layout/MobileFAB';
 import VisitorTracker from '@/components/analytics/VisitorTracker';
 import { CartProvider } from '@/components/services/CartProvider';
 import { Suspense } from 'react';
@@ -98,6 +99,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <AuthProvider>
           <CartProvider>
             {children}
+            {/* Site-wide, but MobileFAB hides itself on the long application forms. */}
+            <MobileFAB />
           </CartProvider>
         </AuthProvider>
         <CookieBanner />

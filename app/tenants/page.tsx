@@ -219,6 +219,30 @@ export default function TenantsPage() {
           .tp-journey { grid-template-columns: repeat(2, 1fr) !important; }
           .tp-reviews { grid-template-columns: 1fr !important; }
           .tp-pillars-wrap { grid-template-columns: 1fr !important; }
+
+          /* A Place to Call Home becomes one self-contained card, the same shape
+             as a pricing card: image on top, then copy and buttons in one box.
+             This starts at 980px, where .tp-2col stops being two columns. */
+          .tp-aptc {
+            padding: 0 !important; margin: 40px 20px; max-width: 640px; gap: 0 !important;
+            background: #fff; border: 1px solid ${HAIR}; border-radius: 18px; overflow: hidden;
+            box-shadow: 0 16px 38px -16px rgba(24,33,53,0.2);
+          }
+          /* The frame carries an inline height for the desktop split, so the
+             card height needs !important to win. */
+          .tp-aptc .tp-imgframe { border-radius: 0 !important; box-shadow: none !important; height: 240px !important; }
+          .tp-aptc > div:last-child { padding: 26px 22px 28px; }
+          .tp-aptc .tp-lead, .tp-aptc .tp-btn-col { max-width: none !important; }
+
+          /* Our Commitment pills sit to the left and run shortest to longest.
+             Order is by measured rendered width, not character count: "Friendly
+             local team" (219px) is narrower than "Transparent process" (232px). */
+          .tp-promise-row { justify-content: flex-start !important; }
+          .tp-promise-row .tp-promise:nth-child(1) { order: 3; }  /* Honest communication */
+          .tp-promise-row .tp-promise:nth-child(2) { order: 2; }  /* Transparent process */
+          .tp-promise-row .tp-promise:nth-child(3) { order: 4; }  /* Fast maintenance support */
+          .tp-promise-row .tp-promise:nth-child(4) { order: 1; }  /* Friendly local team */
+          .tp-promise-row .tp-promise:nth-child(5) { order: 5; }  /* Professional property management */
         }
         @media (max-width: 640px) {
           .tp-wrap { padding: 56px 20px; }
@@ -226,17 +250,8 @@ export default function TenantsPage() {
           .area-card { height: 240px; }
           .tp-btn { width: 100%; }
           .tp-h1 { font-size: 40px !important; }
-          /* A Place to Call Home becomes one self-contained card:
-             image on top → text → buttons (pricing-card style). */
-          .tp-aptc {
-            padding: 0 !important; margin: 40px 20px; max-width: none; gap: 0 !important;
-            background: #fff; border: 1px solid ${HAIR}; border-radius: 18px; overflow: hidden;
-            box-shadow: 0 16px 38px -16px rgba(24,33,53,0.2);
-          }
-          .tp-aptc .tp-imgframe { border-radius: 0 !important; box-shadow: none !important; height: 210px; }
-          .tp-aptc > div:last-child { padding: 24px 22px 28px; }
-          /* Our Commitment pills sit to the left on mobile */
-          .tp-promise-row { justify-content: flex-start !important; }
+          .tp-aptc { max-width: none; }
+          .tp-aptc .tp-imgframe { height: 210px !important; }
         }
         @media (prefers-reduced-motion: reduce) {
           .tp-card, .tp-card:hover, .area-card, .area-card:hover, .area-card img, .tp-pillar, .tp-pillar:hover,
@@ -281,7 +296,7 @@ export default function TenantsPage() {
               renting simple, transparent and stress-free.
             </p>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 12, marginBottom: 28 }}>
-              {["Expert local team", "No agency fees", "Support that lasts"].map((t) => (
+              {["Expert local team", "No agency fees", "Professional contractors"].map((t) => (
                 <span key={t} className="tp-chip">
                   <span style={{ width: 20, height: 20, borderRadius: 999, background: "rgba(74,222,128,0.16)", display: "grid", placeItems: "center", flexShrink: 0 }}>
                     <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#4ade80" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="m5 13 4 4L19 7" /></svg>
@@ -290,7 +305,7 @@ export default function TenantsPage() {
                 </span>
               ))}
             </div>
-            <div style={{ display: "flex", flexDirection: "column", gap: 12, alignItems: "stretch", maxWidth: 380 }}>
+            <div className="tp-btn-col" style={{ display: "flex", flexDirection: "column", gap: 12, alignItems: "stretch", maxWidth: 380 }}>
               <span className="tp-btn sm tp-ink" style={{ cursor: "default", width: "100%", minWidth: 0 }}>Homes across Leeds &amp; Manchester</span>
               <a href="/listings" className="tp-btn sm tp-blue" style={{ width: "100%", minWidth: 0 }}>Ready to find your next home? →</a>
             </div>

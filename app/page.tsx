@@ -1,6 +1,6 @@
 'use client';
 // app/page.tsx
-import { useState, useEffect, useRef, useCallback, lazy, Suspense } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -69,8 +69,6 @@ function HeroCycler() {
     </>
   );
 }
-
-const ValuationModal = lazy(() => import('@/components/ValuationModal'));
 
 // The site-standard CTA size, matching components/layout/ServiceHero.module.css
 // (.btn) and the .hero-btn rule below. Every call-to-action is this size.
@@ -455,21 +453,6 @@ function ScrollProgressBar() {
   return <div id="hol-progress" style={{ width: `${width}%` }} />;
 }
 
-// ── MOBILE FAB ────────────────────────────────────────────────────────────────
-function MobileFAB() {
-  const [valuationOpen, setValuationOpen] = useState(false);
-  return (
-    <div className="hol-fab">
-      <Link href="/listings">🔍 Search Properties</Link>
-      <div className="fab-divider" />
-      <button onClick={() => setValuationOpen(true)}>📋 Book a Valuation</button>
-      <Suspense fallback={null}>
-        {valuationOpen && <ValuationModal isOpen={valuationOpen} onClose={() => setValuationOpen(false)} />}
-      </Suspense>
-    </div>
-  );
-}
-
 // ── SERVICE-ROW SCROLL REVEAL ─────────────────────────────────────────────────
 // Rows are visible by default; when a row scrolls into view we add `is-in`, which
 // plays a one-shot directional entrance (copy from one side, panel from the other).
@@ -585,37 +568,6 @@ export default function HomePage() {
           pointer-events: none;
         }
 
-        /* Mobile FAB */
-        .hol-fab {
-          display: none;
-          position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
-          z-index: 999;
-          max-width: calc(100vw - 16px);
-          background: #0f1f3d; border-radius: 40px;
-          box-shadow: 0 8px 32px rgba(0,0,0,0.35);
-          overflow: hidden;
-          border: 1px solid rgba(255,255,255,0.12);
-        }
-        @media (max-width: 768px) {
-          .hol-fab { display: flex; }
-        }
-        .hol-fab a, .hol-fab button {
-          padding: 12px 16px; font-size: 11.5px; font-weight: 700;
-          letter-spacing: 0.3px; text-transform: uppercase;
-          color: #fff; text-decoration: none; white-space: nowrap;
-          font-family: 'Poppins', sans-serif;
-          border: none; background: none; cursor: pointer;
-          transition: background 0.2s;
-        }
-        @media (max-width: 380px) {
-          .hol-fab a, .hol-fab button { padding: 11px 12px; font-size: 10.5px; letter-spacing: 0.2px; }
-        }
-        .hol-fab a:hover, .hol-fab button:hover { background: rgba(255,255,255,0.08); }
-        .hol-fab .fab-divider {
-          width: 1px; background: rgba(255,255,255,0.15);
-          align-self: stretch; margin: 10px 0;
-        }
-
         /* Pricing card hover lift */
         .pricing-card {
           transition: transform 0.3s cubic-bezier(.22,1,.36,1), box-shadow 0.3s ease !important;
@@ -667,8 +619,7 @@ export default function HomePage() {
       {/* Scroll progress bar */}
       <ScrollProgressBar />
 
-      {/* Mobile FAB */}
-      <MobileFAB />
+      {/* The mobile FAB is rendered site-wide from app/layout.tsx. */}
 
       <Navbar />
 

@@ -111,16 +111,16 @@
   margin: 0 0 32px;
   text-wrap: pretty;
 }
-/* Buttons flex to a shared width rather than sizing to their label, so a pair
-   is identical to each other on desktop and identically full width on mobile. */
+/* Button pairs sit in equal grid columns; auto-fit stacks them (still equal,
+   still full width) before a one-line label would run out of room, so a CTA
+   label never wraps inside its button. */
 .heroCtas {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
   gap: 12px;
-  max-width: 460px;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  max-width: 560px;
   margin-bottom: 44px;
 }
-.heroCtas > * { flex: 1 1 200px; }
 
 /* Jump links — a contents strip so a landlord can skip to what they need. */
 .jump {
@@ -180,6 +180,7 @@
   letter-spacing: .02em;
   text-transform: uppercase;
   text-decoration: none;
+  white-space: nowrap; /* a wrapped label breaks the pair's shared height */
   cursor: pointer;
   transition: background .2s ease, border-color .2s ease, transform .2s ease, box-shadow .2s ease, color .2s ease;
 }
@@ -228,7 +229,6 @@
 @media (max-width: 600px) {
   .btn { width: 100%; }
   .heroCtas, .ctaBtns { max-width: none; }
-  .heroCtas > *, .ctaBtns > * { flex: 1 1 100%; }
 }
 
 /* ── Step timeline ────────────────────────────────────── */
@@ -527,14 +527,12 @@
   text-wrap: pretty;
 }
 .ctaBtns {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
   gap: 12px;
-  justify-content: center;
-  max-width: 460px;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  max-width: 560px;
   margin: 0 auto;
 }
-.ctaBtns > * { flex: 1 1 200px; }
 
 @media (prefers-reduced-motion: reduce) {
   .page *, .page *::before, .page *::after {

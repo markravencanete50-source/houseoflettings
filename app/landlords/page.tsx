@@ -19,6 +19,9 @@ const CTA_STYLE: React.CSSProperties = {
   padding: '14px 28px', border: '1.5px solid transparent', borderRadius: 9,
   fontFamily: "'Poppins', sans-serif", fontSize: 13.5, fontWeight: 700, lineHeight: 1.2,
   letterSpacing: '.02em', textTransform: 'uppercase', textDecoration: 'none',
+  // A CTA label never breaks across lines: a wrapped label makes paired
+  // buttons render at different heights and reads as two stacked words.
+  whiteSpace: 'nowrap',
 };
 
 // Hero stat figures come from lib/bundles.ts rather than being typed here, so
@@ -253,21 +256,28 @@ function LlxWhySwitch() {
         .llx7-eyebrow { font-size:11px; font-weight:700; letter-spacing:.24em; text-transform:uppercase; color:var(--logo-blue); margin-bottom:14px; }
         .llx7-h2 { font-size:clamp(28px,3.8vw,46px); font-weight:700; color:#0f1f3d; margin:0 0 16px; line-height:1.15; text-wrap:balance; }
         .llx7-sub { font-size:15px; font-weight:300; color:#6b7280; line-height:1.75; max-width:600px; margin:0 auto; text-wrap:pretty; }
-        .llx7-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:16px; margin-bottom:36px; }
-        .llx7-card { background:#fff; border:1px solid #e5e7eb; border-radius:16px; padding:24px 22px;
+        /* A strict 2×2 above 700px: four reasons should never render as a row
+           of three with one orphan underneath. */
+        .llx7-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:18px; margin-bottom:40px; }
+        @media (max-width:700px) { .llx7-grid { grid-template-columns:1fr; } }
+        .llx7-card { position:relative; overflow:hidden; background:#fff; border:1px solid #e5e7eb;
+          border-radius:18px; padding:26px 26px 28px;
           transition:transform .25s ease, border-color .25s ease, box-shadow .25s ease; }
+        .llx7-card::before { content:''; position:absolute; left:0; top:0; bottom:0; width:3px;
+          background:linear-gradient(180deg,#2563eb,#4a90d9); opacity:0; transition:opacity .25s ease; }
         .llx7-card:hover { transform:translateY(-3px); border-color:#bfdbfe; box-shadow:0 22px 40px -28px rgba(37,99,235,.45); }
-        .llx7-pain { display:flex; align-items:center; gap:9px; font-size:13px; font-weight:600; color:#9ca3af; margin-bottom:10px; }
-        .llx7-pain s { text-decoration-color:rgba(156,163,175,.7); }
-        .llx7-x { flex:none; width:20px; height:20px; border-radius:50%; background:#fef2f2; color:#dc2626;
+        .llx7-card:hover::before { opacity:1; }
+        .llx7-pain { display:inline-flex; align-items:center; gap:8px; font-size:12px; font-weight:600; color:#b91c1c;
+          background:#fef2f2; border:1px solid #fecaca; border-radius:999px; padding:6px 13px 6px 9px; margin-bottom:14px; }
+        .llx7-pain s { text-decoration-color:rgba(185,28,28,.55); }
+        .llx7-x { flex:none; width:18px; height:18px; border-radius:50%; background:#fff; color:#dc2626;
           display:inline-flex; align-items:center; justify-content:center; }
-        .llx7-fix { display:flex; align-items:flex-start; gap:9px; font-size:14px; color:#374151; line-height:1.7; margin:0; }
-        .llx7-tick { flex:none; width:20px; height:20px; border-radius:50%; background:#f0fdf4; color:var(--price-green);
+        .llx7-fix { display:flex; align-items:flex-start; gap:11px; font-size:14.5px; color:#374151; line-height:1.75; margin:0; }
+        .llx7-tick { flex:none; width:22px; height:22px; border-radius:50%; background:#f0fdf4; color:var(--price-green);
           display:inline-flex; align-items:center; justify-content:center; margin-top:2px; }
         .llx7-solve { text-align:center; font-size:15px; font-weight:600; color:#0f1f3d; margin:0 0 26px; }
-        .llx7-ctas { display:flex; flex-wrap:wrap; gap:12px; justify-content:center; max-width:460px; margin:0 auto; }
-        .llx7-ctas > * { flex:1 1 200px; }
-        @media (max-width:600px) { .llx7-ctas { max-width:none; } .llx7-ctas > * { flex:1 1 100%; } }
+        .llx7-ctas { display:grid; gap:12px; max-width:560px; margin:0 auto;
+          grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); }
         .llx7-cta-blue { background:#2563eb; color:#fff; box-shadow:0 14px 30px -14px rgba(37,99,235,.6); transition:all .22s ease; }
         .llx7-cta-blue:hover { background:#1d4ed8; color:#fff; transform:translateY(-2px); }
         .llx7-cta-ghost { background:transparent; color:#0f1f3d; transition:all .22s ease; }
@@ -312,19 +322,25 @@ function LlxWhySwitch() {
 // list on the right drives the illustration + copy panel on the left — only
 // the panel content changes on click. Mobile: an accordion, because landlords
 // scroll vertically; no horizontal carousel here.
-const HANDLE_ITEMS: { key: string; title: string; lead: string; body: string }[] = [
+const HANDLE_ITEMS: { key: string; title: string; lead: string; body: string; points: string[] }[] = [
   { key: 'tenants', title: 'Tenant Management', lead: 'Quality tenants. Professional referencing.',
-    body: 'We handle every conversation, from first enquiry to renewal, so you never field a tenant call again.' },
+    body: 'We handle every conversation, from first enquiry to renewal, so you never field a tenant call again.',
+    points: ['Every enquiry answered within one working day', 'Viewings, negotiations and renewals handled for you', 'Deposit registration and end-of-tenancy administration'] },
   { key: 'maintenance', title: 'Maintenance', lead: 'Repairs handled end to end.',
-    body: 'Reported, quoted and completed by vetted local contractors. You approve the cost, we coordinate the rest.' },
+    body: 'Reported, quoted and completed by vetted local contractors. You approve the cost, we coordinate the rest.',
+    points: ['Vetted local contractors at agreed trade rates', 'You approve every quote before work begins', 'Completion checked before any invoice is paid'] },
   { key: 'compliance', title: 'Compliance', lead: 'Legally lettable, always.',
-    body: 'Gas Safety, EICR, EPC, deposit protection and licensing tracked and renewed before anything lapses.' },
+    body: 'Gas Safety, EICR, EPC, deposit protection and licensing tracked and renewed before anything lapses.',
+    points: ['Gas Safety renewed every 12 months, EICR every 5 years', 'Deposit protected in an approved scheme within 30 days', 'HMO and selective licensing checked for every property'] },
   { key: 'marketing', title: 'Marketing', lead: 'Seen by every serious tenant.',
-    body: 'Professional photography and listings on Rightmove, Zoopla and OnTheMarket, plus our own local audience.' },
+    body: 'Professional photography and listings on Rightmove, Zoopla and OnTheMarket, plus our own local audience.',
+    points: ['Listed on Rightmove, Zoopla and OnTheMarket', 'Professional photography and a floor plan', 'A waiting list of pre-qualified local applicants'] },
   { key: 'rent', title: 'Rent Collection', lead: 'Paid, monitored, chased.',
-    body: 'Rent collected and monitored every month, with arrears chased the moment a payment is missed.' },
+    body: 'Rent collected and monitored every month, with arrears chased the moment a payment is missed.',
+    points: ['Rent monitored daily, statement to you monthly', 'Arrears chased from the first missed day', 'An annual income summary for your tax return'] },
   { key: 'support', title: 'Support', lead: 'A person, not a portal.',
-    body: 'A named local agent in Leeds or Manchester with a direct line, backed by emergency cover on our top tier.' },
+    body: 'A named local agent in Leeds or Manchester with a direct line, backed by emergency cover on our top tier.',
+    points: ['A named agent who knows your property', 'A direct line and email, no ticket queues', 'Emergency maintenance cover on Comprehensive'] },
 ];
 
 function HandleArt({ kind }: { kind: string }) {
@@ -410,8 +426,22 @@ function LlxEverythingWeHandle() {
         .llx8-art { margin-bottom:22px; animation:llx8Fade .35s ease; }
         .llx8-title { font-size:22px; font-weight:800; color:#fff; margin:0 0 8px; animation:llx8Fade .35s ease; }
         .llx8-lead { font-size:14px; font-weight:600; color:#7db4f0; margin:0 0 12px; animation:llx8Fade .35s ease; }
-        .llx8-body { font-size:14px; font-weight:300; color:rgba(255,255,255,.66); line-height:1.8; max-width:380px; margin:0; animation:llx8Fade .35s ease; text-wrap:pretty; }
+        .llx8-body { font-size:14px; font-weight:300; color:rgba(255,255,255,.66); line-height:1.8; max-width:380px; margin:0 0 20px; animation:llx8Fade .35s ease; text-wrap:pretty; }
         @keyframes llx8Fade { from { opacity:0; transform:translateY(8px); } }
+        .llx8-points { list-style:none; margin:0; padding:16px 0 0; border-top:1px solid rgba(255,255,255,.09);
+          display:flex; flex-direction:column; gap:11px; text-align:left; max-width:380px; width:100%;
+          animation:llx8Fade .35s ease; }
+        .llx8-pt { display:flex; align-items:flex-start; gap:11px; font-size:13px; color:#e7eefb; line-height:1.55; }
+        .llx8-pt-tick { flex:none; width:20px; height:20px; border-radius:50%; background:rgba(74,222,128,.16); color:#4ade80;
+          display:inline-flex; align-items:center; justify-content:center; margin-top:1px; }
+        /* Closing CTA under the card */
+        .llx8-cta-row { text-align:center; margin-top:36px; }
+        .llx8-cta-line { font-size:14px; font-weight:300; color:rgba(255,255,255,.6); margin:0 0 18px; }
+        .llx8-cta { background:#fff; color:#0f1f3d; box-shadow:0 10px 26px -14px rgba(0,0,0,.5); transition:all .22s ease; }
+        .llx8-cta:hover { background:rgba(255,255,255,.9); color:#0f1f3d; transform:translateY(-2px); box-shadow:0 14px 32px rgba(0,0,0,.3); }
+        /* This label is a full question; on a phone one line can't hold it, and
+           it's a lone button (no pair to misalign), so wrapping is fine here. */
+        @media (max-width:640px) { .llx8-cta { white-space:normal !important; text-align:center; } }
         .llx8-list { display:flex; flex-direction:column; border-left:1px solid rgba(255,255,255,.09); }
         .llx8-tab { display:flex; align-items:center; gap:12px; text-align:left; min-height:56px; padding:0 24px; flex:1;
           background:none; border:0; border-top:1px solid rgba(255,255,255,.07); cursor:pointer;
@@ -455,6 +485,16 @@ function LlxEverythingWeHandle() {
             <h3 className="llx8-title">{item.title}</h3>
             <p className="llx8-lead">{item.lead}</p>
             <p className="llx8-body">{item.body}</p>
+            <ul className="llx8-points">
+              {item.points.map(p => (
+                <li key={p} className="llx8-pt">
+                  <span className="llx8-pt-tick" aria-hidden="true">
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
+                  </span>
+                  {p}
+                </li>
+              ))}
+            </ul>
           </div>
           <div className="llx8-list" role="tablist" aria-label="What we handle">
             {HANDLE_ITEMS.map((it, i) => (
@@ -469,7 +509,7 @@ function LlxEverythingWeHandle() {
 
         <div className="llx8-acc hol-reveal">
           {HANDLE_ITEMS.map((it, i) => (
-            <div key={it.key} className={`llx8-acc-item${open === i ? ' open' : ''}`}>
+            <div key={`acc-${it.key}`} className={`llx8-acc-item${open === i ? ' open' : ''}`}>
               <button type="button" className="llx8-acc-btn" aria-expanded={open === i}
                 onClick={() => setOpen(open === i ? null : i)}>
                 {it.title}
@@ -480,10 +520,27 @@ function LlxEverythingWeHandle() {
                   <div className="llx8-art"><HandleArt kind={it.key} /></div>
                   <p className="llx8-acc-lead">{it.lead}</p>
                   <p className="llx8-acc-body">{it.body}</p>
+                  <ul className="llx8-points" style={{ margin: '16px auto 0' }}>
+                    {it.points.map(p => (
+                      <li key={p} className="llx8-pt">
+                        <span className="llx8-pt-tick" aria-hidden="true">
+                          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
+                        </span>
+                        {p}
+                      </li>
+                    ))}
+                  </ul>
                 </div>
               )}
             </div>
           ))}
+        </div>
+
+        <div className="llx8-cta-row hol-reveal">
+          <p className="llx8-cta-line">Six jobs off your plate, one local team on it.</p>
+          <Link href="/landlord-registration" className="llx-cta llx8-cta" style={{ ...CTA_STYLE }}>
+            Ready to Be Part of House of Lettings?
+          </Link>
         </div>
       </div>
     </section>
@@ -611,7 +668,15 @@ function LlxBeforeAfter() {
         .llx10-head { text-align:center; margin-bottom:44px; }
         .llx10-eyebrow { font-size:11px; font-weight:700; letter-spacing:.24em; text-transform:uppercase; color:var(--logo-blue); margin-bottom:14px; }
         .llx10-h2 { font-size:clamp(28px,3.8vw,46px); font-weight:700; color:#0f1f3d; margin:0 0 16px; line-height:1.15; text-wrap:balance; }
-        .llx10-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(290px,1fr)); gap:18px; margin-bottom:40px; }
+        .llx10-grid { position:relative; display:grid; grid-template-columns:repeat(auto-fit,minmax(290px,1fr)); gap:18px; margin-bottom:40px; }
+        /* The VS badge floats where the two cards meet; it disappears when the
+           cards stack, where the midpoint stops meaning anything. */
+        .llx10-vs { position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); z-index:2;
+          width:54px; height:54px; border-radius:50%; background:#fff; border:2px solid #2563eb;
+          color:var(--logo-blue); font-size:14px; font-weight:800; letter-spacing:.04em;
+          display:flex; align-items:center; justify-content:center;
+          box-shadow:0 12px 28px -10px rgba(15,31,61,.35); }
+        @media (max-width:640px) { .llx10-vs { display:none; } }
         .llx10-card { border-radius:18px; padding:30px 26px; }
         .llx10-card-a { background:#fff; border:1px solid #e5e7eb; }
         .llx10-card-b { background:linear-gradient(160deg,#15294c 0%,#0c1a33 100%); border:1px solid rgba(37,99,235,.5);
@@ -628,13 +693,16 @@ function LlxBeforeAfter() {
           display:inline-flex; align-items:center; justify-content:center; margin-top:1px; }
         .llx10-tick { flex:none; width:20px; height:20px; border-radius:50%; background:rgba(74,222,128,.16); color:#4ade80;
           display:inline-flex; align-items:center; justify-content:center; margin-top:1px; }
-        .llx10-stats { max-width:640px; margin:0 auto; }
-        .llx10-stat { display:grid; grid-template-columns:1fr auto 1fr; align-items:center; gap:14px;
-          padding:16px 0; border-top:1px solid #e5e7eb; }
-        .llx10-stat:first-child { border-top:0; }
+        .llx10-stats { max-width:680px; margin:0 auto; background:#fff; border:1px solid #e5e7eb;
+          border-radius:18px; padding:8px 28px; box-shadow:0 24px 48px -34px rgba(15,31,61,.35); }
+        .llx10-stats-label { display:block; text-align:center; font-size:11px; font-weight:700;
+          letter-spacing:.14em; text-transform:uppercase; color:var(--logo-blue); padding:18px 0 4px; }
+        .llx10-stat { display:grid; grid-template-columns:1fr auto 1fr; align-items:center; gap:16px;
+          padding:17px 0; border-top:1px solid #f0f1f3; }
         .llx10-before { font-size:13.5px; font-weight:500; color:#9ca3af; text-align:right; text-decoration:line-through;
           text-decoration-color:rgba(156,163,175,.6); }
-        .llx10-arrow { color:var(--logo-blue); display:inline-flex; }
+        .llx10-arrow { width:30px; height:30px; border-radius:50%; background:#eff6ff; border:1px solid #dbeafe;
+          color:var(--logo-blue); display:inline-flex; align-items:center; justify-content:center; }
         .llx10-after { font-size:14.5px; font-weight:700; color:#0f1f3d; }
         @media (max-width:560px) {
           .llx10-stat { grid-template-columns:1fr; gap:4px; }
@@ -648,6 +716,7 @@ function LlxBeforeAfter() {
           <h2 className="llx10-h2">Your Week, Before and After</h2>
         </div>
         <div className="llx10-grid">
+          <span className="llx10-vs" aria-hidden="true">VS</span>
           <div className="llx10-card llx10-card-a hol-reveal">
             <span className="llx10-face" aria-hidden="true">😓</span>
             <h3 className="llx10-lab">Without House of Lettings</h3>
@@ -678,6 +747,7 @@ function LlxBeforeAfter() {
           </div>
         </div>
         <div className="llx10-stats hol-reveal" style={{ animationDelay: '120ms' }}>
+          <span className="llx10-stats-label">The outcomes</span>
           {stats.map(s => (
             <div key={s.after} className="llx10-stat">
               <span className="llx10-before">{s.before}</span>
@@ -950,11 +1020,11 @@ function LlxChooseService() {
         .llx5-price b { font-size:30px; font-weight:800; color:var(--price-green-ink); line-height:1; }
         .llx5-price span { font-size:11px; font-weight:600; letter-spacing:.04em; text-transform:uppercase; color:#6b7280; margin-top:6px; }
         .llx5-price-sep { width:1px; height:42px; background:#e5e7eb; }
-        /* Both CTAs are the site-standard size and share a row, so the pair is
-           identical on desktop and identically full-width on mobile. */
-        .llx5-cta-pair { display:flex; flex-wrap:wrap; gap:12px; }
+        /* Both CTAs are the site-standard size in equal grid columns; auto-fit
+           stacks the pair before a one-line label would run out of room. */
+        .llx5-cta-pair { display:grid; gap:12px; grid-template-columns:repeat(auto-fit,minmax(225px,1fr)); }
         .llx5-btn { display:inline-flex; align-items:center; justify-content:center; gap:9px;
-          box-sizing:border-box; min-height:48px; flex:1 1 190px; line-height:1.2;
+          box-sizing:border-box; min-height:48px; line-height:1.2; white-space:nowrap;
           font-size:13.5px; font-weight:700; letter-spacing:.02em; text-transform:uppercase;
           text-decoration:none; padding:14px 24px; border:1.5px solid transparent; border-radius:9px;
           transition:all .2s ease; }
@@ -964,7 +1034,6 @@ function LlxChooseService() {
         .llx5-btn.ghost:hover { border-color:#0f1f3d; background:#0f1f3d; color:#fff; transform:translateY(-2px); }
         .llx5-btn svg { transition:transform .2s ease; }
         .llx5-btn:hover svg { transform:translateX(3px); }
-        @media (max-width:600px) { .llx5-btn { flex:1 1 100%; } }
 
         .llx5-included { padding:clamp(26px,3.2vw,40px); background:#f7f9fc; border-left:1px solid #e9edf3; display:flex; flex-direction:column; }
         @media (max-width:820px) { .llx5-included { border-left:0; border-top:1px solid #e9edf3; } }
@@ -1427,13 +1496,12 @@ export default function LandlordsPage() {
           .ll-price-cta { display:inline-block; margin-top:20px; font-family:'Poppins',sans-serif;
             font-size:13px; font-weight:700; color:#4a90d9; text-decoration:none; }
           .ll-price-cta:hover { color:#fff; }
-          /* The "Why choose us" CTA pair. Both buttons are the site-standard CTA
-             size and flex:1 within a shared max-width row, so they are identical
-             to each other on desktop and stack to the same full width on mobile
-             rather than sizing themselves to their label. */
-          .ll-why-ctas { display:flex; flex-wrap:wrap; gap:12px; max-width:440px; }
-          .ll-why-ctas > * { flex:1 1 190px; }
-          @media (max-width:600px) { .ll-why-ctas { max-width:none; } .ll-why-ctas > * { flex:1 1 100%; } }
+          /* The "Why choose us" CTA pair. Equal grid columns keep the two
+             buttons identical; auto-fit stacks them (still full width and
+             equal) as soon as a column would be too narrow for a one-line
+             label, so the text never wraps inside a button. */
+          .ll-why-ctas { display:grid; gap:12px; max-width:520px;
+            grid-template-columns:repeat(auto-fit,minmax(230px,1fr)); }
         `}</style>
         <div className="ll-intro-grid">
           <div>

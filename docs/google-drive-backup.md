@@ -9,7 +9,7 @@ upload experience changes.
 ```
 Cloudinary Back up file/
 ├── Tenant Application/
-│   └── 2026-07-17 14-32 Jane Smith/
+│   └── Jane Smith - 12 Example Street, Leeds LS1 1AB/
 │       ├── Government ID.jpg
 │       ├── Payslip 1.pdf … Payslip 3.pdf
 │       ├── Bank Statement 1.pdf …
@@ -19,9 +19,20 @@ Cloudinary Back up file/
 └── Maintenance Report/
 ```
 
-One folder per submission, stamped to the minute so a repeat submission from the
-same person never merges into the earlier one. Files are named after **what the
-document is**, not the customer's `scan001.pdf`.
+One folder per submission, named `<Name> - <Address>` and capped at 120
+characters. Files are named after **what the document is**, not the customer's
+`scan001.pdf`.
+
+There is deliberately **no date in the folder name** — Drive already shows one
+in its own Modified column, so a date here only pushed the useful part of the
+name off the edge of the grid. The consequence: two submissions from the same
+person about the same property produce two identically named folders. Drive
+allows this (they're separate folders with separate ids, nothing is
+overwritten); sort by Modified to tell them apart.
+
+A landlord registration has no single address field — it carries an array of
+properties. The first one names the folder, plus `+N more` when there are
+several.
 
 ## Why it is built this way
 

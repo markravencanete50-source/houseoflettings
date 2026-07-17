@@ -32,9 +32,21 @@ const ask = (q) => {
 };
 
 function openBrowser(url) {
-  const cmd = process.platform === 'win32' ? 'explorer'
-    : process.platform === 'darwin' ? 'open' : 'xdg-open';
-  try { spawn(cmd, [url], { detached: true, stdio: 'ignore' }).unref(); } catch { /* print-only fallback */ }
+  try {
+    if (process.platform === 'win32') {
+      // `explorer <url>` opens a file window instead of the browser here: node
+      // only quotes args containing spaces, so the unquoted `&` in the query
+      // string terminates the command and the URL is lost. windowsVerbatimArguments
+      // passes our own quoting through untouched. The empty "" is start's title
+      // argument — without it, start treats the quoted URL as the title.
+      spawn('cmd', ['/c', 'start', '""', `"${url}"`], {
+        detached: true, stdio: 'ignore', windowsVerbatimArguments: true,
+      }).unref();
+    } else {
+      const cmd = process.platform === 'darwin' ? 'open' : 'xdg-open';
+      spawn(cmd, [url], { detached: true, stdio: 'ignore' }).unref();
+    }
+  } catch { /* the URL is printed above, so it can always be pasted by hand */ }
 }
 
 // Resolves with the ?code= Google sends back to the loopback redirect.

@@ -205,6 +205,7 @@ export async function POST(request: Request) {
       backupToDrive({
         formType: 'guarantor',
         label: data.guarantorFullName,
+        address: data.propertyAddress,
         files: [
           ...namedFiles(data.idDocUrls, 'ID Document'),
           ...namedFiles(data.proofOfAddressUrls, 'Proof of Address'),

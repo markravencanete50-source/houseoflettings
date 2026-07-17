@@ -221,6 +221,7 @@ export async function POST(request: Request) {
       backupToDrive({
         formType: 'tenant-application',
         label: data.fullName,
+        address: data.propertyAddress,
         files: driveFiles,
       }),
     ]);

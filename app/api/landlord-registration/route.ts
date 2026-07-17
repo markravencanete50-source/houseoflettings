@@ -121,6 +121,18 @@ function docRows(data: any) {
   }).join("");
 }
 
+// A registration has no single "propertyAddress" field like the other forms —
+// it carries an array of properties, each split into street/postcode/flat. The
+// first one names the Drive folder, with a count when there are more, so the
+// office sees which registration it is without opening it.
+function primaryAddress(data: any): string {
+  const props = Array.isArray(data.properties) ? data.properties : [];
+  const p = props[0];
+  const composed = p ? [p.flatNumber, p.street, p.postcode].filter(Boolean).join(" ") : "";
+  const base = composed || data.address || "";
+  return props.length > 1 ? `${base} +${props.length - 1} more` : base;
+}
+
 // Every document on a registration, labelled for the Drive backup. Reuses the
 // same extractors the email uses, so a field that reaches the office also
 // reaches the backup. The landlord's own file names are dropped in favour of
@@ -344,6 +356,7 @@ export async function POST(request: Request) {
       backupToDrive({
         formType: "landlord-registration",
         label: data.companyName || data.fullName,
+        address: primaryAddress(data),
         files: driveBackupFiles(data, attachments?.[0]?.content),
       }),
     ]);

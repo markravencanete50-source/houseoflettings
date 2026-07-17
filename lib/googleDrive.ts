@@ -260,7 +260,7 @@ export interface BackupResult {
 
 /**
  * Mirror one submission's documents into Drive, under
- * `<root>/<Form folder>/<YYYY-MM-DD HH-mm Name>/`.
+ * `<root>/<Form folder>/<Name> - <Address>/`.
  *
  * Never throws and never rejects: a backup problem must not cost the business a
  * lead, so callers await it purely for the log line. Failures are per-file, so
@@ -268,9 +268,11 @@ export interface BackupResult {
  */
 export async function backupToDrive(opts: {
   formType: BackupFormType;
+  /** Who it's from: the applicant, guarantor, tenant or company. */
   label: string;
+  /** The property it concerns. Omitted only if the form has no address. */
+  address?: string;
   files: BackupFile[];
-  now?: Date;
 }): Promise<BackupResult> {
   if (!isDriveConfigured()) return { configured: false, uploaded: 0, failed: 0 };
 
@@ -282,12 +284,13 @@ export async function backupToDrive(opts: {
     const rootId = await getRootFolderId(token);
     const formFolderId = await findOrCreateFolder(token, FORM_FOLDERS[opts.formType], rootId);
 
-    // Stamped to the minute so a repeat submission from the same person lands in
-    // its own folder instead of merging into the earlier one.
-    const d = opts.now ?? new Date();
-    const pad = (n: number) => String(n).padStart(2, "0");
-    const stamp = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}-${pad(d.getMinutes())}`;
-    const submissionFolder = safeFileName(`${stamp} ${opts.label || "Unnamed"}`);
+    // Named for the person and the property, because that is how the office
+    // looks a submission up. Deliberately no date: Drive already shows one in
+    // its own column, so a date here only pushed the useful part of the name
+    // off the edge. Capped so a long address stays readable in the Drive grid.
+    const submissionFolder = safeFileName(
+      [opts.label || "Unnamed", opts.address].filter(Boolean).join(" - ")
+    ).slice(0, 120).trim();
 
     const createRes = await fetch(FILES_URL, {
       method: "POST",

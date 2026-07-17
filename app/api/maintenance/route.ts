@@ -2,6 +2,7 @@
 import { initializeApp, getApps, cert } from 'firebase-admin/app';
 import { getFirestore, FieldValue } from 'firebase-admin/firestore';
 import { rateLimit } from '@/lib/rateLimit';
+import { backupToDrive, namedFiles } from '@/lib/googleDrive';
 
 function getFirestoreClient() {
   if (!getApps().length) {
@@ -176,6 +177,16 @@ export async function POST(request: Request) {
         subject: `🔧 New Maintenance Request: ${data.fullName} (${data.propertyAddress})`,
         html: adminNotificationHtml(data),
         attachments: pdfAttachment,
+      }),
+      // Backup only, and never throws: a Drive outage must not lose a repair report.
+      backupToDrive({
+        formType: 'maintenance',
+        label: data.fullName,
+        files: [
+          ...namedFiles(data.photoUrls, 'Photo'),
+          ...namedFiles(data.videoUrls, 'Video'),
+          ...(pdfBase64 ? [{ base64: pdfBase64, name: `Maintenance Request ${safeName}` }] : []),
+        ],
       }),
     ]);
 

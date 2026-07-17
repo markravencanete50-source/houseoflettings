@@ -2,6 +2,7 @@ import { initializeApp, getApps, cert } from "firebase-admin/app";
 import { getFirestore, FieldValue } from "firebase-admin/firestore";
 import { jsPDF } from "jspdf";
 import { rateLimit } from '@/lib/rateLimit';
+import { backupToDrive, type BackupFile } from '@/lib/googleDrive';
 
 function getFirestoreClient() {
   if (!getApps().length) {
@@ -118,6 +119,39 @@ function docRows(data: any) {
     if (d?.status === "yes" && d.url) value = `Yes: <a href="${d.url}">view document</a>`;
     return `<tr><td>${label}</td><td>${value}</td></tr>`;
   }).join("");
+}
+
+// Every document on a registration, labelled for the Drive backup. Reuses the
+// same extractors the email uses, so a field that reaches the office also
+// reaches the backup. The landlord's own file names are dropped in favour of
+// what the document IS, since "scan001.pdf" tells the office nothing.
+function driveBackupFiles(data: any, pdfBase64?: string): BackupFile[] {
+  const files: BackupFile[] = [];
+  const add = (list: { url: string }[], label: string) =>
+    list.forEach((f, i) =>
+      files.push({ url: f.url, name: list.length > 1 ? `${label} ${i + 1}` : label })
+    );
+
+  add(idDocFiles(data, "landlordId"), "Landlord ID");
+  add(idDocFiles(data, "billingProof"), "Billing Address Proof");
+  add(idDocFiles(data, "ownershipProof"), "Proof of Ownership");
+
+  const props = Array.isArray(data.properties) ? data.properties : [];
+  props.forEach((p: any, i: number) => {
+    const prefix = props.length > 1 ? `Property ${i + 1} ` : "";
+    add(propertyFiles(p, "photo"), `${prefix}Photo`);
+    add(propertyFiles(p, "floorPlan"), `${prefix}Floor Plan`);
+  });
+
+  // EPC / EICR / gas are only attached when the landlord actually holds them.
+  const docs = data.documents || {};
+  DOC_LABELS.forEach(([key, label]) => {
+    const d = docs[key];
+    if (d?.status === "yes" && d.url) files.push({ url: d.url, name: label });
+  });
+
+  if (pdfBase64) files.push({ base64: pdfBase64, name: "Registration Summary" });
+  return files;
 }
 
 // An identity/ownership field may arrive as multiple files (*Urls / *FileNames
@@ -303,6 +337,14 @@ export async function POST(request: Request) {
         subject: `🔔 New Landlord Registration: ${data.fullName}`,
         html: adminNotificationHtml(data),
         attachments,
+      }),
+      // Backup only, and never throws: a Drive outage must not lose a landlord.
+      // A company registration is filed under the company, an individual under
+      // their own name, matching how the office refers to them.
+      backupToDrive({
+        formType: "landlord-registration",
+        label: data.companyName || data.fullName,
+        files: driveBackupFiles(data, attachments?.[0]?.content),
       }),
     ]);
     return Response.json({ success: true, id: docRef.id }, { status: 201 });

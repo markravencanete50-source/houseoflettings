@@ -1,6 +1,7 @@
 import { initializeApp, getApps, cert } from 'firebase-admin/app';
 import { getFirestore, FieldValue } from 'firebase-admin/firestore';
 import { rateLimit } from '@/lib/rateLimit';
+import { backupToDrive, namedFiles, type BackupFile } from '@/lib/googleDrive';
 
 function getFirestoreClient() {
   if (!getApps().length) {
@@ -188,6 +189,18 @@ export async function POST(request: Request) {
       ? [{ filename: `Tenancy-Application-${safeName}.pdf`, content: pdfBase64 }]
       : undefined;
 
+    // Every uploaded document, labelled so the Drive copy is readable without
+    // opening each file. Runs alongside the emails rather than after them, so
+    // the applicant isn't kept waiting on Drive.
+    const driveFiles: BackupFile[] = [
+      ...namedFiles(data.govIdUrls, 'Government ID'),
+      ...namedFiles(data.proofOfAddressUrls, 'Proof of Address'),
+      ...namedFiles(data.rightToRentDocUrls, 'Right to Rent'),
+      ...namedFiles(data.payslipUrls, 'Payslip'),
+      ...namedFiles(data.bankStatementUrls, 'Bank Statement'),
+      ...(pdfBase64 ? [{ base64: pdfBase64, name: `Tenancy Application ${safeName}` }] : []),
+    ];
+
     await Promise.allSettled([
       sendEmail({
         to: data.email,
@@ -201,6 +214,14 @@ export async function POST(request: Request) {
         subject: `📋 New Tenancy Application: ${data.fullName}`,
         html: adminNotificationHtml(data),
         attachments: pdfAttachment,
+      }),
+      // Backup only. backupToDrive never throws, so a Drive outage can't fail
+      // an application. It is awaited because Vercel freezes the function once
+      // the response is returned, which would drop an un-awaited upload.
+      backupToDrive({
+        formType: 'tenant-application',
+        label: data.fullName,
+        files: driveFiles,
       }),
     ]);
 

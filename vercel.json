@@ -5,6 +5,18 @@
   "functions": {
     "app/api/upload/route.ts": {
       "maxDuration": 60
+    },
+    "app/api/tenant-application/route.ts": {
+      "maxDuration": 60
+    },
+    "app/api/guarantor/route.ts": {
+      "maxDuration": 60
+    },
+    "app/api/landlord-registration/route.ts": {
+      "maxDuration": 60
+    },
+    "app/api/maintenance/route.ts": {
+      "maxDuration": 60
     }
   }
 }

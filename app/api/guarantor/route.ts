@@ -2,6 +2,7 @@
 import { initializeApp, getApps, cert } from 'firebase-admin/app';
 import { getFirestore, FieldValue } from 'firebase-admin/firestore';
 import { rateLimit } from '@/lib/rateLimit';
+import { backupToDrive, namedFiles } from '@/lib/googleDrive';
 
 function getFirestoreClient() {
   if (!getApps().length) {
@@ -185,6 +186,8 @@ export async function POST(request: Request) {
       : undefined;
 
     // Await the sends so Vercel can't freeze the function before Resend is called.
+    // The Drive backup rides along for the same reason, and never throws, so it
+    // cannot turn a Google outage into a failed submission.
     const [guarantorSend, adminSend] = await Promise.allSettled([
       sendEmail({
         to: data.guarantorEmail,
@@ -198,6 +201,18 @@ export async function POST(request: Request) {
         subject: `🛡️ New Guarantor Form: ${data.guarantorFullName} (${data.propertyAddress})`,
         html: adminNotificationHtml(data),
         attachments: pdfAttachment,
+      }),
+      backupToDrive({
+        formType: 'guarantor',
+        label: data.guarantorFullName,
+        files: [
+          ...namedFiles(data.idDocUrls, 'ID Document'),
+          ...namedFiles(data.proofOfAddressUrls, 'Proof of Address'),
+          ...namedFiles(data.payslipUrls, 'Payslip'),
+          ...namedFiles(data.bankStatementUrls, 'Bank Statement'),
+          ...namedFiles(data.studentDocUrls, 'Student Document'),
+          ...(pdfBase64 ? [{ base64: pdfBase64, name: `Guarantor Form ${safeName}` }] : []),
+        ],
       }),
     ]);
 

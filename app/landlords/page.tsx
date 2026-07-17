@@ -1,6 +1,6 @@
 'use client';
 // app/landlords/page.tsx
-import { useState, useRef } from 'react';
+import { useState, useRef, useMemo } from 'react';
 import Link from 'next/link';
 import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
@@ -8,6 +8,8 @@ import ServiceHero from '@/components/layout/ServiceHero';
 import RevealCards from '@/components/RevealCards';
 import { BUNDLES } from '@/lib/bundles';
 import { SERVICE_CATEGORIES } from '@/lib/additionalServices';
+import { calculateValuation, formatCurrency } from '@/lib/valuation/valuationEngine';
+import type { PropertyType } from '@/lib/valuation/marketData2026';
 
 // The site-standard CTA size, matching components/layout/ServiceHero.module.css
 // (.btn). Every call-to-action is this size, so the inline-styled buttons on
@@ -32,6 +34,30 @@ const LOWEST_FIND_FEE = BUNDLES
   .filter(b => b.kind === 'Tenant Find')
   .map(b => b.setupFee)
   .sort((a, b) => Number(a.replace(/[^0-9.]/g, '')) - Number(b.replace(/[^0-9.]/g, '')))[0];
+
+// ── Shared utilities for the llx* marketing sections (2026-07 handoff) ──────
+// One copy of the keyframes and CTA helpers used by every Llx* section below.
+// Rendered once at the top of the page. The llx-cta class makes any CTA
+// full-width on phones (site convention, 600px breakpoint), and the
+// reduced-motion block kills every llx animation in one place so the section
+// components stay free of media queries.
+function LlxShared() {
+  return (
+    <style>{`
+      @keyframes llxPulse { 0% { box-shadow: 0 0 0 0 rgba(74,144,217,.55); } 70% { box-shadow: 0 0 0 9px rgba(74,144,217,0); } 100% { box-shadow: 0 0 0 0 rgba(74,144,217,0); } }
+      @keyframes llxOrbA { 0%, 100% { transform: translate(0,0); } 50% { transform: translate(58px,40px); } }
+      @keyframes llxOrbB { 0%, 100% { transform: translate(0,0); } 50% { transform: translate(-48px,-36px); } }
+      @keyframes llxFloat { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
+      @keyframes llxShimmer { to { background-position: 220% center; } }
+      @media (max-width: 600px) {
+        .llx-cta { width: 100%; }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        [class*='llx'] { animation: none !important; transition: none !important; }
+      }
+    `}</style>
+  );
+}
 
 const landlordFaqs = [
   {
@@ -84,6 +110,677 @@ const RGI_SLIDES = [
   { src: '/images/rent-guarantee/rgi-7.webp', alt: 'Is rent guarantee insurance right for you? Speak to the House of Lettings team' },
 ];
 
+// ── New marketing sections (2026-07 design handoff), one component each ─────
+function LlxInvestmentSmarter() {
+  return (
+    <section className="llx1-wrap" aria-labelledby="llx1-heading">
+      <style>{`
+        .llx1-wrap { position:relative; background:#fff; padding:clamp(64px,9vw,110px) clamp(20px,7%,100px); font-family:'Poppins',sans-serif; color:#0f1f3d; }
+        .llx1-grid { max-width:1120px; margin:0 auto; display:grid; grid-template-columns:repeat(auto-fit,minmax(320px,1fr)); gap:clamp(36px,5vw,64px); align-items:center; }
+        .llx1-eyebrow { display:inline-flex; align-items:center; gap:9px; font-size:11px; font-weight:700; letter-spacing:.18em; text-transform:uppercase; color:#2672d2; background:#eff6ff; border:1px solid #dbeafe; border-radius:999px; padding:8px 16px 8px 13px; margin-bottom:22px; }
+        .llx1-dot { width:7px; height:7px; border-radius:50%; background:#2563eb; animation:llxPulse 2.4s ease-out infinite; flex:none; }
+        .llx1-h2 { font-size:clamp(30px,4.2vw,52px); font-weight:800; line-height:1.08; letter-spacing:-.02em; margin:0 0 20px; color:#0f1f3d; text-wrap:balance; }
+        .llx1-shimmer { background:linear-gradient(100deg,#2563eb 0%,#4a90d9 40%,#1d4ed8 70%,#4a90d9 100%); background-size:220% auto; -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent; animation:llxShimmer 6.5s linear infinite; }
+        .llx1-body { font-size:15.5px; font-weight:300; color:#4b5563; line-height:1.85; margin:0 0 26px; max-width:520px; text-wrap:pretty; }
+        .llx1-benefits { display:flex; flex-wrap:wrap; gap:10px; margin-bottom:32px; }
+        .llx1-benefit { display:inline-flex; align-items:center; gap:7px; font-size:12.5px; font-weight:600; color:#166534; background:#f0fdf4; border:1px solid #bbf7d0; border-radius:999px; padding:7px 14px; transition:transform .25s ease, box-shadow .25s ease; }
+        .llx1-benefit svg { flex:none; transition:transform .3s cubic-bezier(.34,1.56,.64,1); }
+        .llx1-benefit:hover { transform:translateY(-2px); box-shadow:0 10px 20px -12px rgba(22,163,74,.45); }
+        .llx1-benefit:hover svg { transform:scale(1.3); }
+        .llx1-ctas { display:flex; flex-wrap:wrap; gap:12px; }
+        .llx1-cta-blue { background:#2563eb; color:#fff; box-shadow:0 14px 30px -14px rgba(37,99,235,.6); transition:all .22s ease; }
+        .llx1-cta-blue:hover { background:#1d4ed8; color:#fff; transform:translateY(-2px); box-shadow:0 22px 42px -14px rgba(37,99,235,.8); }
+        .llx1-cta-outline { background:transparent; color:#0f1f3d; transition:all .22s ease; }
+        .llx1-cta-outline:hover { background:#0f1f3d; color:#fff; transform:translateY(-2px); box-shadow:0 16px 32px -16px rgba(15,31,61,.55); }
+        .llx1-panelwrap { position:relative; }
+        .llx1-panel { position:relative; overflow:hidden; border-radius:20px; background:linear-gradient(160deg,#15294c 0%,#0c1a33 100%); border:1px solid rgba(255,255,255,.09); box-shadow:0 40px 80px -34px rgba(4,10,26,.6); padding:clamp(26px,3vw,36px); }
+        .llx1-orb { position:absolute; width:300px; height:300px; top:-120px; right:-100px; border-radius:50%; filter:blur(60px); pointer-events:none; background:radial-gradient(circle,rgba(37,99,235,.4) 0%,transparent 70%); animation:llxOrbA 18s ease-in-out infinite; }
+        .llx1-inner { position:relative; z-index:1; }
+        .llx1-kicker { display:block; font-size:11px; font-weight:700; letter-spacing:.14em; text-transform:uppercase; color:#4a90d9; margin-bottom:6px; }
+        .llx1-subline { display:block; font-size:12.5px; font-weight:300; color:#a9c4ea; margin-bottom:22px; }
+        .llx1-stats { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+        .llx1-tile { background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.1); border-radius:14px; padding:18px 16px; transition:transform .25s ease, border-color .25s ease, box-shadow .25s ease; animation:llx1TileRise .6s ease-out backwards; }
+        .llx1-tile:nth-child(1) { animation-delay:.08s; }
+        .llx1-tile:nth-child(2) { animation-delay:.18s; }
+        .llx1-tile:nth-child(3) { animation-delay:.28s; }
+        .llx1-tile:nth-child(4) { animation-delay:.38s; }
+        .llx1-tile:hover { transform:translateY(-3px); border-color:rgba(74,144,217,.5); box-shadow:0 16px 30px -18px rgba(37,99,235,.55); }
+        .llx1-fig { display:block; font-size:22px; font-weight:800; color:#fff; line-height:1; margin-bottom:7px; }
+        .llx1-green { color:#4ade80; }
+        .llx1-accent { color:#4a90d9; }
+        .llx1-lab { font-size:10.5px; font-weight:600; letter-spacing:.06em; text-transform:uppercase; color:rgba(255,255,255,.55); line-height:1.4; }
+        .llx1-foot { display:flex; align-items:center; gap:10px; margin-top:20px; border-top:1px solid rgba(255,255,255,.09); padding-top:18px; }
+        .llx1-greendot { width:7px; height:7px; border-radius:50%; background:#4ade80; animation:llxPulse 2.4s ease-out infinite; flex:none; }
+        .llx1-foottext { font-size:12px; font-weight:500; color:rgba(255,255,255,.6); }
+        .llx1-float { position:absolute; left:-14px; bottom:-16px; background:rgba(255,255,255,.97); border-radius:14px; padding:13px 18px; box-shadow:0 18px 40px -18px rgba(4,10,26,.5); animation:llxFloat 5.5s ease-in-out infinite; }
+        .llx1-floatlabel { display:block; font-size:10px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:#6b7280; margin-bottom:3px; }
+        .llx1-floatvalue { font-size:19px; font-weight:800; color:#16a34a; line-height:1; }
+        @keyframes llx1TileRise { from { opacity:0; transform:translateY(16px); } }
+        @media (max-width:480px) { .llx1-float { left:0; } }
+      `}</style>
+      <div className="llx1-grid">
+        <div className="hol-reveal">
+          <div className="llx1-eyebrow">
+            <span className="llx1-dot" aria-hidden="true" />
+            Highly Recommended
+          </div>
+          <h2 className="llx1-h2" id="llx1-heading">
+            Make Your Property Investment <span className="llx1-shimmer">Smarter</span>
+          </h2>
+          <p className="llx1-body">
+            Whether you&apos;re letting your first property or growing your portfolio, we&apos;re here to help you maximise rental income, reduce void periods, and manage your investment with confidence, all at an affordable price.
+          </p>
+          <div className="llx1-benefits">
+            <span className="llx1-benefit">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#16a34a" strokeWidth="3.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12" /></svg>
+              Maximise rental income
+            </span>
+            <span className="llx1-benefit">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#16a34a" strokeWidth="3.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12" /></svg>
+              Reduce void periods
+            </span>
+            <span className="llx1-benefit">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#16a34a" strokeWidth="3.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12" /></svg>
+              Affordable pricing
+            </span>
+          </div>
+          <div className="llx1-ctas">
+            <Link href="/book-valuation" className="llx-cta llx1-cta-blue" style={{ ...CTA_STYLE }}>
+              Book a Free Valuation
+            </Link>
+            <Link href="/pricing" className="llx-cta llx1-cta-outline" style={{ ...CTA_STYLE, borderColor: '#0f1f3d' }}>
+              Compare Landlord Fees
+            </Link>
+          </div>
+        </div>
+        <div className="llx1-panelwrap hol-reveal" style={{ animationDelay: '140ms' }}>
+          <div className="llx1-panel">
+            <div className="llx1-orb" aria-hidden="true" />
+            <div className="llx1-inner">
+              <span className="llx1-kicker">Your Investment At a Glance</span>
+              <span className="llx1-subline">Inclusive of VAT. No hidden fees, ever.</span>
+              <div className="llx1-stats">
+                <div className="llx1-tile">
+                  <span className="llx1-fig llx1-green">Free</span>
+                  <span className="llx1-lab">Rental valuation</span>
+                </div>
+                <div className="llx1-tile">
+                  <span className="llx1-fig llx1-green">£0</span>
+                  <span className="llx1-lab">Hidden fees</span>
+                </div>
+                <div className="llx1-tile">
+                  <span className="llx1-fig">From <span className="llx1-accent">{LOWEST_MGMT_FEE}</span></span>
+                  <span className="llx1-lab">Management fees</span>
+                </div>
+                <div className="llx1-tile">
+                  <span className="llx1-fig">From <span className="llx1-accent">{LOWEST_FIND_FEE}</span></span>
+                  <span className="llx1-lab">Tenant find fees</span>
+                </div>
+              </div>
+              <div className="llx1-foot">
+                <span className="llx1-greendot" aria-hidden="true" />
+                <span className="llx1-foottext">Serving landlords across Leeds &amp; Manchester</span>
+              </div>
+            </div>
+          </div>
+          <div className="llx1-float">
+            <span className="llx1-floatlabel">Rental Valuation</span>
+            <span className="llx1-floatvalue">Free · No obligation</span>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function LlxWhyLandlords() {
+  return (
+    <section style={{ position: 'relative', overflow: 'hidden', background: 'linear-gradient(168deg,#0a1730 0%,#12244a 52%,#0a1a38 100%)', padding: 'clamp(64px,9vw,110px) clamp(20px,7%,100px)' }}>
+      <style>{`
+        .llx2-orb-a {
+          position:absolute; width:480px; height:480px; top:-160px; left:-120px;
+          border-radius:50%; filter:blur(72px); pointer-events:none;
+          background:radial-gradient(circle, rgba(37,99,235,.45) 0%, transparent 70%);
+          animation:llxOrbA 20s ease-in-out infinite;
+        }
+        .llx2-orb-b {
+          position:absolute; width:420px; height:420px; bottom:-180px; right:-100px;
+          border-radius:50%; filter:blur(72px); pointer-events:none;
+          background:radial-gradient(circle, rgba(74,144,217,.34) 0%, transparent 70%);
+          animation:llxOrbB 24s ease-in-out infinite;
+        }
+        .llx2-h2 { text-wrap:balance; }
+        .llx2-sub, .llx2-body { text-wrap:pretty; }
+        .llx2-card {
+          position:relative; overflow:hidden;
+          background:rgba(255,255,255,.045); border:1px solid rgba(255,255,255,.11);
+          border-radius:18px; padding:32px 28px;
+          backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px);
+          transition:transform .3s cubic-bezier(.22,1,.36,1), box-shadow .3s ease, border-color .3s ease;
+        }
+        .llx2-card:hover {
+          transform:translateY(-8px);
+          border-color:rgba(74,144,217,.55);
+          box-shadow:0 28px 50px -24px rgba(37,99,235,.5);
+        }
+        .llx2-card::before {
+          content:''; position:absolute; top:-46px; left:50%; width:240px; height:130px;
+          transform:translateX(-50%); pointer-events:none;
+          background:radial-gradient(closest-side, rgba(74,144,217,.26), transparent);
+          opacity:0; transition:opacity .45s ease;
+        }
+        .llx2-card:hover::before { opacity:1; }
+        .llx2-tile {
+          width:52px; height:52px; border-radius:14px;
+          background:rgba(37,99,235,.16); border:1px solid rgba(74,144,217,.35);
+          display:flex; align-items:center; justify-content:center; margin-bottom:20px;
+          transition:transform .35s cubic-bezier(.22,1,.36,1), background .35s ease, border-color .35s ease;
+        }
+        .llx2-card:hover .llx2-tile {
+          transform:scale(1.08) rotate(-4deg);
+          background:rgba(37,99,235,.26);
+          border-color:rgba(125,180,240,.6);
+        }
+        .llx2-cta {
+          background:#fff; color:#0f1f3d;
+          box-shadow:0 10px 26px -14px rgba(0,0,0,.5);
+          transition:all .22s ease;
+        }
+        .llx2-cta:hover {
+          background:rgba(255,255,255,.88); color:#0f1f3d;
+          transform:translateY(-2px);
+          box-shadow:0 12px 30px rgba(0,0,0,.28);
+        }
+      `}</style>
+      <div className="llx2-orb-a" aria-hidden="true" />
+      <div className="llx2-orb-b" aria-hidden="true" />
+      <div style={{ position: 'relative', zIndex: 1, maxWidth: 1100, margin: '0 auto' }}>
+        <div className="hol-reveal" style={{ textAlign: 'center', marginBottom: 52 }}>
+          <div style={{ fontFamily: "'Poppins', sans-serif", fontSize: 11, fontWeight: 700, letterSpacing: '.24em', textTransform: 'uppercase', color: '#4a90d9', marginBottom: 14 }}>Why House of Lettings</div>
+          <h2 className="llx2-h2" style={{ fontFamily: "'Poppins', sans-serif", fontSize: 'clamp(28px,3.8vw,46px)', fontWeight: 700, color: '#fff', margin: '0 0 16px', lineHeight: 1.15 }}>Helping Landlords Succeed Every Step of the Way</h2>
+          <p className="llx2-sub" style={{ fontFamily: "'Poppins', sans-serif", fontSize: 15, fontWeight: 300, color: 'rgba(255,255,255,.55)', lineHeight: 1.75, maxWidth: 600, margin: '0 auto' }}>We combine local market expertise, transparent pricing, and proactive property management to help you achieve better long-term returns with less stress.</p>
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(250px,1fr))', gap: 20, marginBottom: 44 }}>
+          <div className="llx2-card hol-reveal" style={{ animationDelay: '80ms' }}>
+            <div className="llx2-tile">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#7db4f0" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" /><circle cx="12" cy="10" r="3" /></svg>
+            </div>
+            <h3 style={{ fontFamily: "'Poppins', sans-serif", fontSize: 17, fontWeight: 700, color: '#fff', margin: '0 0 10px' }}>Local Market Expertise</h3>
+            <p className="llx2-body" style={{ fontFamily: "'Poppins', sans-serif", fontSize: 13.5, fontWeight: 300, color: 'rgba(255,255,255,.62)', lineHeight: 1.75, margin: 0 }}>Agents on the ground in Leeds and Manchester who know exactly what your property can achieve, street by street.</p>
+          </div>
+          <div className="llx2-card hol-reveal" style={{ animationDelay: '160ms' }}>
+            <div className="llx2-tile">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#7db4f0" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2" /><path d="M3 10h18" /><path d="M7 15h4" /></svg>
+            </div>
+            <h3 style={{ fontFamily: "'Poppins', sans-serif", fontSize: 17, fontWeight: 700, color: '#fff', margin: '0 0 10px' }}>Transparent Pricing</h3>
+            <p className="llx2-body" style={{ fontFamily: "'Poppins', sans-serif", fontSize: 13.5, fontWeight: 300, color: 'rgba(255,255,255,.62)', lineHeight: 1.75, margin: 0 }}>Clear packages, all inclusive of VAT, with no hidden fees, ever. You always know exactly what you pay and why.</p>
+          </div>
+          <div className="llx2-card hol-reveal" style={{ animationDelay: '240ms' }}>
+            <div className="llx2-tile">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#7db4f0" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z" /><path d="m9 12 2 2 4-4" /></svg>
+            </div>
+            <h3 style={{ fontFamily: "'Poppins', sans-serif", fontSize: 17, fontWeight: 700, color: '#fff', margin: '0 0 10px' }}>Proactive Management</h3>
+            <p className="llx2-body" style={{ fontFamily: "'Poppins', sans-serif", fontSize: 13.5, fontWeight: 300, color: 'rgba(255,255,255,.62)', lineHeight: 1.75, margin: 0 }}>We stay ahead of maintenance, compliance and rent reviews, so problems are solved before they cost you money.</p>
+          </div>
+        </div>
+        <div className="hol-reveal" style={{ textAlign: 'center', animationDelay: '120ms' }}>
+          <Link href="/branches" className="llx-cta llx2-cta" style={{ ...CTA_STYLE }}>Speak to Our Lettings Team</Link>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function LlxValuationWidget() {
+  const [postcode, setPostcode] = useState('LS6 3AA');
+  const [propertyType, setPropertyType] = useState<'flat' | 'terraced' | 'semi_detached' | 'detached' | 'bungalow'>('terraced');
+  const [bedrooms, setBedrooms] = useState(2);
+
+  const result = useMemo(
+    () => calculateValuation({ postcode, propertyType, bedrooms, mode: 'rent' }),
+    [postcode, propertyType, bedrooms],
+  );
+
+  const typeOptions: { label: string; value: 'flat' | 'terraced' | 'semi_detached' | 'detached' | 'bungalow' }[] = [
+    { label: 'Flat', value: 'flat' },
+    { label: 'Terraced', value: 'terraced' },
+    { label: 'Semi', value: 'semi_detached' },
+    { label: 'Detached', value: 'detached' },
+    { label: 'Bungalow', value: 'bungalow' },
+  ];
+
+  return (
+    <section className="llx3-sec">
+      <style>{`
+        .llx3-sec{position:relative;background:#f7f8fa;padding:clamp(64px,9vw,110px) clamp(20px,7%,100px);font-family:'Poppins',sans-serif;}
+        .llx3-grid{max-width:1100px;margin:0 auto;display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:clamp(36px,5vw,60px);align-items:center;}
+        .llx3-card{position:relative;border-radius:20px;background:#fff;border:1px solid #e5e7eb;box-shadow:0 40px 80px -34px rgba(4,10,26,.35);padding:clamp(26px,3vw,34px);max-width:460px;margin:0 auto;transition:transform .35s ease,box-shadow .35s ease;}
+        .llx3-card:hover{transform:translateY(-6px);box-shadow:0 48px 92px -32px rgba(37,99,235,.4);}
+        .llx3-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:22px;}
+        .llx3-label{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#6b7280;font-family:'Poppins',sans-serif;}
+        .llx3-pill{display:inline-flex;align-items:center;gap:7px;font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#2672d2;background:#eff6ff;border:1px solid #dbeafe;border-radius:999px;padding:5px 11px;font-family:'Poppins',sans-serif;}
+        .llx3-dot{width:6px;height:6px;border-radius:50%;background:#2563eb;animation:llxPulse 2.4s ease-out infinite;}
+        .llx3-field{display:flex;align-items:center;gap:10px;background:#f7f8fa;border:1px solid #e5e7eb;border-radius:10px;padding:12px 16px;margin-bottom:14px;transition:border-color .2s ease,box-shadow .2s ease;}
+        .llx3-field:focus-within{border-color:#2563eb;box-shadow:0 0 0 3px rgba(37,99,235,.12);}
+        .llx3-input{flex:1;min-width:0;border:none;outline:none;background:transparent;font-family:'Poppins',sans-serif;font-size:14px;font-weight:600;color:#0f1f3d;letter-spacing:.04em;text-transform:uppercase;}
+        .llx3-input::placeholder{color:#9ca3af;text-transform:none;letter-spacing:0;font-weight:500;}
+        .llx3-region{font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#9ca3af;flex:none;font-family:'Poppins',sans-serif;}
+        .llx3-chips{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:10px;}
+        .llx3-beds{display:flex;align-items:center;flex-wrap:wrap;gap:7px;margin-bottom:20px;}
+        .llx3-beds-label{font-size:11px;font-weight:600;color:#9ca3af;margin-right:3px;font-family:'Poppins',sans-serif;}
+        .llx3-chip{display:inline-flex;align-items:center;justify-content:center;min-height:44px;min-width:44px;padding:0 15px;border-radius:999px;border:1px solid #e5e7eb;background:#f7f8fa;color:#4b5563;font-family:'Poppins',sans-serif;font-size:12px;font-weight:600;letter-spacing:.02em;cursor:pointer;transition:all .2s ease;}
+        .llx3-chip:hover{border-color:#bfdbfe;color:#2563eb;transform:translateY(-1px);}
+        .llx3-chip-on,.llx3-chip-on:hover{background:#2563eb;border-color:#2563eb;color:#fff;box-shadow:0 10px 22px -10px rgba(37,99,235,.75);animation:llx3Pop .32s ease;transform:none;}
+        @keyframes llx3Pop{0%{transform:scale(.9)}55%{transform:scale(1.07)}100%{transform:scale(1)}}
+        .llx3-result{border-radius:14px;background:linear-gradient(160deg,#15294c 0%,#0c1a33 100%);padding:20px 22px;margin-bottom:16px;}
+        .llx3-result-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:7px;}
+        .llx3-result-label{font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:rgba(255,255,255,.5);font-family:'Poppins',sans-serif;}
+        .llx3-growth{font-size:10px;font-weight:700;color:#4ade80;font-family:'Poppins',sans-serif;}
+        .llx3-est{font-size:32px;font-weight:800;color:#4ade80;line-height:1;font-family:'Poppins',sans-serif;}
+        .llx3-pcm{font-size:14px;font-weight:600;color:rgba(255,255,255,.6);}
+        .llx3-track{position:relative;height:5px;border-radius:99px;background:rgba(255,255,255,.14);margin-top:16px;overflow:hidden;}
+        .llx3-fill{position:absolute;left:22%;right:22%;top:0;bottom:0;border-radius:99px;background:linear-gradient(90deg,#2563eb,#4ade80,#2563eb);background-size:220% 100%;animation:llxShimmer 6.5s linear infinite;transition:all .4s ease;}
+        .llx3-range{display:flex;justify-content:space-between;margin-top:7px;}
+        .llx3-range-end{font-size:10px;font-weight:600;color:rgba(255,255,255,.4);font-family:'Poppins',sans-serif;}
+        .llx3-range-mid{font-size:10px;font-weight:700;color:#4ade80;font-family:'Poppins',sans-serif;}
+        .llx3-foot{display:block;text-align:center;font-size:11px;font-weight:500;color:#9ca3af;line-height:1.6;font-family:'Poppins',sans-serif;}
+        .llx3-eyebrow{font-size:11px;font-weight:700;letter-spacing:.24em;text-transform:uppercase;color:#2672d2;margin-bottom:14px;font-family:'Poppins',sans-serif;}
+        .llx3-h2{font-size:clamp(28px,3.8vw,46px);font-weight:700;color:#0f1f3d;line-height:1.15;margin:0 0 18px;font-family:'Poppins',sans-serif;text-wrap:balance;}
+        .llx3-body{font-size:15px;font-weight:300;color:#4b5563;line-height:1.85;margin:0 0 26px;max-width:500px;font-family:'Poppins',sans-serif;text-wrap:pretty;}
+        .llx3-list{list-style:none;margin:0 0 30px;padding:0;display:flex;flex-direction:column;gap:13px;}
+        .llx3-li{display:flex;align-items:flex-start;gap:12px;font-size:14px;color:#374151;font-family:'Poppins',sans-serif;}
+        .llx3-tick{flex:none;width:22px;height:22px;border-radius:50%;background:#f0fdf4;color:#16a34a;display:inline-flex;align-items:center;justify-content:center;margin-top:1px;transition:transform .25s ease;}
+        .llx3-li:hover .llx3-tick{transform:scale(1.15) rotate(8deg);}
+        .llx3-cta{background:#2563eb;color:#fff;box-shadow:0 14px 30px -14px rgba(37,99,235,.6);transition:all .22s ease;}
+        .llx3-cta:hover{background:#1d4ed8;transform:translateY(-2px);box-shadow:0 22px 42px -14px rgba(37,99,235,.8);}
+        .llx3-cta svg{transition:transform .22s ease;}
+        .llx3-cta:hover svg{transform:translateX(3px);}
+        .llx3-alt-wrap{margin-top:6px;}
+        .llx3-alt{display:inline-flex;align-items:center;min-height:44px;font-size:13px;font-weight:500;color:#2672d2;text-decoration:none;font-family:'Poppins',sans-serif;}
+        .llx3-alt:hover{text-decoration:underline;}
+      `}</style>
+      <div className="llx3-grid">
+        <div className="hol-reveal" style={{ animationDelay: '120ms' }}>
+          <div className="llx3-card">
+            <div className="llx3-head">
+              <span className="llx3-label">Rental Estimate</span>
+              <span className="llx3-pill">
+                <span className="llx3-dot" aria-hidden="true" />
+                Live market data
+              </span>
+            </div>
+            <div className="llx3-field">
+              <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" /><circle cx="12" cy="10" r="3" /></svg>
+              <input
+                className="llx3-input"
+                value={postcode}
+                onChange={(e) => setPostcode(e.target.value.toUpperCase())}
+                placeholder="Enter your postcode"
+                aria-label="Postcode"
+              />
+              <span className="llx3-region">{result.regionLabel}</span>
+            </div>
+            <div className="llx3-chips" role="group" aria-label="Property type">
+              {typeOptions.map((opt) => (
+                <button
+                  key={opt.value}
+                  type="button"
+                  className={propertyType === opt.value ? 'llx3-chip llx3-chip-on' : 'llx3-chip'}
+                  aria-pressed={propertyType === opt.value}
+                  onClick={() => setPropertyType(opt.value)}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+            <div className="llx3-beds" role="group" aria-label="Bedrooms">
+              <span className="llx3-beds-label">Bedrooms</span>
+              {[1, 2, 3, 4, 5].map((n) => (
+                <button
+                  key={n}
+                  type="button"
+                  className={bedrooms === n ? 'llx3-chip llx3-chip-on' : 'llx3-chip'}
+                  aria-pressed={bedrooms === n}
+                  onClick={() => setBedrooms(n)}
+                >
+                  {n}
+                </button>
+              ))}
+            </div>
+            <div className="llx3-result">
+              <div className="llx3-result-head">
+                <span className="llx3-result-label">Instant estimate</span>
+                <span className="llx3-growth">+{result.annualGrowthPct.toFixed(1)}% rent growth YoY</span>
+              </div>
+              <span className="llx3-est">{formatCurrency(result.estimateMid)} <span className="llx3-pcm">pcm</span></span>
+              <div className="llx3-track" aria-hidden="true">
+                <span className="llx3-fill" />
+              </div>
+              <div className="llx3-range">
+                <span className="llx3-range-end">{formatCurrency(result.estimateLow)}</span>
+                <span className="llx3-range-mid">your range</span>
+                <span className="llx3-range-end">{formatCurrency(result.estimateHigh)}</span>
+              </div>
+            </div>
+            <span className="llx3-foot">Instant ballpark from {result.dataYear} ONS market data. Your full valuation is prepared by a local expert.</span>
+          </div>
+        </div>
+        <div className="hol-reveal">
+          <div className="llx3-eyebrow">Free Rental Valuation</div>
+          <h2 className="llx3-h2">Find Out What Your Property Could Earn</h2>
+          <p className="llx3-body">Receive a free, no-obligation rental valuation based on current market conditions in Leeds and Manchester.</p>
+          <ul className="llx3-list">
+            <li className="llx3-li">
+              <span className="llx3-tick" aria-hidden="true"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg></span>
+              Honest, data-backed figure from a local expert
+            </li>
+            <li className="llx3-li">
+              <span className="llx3-tick" aria-hidden="true"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg></span>
+              Based on live Leeds &amp; Manchester market conditions
+            </li>
+            <li className="llx3-li">
+              <span className="llx3-tick" aria-hidden="true"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg></span>
+              No obligation and no pressure to proceed
+            </li>
+          </ul>
+          <div>
+            <Link href="/book-valuation" className="llx-cta llx3-cta" style={{ ...CTA_STYLE }}>
+              Get My Free Rental Valuation
+              <svg aria-hidden="true" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
+            </Link>
+          </div>
+          <div className="llx3-alt-wrap">
+            <Link href="/instant-valuation" className="llx3-alt">Prefer an instant online valuation?</Link>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function LlxLettingSimple() {
+  const steps: { num: string; title: string; body: string; done: boolean }[] = [
+    {
+      num: '01',
+      title: 'Free Valuation',
+      body: 'A local expert values your property against real, current market data.',
+      done: false,
+    },
+    {
+      num: '02',
+      title: 'Choose Your Package',
+      body: 'Tenant find only or fully managed, pick the level of support that suits you.',
+      done: false,
+    },
+    {
+      num: '03',
+      title: 'We Find Quality Tenants',
+      body: 'Marketing, viewings and rigorous referencing, so only the best applicants get through.',
+      done: false,
+    },
+    {
+      num: '04',
+      title: 'Fully Managed',
+      body: 'Rent, maintenance and compliance handled. You focus on your investment.',
+      done: true,
+    },
+  ];
+  return (
+    <section style={{ position: 'relative', background: '#fff', padding: 'clamp(64px, 9vw, 110px) clamp(20px, 7%, 100px)' }}>
+      <style>{`
+        .llx4-head { text-align: center; margin-bottom: 56px; }
+        .llx4-eyebrow { font-family: 'Poppins', sans-serif; font-size: 11px; font-weight: 700; letter-spacing: .24em; text-transform: uppercase; color: #2672d2; margin-bottom: 14px; }
+        .llx4-title { font-family: 'Poppins', sans-serif; font-size: clamp(28px, 3.8vw, 46px); font-weight: 700; color: #0f1f3d; margin: 0 0 16px; line-height: 1.15; text-wrap: balance; }
+        .llx4-sub { font-family: 'Poppins', sans-serif; font-size: 15px; font-weight: 300; color: #6b7280; line-height: 1.75; max-width: 600px; margin: 0 auto; text-wrap: pretty; }
+        .llx4-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 20px; margin-bottom: 48px; }
+        .llx4-card { position: relative; background: linear-gradient(180deg, #fff 0%, #fbfdff 100%); border: 1px solid #e5e7eb; border-radius: 18px; padding: 30px 24px 26px; transition: transform .3s cubic-bezier(.22,1,.36,1), box-shadow .3s ease, border-color .3s ease; }
+        .llx4-card:hover { transform: translateY(-8px); border-color: #bfdbfe; box-shadow: 0 26px 46px -26px rgba(37,99,235,.45); }
+        .llx4-top { display: flex; align-items: center; gap: 14px; margin-bottom: 16px; }
+        .llx4-num { width: 46px; height: 46px; border-radius: 50%; background: #eff6ff; border: 2px solid #2563eb; display: inline-flex; align-items: center; justify-content: center; font-family: 'Poppins', sans-serif; font-size: 15px; font-weight: 800; color: #2672d2; flex: none; transition: transform .35s cubic-bezier(.34,1.56,.64,1), box-shadow .35s ease; }
+        .llx4-card:hover .llx4-num { transform: scale(1.1); box-shadow: 0 0 0 6px rgba(37,99,235,.12); }
+        .llx4-num-done { background: #2563eb; }
+        .llx4-line { flex: 1; height: 2px; background: linear-gradient(90deg, #bfdbfe, transparent); transform-origin: left center; animation: llx4Grow 1s cubic-bezier(.22,1,.36,1) both; }
+        @keyframes llx4Grow { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+        .llx4-tick { display: block; }
+        .llx4-card:hover .llx4-tick { animation: llx4Pop .5s cubic-bezier(.34,1.56,.64,1); }
+        @keyframes llx4Pop { 0% { transform: scale(1); } 45% { transform: scale(1.3) rotate(8deg); } 100% { transform: scale(1); } }
+        .llx4-step-title { font-family: 'Poppins', sans-serif; font-size: 16px; font-weight: 700; color: #0f1f3d; margin: 0 0 9px; }
+        .llx4-step-body { font-family: 'Poppins', sans-serif; font-size: 13.5px; font-weight: 400; color: #6b7280; line-height: 1.7; margin: 0; text-wrap: pretty; }
+        .llx4-cta { background: #0f1f3d; color: #fff; transition: all .22s ease; }
+        .llx4-cta:hover { background: #162849; transform: translateY(-2px); box-shadow: 0 16px 32px -16px rgba(15,31,61,.6); color: #fff; }
+      `}</style>
+      <div style={{ maxWidth: 1100, margin: '0 auto' }}>
+        <div className="hol-reveal llx4-head">
+          <div className="llx4-eyebrow">Letting Made Simple</div>
+          <h2 className="llx4-title">A Simple Process from Valuation to Fully Managed</h2>
+          <p className="llx4-sub">
+            From your initial valuation to finding quality tenants and managing your property, we handle
+            every step so you can focus on your investment.
+          </p>
+        </div>
+        <div className="llx4-grid">
+          {steps.map((s, i) => (
+            <div key={s.num} className="hol-reveal llx4-card" style={{ animationDelay: `${60 + i * 80}ms` }}>
+              <div className="llx4-top">
+                {s.done ? (
+                  <span className="llx4-num llx4-num-done">
+                    <svg
+                      className="llx4-tick"
+                      aria-hidden="true"
+                      width="18"
+                      height="18"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="#fff"
+                      strokeWidth="2.6"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <polyline points="20 6 9 17 4 12" />
+                    </svg>
+                  </span>
+                ) : (
+                  <span className="llx4-num">{s.num}</span>
+                )}
+                <span className="llx4-line" aria-hidden="true" style={{ animationDelay: `${200 + i * 90}ms` }} />
+              </div>
+              <h3 className="llx4-step-title">{s.title}</h3>
+              <p className="llx4-step-body">{s.body}</p>
+            </div>
+          ))}
+        </div>
+        <div className="hol-reveal" style={{ textAlign: 'center', animationDelay: '120ms' }}>
+          <Link href="/landlord-registration" className="llx-cta llx4-cta" style={CTA_STYLE}>
+            Start Letting Today
+          </Link>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function LlxWhichRoute() {
+  return (
+    <section className="llx5-sec">
+      <style>{`
+        .llx5-sec { position:relative; overflow:hidden; background:linear-gradient(180deg,#0b1730 0%,#0f1f3d 55%,#0c1a33 100%); padding:clamp(64px,9vw,110px) clamp(20px,7%,100px); font-family:'Poppins',sans-serif; }
+        .llx5-glow { position:absolute; inset:0; pointer-events:none; background:radial-gradient(ellipse at 82% 8%,rgba(37,99,235,.2) 0%,transparent 55%),radial-gradient(ellipse at 12% 92%,rgba(74,144,217,.12) 0%,transparent 50%); }
+        .llx5-inner { position:relative; z-index:1; max-width:1180px; margin:0 auto; }
+        .llx5-head { text-align:center; margin-bottom:52px; }
+        .llx5-eyebrow { font-size:11px; font-weight:700; letter-spacing:.24em; text-transform:uppercase; color:#4a90d9; margin-bottom:14px; }
+        .llx5-h2 { font-size:clamp(28px,3.8vw,46px); font-weight:700; color:#fff; margin:0 0 16px; line-height:1.15; text-wrap:balance; }
+        .llx5-sub { font-size:15px; font-weight:300; color:rgba(255,255,255,.55); line-height:1.75; max-width:620px; margin:0 auto; text-wrap:pretty; }
+        .llx5-spectrum { max-width:560px; margin:0 auto 30px; text-align:center; }
+        .llx5-spec-label { display:block; font-size:11px; font-weight:700; letter-spacing:.12em; text-transform:uppercase; color:#8fa6c9; margin-bottom:14px; }
+        .llx5-track { position:relative; height:6px; border-radius:99px; background:rgba(255,255,255,.12); margin:0 12px; }
+        .llx5-fill { position:absolute; left:0; top:0; bottom:0; width:50%; border-radius:99px; background:linear-gradient(90deg,#4a90d9,#2563eb,#4a90d9); background-size:220% 100%; animation:llxShimmer 6.5s linear infinite; }
+        .llx5-knob { position:absolute; left:calc(50% - 9px); top:-6px; width:18px; height:18px; border-radius:50%; background:#fff; box-shadow:0 4px 14px rgba(0,0,0,.4),0 0 0 4px rgba(37,99,235,.35); animation:llxFloat 4s ease-in-out infinite; }
+        .llx5-ends { display:flex; justify-content:space-between; margin-top:12px; padding:0 4px; }
+        .llx5-end { font-size:11px; font-weight:600; color:rgba(255,255,255,.5); }
+        .llx5-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); gap:18px; max-width:900px; margin:0 auto 36px; align-items:stretch; }
+        .llx5-card { position:relative; display:flex; flex-direction:column; border-radius:20px; padding:clamp(26px,3vw,34px); transition:transform .3s cubic-bezier(.22,1,.36,1),box-shadow .3s ease,border-color .3s ease; }
+        .llx5-card-a { background:linear-gradient(160deg,rgba(22,41,76,.92) 0%,rgba(12,26,51,.92) 100%); border:1px solid rgba(255,255,255,.11); }
+        .llx5-card-a:hover { transform:translateY(-8px); border-color:rgba(74,144,217,.6); box-shadow:0 28px 50px -24px rgba(37,99,235,.5); }
+        .llx5-card-b { background:linear-gradient(160deg,rgba(30,58,112,.95) 0%,rgba(15,33,66,.95) 100%); border:1.5px solid rgba(37,99,235,.6); box-shadow:0 24px 50px -26px rgba(37,99,235,.55); }
+        .llx5-card-b:hover { transform:translateY(-8px); border-color:rgba(74,144,217,.85); box-shadow:0 30px 56px -22px rgba(37,99,235,.65); }
+        .llx5-badge { position:absolute; top:-11px; right:22px; font-size:9.5px; font-weight:800; letter-spacing:.08em; text-transform:uppercase; background:#2563eb; color:#fff; border-radius:999px; padding:4px 12px; white-space:nowrap; box-shadow:0 8px 18px -6px rgba(37,99,235,.7); }
+        .llx5-chip { display:inline-block; font-size:10px; font-weight:700; letter-spacing:.1em; text-transform:uppercase; border-radius:999px; padding:5px 12px; margin-bottom:18px; align-self:flex-start; transition:background .3s ease,border-color .3s ease; }
+        .llx5-chip-a { color:#a9c4ea; background:rgba(255,255,255,.07); border:1px solid rgba(255,255,255,.14); }
+        .llx5-card-a:hover .llx5-chip-a { background:rgba(255,255,255,.12); border-color:rgba(255,255,255,.26); }
+        .llx5-chip-b { color:#cbdcf6; background:rgba(37,99,235,.18); border:1px solid rgba(74,144,217,.35); }
+        .llx5-card-b:hover .llx5-chip-b { background:rgba(37,99,235,.28); border-color:rgba(74,144,217,.55); }
+        .llx5-title { font-size:20px; font-weight:800; color:#fff; margin:0 0 8px; line-height:1.25; }
+        .llx5-body { font-size:13.5px; font-weight:300; line-height:1.75; margin:0 0 20px; text-wrap:pretty; }
+        .llx5-body-a { color:rgba(255,255,255,.62); }
+        .llx5-body-b { color:rgba(255,255,255,.66); }
+        .llx5-list { list-style:none; margin:0 0 22px; padding:0; display:flex; flex-direction:column; gap:11px; }
+        .llx5-li { display:flex; gap:11px; align-items:flex-start; font-size:13px; color:#e7eefb; line-height:1.5; }
+        .llx5-tick { flex:none; width:20px; height:20px; border-radius:50%; background:rgba(74,222,128,.16); color:#4ade80; display:inline-flex; align-items:center; justify-content:center; margin-top:1px; transition:transform .3s cubic-bezier(.34,1.56,.64,1),background .3s ease; }
+        .llx5-card:hover .llx5-tick { transform:scale(1.18); background:rgba(74,222,128,.3); }
+        .llx5-foot { margin-top:auto; display:flex; flex-wrap:wrap; align-items:baseline; gap:8px; padding-top:18px; }
+        .llx5-foot-a { border-top:1px solid rgba(255,255,255,.09); }
+        .llx5-foot-b { border-top:1px solid rgba(255,255,255,.12); }
+        .llx5-foot-label { font-size:12px; font-weight:600; color:rgba(255,255,255,.5); }
+        .llx5-fig { font-size:24px; font-weight:800; color:#4ade80; line-height:1; }
+        .llx5-foot-sub { font-size:11px; font-weight:600; color:rgba(255,255,255,.5); }
+        .llx5-foot-b .llx5-foot-label, .llx5-foot-b .llx5-foot-sub { color:rgba(255,255,255,.55); }
+        .llx5-note { text-align:center; font-size:13px; font-weight:300; color:rgba(255,255,255,.5); line-height:1.7; max-width:620px; margin:0 auto 28px; text-wrap:pretty; }
+        .llx5-cta-row { text-align:center; }
+        .llx5-cta { background:#2563eb; color:#fff; box-shadow:0 14px 30px -14px rgba(37,99,235,.7); transition:all .22s ease; }
+        .llx5-cta:hover { background:#1d4ed8; transform:translateY(-2px); box-shadow:0 22px 42px -14px rgba(37,99,235,.9); }
+      `}</style>
+      <div className="llx5-glow" aria-hidden="true" />
+      <div className="llx5-inner">
+        <div className="llx5-head hol-reveal">
+          <div className="llx5-eyebrow">Compare Our Landlord Packages</div>
+          <h2 className="llx5-h2">Choose the Right Service for Your Property</h2>
+          <p className="llx5-sub">Whether you need tenant find services or fully managed support, compare our packages to find the option that best suits your goals and budget.</p>
+        </div>
+        <div className="llx5-spectrum hol-reveal" style={{ animationDelay: '60ms' }}>
+          <span className="llx5-spec-label">How hands-on do you want to be?</span>
+          <div className="llx5-track">
+            <span className="llx5-fill" aria-hidden="true" />
+            <span className="llx5-knob" aria-hidden="true" />
+          </div>
+          <div className="llx5-ends">
+            <span className="llx5-end">{"I'll manage it myself"}</span>
+            <span className="llx5-end">Handle everything for me</span>
+          </div>
+        </div>
+        <div className="llx5-grid">
+          <div className="llx5-card llx5-card-a hol-reveal" style={{ animationDelay: '120ms' }}>
+            <span className="llx5-chip llx5-chip-a">You manage · we find</span>
+            <h3 className="llx5-title">I want to stay hands-on</h3>
+            <p className="llx5-body llx5-body-a">You run the tenancy day to day. We find, vet and reference a quality tenant, then hand over a signed agreement.</p>
+            <ul className="llx5-list">
+              {['A single upfront fee, no ongoing charges', 'Full referencing and Right to Rent checks', 'Optional photography & agent-led viewings'].map((t, i) => (
+                <li key={t} className="llx5-li">
+                  <span className="llx5-tick" style={{ transitionDelay: `${i * 50}ms` }} aria-hidden="true">
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
+                  </span>
+                  {t}
+                </li>
+              ))}
+            </ul>
+            <div className="llx5-foot llx5-foot-a">
+              <span className="llx5-foot-label">Tenant Find from</span>
+              <span className="llx5-fig">{LOWEST_FIND_FEE}</span>
+              <span className="llx5-foot-sub">one time</span>
+            </div>
+          </div>
+          <div className="llx5-card llx5-card-b hol-reveal" style={{ animationDelay: '200ms' }}>
+            <span className="llx5-badge">Most Popular Route</span>
+            <span className="llx5-chip llx5-chip-b">We manage everything</span>
+            <h3 className="llx5-title">I want it fully managed</h3>
+            <p className="llx5-body llx5-body-b">Rent, tenants, maintenance and compliance handled by your local team, up to full rent guarantee and legal protection.</p>
+            <ul className="llx5-list">
+              {['Full tenant find included in every tier', 'Rent collection, arrears & compliance handled', 'Rent guarantee & legal cover available'].map((t, i) => (
+                <li key={t} className="llx5-li">
+                  <span className="llx5-tick" style={{ transitionDelay: `${i * 50}ms` }} aria-hidden="true">
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
+                  </span>
+                  {t}
+                </li>
+              ))}
+            </ul>
+            <div className="llx5-foot llx5-foot-b">
+              <span className="llx5-foot-label">Management from</span>
+              <span className="llx5-fig">{LOWEST_MGMT_FEE}</span>
+              <span className="llx5-foot-sub">monthly · rolling</span>
+            </div>
+          </div>
+        </div>
+        <p className="llx5-note hol-reveal" style={{ animationDelay: '80ms' }}>All prices inclusive of VAT. See the full package section below for everything included in each tier.</p>
+        <div className="llx5-cta-row hol-reveal" style={{ animationDelay: '140ms' }}>
+          <a href="#packages" className="llx-cta llx5-cta" style={{ ...CTA_STYLE }}>Compare Landlord Packages</a>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function LlxReadyToGrow() {
+  return (
+    <section className="llx6-band">
+      <style>{`
+        .llx6-band{position:relative;overflow:hidden;background:linear-gradient(168deg,#0a1730 0%,#12244a 55%,#0a1a38 100%);padding:clamp(76px,10vw,130px) clamp(20px,7%,100px);}
+        .llx6-grid{position:absolute;inset:0;pointer-events:none;opacity:.6;background-image:linear-gradient(rgba(255,255,255,.045) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.045) 1px,transparent 1px);background-size:48px 48px;-webkit-mask-image:radial-gradient(ellipse 78% 68% at 50% 40%,#000 0%,transparent 76%);mask-image:radial-gradient(ellipse 78% 68% at 50% 40%,#000 0%,transparent 76%);animation:llx6GridDrift 32s linear infinite;}
+        @keyframes llx6GridDrift{from{background-position:0 0,0 0;}to{background-position:48px 48px,48px 48px;}}
+        .llx6-orb-a{position:absolute;width:520px;height:520px;top:-180px;left:-140px;border-radius:50%;filter:blur(72px);pointer-events:none;background:radial-gradient(circle,rgba(37,99,235,.5) 0%,transparent 70%);animation:llxOrbA 22s ease-in-out infinite;}
+        .llx6-orb-b{position:absolute;width:440px;height:440px;bottom:-190px;right:-110px;border-radius:50%;filter:blur(72px);pointer-events:none;background:radial-gradient(circle,rgba(74,144,217,.36) 0%,transparent 70%);animation:llxOrbB 26s ease-in-out infinite;}
+        .llx6-inner{position:relative;z-index:1;max-width:820px;margin:0 auto;text-align:center;}
+        .llx6-eyebrow{display:inline-flex;align-items:center;gap:9px;font-family:'Poppins',sans-serif;font-size:11px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:#9dc2f2;background:rgba(37,99,235,.12);border:1px solid rgba(74,144,217,.3);border-radius:999px;padding:8px 16px 8px 13px;margin-bottom:24px;max-width:100%;-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);animation:llx6PillFloat 5.5s ease-in-out infinite;}
+        @keyframes llx6PillFloat{0%,100%{transform:translateY(0);}50%{transform:translateY(-4px);}}
+        @media (max-width:480px){.llx6-eyebrow{font-size:10px;letter-spacing:.12em;}}
+        .llx6-dot{flex:0 0 auto;width:7px;height:7px;border-radius:50%;background:#4a90d9;animation:llxPulse 2.4s ease-out infinite;}
+        .llx6-title{font-family:'Poppins',sans-serif;font-size:clamp(32px,5vw,58px);font-weight:800;color:#fff;line-height:1.08;letter-spacing:-.02em;margin:0 0 22px;text-shadow:0 2px 44px rgba(0,0,0,.5);text-wrap:balance;}
+        .llx6-accent{color:#4a90d9;}
+        .llx6-body{font-family:'Poppins',sans-serif;font-size:clamp(15px,1.4vw,17px);font-weight:300;color:rgba(255,255,255,.68);line-height:1.75;max-width:600px;margin:0 auto 36px;text-wrap:pretty;}
+        .llx6-ctas{display:flex;flex-wrap:wrap;gap:14px;justify-content:center;}
+        .llx6-cta{transition:transform .25s ease,box-shadow .25s ease,background .25s ease,border-color .25s ease;}
+        .llx6-cta-primary{background:linear-gradient(135deg,#2563eb 0%,#1d4ed8 55%,#2563eb 100%);background-size:220% 100%;box-shadow:0 14px 34px -12px rgba(37,99,235,.72);animation:llxShimmer 7s linear infinite;}
+        .llx6-cta-primary:hover{transform:translateY(-2px);box-shadow:0 22px 46px -12px rgba(37,99,235,.9);}
+        .llx6-cta-ghost{background:rgba(255,255,255,.05);-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);}
+        .llx6-cta-ghost:hover{transform:translateY(-2px);background:rgba(255,255,255,.11);border-color:#fff !important;box-shadow:0 18px 38px -18px rgba(74,144,217,.55);}
+      `}</style>
+      <div className="llx6-grid" aria-hidden="true" />
+      <div className="llx6-orb-a" aria-hidden="true" />
+      <div className="llx6-orb-b" aria-hidden="true" />
+      <div className="llx6-inner">
+        <div className="hol-reveal">
+          <div className="llx6-eyebrow">
+            <span className="llx6-dot" />
+            Ready to Grow Your Property Portfolio?
+          </div>
+          <h2 className="llx6-title">
+            Your Next Investment Starts with the <span className="llx6-accent">Right Partner</span>
+          </h2>
+          <p className="llx6-body">
+            Partner with an affordable estate agent committed to helping landlords maximise
+            returns, minimise hassle, and protect their investment.
+          </p>
+        </div>
+        <div className="llx6-ctas hol-reveal" style={{ animationDelay: '120ms' }}>
+          <Link
+            href="/branches"
+            className="llx-cta llx6-cta llx6-cta-primary"
+            style={{ ...CTA_STYLE, color: '#fff' }}
+          >
+            Contact Our Team
+          </Link>
+          <Link
+            href="/book-valuation"
+            className="llx-cta llx6-cta llx6-cta-ghost"
+            style={{ ...CTA_STYLE, border: '1.5px solid rgba(255,255,255,.32)', color: '#fff' }}
+          >
+            Book a Free Valuation
+          </Link>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 export default function LandlordsPage() {
   const [openFaq, setOpenFaq] = useState<number | null>(null);
   const [activePkg, setActivePkg] = useState(3); // default: Full Management (Most Popular)
@@ -112,6 +809,7 @@ export default function LandlordsPage() {
     <>
       <Navbar />
       <RevealCards />
+      <LlxShared />
 
       {/* ── HERO ─────────────────────────────────────────────── */}
       <style>{`
@@ -260,7 +958,13 @@ export default function LandlordsPage() {
 
 
 
-{/* ── WHY HOUSE OF LETTINGS ───────────────────────────── */}
+{/* ── S1 · INVESTMENT SMARTER (handoff) ───────────────── */}
+      <LlxInvestmentSmarter />
+
+      {/* ── S2 · WHY LANDLORDS CHOOSE US (handoff) ──────────── */}
+      <LlxWhyLandlords />
+
+      {/* ── WHY HOUSE OF LETTINGS ───────────────────────────── */}
       <section style={{
         padding: 'clamp(60px, 8vw, 100px) clamp(24px, 7%, 100px)',
         background: '#f7f8fa',
@@ -387,11 +1091,17 @@ export default function LandlordsPage() {
       </section>
 
 
+      {/* ── S5 · WHICH ROUTE FITS YOU (handoff) ─────────────── */}
+      <LlxWhichRoute />
+
       {/* ── OUR SERVICES ────────────────────────────────────── */}
-      <section style={{
+      {/* id="packages" is the scroll target for the route-helper section's
+          "Compare Landlord Packages" CTA above. scrollMarginTop clears the
+          72px fixed navbar. */}
+      <section id="packages" style={{
         padding: 'clamp(60px, 8vw, 100px) clamp(24px, 7%, 100px)',
         background: 'linear-gradient(180deg, #0b1730 0%, #0f1f3d 55%, #0c1a33 100%)',
-        position: 'relative', overflow: 'hidden',
+        position: 'relative', overflow: 'hidden', scrollMarginTop: 88,
       }}>
         <div style={{
           position: 'absolute', inset: 0, pointerEvents: 'none',
@@ -712,67 +1422,12 @@ export default function LandlordsPage() {
       </section>
 
 
-      {/* ── HOW IT WORKS ────────────────────────────────────── */}
-      <section style={{
-        padding: 'clamp(60px, 8vw, 100px) clamp(24px, 7%, 100px)',
-        background: '#fff',
-      }}>
-        <div style={{ textAlign: 'center', marginBottom: 56 }}>
-          <div style={{
-            fontSize: 11, fontWeight: 700, letterSpacing: 3,
-            textTransform: 'uppercase', color: 'var(--logo-blue)', marginBottom: 14,
-            fontFamily: "'Poppins', sans-serif",
-          }}>
-            Getting Started
-          </div>
-          <h2 style={{
-            fontFamily: "'Poppins', sans-serif",
-            fontSize: 'clamp(28px,4vw,48px)', fontWeight: 700,
-            color: '#0f1f3d', margin: 0,
-          }}>
-            Let your property in 4 simple steps
-          </h2>
-        </div>
-        <style>{`
-          .ll-steps-grid {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 32px;
-            max-width: 1100px;
-            margin: 0 auto;
-          }
-          @media (max-width: 900px) { .ll-steps-grid { grid-template-columns: 1fr 1fr; } }
-          @media (max-width: 500px) { .ll-steps-grid { grid-template-columns: 1fr; } }
-        `}</style>
-        <div className="ll-steps-grid">
-          {[
-            { n: '01', title: 'Book a Valuation', desc: 'Our local expert visits your property and gives you an honest, data backed rental valuation, completely free.' },
-            { n: '02', title: 'Choose Your Package', desc: 'Pick from Virtual Tenant Find, Expert Tenant Find, or one of our management packages. No pressure, no hard sell.' },
-            { n: '03', title: 'We Find Your Tenant', desc: 'We advertise, screen applicants, conduct viewings, and handle all referencing so only the best tenants make it through.' },
-            { n: '04', title: 'Sit Back & Collect', desc: 'Once your tenant is in, we handle everything from rent collection to maintenance calls. You just enjoy the returns.' },
-          ].map((step, i) => (
-            <div key={step.n} className="hol-reveal" style={{ textAlign: 'center', animationDelay: `${i * 55}ms` }}>
-              <div style={{
-                width: 64, height: 64, borderRadius: '50%',
-                background: '#eff6ff', border: '2px solid #2563eb',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                margin: '0 auto 20px',
-                fontFamily: "'Poppins', sans-serif",
-                fontSize: 18, fontWeight: 800, color: 'var(--logo-blue)',
-              }}>{step.n}</div>
-              <h3 style={{
-                fontFamily: "'Poppins', sans-serif",
-                fontSize: 16, fontWeight: 700, color: '#0f1f3d',
-                marginBottom: 10,
-              }}>{step.title}</h3>
-              <p style={{
-                fontFamily: "'Poppins', sans-serif",
-                fontSize: 14, color: '#6b7280', lineHeight: 1.7,
-              }}>{step.desc}</p>
-            </div>
-          ))}
-        </div>
-      </section>
+      {/* ── S4 · LETTING MADE SIMPLE (handoff; replaces the old
+          "4 simple steps" section, same intent, richer cards) ── */}
+      <LlxLettingSimple />
+
+      {/* ── S3 · INSTANT RENTAL VALUATION WIDGET (handoff) ──── */}
+      <LlxValuationWidget />
 
 
       {/* ── LANDLORD RESPONSIBILITIES CHECKLIST ─────────────── */}
@@ -1109,47 +1764,9 @@ export default function LandlordsPage() {
       </section>
 
 
-      {/* ── CTA BANNER ──────────────────────────────────────── */}
-      <section style={{
-        background: '#0f1f3d',
-        padding: 'clamp(56px, 8vw, 80px) clamp(24px, 7%, 100px)',
-        position: 'relative', overflow: 'hidden',
-        textAlign: 'center',
-      }}>
-        <div style={{
-          position: 'absolute', inset: 0,
-          background: 'radial-gradient(ellipse at 50% 50%, rgba(37,99,235,0.15) 0%, transparent 70%)',
-          pointerEvents: 'none',
-        }} />
-        <div style={{ position: 'relative', zIndex: 1 }}>
-          <h2 style={{
-            fontFamily: "'Poppins', sans-serif",
-            fontSize: 'clamp(28px,4vw,52px)', fontWeight: 700,
-            color: '#fff', marginBottom: 16,
-          }}>
-            Ready to maximise your <span style={{ color: '#fff' }}>rental returns?</span>
-          </h2>
-          <p style={{
-            fontFamily: "'Poppins', sans-serif",
-            fontSize: 16, color: 'rgba(255,255,255,0.55)',
-            maxWidth: 520, margin: '0 auto 40px', lineHeight: 1.7, fontWeight: 300,
-          }}>
-            Book a free valuation today and find out exactly what your property could be earning.
-          </p>
-          <div style={{ display: 'flex', gap: 16, justifyContent: 'center', flexWrap: 'wrap' }}>
-            <Link href="/book-valuation"
-              style={{
-                ...CTA_STYLE, background: '#2563eb', color: '#fff',
-                cursor: 'pointer', transition: 'background 0.2s',
-              }}
-              onMouseEnter={e => (e.currentTarget.style.background = '#1d4ed8')}
-              onMouseLeave={e => (e.currentTarget.style.background = '#2563eb')}
-            >
-              Book a Free Valuation
-            </Link>
-          </div>
-        </div>
-      </section>
+      {/* ── S6 · READY TO GROW, closing CTA band (handoff;
+          replaces the old thin CTA banner) ─────────────────── */}
+      <LlxReadyToGrow />
 
 
       {/* ── FOOTER ──────────────────────────────────────────── */}

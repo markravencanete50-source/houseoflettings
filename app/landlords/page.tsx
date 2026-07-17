@@ -918,68 +918,6 @@ function LlxChooseService() {
   );
 }
 
-function LlxReadyToGrow() {
-  return (
-    <section className="llx6-band">
-      <style>{`
-        .llx6-band{position:relative;overflow:hidden;background:linear-gradient(168deg,#0a1730 0%,#12244a 55%,#0a1a38 100%);padding:clamp(76px,10vw,130px) clamp(20px,7%,100px);}
-        .llx6-grid{position:absolute;inset:0;pointer-events:none;opacity:.6;background-image:linear-gradient(rgba(255,255,255,.045) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.045) 1px,transparent 1px);background-size:48px 48px;-webkit-mask-image:radial-gradient(ellipse 78% 68% at 50% 40%,#000 0%,transparent 76%);mask-image:radial-gradient(ellipse 78% 68% at 50% 40%,#000 0%,transparent 76%);animation:llx6GridDrift 32s linear infinite;}
-        @keyframes llx6GridDrift{from{background-position:0 0,0 0;}to{background-position:48px 48px,48px 48px;}}
-        .llx6-orb-a{position:absolute;width:520px;height:520px;top:-180px;left:-140px;border-radius:50%;filter:blur(72px);pointer-events:none;background:radial-gradient(circle,rgba(37,99,235,.5) 0%,transparent 70%);animation:llxOrbA 22s ease-in-out infinite;}
-        .llx6-orb-b{position:absolute;width:440px;height:440px;bottom:-190px;right:-110px;border-radius:50%;filter:blur(72px);pointer-events:none;background:radial-gradient(circle,rgba(74,144,217,.36) 0%,transparent 70%);animation:llxOrbB 26s ease-in-out infinite;}
-        .llx6-inner{position:relative;z-index:1;max-width:820px;margin:0 auto;text-align:center;}
-        .llx6-eyebrow{display:inline-flex;align-items:center;gap:9px;font-family:'Poppins',sans-serif;font-size:11px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:#9dc2f2;background:rgba(37,99,235,.12);border:1px solid rgba(74,144,217,.3);border-radius:999px;padding:8px 16px 8px 13px;margin-bottom:24px;max-width:100%;-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);animation:llx6PillFloat 5.5s ease-in-out infinite;}
-        @keyframes llx6PillFloat{0%,100%{transform:translateY(0);}50%{transform:translateY(-4px);}}
-        @media (max-width:480px){.llx6-eyebrow{font-size:10px;letter-spacing:.12em;}}
-        .llx6-dot{flex:0 0 auto;width:7px;height:7px;border-radius:50%;background:#4a90d9;animation:llxPulse 2.4s ease-out infinite;}
-        .llx6-title{font-family:'Poppins',sans-serif;font-size:clamp(32px,5vw,58px);font-weight:800;color:#fff;line-height:1.08;letter-spacing:-.02em;margin:0 0 22px;text-shadow:0 2px 44px rgba(0,0,0,.5);text-wrap:balance;}
-        .llx6-accent{color:#4a90d9;}
-        .llx6-body{font-family:'Poppins',sans-serif;font-size:clamp(15px,1.4vw,17px);font-weight:300;color:rgba(255,255,255,.68);line-height:1.75;max-width:600px;margin:0 auto 36px;text-wrap:pretty;}
-        .llx6-ctas{display:flex;flex-wrap:wrap;gap:14px;justify-content:center;}
-        .llx6-cta{transition:transform .25s ease,box-shadow .25s ease,background .25s ease,border-color .25s ease;}
-        .llx6-cta-primary{background:linear-gradient(135deg,#2563eb 0%,#1d4ed8 55%,#2563eb 100%);background-size:220% 100%;box-shadow:0 14px 34px -12px rgba(37,99,235,.72);animation:llxShimmer 7s linear infinite;}
-        .llx6-cta-primary:hover{transform:translateY(-2px);box-shadow:0 22px 46px -12px rgba(37,99,235,.9);}
-        .llx6-cta-ghost{background:rgba(255,255,255,.05);-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);}
-        .llx6-cta-ghost:hover{transform:translateY(-2px);background:rgba(255,255,255,.11);border-color:#fff !important;box-shadow:0 18px 38px -18px rgba(74,144,217,.55);}
-      `}</style>
-      <div className="llx6-grid" aria-hidden="true" />
-      <div className="llx6-orb-a" aria-hidden="true" />
-      <div className="llx6-orb-b" aria-hidden="true" />
-      <div className="llx6-inner">
-        <div className="hol-reveal">
-          <div className="llx6-eyebrow">
-            <span className="llx6-dot" />
-            Ready to Grow Your Property Portfolio?
-          </div>
-          <h2 className="llx6-title">
-            Your Next Investment Starts with the <span className="llx6-accent">Right Partner</span>
-          </h2>
-          <p className="llx6-body">
-            Partner with an affordable estate agent committed to helping landlords maximise
-            returns, minimise hassle, and protect their investment.
-          </p>
-        </div>
-        <div className="llx6-ctas hol-reveal" style={{ animationDelay: '120ms' }}>
-          <Link
-            href="/branches"
-            className="llx-cta llx6-cta llx6-cta-primary"
-            style={{ ...CTA_STYLE, color: '#fff' }}
-          >
-            Contact Our Team
-          </Link>
-          <Link
-            href="/book-valuation"
-            className="llx-cta llx6-cta llx6-cta-ghost"
-            style={{ ...CTA_STYLE, border: '1.5px solid rgba(255,255,255,.32)', color: '#fff' }}
-          >
-            Book a Free Valuation
-          </Link>
-        </div>
-      </div>
-    </section>
-  );
-}
-
 export default function LandlordsPage() {
   const [openFaq, setOpenFaq] = useState<number | null>(null);
   const rgiRef = useRef<HTMLDivElement>(null);
@@ -1206,17 +1144,29 @@ export default function LandlordsPage() {
           .ll-price-arrow { flex:none; color:#4a90d9; opacity:0; transform:translateX(-4px);
             transition:opacity .2s ease, transform .2s ease; }
           .ll-price-row:hover .ll-price-arrow { opacity:1; transform:none; }
+          /* min-width:0 on both columns: without it a flex item refuses to
+             shrink below its content, which is what pushed the management rows
+             ("management fees + £399 set up fees") outside the panel on a phone. */
+          .ll-price-name-col { min-width:0; }
           .ll-price-nm { display:flex; align-items:center; gap:8px; font-family:'Poppins',sans-serif;
             font-size:14.5px; font-weight:700; color:#fff; }
           .ll-price-nm em { font-style:normal; font-size:9px; font-weight:800; letter-spacing:.08em;
-            text-transform:uppercase; background:#2563eb; color:#fff; border-radius:999px; padding:2px 8px; }
+            text-transform:uppercase; background:#2563eb; color:#fff; border-radius:999px; padding:2px 8px;
+            white-space:nowrap; }
           .ll-price-kd { display:block; font-family:'Poppins',sans-serif; font-size:11.5px; color:#8fa6c9; margin-top:3px; }
           /* margin-left:auto keeps the figure hard against the arrow on the
-             right, rather than the row's space-between stranding it mid-row. */
-          .ll-price-fig { text-align:right; flex:none; margin-left:auto; }
+             right, rather than the row's space-between stranding it mid-row.
+             It shrinks and wraps rather than overflowing when space is tight. */
+          .ll-price-fig { text-align:right; flex:0 1 auto; min-width:0; margin-left:auto; }
           /* Price figures are the additional-services green (#16a34a) site-wide. */
           .ll-price-fig b { display:block; font-family:'Poppins',sans-serif; font-size:18px; font-weight:800; color:var(--price-green-bright); }
-          .ll-price-fig span { font-family:'Poppins',sans-serif; font-size:11px; color:#a9c4ea; }
+          .ll-price-fig span { display:block; font-family:'Poppins',sans-serif; font-size:11px; color:#a9c4ea; line-height:1.45; }
+          @media (max-width:600px) {
+            /* The arrow is a hover affordance, so it can never show on a touch
+               device — reclaim its width for the figures instead. */
+            .ll-price-arrow { display:none; }
+            .ll-price-row { gap:10px; padding:14px 10px; }
+          }
           .ll-price-cta { display:inline-block; margin-top:20px; font-family:'Poppins',sans-serif;
             font-size:13px; font-weight:700; color:#4a90d9; text-decoration:none; }
           .ll-price-cta:hover { color:#fff; }
@@ -1312,7 +1262,7 @@ export default function LandlordsPage() {
               {BUNDLES.map(b => (
                 <li key={b.id}>
                   <Link href={`/pricing/${b.id}`} className={`ll-price-row${b.badge ? ' ll-hot' : ''}`}>
-                    <div>
+                    <div className="ll-price-name-col">
                       <span className="ll-price-nm">{b.short}{b.badge && <em>Popular</em>}</span>
                       <span className="ll-price-kd">{b.kind}</span>
                     </div>
@@ -1761,11 +1711,6 @@ export default function LandlordsPage() {
           </div>
         </div>
       </section>
-
-
-      {/* ── S6 · READY TO GROW, closing CTA band (handoff;
-          replaces the old thin CTA banner) ─────────────────── */}
-      <LlxReadyToGrow />
 
 
       {/* ── FOOTER ──────────────────────────────────────────── */}

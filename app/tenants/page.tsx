@@ -203,6 +203,10 @@ export default function TenantsPage() {
         .tp-tl-row { display: flex; gap: 16px; align-items: flex-start; }
         .tp-tl-num { flex-shrink: 0; width: 40px; height: 40px; border-radius: 999px; background: ${BLUE_SM}; color: #fff;
           font-weight: 800; display: grid; place-items: center; box-shadow: 0 8px 16px rgba(10,70,239,0.35); }
+        /* The four steps run under the photo/copy, so they sit tight to it
+           rather than opening a second full section gap. */
+        .tp-maint-steps { padding-top: 0 !important; }
+        .tp-steps-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; align-items: stretch; }
 
         /* Reveal */
         .tp-js .reveal { opacity: 0; }
@@ -220,19 +224,23 @@ export default function TenantsPage() {
           .tp-reviews { grid-template-columns: 1fr !important; }
           .tp-pillars-wrap { grid-template-columns: 1fr !important; }
 
-          /* A Place to Call Home becomes one self-contained card, the same shape
-             as a pricing card: image on top, then copy and buttons in one box.
-             This starts at 980px, where .tp-2col stops being two columns. */
-          .tp-aptc {
+          /* A Place to Call Home and Reporting Maintenance each become one
+             self-contained card, the same shape as a pricing card: image on top,
+             then copy and buttons in one box. This starts at 980px, where
+             .tp-2col stops being two columns. Both sections share these rules —
+             they have the same structure (image div, then copy div). */
+          .tp-aptc, .tp-maint {
             padding: 0 !important; margin: 40px 20px; max-width: 640px; gap: 0 !important;
             background: #fff; border: 1px solid ${HAIR}; border-radius: 18px; overflow: hidden;
             box-shadow: 0 16px 38px -16px rgba(24,33,53,0.2);
           }
           /* The frame carries an inline height for the desktop split, so the
              card height needs !important to win. */
-          .tp-aptc .tp-imgframe { border-radius: 0 !important; box-shadow: none !important; height: 240px !important; }
-          .tp-aptc > div:last-child { padding: 26px 22px 28px; }
-          .tp-aptc .tp-lead, .tp-aptc .tp-btn-col { max-width: none !important; }
+          .tp-aptc .tp-imgframe, .tp-maint .tp-imgframe { border-radius: 0 !important; box-shadow: none !important; height: 240px !important; }
+          .tp-aptc > div:last-child, .tp-maint > div:last-child { padding: 26px 22px 28px; }
+          .tp-aptc .tp-lead, .tp-aptc .tp-btn-col, .tp-maint .tp-lead { max-width: none !important; }
+
+          .tp-steps-grid { grid-template-columns: repeat(2, 1fr); }
 
           /* Our Commitment pills sit to the left and run shortest to longest.
              Order is by measured rendered width, not character count: "Friendly
@@ -250,8 +258,9 @@ export default function TenantsPage() {
           .area-card { height: 240px; }
           .tp-btn { width: 100%; }
           .tp-h1 { font-size: 40px !important; }
-          .tp-aptc { max-width: none; }
-          .tp-aptc .tp-imgframe { height: 210px !important; }
+          .tp-aptc, .tp-maint { max-width: none; }
+          .tp-aptc .tp-imgframe, .tp-maint .tp-imgframe { height: 210px !important; }
+          .tp-steps-grid { grid-template-columns: 1fr; }
         }
         @media (prefers-reduced-motion: reduce) {
           .tp-card, .tp-card:hover, .area-card, .area-card:hover, .area-card img, .tp-pillar, .tp-pillar:hover,
@@ -422,28 +431,39 @@ export default function TenantsPage() {
 
       {/* ── 8 · REPORTING MAINTENANCE ── */}
       <section id="maintenance">
-        <div className="tp-wrap tp-2col">
+        {/* Photo + copy. Two columns on desktop; below 980px .tp-maint collapses
+            into one card (photo on top, copy and button in the body), sharing
+            the same rules as .tp-aptc above. */}
+        <div className="tp-wrap tp-2col tp-maint">
+          <div className="reveal">
+            <div className="tp-imgframe" style={{ borderRadius: 24, overflow: "hidden", boxShadow: "0 26px 60px -20px rgba(24,33,53,0.32)", height: 400 }}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/images/maintenance-tenant.webp" alt="A tenant reporting a maintenance issue from his phone at home" style={{ display: "block", width: "100%", height: "100%", objectFit: "cover" }} loading="lazy" />
+            </div>
+          </div>
           <div className="reveal">
             <p className="tp-kicker" style={{ color: GREEN_DEEP }}>Already Renting With Us?</p>
             <h2 className="tp-h2" style={{ marginBottom: 18 }}>Need Help? Reporting Maintenance Is Easy.</h2>
             <p className="tp-lead" style={{ maxWidth: 500, marginBottom: 28 }}>
-              It&apos;s fully online — answer a couple of questions, send a picture and submit your request.
+              It&apos;s fully online: answer a couple of questions, send a picture and submit your request.
               We&apos;ll coordinate it with the right contractor as soon as possible and keep you updated throughout.
             </p>
             <a href="/maintenance/report" className="tp-btn tp-yellow">🔧 Report a Maintenance Issue</a>
           </div>
-          <div className="reveal">
-            <div className="tp-timeline">
-              {maintSteps.map((m) => (
-                <div key={m.num} className="tp-card tp-tl-row" style={{ padding: "18px 20px" }}>
-                  <span className="tp-tl-num">{m.num}</span>
-                  <div>
-                    <h3 style={{ fontSize: 16, fontWeight: 800, color: INK, margin: "6px 0 4px" }}>{m.title}</h3>
-                    <p style={{ fontSize: 13.5, color: BODY, lineHeight: 1.5, margin: 0 }}>{m.desc}</p>
-                  </div>
+        </div>
+
+        {/* The four steps sit under the photo/copy, full width. */}
+        <div className="tp-wrap tp-maint-steps">
+          <div className="tp-steps-grid">
+            {maintSteps.map((m, i) => (
+              <div key={m.num} className="tp-card tp-tl-row reveal" style={{ padding: "18px 20px", animationDelay: `${i * 60}ms` }}>
+                <span className="tp-tl-num">{m.num}</span>
+                <div>
+                  <h3 style={{ fontSize: 16, fontWeight: 800, color: INK, margin: "6px 0 4px" }}>{m.title}</h3>
+                  <p style={{ fontSize: 13.5, color: BODY, lineHeight: 1.5, margin: 0 }}>{m.desc}</p>
                 </div>
-              ))}
-            </div>
+              </div>
+            ))}
           </div>
         </div>
       </section>

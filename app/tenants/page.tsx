@@ -26,19 +26,19 @@ const HAIR = "#eceff4";
 
 const journey = [
   { num: "01", title: "Browse Properties", desc: "Search homes across Leeds & Manchester by price, area and bedrooms." },
-  { num: "02", title: "Book Your Viewing Online", desc: "Pick a time that works for you and confirm instantly — fully online." },
+  { num: "02", title: "Book Your Viewing Online", desc: "Pick a time that works for you and confirm instantly, fully online." },
   { num: "03", title: "View the Home", desc: "Meet our local team at the property and take your time looking around." },
   { num: "04", title: "Apply Online", desc: "Submit your application digitally and upload documents securely." },
-  { num: "05", title: "Referencing & Checks", desc: "Identity, right to rent, credit and employment — all handled digitally." },
-  { num: "06", title: "Pay the Holding Deposit", desc: "Takes the home off the market — deducted from your first month's rent." },
+  { num: "05", title: "Referencing & Checks", desc: "Identity, right to rent, credit and employment: all handled digitally." },
+  { num: "06", title: "Pay the Holding Deposit", desc: "Takes the home off the market. Deducted from your first month's rent." },
   { num: "07", title: "Sign Your Tenancy", desc: "Review and e-sign your agreement from any device." },
   { num: "08", title: "Collect Keys & Move In", desc: "We hand over the keys and help you settle into your new home." },
 ];
 
 const pillars = [
-  { icon: "💻", title: "Online, start to finish", desc: "Viewings, applications and maintenance — no calls, no messages, no emails." },
+  { icon: "💻", title: "Online, start to finish", desc: "Viewings, applications and maintenance: no calls, no messages, no emails." },
   { icon: "📍", title: "A real local team", desc: "People in Leeds and Manchester who know the streets you're searching." },
-  { icon: "🤝", title: "Help & Support", desc: "Repairs coordinated with the right contractor, fast — and you're kept updated." },
+  { icon: "🤝", title: "Help & Support", desc: "Repairs coordinated with the right contractor, fast. You're kept updated throughout." },
 ];
 
 const reviews = [
@@ -351,11 +351,11 @@ export default function TenantsPage() {
             </h2>
             <p style={{ color: BODY, fontSize: 16, lineHeight: 1.75, marginBottom: 18 }}>
               Endless phone calls that go unanswered. Emails lost in someone&apos;s inbox. Agents who vanish
-              the day you sign. That&apos;s the renting most people know — and it&apos;s exactly what we set out to end.
+              the day you sign. That&apos;s the renting most people know, and it&apos;s exactly what we set out to end.
             </p>
             <p style={{ color: BODY, fontSize: 16, lineHeight: 1.75, marginBottom: 22 }}>
-              So we rebuilt the whole experience around you. Every step lives <span style={{ fontWeight: 700 }}>online</span> —
-              booking a viewing, applying, reporting a repair — and behind it sits an expert local team who actually pick up when it matters.
+              So we rebuilt the whole experience around you. Every step lives <span style={{ fontWeight: 700 }}>online</span>{" "}
+              (booking a viewing, applying, reporting a repair), and behind it sits an expert local team who actually pick up when it matters.
             </p>
             <p style={{ color: INK, fontSize: 18, fontWeight: 700, lineHeight: 1.5, margin: 0 }}>
               Renting shouldn&apos;t feel like chasing. <span style={{ color: GREEN }}>It should feel like coming home.</span>
@@ -536,7 +536,7 @@ export default function TenantsPage() {
             <p className="tp-kicker">Renting Guides</p>
             <h2 className="tp-h2" style={{ marginBottom: 14 }}>Benefit from our expertise.</h2>
             <p className="tp-lead" style={{ maxWidth: 620, margin: "0 auto" }}>
-              Practical guides covering the topics and tips that matter most to tenants — from holding
+              Practical guides covering the topics and tips that matter most to tenants, from holding
               deposits to moving-in day.
             </p>
           </div>

@@ -145,6 +145,15 @@ service cloud.firestore {
       allow read, update, delete: if isAdmin();
     }
 
+    // Instant-valuation leads (contact details + generated report figures).
+    // Written server-side only (firebase-admin in /api/instant-valuation), so
+    // no client create rule; listed explicitly, like the form collections
+    // above, so the record shows admin-read intent rather than relying
+    // silently on the default deny.
+    match /instantValuationLeads/{id} {
+      allow read, update, delete: if isAdmin();
+    }
+
     // The rent-review property catalogue. Read/written only via the Admin SDK
     // (the public form list and the dashboard manager both go through /api
     // routes), so no client access is needed.

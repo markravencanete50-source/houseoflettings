@@ -116,7 +116,7 @@ export default function RentReviewOverviewPage() {
           <div className="rr-glow-dark" aria-hidden />
           <div className="rr-wrap" style={{ position: 'relative', zIndex: 1 }}>
             <div className="rr-head hol-reveal">
-              <div className="hol-eyebrow" style={{ color: '#7db4f0' }}>The Context</div>
+              <div className="hol-eyebrow" style={{ color: 'var(--price-green-bright)' }}>The Context</div>
               <h2 className="hol-h2" style={{ color: '#fff' }}>What the market tells us</h2>
               <p className="rr-lead" style={{ color: 'rgba(255,255,255,0.6)' }}>
                 Local rents move year to year with supply and demand. Reviewing regularly — and evidencing every figure —
@@ -299,10 +299,10 @@ const PAGE_CSS = `
   .rr-glow-dark { position:absolute; inset:0; background:radial-gradient(ellipse at 50% 40%, rgba(37,99,235,0.16) 0%, transparent 68%); pointer-events:none; }
   .rr-stat-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:18px; }
   @media(max-width:760px){ .rr-stat-grid{grid-template-columns:1fr 1fr;} }
-  .rr-stat { background:rgba(255,255,255,0.04); border:1px solid rgba(125,180,240,0.22); border-radius:16px; padding:26px 22px; text-align:center; transition:transform .25s,border-color .25s,background .25s; }
-  .rr-stat:hover { transform:translateY(-5px); border-color:rgba(125,180,240,0.5); background:rgba(255,255,255,0.06); }
-  .rr-stat-big { font-size:clamp(34px,5vw,46px); font-weight:800; color:#fff; line-height:1; letter-spacing:-.02em; }
-  .rr-stat-small { font-size:14px; font-weight:600; color:#7db4f0; margin-left:8px; letter-spacing:0; white-space:nowrap; }
+  .rr-stat { background:rgba(22,163,74,0.06); border:1px solid rgba(74,222,128,0.24); border-radius:16px; padding:26px 22px; text-align:center; transition:transform .25s,border-color .25s,background .25s,box-shadow .25s; }
+  .rr-stat:hover { transform:translateY(-5px); border-color:rgba(74,222,128,0.55); background:rgba(22,163,74,0.10); box-shadow:0 18px 34px -22px rgba(22,163,74,0.6); }
+  .rr-stat-big { font-size:clamp(34px,5vw,46px); font-weight:800; color:var(--price-green-bright); line-height:1; letter-spacing:-.02em; text-shadow:0 0 22px rgba(74,222,128,0.25); }
+  .rr-stat-small { font-size:14px; font-weight:600; color:#86efac; margin-left:8px; letter-spacing:0; white-space:nowrap; }
   .rr-stat-label { font-size:12.5px; color:rgba(255,255,255,0.6); margin-top:12px; line-height:1.5; }
 
   /* COMPARE */
@@ -327,7 +327,7 @@ const PAGE_CSS = `
 
   .rr-diff-list { list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:14px; }
   .rr-diff-list li { display:flex; gap:11px; align-items:flex-start; font-size:14px; color:#1e3a5f; line-height:1.6; font-weight:500; }
-  .rr-diff-list svg { flex:none; color:#2563eb; margin-top:1px; }
+  .rr-diff-list svg { flex:none; color:var(--price-green); margin-top:1px; }
 
   /* TIMELINE */
   .rr-timeline { display:grid; grid-template-columns:repeat(4,1fr); gap:20px; }

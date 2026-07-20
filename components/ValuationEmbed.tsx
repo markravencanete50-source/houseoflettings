@@ -82,7 +82,7 @@ export default function ValuationEmbed() {
           margin-bottom: 0;
         }
 
-        /* Gold filled — Instant Valuation */
+        /* Gold filled, Instant Valuation */
         .btn-valuation {
           background: #b8962e;
           color: #fff;
@@ -100,7 +100,7 @@ export default function ValuationEmbed() {
           border-color: #9a7a24;
         }
 
-        /* Outlined — Assessment */
+        /* Outlined, Assessment */
         .btn-assessment {
           background: transparent;
           color: #fff;

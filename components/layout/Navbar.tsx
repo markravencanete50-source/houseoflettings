@@ -93,7 +93,7 @@ export default function Navbar() {
             <span className="hol-nav__logo-sub">Leeds &amp; Manchester</span>
           </Link>
 
-          {/* Hamburger — mobile only */}
+          {/* Hamburger, mobile only */}
           <button
             type="button"
             className="hol-nav__burger"
@@ -106,7 +106,7 @@ export default function Navbar() {
             <span className={`hol-nav__burger-bar ${mobileMenuOpen ? 'is-open' : ''}`} />
           </button>
 
-          {/* Links + CTAs — always visible on desktop, collapses into a dropdown on mobile */}
+          {/* Links + CTAs, always visible on desktop, collapses into a dropdown on mobile */}
           <div className={`hol-nav__links ${mobileMenuOpen ? 'hol-nav__links--open' : ''}`}>
             <NavDropdown label="Landlord" href="/landlords" items={LANDLORD_ITEMS} />
             <NavDropdown label="Tenant" href="/tenants" items={TENANT_ITEMS} />

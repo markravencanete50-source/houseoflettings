@@ -69,7 +69,7 @@ function FileUpload({
   const inputRef = useRef<HTMLInputElement>(null);
 
   // New selections are ADDED to what's already uploaded (mobile pickers often
-  // return one file at a time) — never replace previous files.
+  // return one file at a time), never replace previous files.
   const handleFiles = async (files: FileList | null) => {
     if (!files || files.length === 0) return;
     const room = Math.max(0, maxFiles - state.urls.length);

@@ -18,12 +18,12 @@ interface PropertyFormProps {
    * browser. The staff dashboard passes '/api/staff/properties': a staff member
    * is often signed in by session cookie with no Firebase client user, so a
    * browser write is unauthenticated (rules reject it) and, when Firestore is
-   * unreachable, never settles at all — the form just span forever.
+   * unreachable, never settles at all, the form just span forever.
    */
   createVia?: string;
   /**
    * Update an existing property through this server route (PATCH) instead of a
-   * browser Firestore write — for the same cookie-auth reason as createVia. The
+   * browser Firestore write, for the same cookie-auth reason as createVia. The
    * staff dashboard passes '/api/staff/properties'.
    */
   updateVia?: string;
@@ -183,7 +183,7 @@ export default function PropertyForm({
   const [dragOverIdx, setDragOverIdx] = useState<number | null>(null);
 
   const handleDragStart = (e: React.DragEvent, idx: number) => {
-    // Kill the giant browser ghost image — replace with invisible 1px div
+    // Kill the giant browser ghost image, replace with invisible 1px div
     const ghost = document.createElement('div');
     ghost.style.cssText = 'width:1px;height:1px;opacity:0;position:fixed;top:-9999px;left:-9999px';
     document.body.appendChild(ghost);

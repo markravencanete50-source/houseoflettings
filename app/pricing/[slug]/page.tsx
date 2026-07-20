@@ -6,7 +6,7 @@
 // plain-English explanation (grouped by category), followed by what is not
 // included, the other packages, and a closing CTA. Server component for SEO;
 // styling lives in page.module.css (a CSS Module, so it survives the production
-// build — an inline <style> in a Server Component gets hoisted away by React).
+// build, an inline <style> in a Server Component gets hoisted away by React).
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';

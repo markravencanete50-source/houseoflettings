@@ -1,7 +1,7 @@
 // app/pricing/layout.tsx
 // Server layout for /pricing. The page itself is a client component (it can't
-// export metadata), so page-specific SEO — title, description, canonical and
-// JSON-LD structured data — lives here.
+// export metadata), so page-specific SEO, title, description, canonical and
+// JSON-LD structured data, lives here.
 import type { Metadata } from 'next';
 import { BUNDLES } from '@/lib/bundles';
 import { PRICING_FAQ } from '@/lib/pricingMatrix';

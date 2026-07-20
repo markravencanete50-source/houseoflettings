@@ -7,7 +7,7 @@ import Footer from "@/components/layout/Footer";
 import { guidesByDate } from "@/lib/guides";
 
 /* ─────────────────────────────────────────────────────────────────────────
-   Tenant page — hi-fi redesign.
+   Tenant page, hi-fi redesign.
    Palette: blue is the lead colour, green the warm secondary, black/white the
    base, and a single yellow-orange accent reserved for the maintenance CTA.
    Blue TEXT rule: #0A46EF for small text (kickers/meta), #253996 for big/bold.
@@ -86,7 +86,7 @@ const faqs = [
 export default function TenantsPage() {
   const [openFaq, setOpenFaq] = useState<number>(0);
 
-  // JS-gated scroll reveal — content stays visible if scripting is unavailable.
+  // JS-gated scroll reveal, content stays visible if scripting is unavailable.
   useEffect(() => {
     document.body.classList.add("tp-js");
     const els = Array.from(document.querySelectorAll(".reveal"));
@@ -120,7 +120,7 @@ export default function TenantsPage() {
         .tp-lead { font-size: 16px; line-height: 1.7; color: ${BODY}; }
         .tp-2col { display: grid; grid-template-columns: 1.05fr 1fr; gap: 60px; align-items: center; }
 
-        /* Buttons — uniform pill sizing */
+        /* Buttons, uniform pill sizing */
         .tp-btn { height: 54px; min-width: 225px; padding: 0 34px; border-radius: 999px;
           font-size: 16px; font-weight: 700; display: inline-flex; align-items: center; justify-content: center;
           gap: 10px; text-decoration: none; box-sizing: border-box; cursor: pointer; border: 1.5px solid transparent;
@@ -135,13 +135,13 @@ export default function TenantsPage() {
         .tp-ghost { background: transparent; color: #fff; border-color: rgba(255,255,255,0.5); }
         .tp-ghost:hover { border-color: #fff; background: rgba(255,255,255,0.08); }
 
-        /* Cards — soft depth over flat borders */
+        /* Cards, soft depth over flat borders */
         .tp-card { background: #fff; border: 1px solid rgba(24,33,53,0.05); border-radius: 18px; padding: 26px;
           box-shadow: 0 14px 34px -14px rgba(24,33,53,0.16), 0 3px 10px -4px rgba(24,33,53,0.08);
           transition: transform .34s cubic-bezier(.22,1,.36,1), box-shadow .34s ease, border-color .34s ease; }
         .tp-card:hover { transform: translateY(-10px) scale(1.012); border-color: rgba(29,78,216,0.28);
           box-shadow: 0 30px 56px -20px rgba(29,78,216,0.28), 0 10px 22px -12px rgba(24,33,53,0.18); }
-        /* Journey cards — extra blue-tinted depth so they never read as flat white */
+        /* Journey cards, extra blue-tinted depth so they never read as flat white */
         .tp-journey .tp-card { box-shadow: 0 18px 40px -16px rgba(29,78,216,0.22), 0 4px 14px -4px rgba(24,33,53,0.12); }
         .tp-journey .tp-card:hover { box-shadow: 0 34px 60px -20px rgba(29,78,216,0.34), 0 10px 22px -12px rgba(24,33,53,0.2); }
 
@@ -160,14 +160,14 @@ export default function TenantsPage() {
           display: inline-flex; align-items: center; justify-content: center; margin-top: 1px; }
         .tp-check svg { width: 12px; height: 12px; stroke: #16a34a; stroke-width: 3; fill: none; stroke-linecap: round; stroke-linejoin: round; }
 
-        /* Promise pills — dark-blue background with a green tick */
+        /* Promise pills, dark-blue background with a green tick */
         .tp-promise { display: inline-flex; align-items: center; gap: 10px;
           background: linear-gradient(135deg, #1c2b4d 0%, #101a30 100%);
           border: 1px solid rgba(255,255,255,0.08); border-radius: 999px; padding: 12px 20px; font-size: 15px; font-weight: 700; color: #e7eefb;
           box-shadow: 0 10px 24px -10px rgba(16,26,48,0.7); transition: transform .25s cubic-bezier(.22,1,.36,1), box-shadow .25s ease; }
         .tp-promise:hover { transform: translateY(-4px); box-shadow: 0 18px 34px -12px rgba(16,26,48,0.85); }
 
-        /* Image frames — subtle zoom on hover */
+        /* Image frames, subtle zoom on hover */
         .tp-imgframe { transition: box-shadow .35s ease; }
         .tp-imgframe img { transition: transform .7s cubic-bezier(.22,1,.36,1); }
         .tp-imgframe:hover img { transform: scale(1.05); }
@@ -183,11 +183,11 @@ export default function TenantsPage() {
         .area-ov { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(24,33,53,0) 34%, rgba(24,33,53,0.82) 100%); }
         .area-txt { position: absolute; left: 18px; right: 18px; bottom: 16px; color: #fff; z-index: 1; }
 
-        /* Leeds property cards — stretch each to equal height so buttons align */
+        /* Leeds property cards, stretch each to equal height so buttons align */
         .leeds-grid > .reveal { display: flex; }
         .leeds-grid > .reveal > * { flex: 1; }
 
-        /* Pillars (light section) — white cards with depth */
+        /* Pillars (light section), white cards with depth */
         .tp-pillar { display: flex; gap: 16px; align-items: flex-start; background: #fff;
           border: 1px solid rgba(29,78,216,0.08); border-radius: 16px; padding: 20px 22px;
           box-shadow: 0 14px 32px -16px rgba(24,33,53,0.16);
@@ -229,7 +229,7 @@ export default function TenantsPage() {
           /* A Place to Call Home and Reporting Maintenance each become one
              self-contained card, the same shape as a pricing card: image on top,
              then copy and buttons in one box. This starts at 980px, where
-             .tp-2col stops being two columns. Both sections share these rules —
+             .tp-2col stops being two columns. Both sections share these rules,
              they have the same structure (image div, then copy div). */
           .tp-aptc, .tp-maint {
             padding: 0 !important; margin: 40px 20px; max-width: 640px; gap: 0 !important;
@@ -276,7 +276,7 @@ export default function TenantsPage() {
 
       <Navbar />
 
-      {/* ── 1 · HERO (previous design — Browse Properties highlighted + Report a Maintenance) ── */}
+      {/* ── 1 · HERO (previous design, Browse Properties highlighted + Report a Maintenance) ── */}
       <ServiceHero
         eyebrow="For Tenants · Leeds & Manchester"
         title={<>Looking for your next home? <span style={{ color: "#6ea8ff" }}>House of Lettings holds the key.</span></>}

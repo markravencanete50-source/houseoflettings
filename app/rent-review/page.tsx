@@ -10,11 +10,11 @@ import Footer from '@/components/layout/Footer';
 import RevealCards from '@/components/RevealCards';
 
 const WHY = [
-  { icon: '⚖️', title: 'Fair, market-aligned rent', desc: 'A review keeps your rent in step with what similar homes nearby actually let for today — fair for you and fair for us.' },
+  { icon: '⚖️', title: 'Fair, market-aligned rent', desc: 'A review keeps your rent in step with what similar homes nearby actually let for today, fair for you and fair for us.' },
   { icon: '📈', title: 'No sudden shocks', desc: 'Small, evidence-based adjustments once a year are far easier to plan for than one large correction after rent has drifted for years.' },
   { icon: '🛠️', title: 'A well-maintained home', desc: 'A sustainable rent funds ongoing repairs, safety checks, and the gas, electrical and EPC compliance that keeps you safe.' },
   { icon: '🤝', title: 'Longer, stable tenancies', desc: 'Keeping a good tenant almost always beats an empty property. Reviews are designed to keep you settled, not to move you on.' },
-  { icon: '🔍', title: 'Full transparency', desc: 'You see the current figure, the proposed figure and the reasoning behind it — nothing is hidden or automatic.' },
+  { icon: '🔍', title: 'Full transparency', desc: 'You see the current figure, the proposed figure and the reasoning behind it, nothing is hidden or automatic.' },
   { icon: '💬', title: 'A conversation, not a demand', desc: 'Happy with the proposal? Accept in a click. Not sure? Open a discussion and tell us the figure that works for you.' },
 ];
 
@@ -22,15 +22,15 @@ const INDUSTRY = [
   { tag: 'Common', title: 'Market-comparable review', desc: 'Most agents review at renewal by comparing your home against similar local properties currently on the market.' },
   { tag: 'Common', title: 'Index-linked increases', desc: 'Some tenancies contain a clause tying the rent to inflation (RPI or CPI), so it rises by a set index each year regardless of the local market.' },
   { tag: 'Statutory', title: 'Section 13 notice', desc: 'For rolling (periodic) tenancies in England, landlords can propose an increase once a year through a formal Section 13 notice.' },
-  { tag: 'Blunt', title: 'Automatic fixed uplift', desc: 'A minority of agents write a flat percentage rise into the contract every year — simple, but it ignores whether the local market actually moved.' },
+  { tag: 'Blunt', title: 'Automatic fixed uplift', desc: 'A minority of agents write a flat percentage rise into the contract every year. It is simple, but it ignores whether the local market actually moved.' },
 ];
 
 const DIFF = [
-  'Evidence-based, never automatic — we benchmark your actual property against live local comparables.',
-  'Transparent — you see the current rent, the proposed rent and the reasoning, side by side.',
-  'Collaborative — accept online, or propose your own figure and tell us why.',
-  'Fully online — no back-and-forth calls, no posted forms; the whole review takes minutes.',
-  'A whole-tenancy check-in — we refresh your details, documents and any maintenance in one place.',
+  'Evidence-based, never automatic, we benchmark your actual property against live local comparables.',
+  'Transparent, you see the current rent, the proposed rent and the reasoning, side by side.',
+  'Collaborative, accept online, or propose your own figure and tell us why.',
+  'Fully online, no back-and-forth calls, no posted forms; the whole review takes minutes.',
+  'A whole-tenancy check-in, we refresh your details, documents and any maintenance in one place.',
 ];
 
 const STEPS = [
@@ -49,10 +49,10 @@ const STATS = [
 
 const FAQS = [
   { q: 'Why is my rent being reviewed?', a: 'We review the rent on every managed tenancy roughly once a year, usually at renewal, to keep it aligned with the current local market. It keeps things fair on both sides and avoids the rent drifting so far that a large one-off increase becomes necessary later.' },
-  { q: 'Does a review always mean my rent goes up?', a: 'No. A review is exactly that — a review. Depending on what the local market is doing, the proposed rent may rise modestly, or stay the same. Whatever the outcome, we show you the evidence behind it.' },
+  { q: 'Does a review always mean my rent goes up?', a: 'No. A review is exactly that, a review. Depending on what the local market is doing, the proposed rent may rise modestly, or stay the same. Whatever the outcome, we show you the evidence behind it.' },
   { q: 'What if I don’t agree with the proposed rent?', a: 'That’s absolutely fine. When you reach the rent step, choose “I’d like to discuss the rent”, tell us the figure you feel is fair and why, and your property manager will talk it through with you before anything is finalised.' },
   { q: 'How often do rent reviews happen?', a: 'Typically every 12 months, in line with your tenancy renewal. We’ll always contact you in good time rather than springing it on you.' },
-  { q: 'Why do you ask for documents again?', a: 'A renewal is a good moment to refresh your referencing — recent bank statements, payslips and ID confirm your circumstances are up to date. It only takes a few minutes and you can upload everything securely online.' },
+  { q: 'Why do you ask for documents again?', a: 'A renewal is a good moment to refresh your referencing, recent bank statements, payslips and ID confirm your circumstances are up to date. It only takes a few minutes and you can upload everything securely online.' },
 ];
 
 export default function RentReviewOverviewPage() {
@@ -73,8 +73,8 @@ export default function RentReviewOverviewPage() {
             <div className="rr-badge">Rent Review Process</div>
             <h1 className="rr-hero-h1">Rent reviews, done fairly and transparently</h1>
             <p className="rr-hero-sub">
-              Once a year we check your rent against the real local market — with the evidence shown, the reasoning
-              explained, and the final say a conversation — never a demand. Here&rsquo;s why we do it, and how our
+              Once a year we check your rent against the real local market, with the evidence shown, the reasoning
+              explained, and the final say a conversation, never a demand. Here&rsquo;s why we do it, and how our
               approach compares with the rest of the industry.
             </p>
             <div className="rr-hero-cta-row">
@@ -119,7 +119,7 @@ export default function RentReviewOverviewPage() {
               <div className="hol-eyebrow" style={{ color: 'var(--price-green-bright)' }}>The Context</div>
               <h2 className="hol-h2" style={{ color: '#fff' }}>What the market tells us</h2>
               <p className="rr-lead" style={{ color: 'rgba(255,255,255,0.6)' }}>
-                Local rents move year to year with supply and demand. Reviewing regularly — and evidencing every figure —
+                Local rents move year to year with supply and demand. Reviewing regularly, and evidencing every figure,
                 keeps things fair and predictable, instead of letting rent drift until a big correction is unavoidable.
               </p>
             </div>
@@ -140,7 +140,7 @@ export default function RentReviewOverviewPage() {
             <div className="rr-head hol-reveal">
               <div className="hol-eyebrow">The Industry</div>
               <h2 className="hol-h2">How rent reviews work across the industry</h2>
-              <p className="rr-lead">Estate and lettings agents take a few different routes. Some are fairer and clearer than others — here&rsquo;s the landscape, and where we sit in it.</p>
+              <p className="rr-lead">Estate and lettings agents take a few different routes. Some are fairer and clearer than others, here&rsquo;s the landscape, and where we sit in it.</p>
             </div>
 
             <div className="rr-compare">
@@ -231,7 +231,7 @@ export default function RentReviewOverviewPage() {
           <div className="rr-glow-dark" aria-hidden />
           <div style={{ position: 'relative', zIndex: 1, textAlign: 'center' }}>
             <h2 className="rr-cta-title">Ready to start your rent review?</h2>
-            <p className="rr-cta-text">Confirm your details, review the proposed rent, and renew — all in a few minutes, online.</p>
+            <p className="rr-cta-text">Confirm your details, review the proposed rent, and renew, all in a few minutes, online.</p>
             <Link href="/rent-review/apply" className="rr-cta rr-cta--primary rr-cta--lg">
               Rent Review
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 12h14M12 5l7 7-7 7" /></svg>
@@ -351,4 +351,34 @@ const PAGE_CSS = `
   .rr-cta-band { text-align:center; }
   .rr-cta-title { font-size:clamp(26px,3.6vw,44px); font-weight:700; color:#fff; margin:0 0 16px; }
   .rr-cta-text { font-size:16px; color:rgba(255,255,255,0.6); max-width:520px; margin:0 auto 34px; line-height:1.7; font-weight:300; }
+
+  /* Nothing on the page may push the body wider than the screen. */
+  .rr-hero, .rr-sec { overflow-x:clip; }
+  .rr-hero-h1, .rr-hero-sub, .rr-lead, .rr-why-desc, .rr-ind-item p, .rr-diff-list li,
+  .rr-step-desc, .rr-faq-q, .rr-faq-a p, .rr-cta-text, .hol-h2 { overflow-wrap:break-word; }
+
+  /* ── Phones ── */
+  @media(max-width:600px){
+    .rr-sec { padding:clamp(44px,11vw,60px) 18px; }
+    .rr-hero { padding:calc(64px + 44px) 18px 64px; }
+    .rr-hero-h1 { font-size:clamp(27px,8vw,34px); line-height:1.15; }
+    .rr-hero-sub { font-size:15px; line-height:1.65; margin-bottom:28px; }
+    .rr-head { margin-bottom:30px; }
+    .rr-lead { font-size:14.5px; }
+    /* Full-width, stacked buttons are easier to tap than a cramped row. */
+    .rr-hero-cta-row { flex-direction:column; gap:10px; }
+    .rr-hero-cta-row .rr-cta { width:100%; }
+    .rr-cta--lg { width:100%; }
+    .rr-why-card, .rr-compare-col, .rr-step { padding:20px 18px; }
+    .rr-stat { padding:20px 14px; }
+    .rr-stat-big { font-size:30px; }
+    .rr-stat-small { font-size:13px; margin-left:6px; }
+    .rr-stat-label { font-size:11.5px; }
+    .rr-faq-q { padding:15px 16px; font-size:14.5px; }
+    .rr-faq-a p { padding:0 16px 15px; }
+  }
+  /* ── Small phones: one stat per row so figures never crowd ── */
+  @media(max-width:380px){
+    .rr-stat-grid { grid-template-columns:1fr; }
+  }
 `;

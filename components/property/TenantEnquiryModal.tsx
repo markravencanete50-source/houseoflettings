@@ -22,7 +22,7 @@ const EMPTY_FORM = {
   phone: "",
   postcode: "",
   // Viewing appointment (the calendar)
-  city: "",   // 'Manchester' | 'Leeds' — drives slot availability
+  city: "",   // 'Manchester' | 'Leeds', drives slot availability
   date: "",   // YYYY-MM-DD
   time: "",   // HH:mm slot
   // About your move
@@ -188,10 +188,10 @@ interface TenantEnquiryModalProps {
   onClose: () => void;
   propertyTitle?: string;
   propertyPrice?: number;
-  /** Postcode of the property being enquired about — pre-fills the postcode field. */
+  /** Postcode of the property being enquired about, pre-fills the postcode field. */
   propertyPostcode?: string;
   /** City the property is in, auto-detected by the listing page. When set, the
-   *  tenant isn't asked to choose — the viewing is locked to this city. */
+   *  tenant isn't asked to choose, the viewing is locked to this city. */
   propertyCity?: City | null;
   /** Full address of the property. When set, viewing times come from this
    *  property's calendar availability windows (per-property booking mode). */
@@ -232,7 +232,7 @@ export default function TenantEnquiryModal({
   // Per-property mode: the dates this property has viewing availability on.
   const [availDates, setAvailDates] = useState<string[] | null>(null);
 
-  // "None of these suit me" path — the tenant proposes their own availability
+  // "None of these suit me" path, the tenant proposes their own availability
   // instead of picking a fixed slot. These requests skip the slot-booking API
   // (which requires a concrete date/time) and go to the enquiry endpoint so the
   // team can arrange a viewing manually.
@@ -277,7 +277,7 @@ export default function TenantEnquiryModal({
   useEffect(() => {
     if (!isOpen || !form.date) { setSlots([]); setLockedCity(null); setSlotsError(""); return; }
     if (hasProperty) {
-      // availDates === null means "still loading" — allow the fetch through.
+      // availDates === null means "still loading", allow the fetch through.
       if (availDates && !availDates.includes(form.date)) {
         setSlots([]); setLockedCity(null); setSlotsError("");
         return;
@@ -313,7 +313,7 @@ export default function TenantEnquiryModal({
 
   // Pre-fill the postcode from the property being viewed, so the tenant is
   // never asked for something the page already knows. Only fills an empty
-  // field — anything they typed themselves is kept.
+  // field, anything they typed themselves is kept.
   useEffect(() => {
     if (isOpen && propertyPostcode) {
       setForm(f => (f.postcode ? f : { ...f, postcode: propertyPostcode }));
@@ -479,7 +479,7 @@ export default function TenantEnquiryModal({
       const data = await res.json();
       if (res.status === 409) {
         // Someone took the slot (or the day locked to the other city) between
-        // loading and submitting — clear the choice and refresh the grid.
+        // loading and submitting, clear the choice and refresh the grid.
         setForm(f => ({ ...f, time: "" }));
         setRefreshKey(k => k + 1);
         setErrorMsg(data.message || "That time was just taken. Please pick another.");
@@ -505,7 +505,7 @@ export default function TenantEnquiryModal({
       weekday: "short", day: "numeric", month: "short",
     });
 
-  // The next handful of bookable dates — the "when can I book?" hint.
+  // The next handful of bookable dates, the "when can I book?" hint.
   const upcomingDates = hasProperty
     ? (availDates ?? []).filter((d) => d >= todayStr).slice(0, 5)
     : activeCity
@@ -622,7 +622,7 @@ export default function TenantEnquiryModal({
                 {/* ── Choose your viewing (calendar) ── */}
                 <SectionTitle>Choose your viewing</SectionTitle>
                 {cityDetected ? (
-                  // City auto-detected from the property — shown, not asked.
+                  // City auto-detected from the property, shown, not asked.
                   <div className="hol-field hol-field--mb">
                     <label className="hol-label">Viewing location</label>
                     <div className="hol-city-detected">

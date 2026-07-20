@@ -223,7 +223,7 @@ export default function BookValuationPage() {
                       </p>
                     </div>
 
-                    {/* Postcode — look it up here, then pick the address below to auto-fill the rest */}
+                    {/* Postcode, look it up here, then pick the address below to auto-fill the rest */}
                     <div className="hol-field hol-field--full">
                       <label className="hol-label">Postcode<span className="hol-req">*</span></label>
                       <PostcodeLookup
@@ -239,7 +239,7 @@ export default function BookValuationPage() {
                       </p>
                     </div>
 
-                    {/* 1st Line of Address — auto-filled, still editable */}
+                    {/* 1st Line of Address, auto-filled, still editable */}
                     <div className="hol-field hol-field--full">
                       <label className="hol-label">1st Line of Address<span className="hol-req">*</span></label>
                       <input
@@ -267,7 +267,7 @@ export default function BookValuationPage() {
                       {errors.city && <p className="hol-err">{errors.city}</p>}
                     </div>
 
-                    {/* County — new, auto-filled from postcode lookup */}
+                    {/* County, new, auto-filled from postcode lookup */}
                     <div className="hol-field">
                       <label className="hol-label">County <span style={{ color: '#9ca3af', fontWeight: 400 }}>(optional)</span></label>
                       <input

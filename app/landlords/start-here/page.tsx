@@ -1,11 +1,11 @@
 // app/landlords/start-here/page.tsx
 // The landlord "Start Here" guide: everything a landlord needs before letting
-// with us, on one page — who we are, the process end to end, how long it takes,
+// with us, on one page, who we are, the process end to end, how long it takes,
 // what it costs, what we need from them, and the legal duties they carry.
 // Reached from the "Start Here" CTA on /landlords and linked in the sitemap.
 //
 // A Server Component (so it can export metadata and JSON-LD and be statically
-// rendered for SEO), which means styling lives in page.module.css — an inline
+// rendered for SEO), which means styling lives in page.module.css, an inline
 // <style> in a Server Component gets hoisted away by React in a production
 // build. The FAQ uses native <details>/<summary> so the page needs no client JS.
 import type { Metadata } from 'next';
@@ -463,7 +463,7 @@ export default function StartHerePage() {
                     {d.items.map((it) => (
                       <li key={it.label}>
                         <Tick />
-                        <span><b>{it.label}</b> &mdash; {it.detail}</span>
+                        <span><b>{it.label}</b>, {it.detail}</span>
                       </li>
                     ))}
                   </ul>
@@ -543,7 +543,7 @@ export default function StartHerePage() {
                   <li><Tick /><span>Keep it <b>free of serious hazards</b> and fit for human habitation.</span></li>
                   <li><Tick /><span>Repair the <b>structure, exterior and installations</b> for heat, water and power.</span></li>
                   <li><Tick /><span>Give <b>24 hours&rsquo; notice</b> in writing before visiting.</span></li>
-                  <li><Tick /><span>Hold <b>landlord insurance</b> &mdash; home insurance does not cover a let property.</span></li>
+                  <li><Tick /><span>Hold <b>landlord insurance</b>, home insurance does not cover a let property.</span></li>
                 </ul>
               </div>
             </div>

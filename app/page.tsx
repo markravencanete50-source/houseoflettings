@@ -634,7 +634,7 @@ export default function HomePage() {
             Served as a directly-preloaded static WebP (see layout.tsx) rather than
             through next/image: heropage.webp is already only ~52KB, so the optimizer
             adds a network hop + AVIF-decode cost on throttled mobile with no byte
-            saving — a measured LCP/PageSpeed regression. Keep it a raw background. */}
+            saving, a measured LCP/PageSpeed regression. Keep it a raw background. */}
         <div style={{
           position: 'absolute', inset: 0,
           backgroundImage: 'url(/images/heropage.webp)',
@@ -785,7 +785,7 @@ export default function HomePage() {
           .hp-svc-row.hp-rev.is-in .hp-svc-copy { animation-name: hp-in-right; }
           .hp-svc-row.hp-rev.is-in .hp-svc-visual { animation-name: hp-in-left; }
         }
-        /* mobile: each row becomes ONE card, shaped like a pricing card —
+        /* mobile: each row becomes ONE card, shaped like a pricing card,
            navy spec panel as the header, copy and CTA in the body below.
            gap:0 is what closes the seam between the two grid cells. */
         @media (max-width: 860px) {
@@ -796,7 +796,7 @@ export default function HomePage() {
           }
           .hp-svc-visual { order: -1; }
           /* The panel is now the card's header, so it loses its own rounding,
-             border and shadow — they'd otherwise draw a second box inside the
+             border and shadow, they'd otherwise draw a second box inside the
              card. The gradient and orbs stay. */
           .hp-vis { border-radius: 0; box-shadow: none; border: none; }
           .hp-svc-row:hover .hp-vis { transform: none; box-shadow: none; }
@@ -1227,7 +1227,7 @@ export default function HomePage() {
   `}</style>
   <div className="val-section-inner reveal">
 
-    {/* LEFT — heading + body */}
+    {/* LEFT, heading + body */}
     <div>
       <p className="split-eyebrow" style={{ textAlign: 'left' }}>For Landlords</p>
       <h2 className="split-title" style={{ textAlign: 'left', fontSize: 'clamp(28px,3.5vw,40px)', marginBottom: 20 }}>
@@ -1242,7 +1242,7 @@ export default function HomePage() {
       <ValuationInlineButton />
     </div>
 
-    {/* RIGHT — checklist */}
+    {/* RIGHT, checklist */}
     <div style={{
       background: '#fff',
       borderRadius: 12,

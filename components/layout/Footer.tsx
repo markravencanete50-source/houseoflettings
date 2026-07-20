@@ -143,7 +143,7 @@ export default function Footer() {
           width: 46px; height: 46px; flex-shrink: 0;
           display: inline-flex; align-items: center; justify-content: center;
         }
-        /* The logo carries its own white plate, so no tile behind it — just a
+        /* The logo carries its own white plate, so no tile behind it, just a
            soft, dark shadow that hugs the mark (no bright bloom). */
         .hol-ft__mark img {
           width: 100%; height: 100%; object-fit: contain; display: block;

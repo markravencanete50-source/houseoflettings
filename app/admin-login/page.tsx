@@ -33,7 +33,7 @@ export default function AdminLoginPage() {
       // Admins also need the Firebase client SDK signed in, because the admin
       // dashboard reads Firestore directly in the browser. Staff don't (their
       // dashboard runs entirely off the session cookie), so we skip it for them
-      // — that also avoids a long hang on networks that block Google.
+      //, that also avoids a long hang on networks that block Google.
       if (data.role === 'admin') {
         try { await signIn(email, password); } catch { /* cookie session still works */ }
       }

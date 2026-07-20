@@ -582,7 +582,7 @@ export default function PricingPage() {
           .pr-svc-row.pr-rev.is-in .pr-svc-copy { animation-name: pr-in-right; }
           .pr-svc-row.pr-rev.is-in .pr-svc-visual { animation-name: pr-in-left; }
         }
-        /* mobile: fold each row into one clean card — dark price header on top,
+        /* mobile: fold each row into one clean card, dark price header on top,
            decision copy + full-width CTA below. Redundant name/fee/feature-list
            are trimmed (features live in the comparison table above). */
         @media(max-width:860px){
@@ -663,7 +663,7 @@ export default function PricingPage() {
             <h1 className="pr-hero2-title">Clear pricing, every service side by side</h1>
             <p className="pr-hero2-sub">
               From simply finding the right tenant to fully managing your property, choose the level of support that suits you.
-              No hidden fees, no surprises — and you can upgrade whenever you&apos;re ready.
+              No hidden fees, no surprises, and you can upgrade whenever you&apos;re ready.
             </p>
             <div className="pr-hero2-cta">
               <a href="#compare" className="pr-hero2-btn pr-hero2-btn--solid">Compare packages</a>
@@ -788,7 +788,7 @@ export default function PricingPage() {
           </div>
         </div>
 
-        {/* Mobile: a self-contained package card — NOT the comparison table.
+        {/* Mobile: a self-contained package card, NOT the comparison table.
             Short description, four curated highlights, then a visual coverage
             meter per service category. No 48-row service list on small
             screens; the full breakdown lives in the desktop table. */}
@@ -922,7 +922,7 @@ export default function PricingPage() {
                   </Link>
                 </div>
 
-                {/* Designed spec panel (no photo) — links to the package's own page */}
+                {/* Designed spec panel (no photo), links to the package's own page */}
                 <Link href={`/pricing/${p.id}`} className="pr-svc-visual" aria-label={`See everything included in ${p.label}`}>
                   <div className={`pr-vis${featured ? ' pr-vis--hot' : ''}`}>
                     <span className="pr-orb pr-orb-a" aria-hidden />
@@ -963,7 +963,7 @@ export default function PricingPage() {
         <div className="pr-fees-in">
           <div>
             <h3><span className="n">1</span> Charged on rent collected</h3>
-            <p>Management percentages apply only to the monthly rent we actually collect on your behalf — nothing when the property is empty.</p>
+            <p>Management percentages apply only to the monthly rent we actually collect on your behalf, nothing when the property is empty.</p>
           </div>
           <div>
             <h3><span className="n">2</span> All prices include VAT</h3>
@@ -971,7 +971,7 @@ export default function PricingPage() {
           </div>
           <div>
             <h3><span className="n">3</span> No long tie-ins</h3>
-            <p>Tenant-find packages are one-time with no ongoing commitment. Management runs on a rolling monthly basis — upgrade or adjust any time.</p>
+            <p>Tenant-find packages are one-time with no ongoing commitment. Management runs on a rolling monthly basis, upgrade or adjust any time.</p>
           </div>
         </div>
       </section>
@@ -1007,7 +1007,7 @@ export default function PricingPage() {
         <p className="pr-fine">
           All fees quoted are inclusive of VAT/IPT where applicable. Management percentages are charged on rent collected each month.
           Under the Tenant Fees Act 2019 we do not charge tenants for referencing, admin or renewals. &ldquo;From&rdquo; prices are starting
-          rates; optional-extra pricing may vary by property type and is confirmed in your written quotation. House of Lettings — Leeds &amp; Manchester.
+          rates; optional-extra pricing may vary by property type and is confirmed in your written quotation. House of Lettings, Leeds &amp; Manchester.
         </p>
       </section>
 

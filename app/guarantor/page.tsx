@@ -282,7 +282,7 @@ export default function GuarantorPage() {
 
   const anyUploading = idDoc.uploading || payslips.uploading || proofOfAddress.uploading || bankStatements.uploading || studentDoc.uploading;
 
-  // Full validation — still runs as a safety net right before submission.
+  // Full validation, still runs as a safety net right before submission.
   const validate = (): string | null => {
     if (!selectedPropertyId) return 'Please select the property you are guaranteeing.';
     if (!form.guarantorFullName.trim()) return "Guarantor's full name is required.";
@@ -299,7 +299,7 @@ export default function GuarantorPage() {
     return null;
   };
 
-  // Per-step validation — only checks what's relevant to the step the
+  // Per-step validation, only checks what's relevant to the step the
   // person is currently trying to leave.
   const validateStep = (s: number): string | null => {
     switch (STEPS[s].key) {

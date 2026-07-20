@@ -3,7 +3,7 @@
 // Lightweight scroll-reveal wrapper. Uses a single IntersectionObserver, only
 // animates transform + opacity (GPU-composited, no layout/paint), unobserves
 // after the first reveal, and fully disables under prefers-reduced-motion.
-// No animation library — keeps the branch pages fast.
+// No animation library, keeps the branch pages fast.
 import { useEffect, useRef, useState } from 'react';
 
 interface RevealProps {

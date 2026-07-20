@@ -106,7 +106,7 @@ const PKG_HL: string[][] = [
   ['Everything in Full Management', 'Emergency maintenance support', 'Routine inspection every 6 months', 'Rent guarantee, legal and eviction protection'],
 ];
 
-// Rent Guarantee Insurance carousel — a client-supplied 7-slide educational set
+// Rent Guarantee Insurance carousel, a client-supplied 7-slide educational set
 // (optimised to WebP in /public/images/rent-guarantee). Ties to the rent
 // guarantee cover in the Comprehensive Management package.
 const RGI_SLIDES = [
@@ -245,7 +245,7 @@ function LlxInvestmentSmarter() {
 // ── S7 · WHY LANDLORDS SWITCH ───────────────────────────────────────────────
 // Sits directly under the hero: the four reasons landlords leave their current
 // agent, each answered, then straight into the two entry CTAs. Reassurance
-// before features — this is the section competitors rarely write.
+// before features, this is the section competitors rarely write.
 function LlxWhySwitch() {
   const reasons: { pain: string; fix: string }[] = [
     { pain: 'Slow communication elsewhere', fix: 'A named local agent on a direct line, in Leeds or Manchester. No call centres, no ticket queues.' },
@@ -325,7 +325,7 @@ function LlxWhySwitch() {
 
 // ── S8 · EVERYTHING WE HANDLE ───────────────────────────────────────────────
 // One featured card instead of a grid of equal cards. Desktop: a capability
-// list on the right drives the illustration + copy panel on the left — only
+// list on the right drives the illustration + copy panel on the left, only
 // the panel content changes on click. Mobile: an accordion, because landlords
 // scroll vertically; no horizontal carousel here.
 const HANDLE_ITEMS: { key: string; title: string; lead: string; body: string; points: string[] }[] = [
@@ -557,7 +557,7 @@ function LlxEverythingWeHandle() {
 // Deliberately not interactive: no clicks, no hovers, just scrolling. Seven
 // blocks down a vertical rail; the rail draws itself in as the section enters
 // (piggybacking the existing .hol-reveal → .hol-in observer). Each block is an
-// icon, two sentences and a time estimate — that's enough.
+// icon, two sentences and a time estimate, that's enough.
 const TIMELINE_STEPS: { title: string; body: string; time: string; icon: string }[] = [
   { title: 'Free Valuation', icon: 'search', time: 'Within 48 hours',
     body: 'A local expert values your property against live Leeds and Manchester market data. An honest figure, with the reasoning explained.' },
@@ -668,7 +668,7 @@ function LlxBeforeAfter() {
     { before: 'Unprotected rental income', after: 'Rent guarantee cover available' },
   ];
   // Self-serve online journeys, each a real page. This is the proof behind the
-  // "everything online" claim above — no back-and-forth, available any time.
+  // "everything online" claim above, no back-and-forth, available any time.
   const online: { icon: string; title: string; sub: string; href: string }[] = [
     { icon: '📅', title: 'Book a viewing', sub: 'Pick a slot online', href: '/book-viewing' },
     { icon: '🔧', title: 'Report maintenance', sub: 'Log an issue in minutes', href: '/maintenance/report' },
@@ -804,7 +804,7 @@ function LlxBeforeAfter() {
             </div>
             <h3 className="llx10-online-h3">Almost everything, done online</h3>
             <p className="llx10-online-sub">
-              We&rsquo;ve moved the whole journey online — no chains of emails, no phone tag, no waiting on office hours.
+              We&rsquo;ve moved the whole journey online, no chains of emails, no phone tag, no waiting on office hours.
               Book, apply, report and register in minutes, then let your dedicated manager and our professional maintenance
               team take it from there.
             </p>
@@ -821,7 +821,7 @@ function LlxBeforeAfter() {
             ))}
           </div>
           <p className="llx10-online-foot">
-            See how it all fits together — <Link href="/pricing">explore our services &amp; process</Link>.
+            See how it all fits together, <Link href="/pricing">explore our services &amp; process</Link>.
           </p>
         </div>
       </div>
@@ -1047,7 +1047,7 @@ function LlxChooseService() {
         .llx5-sub { font-size:15px; font-weight:300; color:#6b7280; line-height:1.75; max-width:620px; margin:0 auto; text-wrap:pretty; }
 
         /* Hands-on spectrum: kept from the old section, but now it tracks the
-           carousel — the knob slides as you move through the packages, which is
+           carousel, the knob slides as you move through the packages, which is
            exactly the axis they are ordered on. */
         .llx5-spectrum { max-width:520px; margin:0 auto 34px; text-align:center; }
         .llx5-spec-label { display:block; font-size:11px; font-weight:700; letter-spacing:.12em; text-transform:uppercase; color:#6b7280; margin-bottom:14px; }
@@ -1442,7 +1442,7 @@ export default function LandlordsPage() {
           .ll-hero-stat:nth-child(-n+2) { border-bottom: 1px solid rgba(255,255,255,.08); }
         }
 
-        /* Staggered entrance — layered on ONLY when motion is welcome, so the
+        /* Staggered entrance, layered on ONLY when motion is welcome, so the
            hero content is never left hidden if the animation can't run. */
         @keyframes ll-rise { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: none; } }
         @media (prefers-reduced-motion: no-preference) {
@@ -1557,7 +1557,7 @@ export default function LandlordsPage() {
           .ll-price-fig span { display:block; font-family:'Poppins',sans-serif; font-size:11px; color:#a9c4ea; line-height:1.45; }
           @media (max-width:600px) {
             /* The arrow is a hover affordance, so it can never show on a touch
-               device — reclaim its width for the figures instead. */
+               device, reclaim its width for the figures instead. */
             .ll-price-arrow { display:none; }
             .ll-price-row { gap:10px; padding:14px 10px; }
           }

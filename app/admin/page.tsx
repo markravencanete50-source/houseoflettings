@@ -788,7 +788,7 @@ export default function AdminDashboard() {
                 />
               </div>
 
-              {/* Staff access editor — which dashboard sections this member sees */}
+              {/* Staff access editor, which dashboard sections this member sees */}
               {accessUser && (
                 <div className="dash-card" style={{ marginBottom: 20, border: '1.5px solid #2563eb' }}>
                   <h3 style={{ fontSize: 15, fontWeight: 700, marginBottom: 6 }}>
@@ -1639,7 +1639,7 @@ export default function AdminDashboard() {
                         <div style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '16px 20px', flexWrap: 'wrap' }}>
                           <div style={{ minWidth: 0, flex: 1 }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-                              <strong style={{ fontSize: 15, color: 'var(--navy)' }}>{o.customer?.fullName || '—'}</strong>
+                              <strong style={{ fontSize: 15, color: 'var(--navy)' }}>{o.customer?.fullName || ','}</strong>
                               <span style={{ fontFamily: 'monospace', fontSize: 12, color: 'var(--gray-400)' }}>{o.ref}</span>
                               <span style={{ display: 'inline-block', padding: '3px 10px', borderRadius: 20, fontSize: 11, fontWeight: 700, textTransform: 'uppercase', background: badge.bg, color: badge.color }}>{o.status}</span>
                             </div>
@@ -1664,14 +1664,14 @@ export default function AdminDashboard() {
                                   <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--navy)' }}>{l.name}{l.quantity > 1 ? ` ×${l.quantity}` : ''}</div>
                                   <div style={{ fontSize: 12, color: 'var(--gray-400)' }}>{l.categoryTitle}</div>
                                   {l.variantLabel && <div style={{ fontSize: 12, color: 'var(--gray-600)' }}>{l.variantLabel}</div>}
-                                  {l.addOns?.map((a, ai) => <div key={ai} style={{ fontSize: 12, color: 'var(--gray-600)' }}>+ {a.label}{a.count ? ` ×${a.count}` : ''} — £{a.amount}</div>)}
+                                  {l.addOns?.map((a, ai) => <div key={ai} style={{ fontSize: 12, color: 'var(--gray-600)' }}>+ {a.label}{a.count ? ` ×${a.count}` : ''}, £{a.amount}</div>)}
                                 </div>
                                 <div style={{ fontWeight: 700, color: 'var(--navy)', whiteSpace: 'nowrap' }}>{l.from ? 'from ' : ''}£{l.total}</div>
                               </div>
                             ))}
                             <div style={{ display: 'flex', gap: 24, flexWrap: 'wrap', marginTop: 14, fontSize: 13, color: 'var(--gray-600)' }}>
-                              <div><strong style={{ color: 'var(--navy)' }}>Postcode:</strong> {o.customer?.postcode || '—'}</div>
-                              <div><strong style={{ color: 'var(--navy)' }}>Address:</strong> {o.customer?.address || '—'}</div>
+                              <div><strong style={{ color: 'var(--navy)' }}>Postcode:</strong> {o.customer?.postcode || ','}</div>
+                              <div><strong style={{ color: 'var(--navy)' }}>Address:</strong> {o.customer?.address || ','}</div>
                             </div>
                             {o.customer?.notes && <div style={{ marginTop: 8, fontSize: 13, color: 'var(--gray-600)' }}><strong style={{ color: 'var(--navy)' }}>Notes:</strong> {o.customer.notes}</div>}
                             {(o.proofOfPaymentUrls?.length || 0) > 0 && (

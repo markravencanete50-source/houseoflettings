@@ -432,9 +432,9 @@ export default function CheckoutPage() {
                         <div style={{ minWidth: 0 }}>
                           <div style={{ fontSize: 12, color: BLUE, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em' }}>{line.categoryTitle}</div>
                           <div style={{ fontSize: 16, fontWeight: 700, color: '#0a162f', margin: '2px 0 6px' }}>{line.name}</div>
-                          {line.variantLabel && <div style={{ fontSize: 13, color: '#475569' }}>{line.variantLabel} — {line.from ? 'from ' : ''}{formatGBP(line.base)}</div>}
+                          {line.variantLabel && <div style={{ fontSize: 13, color: '#475569' }}>{line.variantLabel}, {line.from ? 'from ' : ''}{formatGBP(line.base)}</div>}
                           {line.addOns.map((a) => (
-                            <div key={a.id} style={{ fontSize: 13, color: '#475569' }}>+ {a.label}{a.count ? ` ×${a.count}` : ''} — {formatGBP(a.amount)}</div>
+                            <div key={a.id} style={{ fontSize: 13, color: '#475569' }}>+ {a.label}{a.count ? ` ×${a.count}` : ''}, {formatGBP(a.amount)}</div>
                           ))}
                           {line.kind === 'package' && (
                             <div style={{ fontSize: 12.5, color: '#64748b', marginTop: 4 }}>

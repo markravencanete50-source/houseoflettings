@@ -253,7 +253,7 @@ export default function PropertyManagementPage() {
         </div>
       </section>
 
-      {/* Renters Rights Act Section — redesigned */}
+      {/* Renters Rights Act Section, redesigned */}
       <section style={{ padding: '80px 24px', background: colors.navy }}>
         <div style={{ maxWidth: 1000, margin: '0 auto' }}>
 
@@ -297,7 +297,7 @@ export default function PropertyManagementPage() {
             </div>
           </div>
 
-          {/* Zone 1 — 3 key changes, horizontal */}
+          {/* Zone 1, 3 key changes, horizontal */}
           <div style={{ marginBottom: 40 }}>
             <p style={{ color: 'rgba(255,255,255,0.35)', fontSize: 11, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 20 }}>
               What&apos;s Changed
@@ -333,7 +333,7 @@ export default function PropertyManagementPage() {
             </div>
           </div>
 
-          {/* Zone 2 — We handle checklist */}
+          {/* Zone 2, We handle checklist */}
           <div style={{
             background: 'rgba(255,255,255,0.04)',
             border: '1px solid rgba(255,255,255,0.08)',

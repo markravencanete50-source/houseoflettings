@@ -1,5 +1,5 @@
 // app/branches/manchester/page.tsx
-// Manchester branch OFFICE page. Static route — takes precedence over the
+// Manchester branch OFFICE page. Static route, takes precedence over the
 // dynamic [slug] neighbourhood route.
 import type { Metadata } from 'next';
 import BranchOffice from '@/components/branches/BranchOffice';

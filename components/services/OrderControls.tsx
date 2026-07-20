@@ -50,7 +50,7 @@ export default function OrderControls({ serviceId }: { serviceId: string }) {
   const line = priceLine({ ...sel, uid: 'preview' })!;
 
   // Ticked state is derived from the basket, not from a timer, so it stays
-  // ticked for as long as the service is actually on the order — including
+  // ticked for as long as the service is actually on the order, including
   // after a reload, since the cart is persisted. The button stays live either
   // way: a landlord can add the same service again for a second property.
   const inOrder = items.some(it => it.serviceId === serviceId);

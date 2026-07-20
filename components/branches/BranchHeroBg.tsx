@@ -1,6 +1,6 @@
 'use client';
 // components/branches/BranchHeroBg.tsx
-// Branch hero background. Shows ONLY a real matching property photo — never a
+// Branch hero background. Shows ONLY a real matching property photo, never a
 // stock/brand image, and with no image-swap animation. Until a property photo
 // is found AND fully preloaded, the hero sits on a solid branded gradient; the
 // photo is then painted in a single frame (it's already cached), so there is no
@@ -18,7 +18,7 @@ export default function BranchHeroBg({ branch }: { branch: Branch }) {
     const raw = realBranchPhoto(props, branch);
     const url = raw ? optimizedImage(raw, 1600) : null;
     if (!url || url === img) return;
-    // Preload fully before showing so the photo paints in one go — no half-load
+    // Preload fully before showing so the photo paints in one go, no half-load
     // pop and no swap from a placeholder image.
     let cancelled = false;
     const pre = new window.Image();
@@ -33,7 +33,7 @@ export default function BranchHeroBg({ branch }: { branch: Branch }) {
 
   return (
     <>
-      {/* Branded base — visible before/without a property photo. Not an image. */}
+      {/* Branded base, visible before/without a property photo. Not an image. */}
       <div
         aria-hidden
         style={{
@@ -43,7 +43,7 @@ export default function BranchHeroBg({ branch }: { branch: Branch }) {
           background: 'linear-gradient(135deg, #0a162f 0%, #12274d 100%)',
         }}
       />
-      {/* Real property photo — rendered only once fully loaded, at full opacity,
+      {/* Real property photo, rendered only once fully loaded, at full opacity,
           no transition. */}
       {img && (
         <div

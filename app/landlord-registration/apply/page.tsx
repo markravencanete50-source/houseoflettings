@@ -108,7 +108,7 @@ const STEPS = ['Owner Type', 'Your Details', 'Property Details', 'Service', 'Doc
 // Direct-to-Cloudinary upload (bypasses Vercel's ~4.5MB request-body limit).
 // The folder decides which library the file lands in: property photos & floor
 // plans go to landlord-properties, the landlord's ID / billing / ownership /
-// compliance documents stay in landlord-docs — so a registration's property
+// compliance documents stay in landlord-docs, so a registration's property
 // photos are never mixed in with its sensitive personal documents.
 async function uploadToCloudinary(file: File, folder: string = CLOUDINARY_FOLDERS.landlordDocs): Promise<string> {
   const sigRes = await fetch('/api/cloudinary-sign', {
@@ -140,7 +140,7 @@ const EMPTY_FORM = {
 };
 
 // Draft answers survive navigating away (e.g. to the pricing or terms page)
-// and coming back — restored from sessionStorage until the form is submitted.
+// and coming back, restored from sessionStorage until the form is submitted.
 // v2: step indexes shifted when the Owner Type step was added.
 const STORAGE_KEY = 'hol-landlord-apply-draft-v2';
 
@@ -192,7 +192,7 @@ export default function LandlordRegistrationApplyPage() {
         }
         if (typeof saved.step === 'number') setStep(Math.min(Math.max(saved.step, 0), STEPS.length - 1));
       }
-    } catch { /* corrupt draft — start fresh */ }
+    } catch { /* corrupt draft, start fresh */ }
     setRestored(true);
   }, []);
 
@@ -201,7 +201,7 @@ export default function LandlordRegistrationApplyPage() {
     if (!restored) return;
     try {
       sessionStorage.setItem(STORAGE_KEY, JSON.stringify({ step, form, properties, companyPeople, docs, idDocs }));
-    } catch { /* storage full/unavailable — non-fatal */ }
+    } catch { /* storage full/unavailable, non-fatal */ }
   }, [restored, step, form, properties, companyPeople, docs, idDocs]);
 
   const set = (key: string) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
@@ -239,7 +239,7 @@ export default function LandlordRegistrationApplyPage() {
   const setIdDoc = (key: string, patch: Partial<IdDocState>) => setIdDocs(d => ({ ...d, [key]: { ...d[key], ...patch } }));
 
   // New selections are ADDED to what's already uploaded, so a landlord can build
-  // up several files (e.g. ID front + back) one at a time — matching the
+  // up several files (e.g. ID front + back) one at a time, matching the
   // guarantor / tenant-application upload behaviour.
   const handleIdFile = async (key: string, files: FileList | null) => {
     if (!files || files.length === 0) return;
@@ -356,7 +356,7 @@ export default function LandlordRegistrationApplyPage() {
           contactRole: isCompany ? companyPeople[0].role : '',
           companyPeople: isCompany ? companyPeople.map(({ id, ...rest }) => rest) : [],
           selectedPackage: form.selectedPackage,
-          // No checkbox any more — submitting the form is the agreement.
+          // No checkbox any more, submitting the form is the agreement.
           termsAccepted: true,
           // First file kept as *Url/*FileName for backward compatibility; full
           // lists sent as *Urls/*FileNames so every uploaded document is captured.
@@ -437,7 +437,7 @@ export default function LandlordRegistrationApplyPage() {
               {/* Step body */}
               <div style={{ padding: 'clamp(22px, 4vw, 32px)' }}>
 
-                {/* STEP 1 — OWNER TYPE */}
+                {/* STEP 1, OWNER TYPE */}
                 {step === 0 && (
                   <div>
                     <p style={{ fontSize: 13, color: '#6b7280', margin: '0 0 18px' }}>
@@ -473,7 +473,7 @@ export default function LandlordRegistrationApplyPage() {
                   </div>
                 )}
 
-                {/* STEP 2 — YOUR DETAILS (individual or company) */}
+                {/* STEP 2, YOUR DETAILS (individual or company) */}
                 {step === 1 && (
                   <div className="hol-form-grid">
                     {isCompany && (
@@ -618,7 +618,7 @@ export default function LandlordRegistrationApplyPage() {
                   </div>
                 )}
 
-                {/* STEP 3 — YOUR PROPERTY (one or more) */}
+                {/* STEP 3, YOUR PROPERTY (one or more) */}
                 {step === 2 && (
                   <div>
                     <p style={{ fontSize: 13, color: '#6b7280', margin: '0 0 18px' }}>
@@ -648,7 +648,7 @@ export default function LandlordRegistrationApplyPage() {
                   </div>
                 )}
 
-                {/* STEP 4 — SERVICE / BUNDLE */}
+                {/* STEP 4, SERVICE / BUNDLE */}
                 {step === 3 && (
                   <div>
                     <p style={{ fontSize: 13, color: '#6b7280', margin: '0 0 16px' }}>Choose a management bundle. Our management fees are the percentage of the monthly rent shown in green, with smaller set up fees to get started. You can discuss and change this with your agent later.</p>
@@ -709,7 +709,7 @@ export default function LandlordRegistrationApplyPage() {
                   </div>
                 )}
 
-                {/* STEP 5 — DOCUMENTS */}
+                {/* STEP 5, DOCUMENTS */}
                 {step === 4 && (
                   <div>
                     <p style={{ fontSize: 13, color: '#6b7280', margin: '0 0 18px' }}>
@@ -768,7 +768,7 @@ export default function LandlordRegistrationApplyPage() {
                   </div>
                 )}
 
-                {/* STEP 6 — CONFIRM */}
+                {/* STEP 6, CONFIRM */}
                 {step === 5 && (
                   <div>
                     <div className="hol-summary">
@@ -1271,7 +1271,7 @@ const PAGE_CSS = `
 
   @media(max-width:600px){
     .hol-form-grid{grid-template-columns:1fr;gap:14px;}
-    /* iOS Safari auto-zooms into any input under 16px — keep fields at 16px
+    /* iOS Safari auto-zooms into any input under 16px, keep fields at 16px
        on phones so the page never zooms and each step stays full-width. */
     .hol-input{font-size:16px;}
   }

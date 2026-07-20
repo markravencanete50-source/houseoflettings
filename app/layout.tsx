@@ -12,14 +12,14 @@ import './globals.css';
 // The whole codebase references the literal family names 'Poppins' and
 // 'Barlow Condensed' in hundreds of inline styles, so the fonts must be
 // registered under those exact names. We load them via preconnect + preinit
-// (parallel, non-chained — faster than a CSS @import) rather than next/font,
+// (parallel, non-chained, faster than a CSS @import) rather than next/font,
 // which only exposes hashed family names. Barlow is trimmed to the single
 // weight (700) actually used by the hero.
 const GOOGLE_FONTS_HREF =
   'https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&family=Barlow+Condensed:wght@700&display=swap';
 
 // The nonce-based CSP (middleware.ts) requires every page to be rendered per
-// request — a statically prerendered page can't carry that request's nonce on
+// request, a statically prerendered page can't carry that request's nonce on
 // its inline scripts and they would be blocked. If the CSP ever moves back to
 // a static header, remove this too.
 export const dynamic = 'force-dynamic';
@@ -86,7 +86,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   // Preload the hero background so it starts downloading before CSS is parsed (helps LCP).
   // ReactDOM.preload injects the <link> into <head> during SSR without a body DOM node,
   // avoiding hydration structure mismatches. The hero is a static ~52KB WebP background
-  // (not next/image) — preloading the raw file is the fastest path to the LCP paint.
+  // (not next/image), preloading the raw file is the fastest path to the LCP paint.
   ReactDOM.preload('/images/heropage.webp', { as: 'image', fetchPriority: 'high' });
   // Open the font-CDN connections early and load the stylesheet in parallel.
   ReactDOM.preconnect('https://fonts.googleapis.com');

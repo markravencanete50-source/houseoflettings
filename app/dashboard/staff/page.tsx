@@ -1,6 +1,6 @@
 'use client';
 // app/dashboard/staff/page.tsx
-// Staff dashboard — mirrors the admin dark-sidebar layout (shared global
+// Staff dashboard, mirrors the admin dark-sidebar layout (shared global
 // .dash-* classes). The sidebar is built from the user's enabled features
 // (lib/staffAccess.ts): admins grant/revoke features per staff member from the
 // admin Users tab, no code change needed. All data goes through the Admin-SDK
@@ -272,7 +272,7 @@ function StaffDashboardInner() {
     return () => { cancelled = true; };
   }, [authLoading, clientProfile]);
 
-  // Auth guard — staff/admin only, once we've resolved client + cookie sessions.
+  // Auth guard, staff/admin only, once we've resolved client + cookie sessions.
   useEffect(() => {
     if (!ready) return;
     if (!profile || (profile.role !== 'staff' && profile.role !== 'admin')) {
@@ -733,7 +733,7 @@ function StaffDashboardInner() {
                         <div style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '16px 20px', flexWrap: 'wrap' }}>
                           <div style={{ minWidth: 0, flex: 1 }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-                              <strong style={{ fontSize: 15, color: 'var(--navy)' }}>{o.customer?.fullName || '—'}</strong>
+                              <strong style={{ fontSize: 15, color: 'var(--navy)' }}>{o.customer?.fullName || ','}</strong>
                               <span style={{ fontFamily: 'monospace', fontSize: 12, color: 'var(--gray-400)' }}>{o.ref}</span>
                               <StatusBadge status={o.status} />
                             </div>
@@ -756,14 +756,14 @@ function StaffDashboardInner() {
                                   <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--navy)' }}>{l.name}{l.quantity > 1 ? ` ×${l.quantity}` : ''}</div>
                                   <div style={{ fontSize: 12, color: 'var(--gray-400)' }}>{l.categoryTitle}</div>
                                   {l.variantLabel && <div style={{ fontSize: 12, color: 'var(--gray-600)' }}>{l.variantLabel}</div>}
-                                  {l.addOns?.map((a, ai) => <div key={ai} style={{ fontSize: 12, color: 'var(--gray-600)' }}>+ {a.label}{a.count ? ` ×${a.count}` : ''} — £{a.amount}</div>)}
+                                  {l.addOns?.map((a, ai) => <div key={ai} style={{ fontSize: 12, color: 'var(--gray-600)' }}>+ {a.label}{a.count ? ` ×${a.count}` : ''}, £{a.amount}</div>)}
                                 </div>
                                 <div style={{ fontWeight: 700, color: 'var(--navy)', whiteSpace: 'nowrap' }}>{l.from ? 'from ' : ''}£{l.total}</div>
                               </div>
                             ))}
                             <div style={{ display: 'flex', gap: 24, flexWrap: 'wrap', marginTop: 14, fontSize: 13, color: 'var(--gray-600)' }}>
-                              <div><strong style={{ color: 'var(--navy)' }}>Postcode:</strong> {o.customer?.postcode || '—'}</div>
-                              <div><strong style={{ color: 'var(--navy)' }}>Address:</strong> {o.customer?.address || '—'}</div>
+                              <div><strong style={{ color: 'var(--navy)' }}>Postcode:</strong> {o.customer?.postcode || ','}</div>
+                              <div><strong style={{ color: 'var(--navy)' }}>Address:</strong> {o.customer?.address || ','}</div>
                             </div>
                             {o.customer?.notes && <div style={{ marginTop: 8, fontSize: 13, color: 'var(--gray-600)' }}><strong style={{ color: 'var(--navy)' }}>Notes:</strong> {o.customer.notes}</div>}
                             {(o.proofOfPaymentUrls?.length || 0) > 0 && (
@@ -945,7 +945,7 @@ function StaffDashboardInner() {
                   existing={editingProperty}
                   onSuccess={handleEditSuccess}
                   onCancel={handleEditCancel}
-                  // Edit server-side too — a cookie-only staff session can't
+                  // Edit server-side too, a cookie-only staff session can't
                   // write to Firestore directly.
                   updateVia="/api/staff/properties"
                 />

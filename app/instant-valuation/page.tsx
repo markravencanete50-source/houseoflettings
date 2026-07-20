@@ -540,7 +540,7 @@ export default function InstantValuationPage() {
                       value={postcode}
                       onChange={(e) => {
                         setPostcode(e.target.value.toUpperCase());
-                        // Clear error while typing — only re-validate on blur
+                        // Clear error while typing, only re-validate on blur
                         if (postcodeErr) setPostcodeErr('');
                       }}
                       onBlur={handlePostcodeBlur}

@@ -54,7 +54,7 @@ function readCache(key: string): AddressResult[] | null {
       return parsed;
     }
   } catch {
-    /* sessionStorage unavailable — fall back to memory only */
+    /* sessionStorage unavailable, fall back to memory only */
   }
   return null;
 }
@@ -64,7 +64,7 @@ function writeCache(key: string, value: AddressResult[]): void {
   try {
     sessionStorage.setItem(CACHE_PREFIX + key, JSON.stringify(value));
   } catch {
-    /* ignore quota/availability errors — memory cache still applies */
+    /* ignore quota/availability errors, memory cache still applies */
   }
 }
 
@@ -111,13 +111,13 @@ export default function PostcodeLookup({
 
     const key = normalizePostcode(raw);
 
-    // Already showing this postcode's results — just reopen, no call.
+    // Already showing this postcode's results, just reopen, no call.
     if (lastKeyRef.current === key && addresses.length > 0) {
       setShowDropdown(true);
       return;
     }
 
-    // Cache hit — no API call is made.
+    // Cache hit, no API call is made.
     const cached = readCache(key);
     if (cached) {
       lastKeyRef.current = key;

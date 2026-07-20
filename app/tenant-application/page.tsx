@@ -401,7 +401,7 @@ export default function TenantApplicationPage() {
 
   useEffect(() => {
     getAllProperties()
-      // Let-agreed properties are hidden from the application picker — tenants
+      // Let-agreed properties are hidden from the application picker, tenants
       // can't apply for a home that already has an offer accepted.
       .then(all => setProperties(all.filter(p => p.status === 'active' && !p.letAgreed)))
       .catch(() => setProperties([]))

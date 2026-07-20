@@ -129,7 +129,7 @@ export default function BranchReviews({ city }: { city: City }) {
           .filter((r) => r.author_name && r.text && r.rating >= 4);
         if (!cancelled) setReviews(curated.slice(0, 6));
       } catch {
-        /* permission-denied or offline — section will simply not render */
+        /* permission-denied or offline, section will simply not render */
       }
       if (!cancelled) setLoaded(true);
     })();

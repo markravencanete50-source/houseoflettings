@@ -32,7 +32,7 @@ export default function VisitorTracker() {
         isNewVisitor = true;
       }
     } catch {
-      /* private mode — still count the view, just not the unique */
+      /* private mode, still count the view, just not the unique */
     }
 
     fetch('/api/track', {

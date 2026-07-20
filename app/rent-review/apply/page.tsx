@@ -1,6 +1,6 @@
 'use client';
 // app/rent-review/apply/page.tsx
-// Rent Review Process form — for existing tenants ~12 months into a managed
+// Rent Review Process form, for existing tenants ~12 months into a managed
 // tenancy. A multi-step wizard (matching the landlord-registration/apply design
 // system) that: picks the managed property, confirms household & finances,
 // collects documents, confirms the revised rent and effective date, reports any
@@ -17,7 +17,7 @@ import Footer from '@/components/layout/Footer';
 import { CLOUDINARY_FOLDERS } from '@/lib/cloudinaryFolders';
 import type { RentReviewProperty } from '@/lib/rentReviewProperties';
 
-const STEPS = ['Property', 'Details', 'Household', 'Financial', 'Documents', 'Revised Rent', 'Maintenance', 'Confirm'];
+const STEPS = ['Property & You', 'Household & Finances', 'Documents', 'Rent & Maintenance', 'Confirm'];
 const STORAGE_KEY = 'hol-rent-review-draft-v2';
 const MAINTENANCE_CATEGORIES = ['Plumbing', 'Electrical', 'Heating', 'Damp', 'Appliances', 'Other'];
 
@@ -174,37 +174,34 @@ export default function RentReviewApplyPage() {
     const e: Record<string, string> = {};
     if (s === 0) {
       if (!form.propertyAddress.trim()) e.propertyAddress = 'Please select your property';
-    } else if (s === 1) {
       if (!form.fullName.trim()) e.fullName = 'Full name is required';
       if (!form.email.trim()) e.email = 'Email is required';
       else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim())) e.email = 'Enter a valid email address';
       if (!form.phone.trim()) e.phone = 'Phone number is required';
-    } else if (s === 2) {
+    } else if (s === 1) {
       if (!form.adultOccupants.trim()) e.adultOccupants = 'Please confirm the number of adults';
       if (form.childOccupants.trim() && Number(form.childOccupants) > 0 && !form.childrenAges.trim()) e.childrenAges = 'Please provide each child’s age';
       if (!form.pets) e.pets = 'Please answer this question';
       if (form.pets === 'yes' && !form.petDetails.trim()) e.petDetails = 'Please specify the type and breed';
       if (!form.annualIncome.trim()) e.annualIncome = 'Please confirm your annual income';
-    } else if (s === 3) {
-      if (!form.hasCCJ) e.hasCCJ = 'Please answer this question';
+      if (!form.hasCCJ) e.hasCCJ = 'Please answer the CCJ question';
       if (form.hasCCJ === 'yes' && !form.ccjDetails.trim()) e.ccjDetails = 'Please provide brief details';
-    } else if (s === 4) {
+    } else if (s === 2) {
       if (photoId.urls.length === 0) e.photoId = 'Please upload your photo ID (front and back)';
       if (payslips.urls.length === 0) e.payslips = 'Please upload your most recent payslip(s)';
       if (bankStatements.urls.length === 0) e.bankStatements = 'Please upload your bank statements';
-    } else if (s === 5) {
+    } else if (s === 3) {
       if (!form.rentDecision) e.rentDecision = 'Please confirm whether you accept the revised rent';
       if (form.rentDecision === 'discuss') {
         if (!form.tenantProposedRent.trim()) e.tenantProposedRent = 'Please enter the rent you would propose';
         if (!form.rentDiscussReason.trim()) e.rentDiscussReason = 'Please tell us why';
       }
-    } else if (s === 6) {
-      if (!form.hasMaintenance) e.hasMaintenance = 'Please answer this question';
+      if (!form.hasMaintenance) e.hasMaintenance = 'Please answer the maintenance question';
       if (form.hasMaintenance === 'yes') {
         if (!form.maintenanceCategory) e.maintenanceCategory = 'Please choose a category';
         if (!form.maintenanceDescription.trim()) e.maintenanceDescription = 'Please describe the issue';
       }
-    } else if (s === 7) {
+    } else if (s === 4) {
       if (!form.declarationAccepted) e.declaration = 'Please confirm the declaration to submit';
     }
     setErrors(e);
@@ -215,7 +212,7 @@ export default function RentReviewApplyPage() {
   const back = () => { setErrors({}); setStep(s => Math.max(0, s - 1)); resetView(); };
 
   async function handleSubmit() {
-    if (!validateStep(7)) return;
+    if (!validateStep(4)) return;
     setStatus('loading');
     setErrorMsg('');
     try {
@@ -323,7 +320,7 @@ export default function RentReviewApplyPage() {
                           )}
                         </div>
                         {propertyList.length > 60 && !propSearch && (
-                          <p style={{ fontSize: 12, color: '#9ca3af', margin: '8px 0 0' }}>Showing the first 60 — search by postcode to narrow down.</p>
+                          <p style={{ fontSize: 12, color: '#9ca3af', margin: '8px 0 0' }}>Showing the first 60, search by postcode to narrow down.</p>
                         )}
                       </>
                     )}
@@ -331,7 +328,7 @@ export default function RentReviewApplyPage() {
                 )}
 
                 {/* ── Step 1 · Details ──────────────────────────────── */}
-                {step === 1 && (
+                {step === 0 && (
                   <>
                     <StepIntro title="Your details" subtitle="Please confirm or update your contact details." />
                     <div className="hol-form-grid">
@@ -355,7 +352,7 @@ export default function RentReviewApplyPage() {
                 )}
 
                 {/* ── Step 2 · Household ────────────────────────────── */}
-                {step === 2 && (
+                {step === 1 && (
                   <>
                     <StepIntro title="Your household" subtitle="Tell us who currently lives at the property, and confirm your income." />
                     <div className="hol-form-grid">
@@ -387,9 +384,9 @@ export default function RentReviewApplyPage() {
                 )}
 
                 {/* ── Step 3 · Financial ────────────────────────────── */}
-                {step === 3 && (
+                {step === 1 && (
                   <>
-                    <StepIntro title="Financial status" subtitle="Please answer honestly — this forms part of your renewal and referencing." />
+                    <StepIntro title="Financial status" subtitle="Please answer honestly, this forms part of your renewal and referencing." />
                     <YesNo label="Do you currently have any County Court Judgments (CCJs) or any significant financial issues?" value={form.hasCCJ} onChange={(v) => setVal('hasCCJ', v)} error={errors.hasCCJ}
                       detail={form.hasCCJ === 'yes' ? { label: 'Please provide brief details', value: form.ccjDetails, onChange: (v) => setVal('ccjDetails', v), error: errors.ccjDetails } : undefined} />
                     <div className="hol-field hol-field--full" style={{ marginTop: 18 }}>
@@ -400,17 +397,17 @@ export default function RentReviewApplyPage() {
                 )}
 
                 {/* ── Step 4 · Documents ────────────────────────────── */}
-                {step === 4 && (
+                {step === 2 && (
                   <>
                     <StepIntro title="Upload your documents" subtitle="Each working adult on the tenancy should provide these. You can add several files to each." />
-                    <UploadField label="Proof of Identification (front & back)" hint="A clear copy of your valid photo ID — passport or driving licence. Add up to 4." accept=".pdf,.jpg,.jpeg,.png,.webp" max={4} state={photoId} setState={setPhotoId} error={errors.photoId} />
+                    <UploadField label="Proof of Identification (front & back)" hint="A clear copy of your valid photo ID, passport or driving licence. Add up to 4." accept=".pdf,.jpg,.jpeg,.png,.webp" max={4} state={photoId} setState={setPhotoId} error={errors.photoId} />
                     <UploadField label="Most Recent Payslip(s)" hint="Your latest payslip to verify your current income. Add up to 6." accept=".pdf,.jpg,.jpeg,.png,.webp" max={6} state={payslips} setState={setPayslips} error={errors.payslips} />
                     <UploadField label="Bank Statements (last 3 months)" hint="Your three most recent bank statements. Add up to 6." accept=".pdf,.jpg,.jpeg,.png,.webp" max={6} state={bankStatements} setState={setBankStatements} error={errors.bankStatements} />
                   </>
                 )}
 
                 {/* ── Step 5 · Revised Rent ─────────────────────────── */}
-                {step === 5 && (
+                {step === 3 && (
                   <>
                     <StepIntro title="Confirmation of revised rent" subtitle="Please review and confirm the proposed rent for your renewal." />
                     <div className="hol-terms-note" style={{ marginTop: 0, marginBottom: 18 }}>
@@ -452,7 +449,7 @@ export default function RentReviewApplyPage() {
                 )}
 
                 {/* ── Step 6 · Maintenance ──────────────────────────── */}
-                {step === 6 && (
+                {step === 3 && (
                   <>
                     <StepIntro title="Report maintenance issues" subtitle="Please let us know if there are any maintenance issues or repairs that require our attention." />
                     <YesNo label="Do you have any maintenance issues to report?" value={form.hasMaintenance} onChange={(v) => setVal('hasMaintenance', v)} error={errors.hasMaintenance} />
@@ -480,7 +477,7 @@ export default function RentReviewApplyPage() {
                 )}
 
                 {/* ── Step 7 · Confirm ──────────────────────────────── */}
-                {step === 7 && (
+                {step === 4 && (
                   <>
                     <StepIntro title="Review & confirm" subtitle="A quick summary before you submit." />
                     <div className="hol-summary" style={{ marginBottom: 8 }}>
@@ -724,5 +721,17 @@ const PAGE_CSS = `
   @media(max-width:600px){
     .hol-form-grid{grid-template-columns:1fr;gap:14px;}
     .hol-input{font-size:16px;}
+    /* Long-labelled choices (accept / discuss the rent) stack full-width so the
+       text never crams into a half-width button. */
+    .hol-yesno-btn{min-width:0;flex:1 1 100%;}
+    .rr-picker{max-height:280px;}
+    .rr-picker-item{gap:8px;}
+    .rr-picker-addr{font-size:13px;}
+    /* Back / Continue stay side by side but each takes its share of the row. */
+    .hol-wizard-nav .hol-btn-ghost,.hol-wizard-nav .hol-submit{padding:14px 18px;}
+  }
+  /* Tighten the stepper on small phones now there are 5 steps, not 8. */
+  @media(max-width:420px){
+    .hol-step-dot{width:24px;height:24px;font-size:11px;}
   }
 `;

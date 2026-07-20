@@ -4,7 +4,7 @@
 // real matching property photo per card. Some stored listing URLs can be dead
 // (image deleted from Cloudinary/Storage but still referenced in Firestore),
 // so each card self-heals: if its assigned photo fails to load it swaps to the
-// branch's local brand image — a card never renders broken/alt-text-only.
+// branch's local brand image, a card never renders broken/alt-text-only.
 import { useMemo, useState } from 'react';
 import Link from 'next/link';
 import Reveal from '@/components/branches/Reveal';

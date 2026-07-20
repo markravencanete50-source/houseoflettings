@@ -1,5 +1,5 @@
 // app/branches/page.tsx
-// Branches index. The client has exactly TWO branches — Leeds and Manchester —
+// Branches index. The client has exactly TWO branches, Leeds and Manchester,
 // so this page shows two office cards, not the twenty neighbourhood pages
 // (those still exist for local SEO and are linked from each branch page under
 // "areas we cover").

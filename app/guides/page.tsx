@@ -8,7 +8,7 @@ import { guidesByDate } from "@/lib/guides";
 export const metadata: Metadata = {
   title: "Renting Guides | House of Lettings",
   description:
-    "Renting guides for tenants across Leeds & Manchester — holding deposits, viewings, referencing, Right to Rent, maintenance and moving in.",
+    "Renting guides for tenants across Leeds & Manchester, holding deposits, viewings, referencing, Right to Rent, maintenance and moving in.",
 };
 
 const INK = "#182135";
@@ -42,7 +42,7 @@ export default function GuidesPage() {
             Renting guides
           </h1>
           <p style={{ fontSize: 17, color: BODY, lineHeight: 1.7, maxWidth: 620, margin: "0 auto" }}>
-            Benefit from our expertise and years of experience — practical guides covering the topics and
+            Benefit from our expertise and years of experience, practical guides covering the topics and
             tips that matter most to tenants across Leeds &amp; Manchester.
           </p>
         </section>

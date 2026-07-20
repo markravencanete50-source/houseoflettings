@@ -1,7 +1,7 @@
 // app/additional-services/layout.tsx
 // Server layout for /additional-services. The page is a client component (it
-// can't export metadata), so page-specific SEO — title, description, canonical
-// and JSON-LD — lives here.
+// can't export metadata), so page-specific SEO, title, description, canonical
+// and JSON-LD, lives here.
 import type { Metadata } from 'next';
 import { SERVICE_CATEGORIES } from '@/lib/additionalServices';
 

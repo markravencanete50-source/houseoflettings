@@ -25,6 +25,7 @@ export interface AiAnalysis {
   recommendation: string;
   rentCommentary?: string;
   saleCommentary?: string;
+  forecastNote?: string; // 1-2 sentences on the value trajectory shown in the chart
 }
 
 const GROQ_URL   = 'https://api.groq.com/openai/v1/chat/completions';
@@ -84,9 +85,28 @@ export function buildFallbackAnalysis(
     keyDrivers: drivers.slice(0, 5),
     marketOutlook: `${rentPart}${salePart}These estimates are anchored to district-level averages${result.isOperatingArea ? ` for ${result.areaLabel}` : ` for the wider ${result.regionLabel} region`}, adjusted for this property's type, size, condition and features.`,
     recommendation: 'An automated estimate is a strong starting point, but pricing precisely, especially before a rent review or listing, benefits from a local expert seeing the property. Book a free professional valuation and we will confirm the figure in person.',
+    forecastNote: buildForecastNote(result),
     ...(result.rent ? { rentCommentary: `A realistic asking rent is ${fmtGBP(result.rent.market)} per month. Start conservative at ${fmtGBP(result.rent.conservative)} to let quickly, or test ${fmtGBP(result.rent.optimistic)} if the property presents particularly well.` } : {}),
     ...(result.sale ? { saleCommentary: `A realistic marketing price is ${fmtGBP(result.sale.market)}. ${fmtGBP(result.sale.conservative)} positions for a fast sale; ${fmtGBP(result.sale.optimistic)} is achievable in a competitive bidding situation.` } : {}),
   };
+}
+
+// A plain-data forecast caption for the trajectory chart, built from the
+// regional growth rates (used as the fallback and to seed the AI prompt).
+function buildForecastNote(result: FullValuationResult): string {
+  const parts: string[] = [];
+  if (result.rent) {
+    const t = result.rent.trajectory;
+    const dir = result.rent.annualGrowthPct >= 0 ? 'rise' : 'ease';
+    parts.push(`rent is projected to ${dir} from around ${fmtGBP(t[1].value)} to ${fmtGBP(t[2].value)} per month by ${t[2].year} (${result.rent.annualGrowthPct >= 0 ? '+' : ''}${result.rent.annualGrowthPct}% a year)`);
+  }
+  if (result.sale) {
+    const t = result.sale.trajectory;
+    const dir = result.sale.annualGrowthPct >= 0 ? 'grow' : 'soften';
+    parts.push(`value is projected to ${dir} from around ${fmtGBP(t[1].value)} to ${fmtGBP(t[2].value)} by ${t[2].year} (${result.sale.annualGrowthPct >= 0 ? '+' : ''}${result.sale.annualGrowthPct}% a year)`);
+  }
+  const joined = parts.join(', and ');
+  return `On current ${result.regionLabel} trends, ${joined}. Projections use regional year-on-year growth and are indicative, not guaranteed.`;
 }
 
 // ─── Groq call ───────────────────────────────────────────────────────────────
@@ -109,9 +129,11 @@ export async function getAiAnalysis(
   const apiKey = process.env.GROQ_API_KEY;
   if (!apiKey) return fallback;
 
+  const traj = (m: NonNullable<typeof result.rent>) =>
+    m.trajectory.map((p) => `${p.year} ${fmtGBP(p.value)}${p.projected ? ' (projected)' : ''}`).join(' → ');
   const figures = [
-    result.rent && `Rent estimate: conservative ${fmtGBP(result.rent.conservative)}/mo, market ${fmtGBP(result.rent.market)}/mo, optimistic ${fmtGBP(result.rent.optimistic)}/mo (area baseline ${fmtGBP(result.rent.baseline)}/mo, regional rent growth ${result.rent.annualGrowthPct}% YoY)`,
-    result.sale && `Sale estimate: conservative ${fmtGBP(result.sale.conservative)}, market ${fmtGBP(result.sale.market)}, optimistic ${fmtGBP(result.sale.optimistic)} (area baseline ${fmtGBP(result.sale.baseline)}, regional price growth ${result.sale.annualGrowthPct}% YoY)`,
+    result.rent && `Rent estimate: conservative ${fmtGBP(result.rent.conservative)}/mo, market ${fmtGBP(result.rent.market)}/mo, optimistic ${fmtGBP(result.rent.optimistic)}/mo (area baseline ${fmtGBP(result.rent.baseline)}/mo, regional rent growth ${result.rent.annualGrowthPct}% YoY). Trajectory: ${traj(result.rent)}`,
+    result.sale && `Sale estimate: conservative ${fmtGBP(result.sale.conservative)}, market ${fmtGBP(result.sale.market)}, optimistic ${fmtGBP(result.sale.optimistic)} (area baseline ${fmtGBP(result.sale.baseline)}, regional price growth ${result.sale.annualGrowthPct}% YoY). Trajectory: ${traj(result.sale)}`,
   ].filter(Boolean).join('\n');
 
   const prompt = `You are a senior UK lettings and sales valuer writing the analysis section of an instant valuation report for a property owner. Be specific, factual and professional. British English. No hype, no exclamation marks, no em dashes.
@@ -125,6 +147,7 @@ Respond with ONLY a JSON object with these keys:
 - "summary": 2-3 sentences summarising the valuation for this specific property.
 - "keyDrivers": array of 4-5 short strings, each one concrete factor driving this property's value (location, size, condition, EPC, features).
 - "marketOutlook": 2-3 sentences on the current ${result.regionLabel} market relevant to this property (rents/prices direction, demand).
+- "forecastNote": 1-2 sentences interpreting the value trajectory above (last year, this year, projected next year) for this property, referencing the direction and rough figures. This caption sits under a line chart.
 - "recommendation": 1-2 sentences of practical next-step advice for the owner.
 ${type !== 'sale' ? '- "rentCommentary": 2 sentences advising how to position the asking rent within the band.\n- "rentAdjustPct": number between -8 and 8: your % adjustment to the market rent figure if the algorithmic estimate looks off for this property profile, else 0.' : ''}
 ${type !== 'let' ? '- "saleCommentary": 2 sentences advising how to position the asking price within the band.\n- "saleAdjustPct": number between -8 and 8: your % adjustment to the market sale figure if the algorithmic estimate looks off for this property profile, else 0.' : ''}`;
@@ -169,6 +192,7 @@ ${type !== 'let' ? '- "saleCommentary": 2 sentences advising how to position the
         summary:        str(parsed.summary, fallback.analysis.summary),
         keyDrivers:     arr(parsed.keyDrivers, fallback.analysis.keyDrivers),
         marketOutlook:  str(parsed.marketOutlook, fallback.analysis.marketOutlook),
+        forecastNote:   str(parsed.forecastNote, fallback.analysis.forecastNote || ''),
         recommendation: str(parsed.recommendation, fallback.analysis.recommendation),
         ...(result.rent ? { rentCommentary: str(parsed.rentCommentary, fallback.analysis.rentCommentary || '') } : {}),
         ...(result.sale ? { saleCommentary: str(parsed.saleCommentary, fallback.analysis.saleCommentary || '') } : {}),

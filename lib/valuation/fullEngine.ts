@@ -112,6 +112,14 @@ export interface AdjustmentLine {
   pct:   number; // e.g. 0.05 = +5%
 }
 
+// A three-year value trajectory for the charts: last year (actual), this year
+// (the estimate), and next year (projected from the regional growth rate).
+export interface TrajectoryPoint {
+  year:      number;
+  value:     number;
+  projected: boolean; // true only for the forward-looking year
+}
+
 // ─── Output ──────────────────────────────────────────────────────────────────
 export interface ModeValuation {
   mode:          ValuationMode;
@@ -122,6 +130,7 @@ export interface ModeValuation {
   annualGrowthPct: number;
   adjustments:   AdjustmentLine[];
   totalAdjustmentPct: number;
+  trajectory:    TrajectoryPoint[]; // last year → this year → next year (projected)
 }
 
 export interface FullValuationResult {
@@ -187,16 +196,29 @@ function calcMode(input: FullValuationInput, mode: ValuationMode): ModeValuation
   // Conservative / optimistic band: AVM-style uncertainty, tighter for rent.
   const spread = mode === 'sale' ? 0.09 : 0.07;
   const step   = mode === 'sale' ? 2500 : 5;
+  const market = roundTo(mid, step);
+
+  // Three-year trajectory around the current estimate, using the regional
+  // year-on-year growth rate: last year is the estimate discounted by one
+  // year's growth, next year is the estimate grown by one more year.
+  const growth = mode === 'rent' ? regionData.annualRentGrowthPct : regionData.annualSaleGrowthPct;
+  const g = growth / 100;
+  const trajectory: TrajectoryPoint[] = [
+    { year: MARKET_DATA_YEAR - 1, value: roundTo(market / (1 + g), step), projected: false },
+    { year: MARKET_DATA_YEAR,     value: market,                          projected: false },
+    { year: MARKET_DATA_YEAR + 1, value: roundTo(market * (1 + g), step), projected: true  },
+  ];
 
   return {
     mode,
     conservative: roundTo(mid * (1 - spread), step),
-    market:       roundTo(mid, step),
+    market,
     optimistic:   roundTo(mid * (1 + spread), step),
     baseline,
-    annualGrowthPct: mode === 'rent' ? regionData.annualRentGrowthPct : regionData.annualSaleGrowthPct,
+    annualGrowthPct: growth,
     adjustments,
     totalAdjustmentPct,
+    trajectory,
   };
 }
 

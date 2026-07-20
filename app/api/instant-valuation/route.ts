@@ -266,6 +266,19 @@ async function generateReportPdf(contact: Contact, report: ValuationReport): Pro
     if (ai.saleCommentary) w.paragraph(ai.saleCommentary);
   }
 
+  // Value trajectory (last year → this year → projected next year)
+  if (result.rent || result.sale) {
+    w.sectionTitle('Value Trajectory');
+    const line = (label: string, m: ModeValuation, suffix: string) =>
+      w.paragraph(
+        `${label}: ${m.trajectory.map((p) => `${p.year} ${fmtGBP(p.value)}${suffix}${p.projected ? ' (projected)' : ''}`).join('  →  ')}`,
+        { color: w.navy },
+      );
+    if (result.rent) line('Monthly rent', result.rent, '/mo');
+    if (result.sale) line('Sale price', result.sale, '');
+    if (ai.forecastNote) w.paragraph(ai.forecastNote);
+  }
+
   // Market outlook
   w.sectionTitle('Local Market Outlook');
   w.paragraph(ai.marketOutlook);
@@ -347,6 +360,19 @@ function bandHtml(mode: ModeValuation, title: string, suffix: string): string {
 </div></div>`;
 }
 
+// A compact, email-safe (table-based, no SVG) version of the trajectory chart.
+function trajectoryHtml(mode: ModeValuation, title: string, suffix: string): string {
+  const tags = ['Last year', 'This year', 'Projected'];
+  const cols = mode.trajectory.map((p, i) => {
+    const mid = i === 1;
+    return `<div class="band-col${mid ? ' band-col--mid' : ''}">
+<p class="band-label">${p.year} · ${tags[i]}</p>
+<p class="band-value"${mid ? '' : ' style="color:#0f1f3d;"'}>${fmtGBP(p.value)}${suffix}</p></div>`;
+  }).join('');
+  const up = mode.annualGrowthPct >= 0;
+  return `<div class="band"><div class="band-title">${title} trajectory · ${up ? '+' : ''}${mode.annualGrowthPct}%/yr</div><div class="band-cols">${cols}</div></div>`;
+}
+
 function customerEmailHtml(contact: Contact, report: ValuationReport, bookUrl: string): string {
   const { property, result, ai } = report;
   return `<!DOCTYPE html><html><head><meta charset="utf-8"/><style>${EMAIL_CSS}</style></head><body><div class="wrap">
@@ -357,6 +383,10 @@ function customerEmailHtml(contact: Contact, report: ValuationReport, bookUrl: s
 ${result.rent ? bandHtml(result.rent, 'Estimated Monthly Rent', '/mo') : ''}
 ${result.sale ? bandHtml(result.sale, 'Estimated Sale Price', '') : ''}
 <p>${ai.summary}</p>
+<p class="section-h">How the value is trending</p>
+${result.rent ? trajectoryHtml(result.rent, 'Monthly rent', '/mo') : ''}
+${result.sale ? trajectoryHtml(result.sale, 'Sale price', '') : ''}
+${ai.forecastNote ? `<p class="note">${ai.forecastNote}</p>` : ''}
 <p class="section-h">Your property</p>
 <div class="details">
 <div class="detail-row"><span class="detail-label">Property type</span><span class="detail-value">${PROPERTY_TYPE_LABEL[property.propertyType]}</span></div>

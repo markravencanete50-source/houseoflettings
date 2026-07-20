@@ -27,6 +27,7 @@ function applyNudge(mode: ModeValuation | undefined, pct: number): ModeValuation
     conservative: r(mode.conservative),
     market:       r(mode.market),
     optimistic:   r(mode.optimistic),
+    trajectory:   mode.trajectory.map((p) => ({ ...p, value: r(p.value) })),
   };
 }
 

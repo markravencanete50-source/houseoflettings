@@ -20,7 +20,7 @@ import {
   PROPERTY_TYPE_LABEL, CONDITION_LABEL, GARDEN_LABEL, PARKING_LABEL,
   type ValuationType, type PropertyTypeId, type ConditionId, type EpcId,
   type GardenId, type ParkingId, type FullValuationInput, type FullValuationResult,
-  type ModeValuation,
+  type ModeValuation, type TrajectoryPoint,
 } from '@/lib/valuation/fullEngine';
 import type { AiAnalysis } from '@/lib/ai/groqValuation';
 
@@ -59,6 +59,93 @@ function bookBedsLabel(n: number): string {
   if (n === 0) return 'Studio';
   if (n >= 4) return '4+ Bedrooms';
   return `${n} Bedroom${n > 1 ? 's' : ''}`;
+}
+
+// Compact money for chart labels: £680, £160k, £177.5k.
+function chartMoney(v: number): string {
+  if (v >= 100_000) return `£${Math.round(v / 1000)}k`;
+  if (v >= 10_000)  return `£${(v / 1000).toFixed(1)}k`;
+  return fmtGBP(v);
+}
+
+// ─── Value trajectory line chart (inline SVG, no chart library) ───────────────
+// Three points: last year (actual), this year (the estimate), next year
+// (projected from the regional growth rate). The projected segment is dashed.
+function TrajectoryChart({
+  title, points, suffix, growthPct,
+}: {
+  title: string;
+  points: TrajectoryPoint[];
+  suffix: string;
+  growthPct: number;
+}) {
+  const W = 300, H = 178;
+  const padL = 18, padR = 18, padTop = 40, padBottom = 42;
+  const plotW = W - padL - padR;
+  const plotH = H - padTop - padBottom;
+
+  const vals = points.map((p) => p.value);
+  const min = Math.min(...vals), max = Math.max(...vals);
+  const span = max - min;
+  const lo = span === 0 ? min * 0.97 : min - span * 0.7;
+  const hi = span === 0 ? max * 1.03 : max + span * 0.7;
+
+  const X = (i: number) => padL + (plotW * i) / (points.length - 1);
+  const Y = (v: number) => padTop + plotH - ((v - lo) / (hi - lo)) * plotH;
+  const baseY = padTop + plotH;
+
+  const tags = ['Last year', 'Now', 'Projected'];
+  const up = growthPct >= 0;
+  const solid = `M ${X(0)} ${Y(points[0].value)} L ${X(1)} ${Y(points[1].value)}`;
+  const dashed = `M ${X(1)} ${Y(points[1].value)} L ${X(2)} ${Y(points[2].value)}`;
+  const area = `M ${X(0)} ${baseY} L ${X(0)} ${Y(points[0].value)} L ${X(1)} ${Y(points[1].value)} L ${X(2)} ${Y(points[2].value)} L ${X(2)} ${baseY} Z`;
+  const gid = `ivgrad-${title.replace(/\W/g, '')}`;
+
+  return (
+    <div className="iv-chart">
+      <div className="iv-chart__head">
+        <span className="iv-chart__title">{title}</span>
+        <span className={`iv-chart__badge ${up ? 'iv-chart__badge--up' : 'iv-chart__badge--down'}`}>
+          {up ? '▲' : '▼'} {up ? '+' : ''}{growthPct}%/yr
+        </span>
+      </div>
+      <svg viewBox={`0 0 ${W} ${H}`} width="100%" role="img"
+        aria-label={`${title} from ${points[0].year} to ${points[2].year}`}>
+        <defs>
+          <linearGradient id={gid} x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="#2563eb" stopOpacity="0.18" />
+            <stop offset="100%" stopColor="#2563eb" stopOpacity="0" />
+          </linearGradient>
+        </defs>
+        <line x1={padL} y1={baseY} x2={W - padR} y2={baseY} stroke="#e5e7eb" strokeWidth="1" />
+        <path d={area} fill={`url(#${gid})`} />
+        <path d={solid} fill="none" stroke="#2563eb" strokeWidth="2.5" strokeLinecap="round" />
+        <path d={dashed} fill="none" stroke="#2563eb" strokeWidth="2.5" strokeDasharray="5 4" strokeLinecap="round" opacity="0.75" />
+        {points.map((p, i) => {
+          const cx = X(i), cy = Y(p.value);
+          const isNow = i === 1;
+          return (
+            <g key={p.year}>
+              <text x={cx} y={cy - 11} textAnchor="middle" fontSize="11" fontWeight="700"
+                fill={isNow ? '#1d4ed8' : '#0f1f3d'}>
+                {chartMoney(p.value)}{suffix}
+              </text>
+              <circle cx={cx} cy={cy} r={isNow ? 5.5 : 4.5}
+                fill={isNow ? '#2563eb' : p.projected ? '#fff' : '#94a3b8'}
+                stroke={p.projected ? '#2563eb' : isNow ? '#2563eb' : '#94a3b8'}
+                strokeWidth={p.projected ? 2 : 1.5} />
+              <text x={cx} y={baseY + 17} textAnchor="middle" fontSize="10.5" fontWeight="700" fill="#374151">
+                {p.year}
+              </text>
+              <text x={cx} y={baseY + 31} textAnchor="middle" fontSize="9" fill="#9ca3af">
+                {tags[i]}
+              </text>
+            </g>
+          );
+        })}
+      </svg>
+    </div>
+  );
 }
 
 export default function InstantValuationPage() {
@@ -523,6 +610,40 @@ export default function InstantValuationPage() {
                 </div>
               ))}
 
+              {/* Value trajectory: last year → now → projected next year */}
+              <div className="iv-section">
+                <p className="iv-report__h">How the value is trending</p>
+                <div className="iv-charts">
+                  {rent && (
+                    <TrajectoryChart title="Monthly Rent" points={rent.trajectory} suffix="/mo" growthPct={rent.annualGrowthPct} />
+                  )}
+                  {sale && (
+                    <TrajectoryChart title="Sale Price" points={sale.trajectory} suffix="" growthPct={sale.annualGrowthPct} />
+                  )}
+                </div>
+                {report.ai.forecastNote && <p className="iv-report__support">{report.ai.forecastNote}</p>}
+              </div>
+            </div>
+
+            {/* ── PRIMARY CTA (before the detail) ── */}
+            <div className="iv-next-card">
+              <p className="iv-next-card__title">Want a precise figure?</p>
+              <p className="iv-next-card__sub">
+                A free professional valuation with one of our local experts confirms exactly what your
+                property can achieve, with no obligation.
+              </p>
+              <div className="iv-gate__btns">
+                <button className="iv-gate__btn iv-gate__btn--yes" onClick={goToBookValuation}>
+                  Book a free professional valuation
+                </button>
+                <button className="iv-gate__btn iv-gate__btn--no" onClick={handleReset}>
+                  Value another property
+                </button>
+              </div>
+            </div>
+
+            {/* ── DETAIL (narrative) ── */}
+            <div className="iv-card-wrap">
               {/* AI analysis */}
               <div className="iv-section">
                 <p className="iv-report__h">Valuation summary</p>
@@ -655,23 +776,6 @@ export default function InstantValuationPage() {
                   No problem. Your valuation stays right here on this page.
                 </p>
               )}
-            </div>
-
-            {/* ── PERSISTENT NEXT-STEP CTA ── */}
-            <div className="iv-next-card">
-              <p className="iv-next-card__title">Want a precise figure?</p>
-              <p className="iv-next-card__sub">
-                A free professional valuation with one of our local experts confirms exactly what your
-                property can achieve, with no obligation.
-              </p>
-              <div className="iv-gate__btns">
-                <button className="iv-gate__btn iv-gate__btn--yes" onClick={goToBookValuation}>
-                  Book a free professional valuation
-                </button>
-                <button className="iv-gate__btn iv-gate__btn--no" onClick={handleReset}>
-                  Value another property
-                </button>
-              </div>
             </div>
           </div>
         )}
@@ -865,6 +969,21 @@ const PAGE_CSS = `
   .iv-report__list li { font-size: 0.875rem; color: #374151; line-height: 1.7; margin-bottom: 0.35rem; }
   .iv-report__support { font-size: 0.775rem; color: #9ca3af; line-height: 1.6; margin: 0.5rem 0 0; }
   .iv-report__disclaimer { font-size: 0.775rem; color: #9ca3af; line-height: 1.6; margin: 0; }
+
+  /* ── Trajectory charts ── */
+  .iv-charts { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+  .iv-chart {
+    border: 1px solid #eef1f5; border-radius: 0.875rem;
+    padding: 0.875rem 0.875rem 0.5rem; background: #fcfdff;
+  }
+  .iv-chart__head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.25rem; }
+  .iv-chart__title { font-size: 0.8125rem; font-weight: 700; color: #0f1f3d; }
+  .iv-chart__badge {
+    font-size: 0.7rem; font-weight: 700; padding: 0.15rem 0.5rem; border-radius: 1rem;
+  }
+  .iv-chart__badge--up { background: #e8f5e9; color: #1b7a3d; }
+  .iv-chart__badge--down { background: #fdecea; color: #c0392b; }
+  @media (max-width: 560px) { .iv-charts { grid-template-columns: 1fr; } }
 
   .iv-email-card, .iv-next-card {
     width: 100%;

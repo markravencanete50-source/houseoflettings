@@ -1,6 +1,7 @@
 'use client';
 // app/book-valuation/page.tsx
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect, Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
@@ -32,11 +33,28 @@ function validate(form: typeof EMPTY_FORM) {
   return errors;
 }
 
-export default function BookValuationPage() {
+function BookValuationForm() {
+  const searchParams = useSearchParams();
   const [form, setForm] = useState(EMPTY_FORM);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
   const [errorMsg, setErrorMsg] = useState('');
+
+  // Prefill from the instant-valuation handoff (?street=&city=&postcode=&type=&beds=&name=&email=&phone=)
+  useEffect(() => {
+    const get = (k: string) => (searchParams.get(k) || '').trim();
+    const prefill: Partial<typeof EMPTY_FORM> = {};
+    if (get('name'))     prefill.fullName = get('name');
+    if (get('email'))    prefill.email = get('email');
+    if (get('phone'))    prefill.phone = get('phone');
+    if (get('street'))   prefill.street = get('street');
+    if (get('city'))     prefill.city = get('city');
+    if (get('postcode')) prefill.postcode = get('postcode').toUpperCase();
+    if (get('type'))     prefill.propertyType = get('type');
+    if (get('beds'))     prefill.bedrooms = get('beds');
+    if (Object.keys(prefill).length) setForm(f => ({ ...f, ...prefill }));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   const handleAddressSelect = useCallback((data: AddressResult) => {
     setForm(f => ({
       ...f,
@@ -380,6 +398,15 @@ export default function BookValuationPage() {
       </div>
       <Footer />
     </>
+  );
+}
+
+// useSearchParams needs a Suspense boundary in the App Router.
+export default function BookValuationPage() {
+  return (
+    <Suspense fallback={null}>
+      <BookValuationForm />
+    </Suspense>
   );
 }
 

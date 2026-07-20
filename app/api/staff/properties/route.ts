@@ -106,8 +106,14 @@ export async function DELETE(request: Request) {
 
 export async function GET(request: Request) {
   try {
-    const auth = await requireStaff(request, 'properties');
-    if (auth instanceof Response) return auth;
+    // The property list also feeds the Rent Review tool, so either permission
+    // grants read access here.
+    let auth = await requireStaff(request, 'properties');
+    if (auth instanceof Response) {
+      const viaRentReview = await requireStaff(request, 'rent-reviews');
+      if (viaRentReview instanceof Response) return auth;
+      auth = viaRentReview;
+    }
 
     const snapshot = await getAdminDb().collection('properties')
       .orderBy('createdAt', 'desc')

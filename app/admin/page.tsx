@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import Navbar from '@/components/layout/Navbar';
 import PropertyForm from '@/components/property/PropertyForm';
 import RentReviewPropertyManager from '@/components/dashboard/RentReviewPropertyManager';
+import RentReviewPanel from '@/components/valuation/RentReviewPanel';
 import { useAuth } from '@/hooks/useAuth';
 import {
   getAllUsers,
@@ -322,6 +323,7 @@ export default function AdminDashboard() {
   const [rentReviews, setRentReviews] = useState<RentReview[]>([]);
   const [expandedRR, setExpandedRR] = useState<string | null>(null);
   const [showRRProps, setShowRRProps] = useState(false);
+  const [showRRCalc, setShowRRCalc] = useState(false);
   // Per-staff dashboard access editor (Users tab).
   const [accessUser, setAccessUser] = useState<AppUser | null>(null);
   const [accessPerms, setAccessPerms] = useState<string[]>([]);
@@ -1563,14 +1565,24 @@ export default function AdminDashboard() {
             <div>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, flexWrap: 'wrap', marginBottom: 8 }}>
                 <h1 className="dash-section-title" style={{ margin: 0 }}>Rent Reviews</h1>
-                <button onClick={() => setShowRRProps(v => !v)} style={{ padding: '10px 16px', background: showRRProps ? '#e5e7eb' : '#2563eb', color: showRRProps ? '#374151' : '#fff', border: 'none', borderRadius: 6, fontSize: 13, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap' }}>
-                  {showRRProps ? '✕ Close property list' : '🏠 Manage properties'}
-                </button>
+                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                  <button onClick={() => setShowRRCalc(v => !v)} style={{ padding: '10px 16px', background: showRRCalc ? '#e5e7eb' : '#0f1f3d', color: showRRCalc ? '#374151' : '#fff', border: 'none', borderRadius: 6, fontSize: 13, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap' }}>
+                    {showRRCalc ? '✕ Close calculator' : '📈 Market rent calculator'}
+                  </button>
+                  <button onClick={() => setShowRRProps(v => !v)} style={{ padding: '10px 16px', background: showRRProps ? '#e5e7eb' : '#2563eb', color: showRRProps ? '#374151' : '#fff', border: 'none', borderRadius: 6, fontSize: 13, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap' }}>
+                    {showRRProps ? '✕ Close property list' : '🏠 Manage properties'}
+                  </button>
+                </div>
               </div>
               <p style={{ color: 'var(--gray-600)', marginBottom: 20, fontSize: 15 }}>
                 Annual rent reviews submitted by existing tenants. Click a row to see the full submission and documents; use the status dropdown to keep the team on track.
               </p>
-              {showRRProps && <RentReviewPropertyManager authedFetch={authedFetch} />}
+              {showRRCalc && (
+                <div className="dash-card" style={{ padding: 24, marginBottom: 20 }}>
+                  <RentReviewPanel properties={properties} />
+                </div>
+              )}
+              {showRRProps && <RentReviewPropertyManager authedFetch={authedFetch} portfolio={properties} />}
               {rentReviews.length === 0 ? (
                 <div className="dash-card" style={{ textAlign: 'center', padding: 60 }}>
                   <div style={{ fontSize: 52, marginBottom: 16 }}>🔁</div>

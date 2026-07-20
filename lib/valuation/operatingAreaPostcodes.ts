@@ -340,9 +340,13 @@ export const DISTRICT_LOOKUP: Record<string, DistrictInfo> = {
  */
 export function getDistrictFromPostcode(postcode: string): string {
   const cleaned = postcode.toUpperCase().replace(/\s+/g, '');
-  // UK postcode format: outward code (2-4 chars) + inward code (3 chars)
-  // outward code = area letters + district number(s)
-  const match = cleaned.match(/^([A-Z]{1,2}\d{1,2}[A-Z]?)/);
+  // A full postcode always ends in the inward code (digit + 2 letters). Strip
+  // it BEFORE extracting the district, otherwise the district regex swallows
+  // its digit ("LS61AA" must parse as LS6 + 1AA, not district "LS61").
+  const outward = /^[A-Z]{1,2}\d[A-Z\d]?\d[A-Z]{2}$/.test(cleaned)
+    ? cleaned.slice(0, -3)
+    : cleaned;
+  const match = outward.match(/^([A-Z]{1,2}\d{1,2}[A-Z]?)/);
   return match ? match[1] : '';
 }
 

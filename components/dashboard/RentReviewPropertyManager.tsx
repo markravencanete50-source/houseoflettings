@@ -18,9 +18,23 @@ type ManagedProperty = {
 
 type Fetcher = (path: string, init?: RequestInit) => Promise<Response>;
 
+/** Minimal shape of a portfolio listing used for the prefill picker. */
+type PortfolioProperty = {
+  id?: string;
+  title: string;
+  location: string;
+  price: number;
+};
+
 const EMPTY = { address: '', currentRent: '', proposedRent: '', effectiveDate: '' };
 
-export default function RentReviewPropertyManager({ authedFetch }: { authedFetch: Fetcher }) {
+export default function RentReviewPropertyManager({
+  authedFetch,
+  portfolio = [],
+}: {
+  authedFetch: Fetcher;
+  portfolio?: PortfolioProperty[];
+}) {
   const [list, setList] = useState<ManagedProperty[]>([]);
   const [loaded, setLoaded] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
@@ -86,6 +100,34 @@ export default function RentReviewPropertyManager({ authedFetch }: { authedFetch
       <p style={{ fontSize: 12.5, color: 'var(--gray-500)', margin: '0 0 16px' }}>
         Properties added here appear in the rent-review form&rsquo;s picker (alongside the built-in catalogue). Set the current/proposed rent and effective date so they pre-fill for the tenant. No code change needed.
       </p>
+
+      {portfolio.length > 0 && (
+        <div style={{ marginBottom: 12 }}>
+          <label style={{ fontSize: 11, fontWeight: 600, color: 'var(--gray-500)' }}>Prefill from a listed property (optional)</label>
+          <select
+            style={{ ...input, maxWidth: 480, cursor: 'pointer', display: 'block', marginTop: 2 }}
+            value=""
+            onChange={e => {
+              const p = portfolio.find(x => (x.id || x.title) === e.target.value);
+              if (!p) return;
+              const address = [p.title, p.location].filter(Boolean).join(', ');
+              setForm(f => ({
+                ...f,
+                address,
+                currentRent: Number.isFinite(p.price) && p.price > 0 ? String(p.price) : f.currentRent,
+              }));
+              setErr('');
+            }}
+          >
+            <option value="">— Select a property to auto-fill address &amp; current rent —</option>
+            {portfolio.map(p => (
+              <option key={p.id || p.title} value={p.id || p.title}>
+                {p.title} · {p.location} · £{p.price?.toLocaleString('en-GB')}/mo
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
 
       <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr auto', gap: 8, alignItems: 'end' }}>
         <div>

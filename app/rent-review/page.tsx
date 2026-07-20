@@ -102,7 +102,7 @@ export default function RentReviewOverviewPage() {
             <div className="rr-why-grid">
               {WHY.map((item, i) => (
                 <div key={item.title} className="rr-why-card hol-card hol-reveal" style={{ animationDelay: `${i * 60}ms` }}>
-                  <div className="rr-why-icon">{item.icon}</div>
+                  <div className="rr-why-icon" aria-hidden="true">{item.icon}</div>
                   <h3 className="rr-why-title">{item.title}</h3>
                   <p className="rr-why-desc">{item.desc}</p>
                 </div>
@@ -380,5 +380,12 @@ const PAGE_CSS = `
   /* ── Small phones: one stat per row so figures never crowd ── */
   @media(max-width:380px){
     .rr-stat-grid { grid-template-columns:1fr; }
+  }
+
+  /* Accessibility: honour reduced-motion for the custom hero/scroll animations
+     (the scroll-reveal already respects it via the global .hol-reveal rule). */
+  @media (prefers-reduced-motion: reduce){
+    .rr-hero-glow, .rr-hero-inner, .rr-scroll-cue span { animation: none !important; }
+    .rr-cta, .rr-stat, .rr-why-card, .rr-faq, .rr-faq-a, .rr-faq-q svg { transition: none !important; }
   }
 `;

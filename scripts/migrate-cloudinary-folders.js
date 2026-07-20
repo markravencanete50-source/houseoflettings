@@ -6,6 +6,8 @@
 //
 //   tenantApplications documents → houseoflettings/tenant-applications
 //   serviceOrders      documents → houseoflettings/service-orders
+//   landlordRegistrations property photos & floor plans (from landlord-docs)
+//                              → houseoflettings/landlord-properties
 //
 // Why Firestore-driven: inside houseoflettings/properties these files sit next
 // to genuine property photos with indistinguishable random IDs. The ONLY thing
@@ -54,20 +56,40 @@ const admin = require('firebase-admin');
 const { v2: cloudinary } = require('cloudinary');
 
 const APPLY = process.argv.includes('--apply');
-const SOURCE_PREFIX = 'houseoflettings/properties/';
 
-// Collections to fix, each with the target folder and the URL-bearing fields.
+// Collections to fix. Each entry moves assets from `sourceFolder` into
+// `targetFolder`, but ONLY the ones referenced by the listed fields — so files
+// that share the source folder (e.g. genuine property photos, or a landlord's
+// ID documents) are never touched.
+//
+//   urlFields        — flat array/string fields on the document
+//   nestedArrayField + nestedUrlFields — fields inside each element of an array
+//                      (landlord registrations store one photo set per property)
+//
 // Field names mirror what the /api routes store.
 const TARGETS = [
   {
     collection: 'tenantApplications',
+    sourceFolder: 'houseoflettings/properties',
     targetFolder: 'houseoflettings/tenant-applications',
     urlFields: ['govIdUrls', 'proofOfAddressUrls', 'rightToRentDocUrls', 'payslipUrls', 'bankStatementUrls'],
   },
   {
     collection: 'serviceOrders',
+    sourceFolder: 'houseoflettings/properties',
     targetFolder: 'houseoflettings/service-orders',
     urlFields: ['proofOfPaymentUrls'],
+  },
+  {
+    // Property photos & floor plans submitted with a landlord registration were
+    // filed in landlord-docs next to the landlord's ID/ownership documents.
+    // Move only the property photos out into their own library; the sensitive
+    // documents stay put.
+    collection: 'landlordRegistrations',
+    sourceFolder: 'houseoflettings/landlord-docs',
+    targetFolder: 'houseoflettings/landlord-properties',
+    nestedArrayField: 'properties',
+    nestedUrlFields: ['photoUrls', 'floorPlanUrls'],
   },
 ];
 
@@ -110,12 +132,13 @@ function parseCloudinary(url) {
 
 // Move one asset if it's in the source folder. Returns the NEW url (moved or
 // already-moved), or null when nothing to do / not ours. Idempotent.
-async function moveOne(url, targetFolder, stats) {
+async function moveOne(url, sourceFolder, targetFolder, stats) {
+  const sourcePrefix = sourceFolder + '/';
   const parsed = parseCloudinary(url);
   if (!parsed) { stats.skippedForeign++; return null; }        // Firebase Storage / other host
-  if (!parsed.publicId.startsWith(SOURCE_PREFIX)) { stats.skippedAlready++; return null; }
+  if (!parsed.publicId.startsWith(sourcePrefix)) { stats.skippedAlready++; return null; }
 
-  const newPublicId = targetFolder + '/' + parsed.publicId.slice(SOURCE_PREFIX.length);
+  const newPublicId = targetFolder + '/' + parsed.publicId.slice(sourcePrefix.length);
   const rt = parsed.resourceType;
 
   if (!APPLY) {
@@ -188,7 +211,8 @@ async function run() {
 
   const stats = { planned: 0, moved: 0, recovered: 0, errors: 0, skippedAlready: 0, skippedForeign: 0, docsUpdated: 0 };
 
-  for (const { collection, targetFolder, urlFields } of TARGETS) {
+  for (const target of TARGETS) {
+    const { collection, sourceFolder, targetFolder, urlFields = [], nestedArrayField, nestedUrlFields = [] } = target;
     const snap = await db.collection(collection).get();
     console.log(`── ${collection}: ${snap.size} document(s) → ${targetFolder}`);
 
@@ -196,14 +220,26 @@ async function run() {
       const data = doc.data();
       const moves = new Map(); // oldUrl → newUrl (only successfully-moved assets)
 
+      // Collect every candidate URL from both flat and nested fields, then move.
+      const candidates = [];
       for (const field of urlFields) {
-        const value = data[field];
-        const urls = Array.isArray(value) ? value : (typeof value === 'string' && value ? [value] : []);
-        for (const url of urls) {
-          if (moves.has(url)) continue;
-          const newUrl = await moveOne(url, targetFolder, stats);
-          if (newUrl) moves.set(url, newUrl);
+        const v = data[field];
+        if (Array.isArray(v)) candidates.push(...v);
+        else if (typeof v === 'string' && v) candidates.push(v);
+      }
+      if (nestedArrayField && Array.isArray(data[nestedArrayField])) {
+        for (const item of data[nestedArrayField]) {
+          for (const field of nestedUrlFields) {
+            const v = item && item[field];
+            if (Array.isArray(v)) candidates.push(...v);
+            else if (typeof v === 'string' && v) candidates.push(v);
+          }
         }
+      }
+      for (const url of candidates) {
+        if (typeof url !== 'string' || moves.has(url)) continue;
+        const newUrl = await moveOne(url, sourceFolder, targetFolder, stats);
+        if (newUrl) moves.set(url, newUrl);
       }
 
       if (APPLY && moves.size) {
@@ -212,6 +248,20 @@ async function run() {
           if (!(field in data)) continue;
           const { value, changed } = remapField(data[field], moves);
           if (changed) update[field] = value;
+        }
+        if (nestedArrayField && Array.isArray(data[nestedArrayField])) {
+          let nestedChanged = false;
+          const nextArray = data[nestedArrayField].map((item) => {
+            if (!item || typeof item !== 'object') return item;
+            const nextItem = { ...item };
+            for (const field of nestedUrlFields) {
+              if (!(field in nextItem)) continue;
+              const { value, changed } = remapField(nextItem[field], moves);
+              if (changed) { nextItem[field] = value; nestedChanged = true; }
+            }
+            return nextItem;
+          });
+          if (nestedChanged) update[nestedArrayField] = nextArray;
         }
         if (Object.keys(update).length) {
           await doc.ref.update(update);

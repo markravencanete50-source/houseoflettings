@@ -13,7 +13,8 @@ export const CLOUDINARY_FOLDERS = {
   properties: 'houseoflettings/properties',              // listing photos & video tours
   tenantApplications: 'houseoflettings/tenant-applications', // tenant ID, payslips, bank statements …
   guarantor: 'houseoflettings/guarantor',               // guarantor documents
-  landlordDocs: 'houseoflettings/landlord-docs',        // landlord registration documents
+  landlordDocs: 'houseoflettings/landlord-docs',        // landlord ID / billing / ownership / compliance docs
+  landlordProperties: 'houseoflettings/landlord-properties', // property photos & floor plans from landlord registrations
   maintenance: 'houseoflettings/maintenance',           // maintenance report photos & videos
   serviceOrders: 'houseoflettings/service-orders',      // service-order proof of payment
 } as const;

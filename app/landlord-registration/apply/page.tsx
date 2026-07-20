@@ -106,19 +106,25 @@ const docSummary = (st: DocState) => {
 const STEPS = ['Owner Type', 'Your Details', 'Property Details', 'Service', 'Documents', 'Confirm'];
 
 // Direct-to-Cloudinary upload (bypasses Vercel's ~4.5MB request-body limit).
-async function uploadToCloudinary(file: File): Promise<string> {
+// The folder decides which library the file lands in: property photos & floor
+// plans go to landlord-properties, the landlord's ID / billing / ownership /
+// compliance documents stay in landlord-docs — so a registration's property
+// photos are never mixed in with its sensitive personal documents.
+async function uploadToCloudinary(file: File, folder: string = CLOUDINARY_FOLDERS.landlordDocs): Promise<string> {
   const sigRes = await fetch('/api/cloudinary-sign', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ folder: CLOUDINARY_FOLDERS.landlordDocs }),
+    body: JSON.stringify({ folder }),
   });
   if (!sigRes.ok) throw new Error('Could not prepare upload');
-  const { cloudName, apiKey, timestamp, folder, signature } = await sigRes.json();
+  // The server signs and echoes back the folder it actually used; sign with
+  // that exact value so the signature matches.
+  const { cloudName, apiKey, timestamp, folder: signedFolder, signature } = await sigRes.json();
   const fd = new FormData();
   fd.append('file', file);
   fd.append('api_key', apiKey);
   fd.append('timestamp', String(timestamp));
-  fd.append('folder', folder);
+  fd.append('folder', signedFolder);
   fd.append('signature', signature);
   const upRes = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/auto/upload`, { method: 'POST', body: fd });
   const data = await upRes.json();
@@ -246,7 +252,8 @@ export default function LandlordRegistrationApplyPage() {
     const addedNames: string[] = [];
     try {
       for (const file of newFiles) {
-        addedUrls.push(await uploadToCloudinary(file));
+        // ID / billing / ownership documents → the private landlord-docs library.
+        addedUrls.push(await uploadToCloudinary(file, CLOUDINARY_FOLDERS.landlordDocs));
         addedNames.push(file.name);
       }
       setIdDocs(d => ({ ...d, [key]: { ...d[key], uploading: false, urls: [...d[key].urls, ...addedUrls], fileNames: [...d[key].fileNames, ...addedNames] } }));
@@ -264,7 +271,8 @@ export default function LandlordRegistrationApplyPage() {
     if (!file) return;
     setDoc(key, { uploading: true, error: '', fileName: file.name });
     try {
-      const url = await uploadToCloudinary(file);
+      // Compliance certificates (EPC / EICR / gas) → the private landlord-docs library.
+      const url = await uploadToCloudinary(file, CLOUDINARY_FOLDERS.landlordDocs);
       setDoc(key, { uploading: false, url });
     } catch (e: any) {
       setDoc(key, { uploading: false, url: '', error: e.message || 'Upload failed' });
@@ -894,7 +902,9 @@ function PropertyFileField({
     const addedNames: string[] = [];
     try {
       for (const file of picked) {
-        addedUrls.push(await uploadToCloudinary(file));
+        // Property photos & floor plans → their own library, kept apart from
+        // the landlord's sensitive documents.
+        addedUrls.push(await uploadToCloudinary(file, CLOUDINARY_FOLDERS.landlordProperties));
         addedNames.push(file.name);
       }
     } catch (e: any) {

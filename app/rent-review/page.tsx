@@ -1,708 +1,354 @@
 'use client';
 // app/rent-review/page.tsx
-// Rent Review Process — for existing tenants ~12 months into a managed
-// tenancy. A multi-step wizard (matching the landlord-registration/apply
-// design system) that reviews the tenancy, updates the tenant's details,
-// confirms the proposed rent, collects documents, reports any maintenance,
-// and captures the renewal declaration.
-//
-// The read-only property/rent panel is prefilled from URL query params so the
-// office can send each tenant a personalised link:
-//   /rent-review?address=...&postcode=...&currentRent=950&proposedRent=975&name=...&email=...&phone=...
-// If a value isn't supplied, that field falls back to an editable input so the
-// form still works when opened directly.
-import { useState, useEffect } from 'react';
+// Overview / landing page explaining why we run rent reviews, the market
+// context behind them, and how our approach compares with the rest of the
+// industry. The actual multi-step form lives at /rent-review/apply.
+import { useState } from 'react';
 import Link from 'next/link';
 import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
-import { CLOUDINARY_FOLDERS } from '@/lib/cloudinaryFolders';
+import RevealCards from '@/components/RevealCards';
 
-const STEPS = ['Property & Rent', 'Your Details', 'Declarations', 'Documents', 'Maintenance', 'Confirm'];
-const STORAGE_KEY = 'hol-rent-review-draft-v1';
+const WHY = [
+  { icon: '⚖️', title: 'Fair, market-aligned rent', desc: 'A review keeps your rent in step with what similar homes nearby actually let for today — fair for you and fair for us.' },
+  { icon: '📈', title: 'No sudden shocks', desc: 'Small, evidence-based adjustments once a year are far easier to plan for than one large correction after rent has drifted for years.' },
+  { icon: '🛠️', title: 'Keeps your home maintained', desc: 'A sustainable rent funds ongoing repairs, safety checks and the gas, electrical and EPC compliance that protect you.' },
+  { icon: '🤝', title: 'Longer, stable tenancies', desc: 'Keeping a good tenant almost always beats an empty property. Reviews are designed to keep you settled, not to move you on.' },
+  { icon: '🔍', title: 'Full transparency', desc: 'You see the current figure, the proposed figure and the reasoning behind it — nothing is hidden or automatic.' },
+  { icon: '💬', title: 'A conversation, not a demand', desc: 'Happy with the proposal? Accept in a click. Not sure? Open a discussion and tell us the figure that works for you.' },
+];
 
-const MAINTENANCE_CATEGORIES = ['Plumbing', 'Electrical', 'Heating', 'Damp', 'Appliances', 'Other'];
+const INDUSTRY = [
+  { tag: 'Common', title: 'Market-comparable review', desc: 'Most agents review at renewal by comparing your home against similar local properties currently on the market.' },
+  { tag: 'Common', title: 'Index-linked increases', desc: 'Some tenancies contain a clause tying the rent to inflation (RPI or CPI), so it rises by a set index each year regardless of the local market.' },
+  { tag: 'Statutory', title: 'Section 13 notice', desc: 'For rolling (periodic) tenancies in England, landlords can propose an increase once a year through a formal Section 13 notice.' },
+  { tag: 'Blunt', title: 'Automatic fixed uplift', desc: 'A minority write a flat percentage rise into the contract every year — simple, but it ignores whether the local market actually moved.' },
+];
 
-type Upload = { urls: string[]; names: string[]; uploading: boolean; error: string };
-const emptyUpload = (): Upload => ({ urls: [], names: [], uploading: false, error: '' });
+const DIFF = [
+  'Evidence-based, never automatic — we benchmark your actual property against live local comparables.',
+  'Transparent — you see the current rent, the proposed rent and the reasoning, side by side.',
+  'Collaborative — accept online, or propose your own figure and tell us why.',
+  'Fully online — no phone tag, no posted forms; the whole review takes minutes.',
+  'A whole-tenancy check-in — we refresh your details, documents and any maintenance in one place.',
+];
 
-type Prefill = { address?: string; postcode?: string; currentRent?: string; proposedRent?: string };
+const STEPS = [
+  { n: '01', title: 'Market review', desc: 'We benchmark your property against homes currently letting in your area to find its fair market rent.' },
+  { n: '02', title: 'Your proposal', desc: 'You receive a clear current-vs-proposed rent, with the reasoning behind the figure.' },
+  { n: '03', title: 'You decide online', desc: 'Accept the proposal in a click, or open a discussion and suggest your own figure.' },
+  { n: '04', title: 'Renewal completed', desc: 'We finalise your tenancy renewal and update your details, documents and any repairs together.' },
+];
 
-const EMPTY_FORM = {
-  // Property (may be prefilled/read-only from the link)
-  propertyAddress: '', postcode: '', currentRent: '', proposedRent: '',
-  // Rent decision
-  rentDecision: '' as '' | 'accept' | 'discuss',
-  tenantProposedRent: '', rentDiscussReason: '',
-  // Personal & employment
-  fullName: '', email: '', phone: '', employer: '', jobTitle: '', employmentStatus: '',
-  employmentChanged: '' as '' | 'yes' | 'no', employmentChangeDetails: '',
-  // Financial declaration
-  financeChanged: '' as '' | 'yes' | 'no', financeChangedDetails: '',
-  hasCCJ: '' as '' | 'yes' | 'no', ccjDetails: '',
-  courtProceedings: '' as '' | 'yes' | 'no', courtDetails: '',
-  ivaBankruptcy: '' as '' | 'yes' | 'no', ivaDetails: '',
-  occupancyChanged: '' as '' | 'yes' | 'no', occupancyDetails: '',
-  // Documents
-  shareCode: '',
-  // Maintenance
-  hasMaintenance: '' as '' | 'yes' | 'no', maintenanceCategory: '', maintenanceDescription: '',
-  // Declaration
-  declarationAccepted: false,
-};
+const STATS = [
+  { big: '12', small: 'months', label: 'Typical review cycle, at each renewal' },
+  { big: '4', small: 'steps', label: 'From market review to completed renewal' },
+  { big: '0', small: 'calls', label: 'It’s all done online, in your own time' },
+  { big: '100%', small: 'clear', label: 'You see the evidence behind every figure' },
+];
 
-type FormState = typeof EMPTY_FORM;
+const FAQS = [
+  { q: 'Why is my rent being reviewed?', a: 'We review the rent on every managed tenancy roughly once a year, usually at renewal, to keep it aligned with the current local market. It keeps things fair on both sides and avoids the rent drifting so far that a large one-off increase becomes necessary later.' },
+  { q: 'Does a review always mean my rent goes up?', a: 'No. A review is exactly that — a review. Depending on what the local market is doing, the proposed rent may rise modestly, or stay the same. Whatever the outcome, we show you the evidence behind it.' },
+  { q: 'What if I don’t agree with the proposed rent?', a: 'That’s absolutely fine. When you reach the rent step, choose “I’d like to discuss the rent”, tell us the figure you feel is fair and why, and your property manager will talk it through with you before anything is finalised.' },
+  { q: 'How often do rent reviews happen?', a: 'Typically every 12 months, in line with your tenancy renewal. We’ll always contact you in good time rather than springing it on you.' },
+  { q: 'Why do you ask for documents again?', a: 'A renewal is a good moment to refresh your referencing — recent bank statements, payslips and ID confirm your circumstances are up to date. It only takes a few minutes and you can upload everything securely online.' },
+];
 
-// Direct-to-Cloudinary upload (bypasses Vercel's ~4.5MB request-body limit).
-async function uploadToCloudinary(file: File): Promise<string> {
-  const sigRes = await fetch('/api/cloudinary-sign', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ folder: CLOUDINARY_FOLDERS.rentReview }),
-  });
-  if (!sigRes.ok) throw new Error('Could not prepare upload');
-  const { cloudName, apiKey, timestamp, folder, signature } = await sigRes.json();
-  const fd = new FormData();
-  fd.append('file', file);
-  fd.append('api_key', apiKey);
-  fd.append('timestamp', String(timestamp));
-  fd.append('folder', folder);
-  fd.append('signature', signature);
-  const upRes = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/auto/upload`, { method: 'POST', body: fd });
-  const data = await upRes.json();
-  if (!data.secure_url) throw new Error(data.error?.message || 'Upload failed');
-  return data.secure_url as string;
-}
-
-const money = (v: string) => {
-  const n = (v || '').toString().replace(/[^\d.]/g, '');
-  return n ? `£${Number(n).toLocaleString('en-GB')}` : '';
-};
-
-export default function RentReviewPage() {
-  const [step, setStep] = useState(0);
-  const [form, setForm] = useState<FormState>(EMPTY_FORM);
-  const [prefill, setPrefill] = useState<Prefill>({});
-  const [bankStatements, setBankStatements] = useState<Upload>(emptyUpload);
-  const [payslips, setPayslips] = useState<Upload>(emptyUpload);
-  const [photoId, setPhotoId] = useState<Upload>(emptyUpload);
-  const [visa, setVisa] = useState<Upload>(emptyUpload);
-  const [maintenancePhotos, setMaintenancePhotos] = useState<Upload>(emptyUpload);
-  const [errors, setErrors] = useState<Record<string, string>>({});
-  const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
-  const [errorMsg, setErrorMsg] = useState('');
-  const [restored, setRestored] = useState(false);
-
-  // Prefill from the personalised link + restore any saved draft (after mount,
-  // to avoid a hydration mismatch with the server-rendered empty form).
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const pf: Prefill = {
-      address: params.get('address') || undefined,
-      postcode: params.get('postcode') || undefined,
-      currentRent: params.get('currentRent') || undefined,
-      proposedRent: params.get('proposedRent') || undefined,
-    };
-    setPrefill(pf);
-
-    let base = { ...EMPTY_FORM };
-    if (pf.address) base.propertyAddress = pf.address;
-    if (pf.postcode) base.postcode = pf.postcode;
-    if (pf.currentRent) base.currentRent = pf.currentRent;
-    if (pf.proposedRent) base.proposedRent = pf.proposedRent;
-    for (const k of ['name', 'email', 'phone'] as const) {
-      const v = params.get(k);
-      if (v) base[k === 'name' ? 'fullName' : k] = v;
-    }
-
-    try {
-      const raw = sessionStorage.getItem(STORAGE_KEY);
-      if (raw) {
-        const saved = JSON.parse(raw);
-        if (saved.form) base = { ...base, ...saved.form };
-        if (saved.uploads) {
-          const u = saved.uploads;
-          if (u.bankStatements) setBankStatements({ ...emptyUpload(), ...u.bankStatements, uploading: false });
-          if (u.payslips) setPayslips({ ...emptyUpload(), ...u.payslips, uploading: false });
-          if (u.photoId) setPhotoId({ ...emptyUpload(), ...u.photoId, uploading: false });
-          if (u.visa) setVisa({ ...emptyUpload(), ...u.visa, uploading: false });
-          if (u.maintenancePhotos) setMaintenancePhotos({ ...emptyUpload(), ...u.maintenancePhotos, uploading: false });
-        }
-        if (typeof saved.step === 'number') setStep(Math.min(Math.max(saved.step, 0), STEPS.length - 1));
-      }
-    } catch { /* ignore a corrupt draft */ }
-
-    setForm(base);
-    setRestored(true);
-  }, []);
-
-  // Persist the draft so a tenant can leave and come back (save-progress).
-  useEffect(() => {
-    if (!restored) return;
-    try {
-      sessionStorage.setItem(STORAGE_KEY, JSON.stringify({
-        form, step,
-        uploads: {
-          bankStatements: { urls: bankStatements.urls, names: bankStatements.names },
-          payslips: { urls: payslips.urls, names: payslips.names },
-          photoId: { urls: photoId.urls, names: photoId.names },
-          visa: { urls: visa.urls, names: visa.names },
-          maintenancePhotos: { urls: maintenancePhotos.urls, names: maintenancePhotos.names },
-        },
-      }));
-    } catch { /* storage full/blocked — draft just won't persist */ }
-  }, [form, step, bankStatements, payslips, photoId, visa, maintenancePhotos, restored]);
-
-  const set = (key: keyof FormState) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) =>
-    setForm(f => ({ ...f, [key]: e.target.value }));
-  const setVal = (key: keyof FormState, value: any) => setForm(f => ({ ...f, [key]: value }));
-
-  const anyUploading = [bankStatements, payslips, photoId, visa, maintenancePhotos].some(u => u.uploading);
-
-  const resetView = () => { if (typeof window !== 'undefined') window.scrollTo({ top: 0, behavior: 'smooth' }); };
-
-  function validateStep(s: number): boolean {
-    const e: Record<string, string> = {};
-    if (s === 0) {
-      if (!prefill.address && !form.propertyAddress.trim()) e.propertyAddress = 'Property address is required';
-      if (!form.rentDecision) e.rentDecision = 'Please tell us if you accept the proposed rent';
-      if (form.rentDecision === 'discuss') {
-        if (!form.tenantProposedRent.trim()) e.tenantProposedRent = 'Please enter the rent you would propose';
-        if (!form.rentDiscussReason.trim()) e.rentDiscussReason = 'Please tell us why';
-      }
-    } else if (s === 1) {
-      if (!form.fullName.trim()) e.fullName = 'Full name is required';
-      if (!form.email.trim()) e.email = 'Email is required';
-      else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim())) e.email = 'Enter a valid email address';
-      if (!form.phone.trim()) e.phone = 'Phone number is required';
-      if (!form.employmentStatus.trim()) e.employmentStatus = 'Employment status is required';
-      if (!form.employmentChanged) e.employmentChanged = 'Please answer this question';
-      if (form.employmentChanged === 'yes' && !form.employmentChangeDetails.trim()) e.employmentChangeDetails = 'Please tell us what changed';
-    } else if (s === 2) {
-      const pairs: [keyof FormState, keyof FormState, string][] = [
-        ['financeChanged', 'financeChangedDetails', 'financeChanged'],
-        ['hasCCJ', 'ccjDetails', 'hasCCJ'],
-        ['courtProceedings', 'courtDetails', 'courtProceedings'],
-        ['ivaBankruptcy', 'ivaDetails', 'ivaBankruptcy'],
-        ['occupancyChanged', 'occupancyDetails', 'occupancyChanged'],
-      ];
-      for (const [q, detail, key] of pairs) {
-        if (!form[q]) e[key] = 'Please answer this question';
-        else if (form[q] === 'yes' && !(form[detail] as string).trim()) e[detail] = 'Please provide details';
-      }
-    } else if (s === 4) {
-      if (!form.hasMaintenance) e.hasMaintenance = 'Please answer this question';
-      if (form.hasMaintenance === 'yes') {
-        if (!form.maintenanceCategory) e.maintenanceCategory = 'Please choose a category';
-        if (!form.maintenanceDescription.trim()) e.maintenanceDescription = 'Please describe the issue';
-      }
-    } else if (s === 5) {
-      if (!form.declarationAccepted) e.declaration = 'Please confirm the declaration to submit';
-    }
-    setErrors(e);
-    return Object.keys(e).length === 0;
-  }
-
-  const next = () => { if (validateStep(step)) { setStep(s => Math.min(STEPS.length - 1, s + 1)); resetView(); } };
-  const back = () => { setErrors({}); setStep(s => Math.max(0, s - 1)); resetView(); };
-
-  async function handleSubmit() {
-    if (!validateStep(5)) return;
-    setStatus('loading');
-    setErrorMsg('');
-    try {
-      const payload = {
-        ...form,
-        bankStatementUrls: bankStatements.urls,
-        payslipUrls: payslips.urls,
-        photoIdUrls: photoId.urls,
-        visaUrls: visa.urls,
-        maintenancePhotoUrls: form.hasMaintenance === 'yes' ? maintenancePhotos.urls : [],
-      };
-      const res = await fetch('/api/rent-review', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      });
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        throw new Error(data.message || 'Something went wrong. Please try again.');
-      }
-      try { sessionStorage.removeItem(STORAGE_KEY); } catch { /* ignore */ }
-      setStatus('success');
-      resetView();
-    } catch (err: any) {
-      setStatus('error');
-      setErrorMsg(err.message || 'Something went wrong. Please try again.');
-    }
-  }
-
-  const firstName = (form.fullName || 'there').split(' ')[0];
+export default function RentReviewOverviewPage() {
+  const [openFaq, setOpenFaq] = useState<number | null>(0);
 
   return (
     <>
       <style>{PAGE_CSS}</style>
       <Navbar />
+      <RevealCards />
 
-      <div className="hol-page-bg" style={{ minHeight: '100vh', fontFamily: "'Poppins', sans-serif", paddingTop: 'calc(68px + clamp(28px, 5vw, 52px))', paddingBottom: 'clamp(48px, 8vw, 80px)' }}>
-        <div style={{ maxWidth: 720, margin: '0 auto', padding: '0 clamp(16px, 4%, 4%)' }}>
+      <div style={{ fontFamily: "'Poppins', sans-serif" }}>
 
-          {status === 'success' ? (
-            <div style={{ background: '#fff', borderRadius: 16, padding: 'clamp(40px, 6vw, 64px) clamp(24px, 5%, 5%)', textAlign: 'center', boxShadow: '0 4px 32px rgba(0,0,0,0.07)' }}>
-              <div style={{ width: 72, height: 72, borderRadius: '50%', background: 'linear-gradient(135deg,#1a3c5e,#2563a8)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', margin: '0 auto 20px', boxShadow: '0 8px 24px rgba(37,99,168,.35)', animation: 'hol-pop .5s cubic-bezier(.34,1.56,.64,1)' }}>
-                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="20 6 9 17 4 12" /></svg>
-              </div>
-              <h2 style={{ fontSize: 26, fontWeight: 700, color: '#0f1f3d', marginBottom: 12 }}>Rent Review Submitted!</h2>
-              <p style={{ fontSize: 15, color: '#374151', maxWidth: 460, margin: '0 auto 8px', lineHeight: 1.6 }}>
-                Thank you, {firstName}. Your Rent Review has been submitted successfully. Our team will review your information and contact you if any further details are required.
-              </p>
-              <p style={{ fontSize: 13, color: '#9ca3af', marginBottom: 28 }}>A confirmation has been sent to {form.email || 'your email'}.</p>
-              <Link href="/" className="hol-submit" style={{ margin: '0 auto' }}>Back to Home</Link>
+        {/* ── HERO ── */}
+        <div className="rr-hero">
+          <div className="rr-hero-glow" aria-hidden />
+          <div className="rr-hero-inner">
+            <div className="rr-badge">Rent Review Process</div>
+            <h1 className="rr-hero-h1">Rent reviews, done the fair, transparent way</h1>
+            <p className="rr-hero-sub">
+              Once a year we check your rent against the real local market — with the evidence shown, the reasoning
+              explained, and the final say a conversation, not a demand. Here&rsquo;s why we do it, and how our
+              approach compares with the rest of the industry.
+            </p>
+            <div className="rr-hero-cta-row">
+              <Link href="/rent-review/apply" className="rr-cta rr-cta--primary">
+                Rent Review
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 12h14M12 5l7 7-7 7" /></svg>
+              </Link>
+              <a href="#why" className="rr-cta rr-cta--ghost">Why we do it</a>
             </div>
-          ) : (
-            <div style={{ background: '#fff', borderRadius: 16, boxShadow: '0 4px 32px rgba(0,0,0,0.07)', overflow: 'hidden' }}>
+            <p className="rr-hero-note">For existing tenants · Takes a few minutes · Accept or discuss online</p>
+          </div>
+          <div className="rr-scroll-cue" aria-hidden>
+            <span />
+          </div>
+        </div>
 
-              {/* Header + progress */}
-              <div style={{ padding: 'clamp(22px, 4vw, 30px) clamp(22px, 4vw, 32px) 0' }}>
-                <Link href="/tenants" className="hol-back-link">← Back to tenants</Link>
-                <h1 style={{ fontSize: 22, fontWeight: 700, color: '#0f1f3d', margin: '10px 0 4px' }}>Rent Review Process</h1>
-                <p style={{ fontSize: 13, color: '#6b7280', margin: 0 }}>Step {step + 1} of {STEPS.length} · {STEPS[step]}</p>
+        {/* ── WHY WE DO REVIEWS ── */}
+        <section id="why" className="rr-sec" style={{ background: '#f7f8fa' }}>
+          <div className="rr-wrap">
+            <div className="rr-head hol-reveal">
+              <div className="hol-eyebrow">Why We Do It</div>
+              <h2 className="hol-h2">Why we review the rent each year</h2>
+              <p className="rr-lead">A rent review isn&rsquo;t about squeezing more out of your tenancy. Done properly, it protects the home you live in and the relationship we have with you.</p>
+            </div>
+            <div className="rr-why-grid">
+              {WHY.map((item, i) => (
+                <div key={item.title} className="rr-why-card hol-card hol-reveal" style={{ animationDelay: `${i * 60}ms` }}>
+                  <div className="rr-why-icon">{item.icon}</div>
+                  <h3 className="rr-why-title">{item.title}</h3>
+                  <p className="rr-why-desc">{item.desc}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
 
-                <div className="hol-steps">
-                  {STEPS.map((label, i) => (
-                    <div key={label} className="hol-step-item">
-                      <div className={`hol-step-dot${i < step ? ' done' : ''}${i === step ? ' active' : ''}`}>
-                        {i < step ? (<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><polyline points="20 6 9 17 4 12" /></svg>) : (i + 1)}
+        {/* ── THE RESEARCH / STAT STRIP ── */}
+        <section className="rr-sec rr-sec--dark">
+          <div className="rr-glow-dark" aria-hidden />
+          <div className="rr-wrap" style={{ position: 'relative', zIndex: 1 }}>
+            <div className="rr-head hol-reveal">
+              <div className="hol-eyebrow" style={{ color: '#7db4f0' }}>The Context</div>
+              <h2 className="hol-h2" style={{ color: '#fff' }}>What the market tells us</h2>
+              <p className="rr-lead" style={{ color: 'rgba(255,255,255,0.6)' }}>
+                Local rents move year to year with supply and demand. Reviewing regularly — and evidencing every figure —
+                keeps things fair and predictable, instead of letting rent drift until a big correction is unavoidable.
+              </p>
+            </div>
+            <div className="rr-stat-grid">
+              {STATS.map((s, i) => (
+                <div key={s.label} className="rr-stat hol-reveal" style={{ animationDelay: `${i * 70}ms` }}>
+                  <div className="rr-stat-big">{s.big}<span className="rr-stat-small">{s.small}</span></div>
+                  <div className="rr-stat-label">{s.label}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* ── HOW OTHERS DO IT vs HOW WE DO IT ── */}
+        <section className="rr-sec" style={{ background: '#fff' }}>
+          <div className="rr-wrap">
+            <div className="rr-head hol-reveal">
+              <div className="hol-eyebrow">The Industry</div>
+              <h2 className="hol-h2">How rent reviews work across the industry</h2>
+              <p className="rr-lead">Estate and lettings agents take a few different routes. Some are fairer and clearer than others — here&rsquo;s the landscape, and where we sit in it.</p>
+            </div>
+
+            <div className="rr-compare">
+              <div className="rr-compare-col hol-reveal">
+                <div className="rr-compare-head rr-compare-head--muted">
+                  <span className="rr-compare-tag">Across the industry</span>
+                  <h3>Common approaches</h3>
+                </div>
+                <div className="rr-ind-list">
+                  {INDUSTRY.map(item => (
+                    <div key={item.title} className="rr-ind-item">
+                      <span className={`rr-chip rr-chip--${item.tag.toLowerCase()}`}>{item.tag}</span>
+                      <div>
+                        <h4>{item.title}</h4>
+                        <p>{item.desc}</p>
                       </div>
-                      <span className={`hol-step-label${i === step ? ' active' : ''}`}>{label}</span>
                     </div>
                   ))}
                 </div>
-                <div className="hol-progress"><div className="hol-progress-bar" style={{ width: `${(step / (STEPS.length - 1)) * 100}%` }} /></div>
               </div>
 
-              <div style={{ padding: 'clamp(22px, 4vw, 30px) clamp(22px, 4vw, 32px) clamp(24px, 4vw, 32px)' }}>
-
-                {/* ── Step 0 · Property & Rent ─────────────────────────── */}
-                {step === 0 && (
-                  <>
-                    <StepIntro title="Your property & rent review" subtitle="We review the rent on managed tenancies each year against the current market." />
-                    <div className="hol-occupied" style={{ marginBottom: 18 }}>
-                      <div className="hol-occupied-head">Property Information</div>
-                      {prefill.address ? (
-                        <div className="hol-summary">
-                          <SummaryRow label="Property Address" value={form.propertyAddress} />
-                          {form.postcode ? <SummaryRow label="Postcode" value={form.postcode} /> : null}
-                          <SummaryRow label="Current Rent" value={form.currentRent ? `${money(form.currentRent)} pcm` : 'On file'} />
-                          <SummaryRow label="Proposed New Rent" value={form.proposedRent ? `${money(form.proposedRent)} pcm` : 'To be confirmed'} />
-                        </div>
-                      ) : (
-                        <div className="hol-form-grid">
-                          <div className="hol-field hol-field--full">
-                            <label className="hol-label">Property Address<span className="hol-req">*</span></label>
-                            <input type="text" className={`hol-input${errors.propertyAddress ? ' hol-input--error' : ''}`} placeholder="e.g. 12 Kirkstall Road, Leeds" value={form.propertyAddress} onChange={set('propertyAddress')} autoComplete="street-address" />
-                            {errors.propertyAddress && <p className="hol-err">{errors.propertyAddress}</p>}
-                          </div>
-                          <div className="hol-field">
-                            <label className="hol-label">Postcode</label>
-                            <input type="text" className="hol-input" placeholder="e.g. LS3 1HD" value={form.postcode} onChange={set('postcode')} autoComplete="postal-code" />
-                          </div>
-                          <div className="hol-field">
-                            <label className="hol-label">Current Rent (pcm)</label>
-                            <input type="text" inputMode="numeric" className="hol-input" placeholder="e.g. 950" value={form.currentRent} onChange={set('currentRent')} />
-                          </div>
-                        </div>
-                      )}
-                    </div>
-
-                    <div className="hol-terms-note" style={{ marginTop: 0, marginBottom: 20 }}>
-                      {form.currentRent && form.proposedRent ? (
-                        <>Your current monthly rent is <strong>{money(form.currentRent)}</strong>. Based on the latest market review, the proposed new rent is <strong>{money(form.proposedRent)}</strong>. If you are happy with this proposal, please continue with the renewal process.</>
-                      ) : (
-                        <>Your property manager will confirm the proposed rent as part of this review. Please complete the form so we can finalise your renewal.</>
-                      )}
-                    </div>
-
-                    <div className="hol-field hol-field--full">
-                      <label className="hol-label">Are you happy with the proposed rent?<span className="hol-req">*</span></label>
-                      <div className="hol-yesno">
-                        <button type="button" className={`hol-yesno-btn${form.rentDecision === 'accept' ? ' on' : ''}`} onClick={() => setVal('rentDecision', 'accept')}>Yes, I accept the proposed rent</button>
-                        <button type="button" className={`hol-yesno-btn${form.rentDecision === 'discuss' ? ' on' : ''}`} onClick={() => setVal('rentDecision', 'discuss')}>No, I&rsquo;d like to discuss the rent</button>
-                      </div>
-                      {errors.rentDecision && <p className="hol-err">{errors.rentDecision}</p>}
-                    </div>
-
-                    {form.rentDecision === 'discuss' && (
-                      <div className="hol-form-grid" style={{ marginTop: 16 }}>
-                        <div className="hol-field">
-                          <label className="hol-label">Rent you would propose (pcm)<span className="hol-req">*</span></label>
-                          <input type="text" inputMode="numeric" className={`hol-input${errors.tenantProposedRent ? ' hol-input--error' : ''}`} placeholder="e.g. 960" value={form.tenantProposedRent} onChange={set('tenantProposedRent')} />
-                          {errors.tenantProposedRent && <p className="hol-err">{errors.tenantProposedRent}</p>}
-                        </div>
-                        <div className="hol-field hol-field--full">
-                          <label className="hol-label">Reason for requesting a different rent<span className="hol-req">*</span></label>
-                          <textarea className={`hol-input hol-textarea${errors.rentDiscussReason ? ' hol-input--error' : ''}`} placeholder="Tell us a little about why…" value={form.rentDiscussReason} onChange={set('rentDiscussReason')} />
-                          {errors.rentDiscussReason && <p className="hol-err">{errors.rentDiscussReason}</p>}
-                        </div>
-                      </div>
-                    )}
-                  </>
-                )}
-
-                {/* ── Step 1 · Personal & Employment ───────────────────── */}
-                {step === 1 && (
-                  <>
-                    <StepIntro title="Confirm your details" subtitle="Please confirm or update your personal and employment information." />
-                    <div className="hol-form-grid">
-                      <div className="hol-field hol-field--full">
-                        <label className="hol-label">Full Name<span className="hol-req">*</span></label>
-                        <input type="text" className={`hol-input${errors.fullName ? ' hol-input--error' : ''}`} value={form.fullName} onChange={set('fullName')} autoComplete="name" />
-                        {errors.fullName && <p className="hol-err">{errors.fullName}</p>}
-                      </div>
-                      <div className="hol-field">
-                        <label className="hol-label">Email Address<span className="hol-req">*</span></label>
-                        <input type="email" className={`hol-input${errors.email ? ' hol-input--error' : ''}`} value={form.email} onChange={set('email')} autoComplete="email" />
-                        {errors.email && <p className="hol-err">{errors.email}</p>}
-                      </div>
-                      <div className="hol-field">
-                        <label className="hol-label">Phone Number<span className="hol-req">*</span></label>
-                        <input type="tel" className={`hol-input${errors.phone ? ' hol-input--error' : ''}`} value={form.phone} onChange={set('phone')} autoComplete="tel" />
-                        {errors.phone && <p className="hol-err">{errors.phone}</p>}
-                      </div>
-                      <div className="hol-field">
-                        <label className="hol-label">Employer</label>
-                        <input type="text" className="hol-input" value={form.employer} onChange={set('employer')} autoComplete="organization" />
-                      </div>
-                      <div className="hol-field">
-                        <label className="hol-label">Job Title</label>
-                        <input type="text" className="hol-input" value={form.jobTitle} onChange={set('jobTitle')} autoComplete="organization-title" />
-                      </div>
-                      <div className="hol-field hol-field--full">
-                        <label className="hol-label">Employment Status<span className="hol-req">*</span></label>
-                        <select className={`hol-input hol-select${errors.employmentStatus ? ' hol-input--error' : ''}`} value={form.employmentStatus} onChange={set('employmentStatus')}>
-                          <option value="">Select…</option>
-                          <option>Employed (full-time)</option>
-                          <option>Employed (part-time)</option>
-                          <option>Self-employed</option>
-                          <option>Student</option>
-                          <option>Retired</option>
-                          <option>Unemployed</option>
-                          <option>Other</option>
-                        </select>
-                        {errors.employmentStatus && <p className="hol-err">{errors.employmentStatus}</p>}
-                      </div>
-                    </div>
-
-                    <YesNo
-                      label="Has your employment changed since your tenancy started?"
-                      value={form.employmentChanged}
-                      onChange={(v) => setVal('employmentChanged', v)}
-                      error={errors.employmentChanged}
-                      detail={form.employmentChanged === 'yes' ? {
-                        label: 'Please tell us what changed',
-                        value: form.employmentChangeDetails,
-                        onChange: (v) => setVal('employmentChangeDetails', v),
-                        error: errors.employmentChangeDetails,
-                      } : undefined}
-                    />
-                  </>
-                )}
-
-                {/* ── Step 2 · Financial Declaration ───────────────────── */}
-                {step === 2 && (
-                  <>
-                    <StepIntro title="Financial declaration" subtitle="Please answer honestly — this forms part of your renewal and referencing." />
-                    <YesNo label="Has your financial situation changed?" value={form.financeChanged} onChange={(v) => setVal('financeChanged', v)} error={errors.financeChanged}
-                      detail={form.financeChanged === 'yes' ? { label: 'Please provide details', value: form.financeChangedDetails, onChange: (v) => setVal('financeChangedDetails', v), error: errors.financeChangedDetails } : undefined} />
-                    <YesNo label="Have you received any CCJs (County Court Judgments) since moving in?" value={form.hasCCJ} onChange={(v) => setVal('hasCCJ', v)} error={errors.hasCCJ}
-                      detail={form.hasCCJ === 'yes' ? { label: 'Please provide details', value: form.ccjDetails, onChange: (v) => setVal('ccjDetails', v), error: errors.ccjDetails } : undefined} />
-                    <YesNo label="Are you currently involved in any court proceedings?" value={form.courtProceedings} onChange={(v) => setVal('courtProceedings', v)} error={errors.courtProceedings}
-                      detail={form.courtProceedings === 'yes' ? { label: 'Please provide details', value: form.courtDetails, onChange: (v) => setVal('courtDetails', v), error: errors.courtDetails } : undefined} />
-                    <YesNo label="Have you entered into an IVA or bankruptcy?" value={form.ivaBankruptcy} onChange={(v) => setVal('ivaBankruptcy', v)} error={errors.ivaBankruptcy}
-                      detail={form.ivaBankruptcy === 'yes' ? { label: 'Please provide details', value: form.ivaDetails, onChange: (v) => setVal('ivaDetails', v), error: errors.ivaDetails } : undefined} />
-                    <YesNo label="Has anyone else moved into or out of the property?" value={form.occupancyChanged} onChange={(v) => setVal('occupancyChanged', v)} error={errors.occupancyChanged}
-                      detail={form.occupancyChanged === 'yes' ? { label: 'Who has moved in or out?', value: form.occupancyDetails, onChange: (v) => setVal('occupancyDetails', v), error: errors.occupancyDetails } : undefined} />
-                  </>
-                )}
-
-                {/* ── Step 3 · Documents ───────────────────────────────── */}
-                {step === 3 && (
-                  <>
-                    <StepIntro title="Upload your documents" subtitle="Each working adult on the tenancy should provide these. You can add several files to each." />
-                    <UploadField label="Three months' Bank Statements" hint="PDF, JPG or PNG. Add up to 6." accept=".pdf,.jpg,.jpeg,.png,.webp" max={6} state={bankStatements} setState={setBankStatements} />
-                    <UploadField label="Three months' Payslips" hint="PDF, JPG or PNG. Add up to 6." accept=".pdf,.jpg,.jpeg,.png,.webp" max={6} state={payslips} setState={setPayslips} />
-                    <UploadField label="Photo ID" hint="Passport or driving licence. Add up to 3." accept=".pdf,.jpg,.jpeg,.png,.webp" max={3} state={photoId} setState={setPhotoId} />
-                    <UploadField label="Visa (if applicable)" hint="Only if relevant to your right to rent." accept=".pdf,.jpg,.jpeg,.png,.webp" max={3} state={visa} setState={setVisa} />
-                    <div className="hol-field hol-field--full">
-                      <label className="hol-label">Right to Rent Share Code <span style={{ color: '#9ca3af', fontWeight: 400 }}>(if applicable)</span></label>
-                      <input type="text" className="hol-input" placeholder="e.g. ABC-123-XYZ" value={form.shareCode} onChange={set('shareCode')} autoComplete="off" />
-                    </div>
-                  </>
-                )}
-
-                {/* ── Step 4 · Maintenance ─────────────────────────────── */}
-                {step === 4 && (
-                  <>
-                    <StepIntro title="Property maintenance" subtitle="While we review your tenancy, let us know about anything that needs attention." />
-                    <YesNo label="Do you have any maintenance issues to report?" value={form.hasMaintenance} onChange={(v) => setVal('hasMaintenance', v)} error={errors.hasMaintenance} />
-                    {form.hasMaintenance === 'yes' && (
-                      <div style={{ marginTop: 16 }}>
-                        <div className="hol-form-grid">
-                          <div className="hol-field hol-field--full">
-                            <label className="hol-label">Issue Category<span className="hol-req">*</span></label>
-                            <select className={`hol-input hol-select${errors.maintenanceCategory ? ' hol-input--error' : ''}`} value={form.maintenanceCategory} onChange={set('maintenanceCategory')}>
-                              <option value="">Select…</option>
-                              {MAINTENANCE_CATEGORIES.map(c => <option key={c}>{c}</option>)}
-                            </select>
-                            {errors.maintenanceCategory && <p className="hol-err">{errors.maintenanceCategory}</p>}
-                          </div>
-                          <div className="hol-field hol-field--full">
-                            <label className="hol-label">Description of the issue<span className="hol-req">*</span></label>
-                            <textarea className={`hol-input hol-textarea${errors.maintenanceDescription ? ' hol-input--error' : ''}`} placeholder="Tell us what's happening, and since when…" value={form.maintenanceDescription} onChange={set('maintenanceDescription')} />
-                            {errors.maintenanceDescription && <p className="hol-err">{errors.maintenanceDescription}</p>}
-                          </div>
-                        </div>
-                        <UploadField label="Upload Photos" hint="Photos help us diagnose the issue. Add up to 8." accept=".jpg,.jpeg,.png,.webp,.heic" max={8} state={maintenancePhotos} setState={setMaintenancePhotos} />
-                      </div>
-                    )}
-                  </>
-                )}
-
-                {/* ── Step 5 · Confirm ─────────────────────────────────── */}
-                {step === 5 && (
-                  <>
-                    <StepIntro title="Review & confirm" subtitle="A quick summary before you submit." />
-                    <div className="hol-summary" style={{ marginBottom: 8 }}>
-                      <SummaryRow label="Property" value={form.propertyAddress} />
-                      <SummaryRow label="Rent decision" value={form.rentDecision === 'accept' ? 'Accepts the proposed rent' : form.rentDecision === 'discuss' ? 'Would like to discuss' : '-'} />
-                      {form.rentDecision === 'discuss' ? <SummaryRow label="Proposed by you" value={form.tenantProposedRent ? `${money(form.tenantProposedRent)} pcm` : '-'} /> : null}
-                      <SummaryRow label="Name" value={form.fullName} />
-                      <SummaryRow label="Email" value={form.email} />
-                      <SummaryRow label="Documents attached" value={String(bankStatements.urls.length + payslips.urls.length + photoId.urls.length + visa.urls.length)} />
-                      <SummaryRow label="Maintenance issue" value={form.hasMaintenance === 'yes' ? (form.maintenanceCategory || 'Yes') : 'None reported'} />
-                    </div>
-
-                    <label className={`hol-terms-accept${errors.declaration ? ' hol-terms-accept--error' : ''}`}>
-                      <input type="checkbox" checked={form.declarationAccepted} onChange={(e) => setVal('declarationAccepted', e.target.checked)} />
-                      <span className="hol-checkbox" aria-hidden>{form.declarationAccepted && <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><polyline points="20 6 9 17 4 12" /></svg>}</span>
-                      <span style={{ fontSize: 13.5, color: '#374151', lineHeight: 1.6 }}>
-                        I confirm that the information provided is accurate and complete. I understand that this information will be used as part of my tenancy renewal and rent review.
-                      </span>
-                    </label>
-                    {errors.declaration && <p className="hol-err" style={{ marginTop: 8 }}>{errors.declaration}</p>}
-
-                    {status === 'error' && (
-                      <div className="hol-err-banner">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" /></svg>
-                        {errorMsg}
-                      </div>
-                    )}
-                  </>
-                )}
-
-                {/* Nav buttons */}
-                <div className="hol-wizard-nav">
-                  <button type="button" className="hol-btn-ghost" onClick={back} disabled={step === 0} style={{ visibility: step === 0 ? 'hidden' : 'visible' }}>← Back</button>
-                  {step < STEPS.length - 1 ? (
-                    <button type="button" className="hol-submit" onClick={next} disabled={anyUploading}>
-                      Continue
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 12h14M12 5l7 7-7 7" /></svg>
-                    </button>
-                  ) : (
-                    <button type="button" className="hol-submit" onClick={handleSubmit} disabled={status === 'loading' || anyUploading}>
-                      {status === 'loading' ? (
-                        <><svg className="hol-spinner" width="16" height="16" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" strokeOpacity=".25" /><path d="M12 2a10 10 0 0 1 10 10" stroke="currentColor" strokeWidth="3" strokeLinecap="round" /></svg> Submitting…</>
-                      ) : (
-                        <><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="20 6 9 17 4 12" /></svg> Submit Rent Review</>
-                      )}
-                    </button>
-                  )}
+              <div className="rr-compare-col rr-compare-col--us hol-reveal" style={{ animationDelay: '90ms' }}>
+                <div className="rr-compare-head">
+                  <span className="rr-compare-tag rr-compare-tag--us">House of Lettings</span>
+                  <h3>How we do it differently</h3>
                 </div>
+                <ul className="rr-diff-list">
+                  {DIFF.map(d => (
+                    <li key={d}>
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="20 6 9 17 4 12" /></svg>
+                      <span>{d}</span>
+                    </li>
+                  ))}
+                </ul>
               </div>
             </div>
-          )}
-        </div>
+          </div>
+        </section>
+
+        {/* ── HOW OUR REVIEW WORKS (timeline) ── */}
+        <section className="rr-sec" style={{ background: '#f7f8fa' }}>
+          <div className="rr-wrap">
+            <div className="rr-head hol-reveal">
+              <div className="hol-eyebrow">The Process</div>
+              <h2 className="hol-h2">How your rent review works</h2>
+              <p className="rr-lead">Four simple steps, all online, at your own pace.</p>
+            </div>
+            <div className="rr-timeline">
+              {STEPS.map((s, i) => (
+                <div key={s.n} className="rr-step hol-card hol-reveal" style={{ animationDelay: `${i * 70}ms` }}>
+                  <div className="rr-step-n">{s.n}</div>
+                  <h3 className="rr-step-title">{s.title}</h3>
+                  <p className="rr-step-desc">{s.desc}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* ── FAQ ── */}
+        <section className="rr-sec" style={{ background: '#fff' }}>
+          <div className="rr-wrap" style={{ maxWidth: 780 }}>
+            <div className="rr-head hol-reveal">
+              <div className="hol-eyebrow">Common Questions</div>
+              <h2 className="hol-h2">Rent review, answered</h2>
+            </div>
+            <div className="rr-faq-list hol-reveal">
+              {FAQS.map((f, i) => {
+                const open = openFaq === i;
+                return (
+                  <div key={f.q} className={`rr-faq${open ? ' open' : ''}`}>
+                    <button type="button" className="rr-faq-q" onClick={() => setOpenFaq(open ? null : i)} aria-expanded={open}>
+                      <span>{f.q}</span>
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" style={{ transform: open ? 'rotate(180deg)' : 'none', transition: 'transform .25s' }}><polyline points="6 9 12 15 18 9" /></svg>
+                    </button>
+                    <div className="rr-faq-a" style={{ maxHeight: open ? 320 : 0 }}>
+                      <p>{f.a}</p>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </section>
+
+        {/* ── FINAL CTA ── */}
+        <section className="rr-sec rr-sec--dark rr-cta-band">
+          <div className="rr-glow-dark" aria-hidden />
+          <div style={{ position: 'relative', zIndex: 1, textAlign: 'center' }}>
+            <h2 className="rr-cta-title">Ready to start your rent review?</h2>
+            <p className="rr-cta-text">Confirm your details, review the proposed rent, and renew — all in a few minutes, online.</p>
+            <Link href="/rent-review/apply" className="rr-cta rr-cta--primary rr-cta--lg">
+              Rent Review
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 12h14M12 5l7 7-7 7" /></svg>
+            </Link>
+          </div>
+        </section>
+
+        <Footer />
       </div>
-      <Footer />
     </>
-  );
-}
-
-function StepIntro({ title, subtitle }: { title: string; subtitle: string }) {
-  return (
-    <div style={{ marginBottom: 20 }}>
-      <h2 style={{ fontSize: 18, fontWeight: 800, color: '#0f172a', margin: '0 0 4px', letterSpacing: '-0.02em' }}>{title}</h2>
-      <p style={{ fontSize: 13, color: '#6b7280', margin: 0, lineHeight: 1.6 }}>{subtitle}</p>
-    </div>
-  );
-}
-
-function SummaryRow({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="hol-summary-row">
-      <span className="hol-summary-label">{label}</span>
-      <span className="hol-summary-value">{value || '-'}</span>
-    </div>
-  );
-}
-
-type Detail = { label: string; value: string; onChange: (v: string) => void; error?: string };
-function YesNo({ label, value, onChange, error, detail }: {
-  label: string;
-  value: '' | 'yes' | 'no';
-  onChange: (v: 'yes' | 'no') => void;
-  error?: string;
-  detail?: Detail;
-}) {
-  return (
-    <div className="hol-field hol-field--full" style={{ marginTop: 18 }}>
-      <label className="hol-label">{label}</label>
-      <div className="hol-yesno">
-        <button type="button" className={`hol-yesno-btn${value === 'yes' ? ' on' : ''}`} onClick={() => onChange('yes')}>Yes</button>
-        <button type="button" className={`hol-yesno-btn${value === 'no' ? ' on' : ''}`} onClick={() => onChange('no')}>No</button>
-      </div>
-      {error && <p className="hol-err">{error}</p>}
-      {detail && (
-        <div style={{ marginTop: 10 }}>
-          <label className="hol-label" style={{ marginBottom: 6, display: 'block' }}>{detail.label}<span className="hol-req">*</span></label>
-          <textarea className={`hol-input hol-textarea${detail.error ? ' hol-input--error' : ''}`} value={detail.value} onChange={(e) => detail.onChange(e.target.value)} />
-          {detail.error && <p className="hol-err">{detail.error}</p>}
-        </div>
-      )}
-    </div>
-  );
-}
-
-function UploadField({ label, hint, accept, max, state, setState }: {
-  label: string;
-  hint: string;
-  accept: string;
-  max: number;
-  state: Upload;
-  setState: React.Dispatch<React.SetStateAction<Upload>>;
-}) {
-  const full = state.urls.length >= max;
-  const handle = async (files: FileList | null) => {
-    if (!files || files.length === 0) return;
-    const picked = Array.from(files).slice(0, Math.max(0, max - state.urls.length));
-    if (picked.length === 0) return;
-    setState(s => ({ ...s, uploading: true, error: '' }));
-    const addedUrls: string[] = [];
-    const addedNames: string[] = [];
-    try {
-      for (const file of picked) {
-        addedUrls.push(await uploadToCloudinary(file));
-        addedNames.push(file.name);
-      }
-      setState(s => ({ ...s, uploading: false, urls: [...s.urls, ...addedUrls], names: [...s.names, ...addedNames] }));
-    } catch (e: any) {
-      setState(s => ({ ...s, uploading: false, urls: [...s.urls, ...addedUrls], names: [...s.names, ...addedNames], error: e.message || 'Upload failed' }));
-    }
-  };
-
-  return (
-    <div className="hol-field hol-field--full" style={{ marginTop: 16 }}>
-      <label className="hol-label">{label}</label>
-      {state.urls.map((url, i) => (
-        <div key={i} className="hol-uploaded" style={{ marginBottom: 6 }}>
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="20 6 9 17 4 12" /></svg>
-          <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{state.names[i] || 'Uploaded'}</span>
-          <a href={url} target="_blank" rel="noopener noreferrer" className="hol-view-link">View</a>
-          <button type="button" onClick={() => setState(s => ({ ...s, urls: s.urls.filter((_, j) => j !== i), names: s.names.filter((_, j) => j !== i) }))} className="hol-remove">Remove</button>
-        </div>
-      ))}
-      {!full && (
-        <label className={`hol-upload${state.uploading ? ' is-loading' : ''}`}>
-          <input type="file" multiple accept={accept} onChange={(e) => { handle(e.target.files); e.currentTarget.value = ''; }} disabled={state.uploading} />
-          {state.uploading ? (
-            <><svg className="hol-spinner" width="15" height="15" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" strokeOpacity=".25" /><path d="M12 2a10 10 0 0 1 10 10" stroke="currentColor" strokeWidth="3" strokeLinecap="round" /></svg> Uploading…</>
-          ) : (
-            <><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12" /></svg> {state.urls.length > 0 ? `Add another (up to ${max})` : 'Upload files'}</>
-          )}
-        </label>
-      )}
-      {state.error && <p className="hol-err">{state.error}</p>}
-      <p style={{ fontSize: 12, color: '#9ca3af', margin: '2px 0 0' }}>{hint}</p>
-    </div>
   );
 }
 
 const PAGE_CSS = `
   @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap');
 
-  @keyframes hol-bg-shift { 0%{background-position:0% 50%;}50%{background-position:100% 50%;}100%{background-position:0% 50%;} }
-  .hol-page-bg { background: linear-gradient(135deg, #eef2ff 0%, #f0f4ff 25%, #e8f0fe 50%, #f7f8fa 75%, #eef2ff 100%); background-size: 400% 400%; animation: hol-bg-shift 12s ease infinite; }
+  .hol-eyebrow { font-size:11px; font-weight:700; letter-spacing:3px; text-transform:uppercase; color:var(--logo-blue); margin-bottom:14px; font-family:'Poppins',sans-serif; }
+  .hol-h2 { font-family:'Poppins',sans-serif; font-size:clamp(26px,3.6vw,42px); font-weight:700; color:#0f1f3d; line-height:1.2; margin:0; }
 
-  .hol-back-link { font-size:12px; color:#6b7280; text-decoration:none; font-weight:600; }
-  .hol-back-link:hover { color:var(--logo-blue); }
+  .rr-wrap { max-width:1080px; margin:0 auto; }
+  .rr-sec { padding:clamp(56px,8vw,104px) clamp(20px,6%,80px); position:relative; overflow:hidden; }
+  .rr-head { text-align:center; margin-bottom:clamp(36px,5vw,54px); }
+  .rr-lead { font-size:15.5px; color:#6b7280; max-width:620px; margin:16px auto 0; line-height:1.75; }
 
-  .hol-steps { display:flex; justify-content:space-between; gap:4px; margin:20px 0 10px; }
-  .hol-step-item { display:flex; flex-direction:column; align-items:center; gap:6px; flex:1; text-align:center; }
-  .hol-step-dot { width:28px; height:28px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:700; background:#eef0f5; color:#9ca3af; transition:all .2s; }
-  .hol-step-dot.active { background:#2563a8; color:#fff; box-shadow:0 0 0 4px rgba(37,99,168,.14); }
-  .hol-step-dot.done { background:#1a3c5e; color:#fff; }
-  .hol-step-label { font-size:10.5px; font-weight:600; color:#9ca3af; letter-spacing:.02em; }
-  .hol-step-label.active { color:var(--logo-blue); }
-  @media(max-width:600px){ .hol-step-label{display:none;} }
+  /* HERO */
+  .rr-hero { position:relative; overflow:hidden; text-align:center;
+    background:#0b1a34;
+    background-image:radial-gradient(ellipse at 72% 12%, rgba(37,99,235,0.30) 0%, transparent 55%), radial-gradient(ellipse at 12% 88%, rgba(37,99,235,0.16) 0%, transparent 52%);
+    padding:calc(68px + clamp(64px,9vw,120px)) clamp(20px,5%,5%) clamp(72px,10vw,128px); }
+  .rr-hero-glow { position:absolute; top:-30%; left:50%; width:min(760px,90%); height:520px; transform:translateX(-50%);
+    background:radial-gradient(circle, rgba(74,144,217,0.28) 0%, transparent 65%); filter:blur(10px);
+    animation:rr-float 9s ease-in-out infinite; pointer-events:none; }
+  @keyframes rr-float { 0%,100%{transform:translateX(-50%) translateY(0);} 50%{transform:translateX(-50%) translateY(26px);} }
+  .rr-hero-inner { position:relative; z-index:1; max-width:720px; margin:0 auto; animation:rr-hero-in .8s cubic-bezier(.22,1,.36,1) both; }
+  @keyframes rr-hero-in { from{opacity:0; transform:translateY(20px);} to{opacity:1; transform:none;} }
+  .rr-badge { display:inline-block; background:rgba(74,144,217,0.28); color:#9fc7fb; font-size:11px; font-weight:700; letter-spacing:3px; text-transform:uppercase; padding:6px 15px; border-radius:20px; margin-bottom:20px; border:1px solid rgba(147,197,253,0.35); }
+  .rr-hero-h1 { font-size:clamp(32px,5vw,56px); font-weight:800; color:#fff; line-height:1.1; margin:0 0 18px; letter-spacing:-.01em; }
+  .rr-hero-sub { font-size:16.5px; color:rgba(255,255,255,0.66); max-width:600px; margin:0 auto 34px; line-height:1.7; font-weight:300; }
+  .rr-hero-cta-row { display:flex; gap:14px; justify-content:center; flex-wrap:wrap; }
+  .rr-hero-note { font-size:12.5px; color:rgba(255,255,255,0.45); margin-top:18px; }
 
-  .hol-progress { height:4px; background:#eef0f5; border-radius:4px; overflow:hidden; margin-top:8px; }
-  .hol-progress-bar { height:100%; background:linear-gradient(90deg,#1a3c5e,#2563a8); border-radius:4px; transition:width .3s ease; }
+  .rr-cta { display:inline-flex; align-items:center; justify-content:center; gap:9px; box-sizing:border-box; min-height:50px; line-height:1.2; font-family:'Poppins',sans-serif; font-size:13.5px; font-weight:700; letter-spacing:.02em; text-transform:uppercase; padding:14px 30px; border-radius:10px; text-decoration:none; border:1.5px solid transparent; transition:background .2s,transform .2s,box-shadow .2s,border-color .2s; }
+  .rr-cta--primary { background:#2563eb; color:#fff; box-shadow:0 10px 26px -10px rgba(37,99,235,.7); }
+  .rr-cta--primary:hover { background:#1d4ed8; transform:translateY(-2px); box-shadow:0 16px 34px -12px rgba(37,99,235,.8); }
+  .rr-cta--ghost { background:transparent; color:#dbe9ff; border-color:rgba(255,255,255,0.3); }
+  .rr-cta--ghost:hover { border-color:rgba(255,255,255,0.6); transform:translateY(-2px); }
+  .rr-cta--lg { min-height:56px; font-size:14px; padding:16px 40px; }
 
-  .hol-form-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;}
-  .hol-field{display:flex;flex-direction:column;gap:6px;}
-  .hol-field--full{grid-column:1/-1;}
-  .hol-label{font-size:13px;font-weight:600;color:#374151;font-family:'Poppins',sans-serif;}
-  .hol-req{color:#e53e3e;margin-left:2px;}
-  .hol-input{width:100%;padding:11px 14px;border:1.5px solid #e5e7eb;border-radius:10px;font-family:'Poppins',sans-serif;font-size:14px;color:#111827;background:#fff;outline:none;transition:border-color .15s,box-shadow .15s;box-sizing:border-box;}
-  .hol-input:focus{border-color:#2563a8;box-shadow:0 0 0 3px rgba(37,99,168,.12);}
-  .hol-input--error{border-color:#e53e3e!important;}
-  .hol-select{appearance:none;cursor:pointer;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:36px;}
-  .hol-textarea{resize:vertical;min-height:80px;}
-  .hol-err{font-size:12px;color:#e53e3e;margin:0;font-family:'Poppins',sans-serif;}
-  .hol-err-banner{display:flex;align-items:center;gap:8px;background:#fef2f2;border:1px solid #fecaca;border-radius:10px;padding:12px 14px;font-size:13px;color:#dc2626;margin:20px 0 0;font-family:'Poppins',sans-serif;}
+  .rr-scroll-cue { position:absolute; bottom:22px; left:50%; transform:translateX(-50%); width:24px; height:38px; border:2px solid rgba(255,255,255,0.3); border-radius:14px; display:flex; justify-content:center; padding-top:7px; z-index:1; }
+  .rr-scroll-cue span { width:4px; height:8px; border-radius:2px; background:rgba(255,255,255,0.6); animation:rr-scroll 1.5s ease-in-out infinite; }
+  @keyframes rr-scroll { 0%{opacity:0; transform:translateY(-4px);} 50%{opacity:1;} 100%{opacity:0; transform:translateY(10px);} }
+  @media(max-width:600px){ .rr-scroll-cue{display:none;} }
 
-  .hol-occupied{border:1px solid #dbe6fb;background:#f5f9ff;border-radius:12px;padding:16px 18px;}
-  .hol-occupied-head{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--logo-blue);margin-bottom:12px;}
+  /* WHY grid */
+  .rr-why-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:22px; }
+  @media(max-width:860px){ .rr-why-grid{grid-template-columns:1fr 1fr;} }
+  @media(max-width:560px){ .rr-why-grid{grid-template-columns:1fr;} }
+  .rr-why-card { background:#fff; border:1px solid #eef0f5; border-radius:16px; padding:28px 24px; }
+  .rr-why-icon { font-size:30px; line-height:1; margin-bottom:14px; }
+  .rr-why-title { font-size:16.5px; font-weight:700; color:#0f1f3d; margin:0 0 8px; }
+  .rr-why-desc { font-size:14px; color:#6b7280; line-height:1.7; margin:0; }
 
-  .hol-terms-note{margin:22px 0 0;padding:14px 16px;border:1px solid #e5e7eb;border-radius:12px;background:#fafbff;font-size:13px;color:#4b5563;line-height:1.65;}
+  /* DARK sections */
+  .rr-sec--dark { background:#0f1f3d; }
+  .rr-glow-dark { position:absolute; inset:0; background:radial-gradient(ellipse at 50% 40%, rgba(37,99,235,0.16) 0%, transparent 68%); pointer-events:none; }
+  .rr-stat-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:18px; }
+  @media(max-width:760px){ .rr-stat-grid{grid-template-columns:1fr 1fr;} }
+  .rr-stat { background:rgba(255,255,255,0.04); border:1px solid rgba(125,180,240,0.22); border-radius:16px; padding:26px 22px; text-align:center; transition:transform .25s,border-color .25s,background .25s; }
+  .rr-stat:hover { transform:translateY(-5px); border-color:rgba(125,180,240,0.5); background:rgba(255,255,255,0.06); }
+  .rr-stat-big { font-size:clamp(34px,5vw,46px); font-weight:800; color:#fff; line-height:1; letter-spacing:-.02em; }
+  .rr-stat-small { font-size:14px; font-weight:600; color:#7db4f0; margin-left:6px; letter-spacing:0; }
+  .rr-stat-label { font-size:12.5px; color:rgba(255,255,255,0.6); margin-top:12px; line-height:1.5; }
 
-  .hol-yesno{display:flex;gap:10px;flex-wrap:wrap;}
-  .hol-yesno-btn{flex:1;min-width:150px;padding:11px 14px;border:1.5px solid #e5e7eb;border-radius:9px;background:#fff;color:#374151;font-family:'Poppins',sans-serif;font-size:13px;font-weight:600;cursor:pointer;transition:all .15s;}
-  .hol-yesno-btn:hover{border-color:#bcd0ee;}
-  .hol-yesno-btn.on{border-color:#2563a8;background:#2563a8;color:#fff;}
+  /* COMPARE */
+  .rr-compare { display:grid; grid-template-columns:1fr 1fr; gap:22px; align-items:start; }
+  @media(max-width:820px){ .rr-compare{grid-template-columns:1fr;} }
+  .rr-compare-col { border:1px solid #eef0f5; border-radius:18px; padding:26px 24px; background:#fdfdff; box-shadow:0 4px 14px -6px rgba(15,31,61,0.10); }
+  .rr-compare-col--us { border-color:#bcd6f7; background:linear-gradient(180deg,#f5f9ff 0%,#ffffff 100%); box-shadow:0 20px 44px -24px rgba(37,99,235,0.4); }
+  .rr-compare-head { margin-bottom:18px; }
+  .rr-compare-tag { display:inline-block; font-size:10px; font-weight:800; letter-spacing:.14em; text-transform:uppercase; color:#6b7280; background:#eef0f5; padding:4px 10px; border-radius:20px; margin-bottom:10px; }
+  .rr-compare-tag--us { color:#fff; background:#2563eb; }
+  .rr-compare-head h3 { font-size:19px; font-weight:700; color:#0f1f3d; margin:0; }
+  .rr-compare-head--muted h3 { color:#64748b; }
 
-  .hol-upload{display:flex;align-items:center;justify-content:center;gap:8px;padding:12px 16px;border:1.5px dashed #cbd5e1;border-radius:9px;cursor:pointer;font-size:13px;font-weight:600;color:var(--logo-blue);background:#f8fafc;transition:all .15s;}
-  .hol-upload:hover{border-color:#2563a8;background:#f0f6ff;}
-  .hol-upload.is-loading{cursor:wait;color:#6b7280;}
-  .hol-upload input{position:absolute;opacity:0;width:0;height:0;}
-  .hol-uploaded{display:flex;align-items:center;gap:10px;padding:10px 14px;border:1.5px solid #bbf7d0;background:#f0fdf4;border-radius:9px;font-size:13px;color:#166534;font-weight:600;}
-  .hol-view-link{color:var(--logo-blue);font-size:12px;font-weight:600;text-decoration:none;}
-  .hol-remove{background:none;border:none;color:#dc2626;font-size:12px;font-weight:600;cursor:pointer;padding:0;}
+  .rr-ind-list { display:flex; flex-direction:column; gap:16px; }
+  .rr-ind-item { display:flex; gap:12px; align-items:flex-start; }
+  .rr-ind-item h4 { font-size:14.5px; font-weight:700; color:#334155; margin:0 0 3px; }
+  .rr-ind-item p { font-size:13px; color:#6b7280; line-height:1.6; margin:0; }
+  .rr-chip { flex:none; font-size:9.5px; font-weight:800; letter-spacing:.08em; text-transform:uppercase; padding:4px 8px; border-radius:6px; margin-top:2px; }
+  .rr-chip--common { color:#475569; background:#e2e8f0; }
+  .rr-chip--statutory { color:#92400e; background:#fef3c7; }
+  .rr-chip--blunt { color:#9f1239; background:#ffe4e6; }
 
-  .hol-summary{border:1px solid #eef0f5;border-radius:12px;overflow:hidden;}
-  .hol-summary-row{display:flex;justify-content:space-between;gap:16px;padding:11px 16px;font-size:13.5px;border-bottom:1px solid #f1f3f7;}
-  .hol-summary-row:last-child{border-bottom:none;}
-  .hol-summary-label{color:#6b7280;font-weight:500;flex-shrink:0;}
-  .hol-summary-value{color:#111827;font-weight:600;text-align:right;}
+  .rr-diff-list { list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:14px; }
+  .rr-diff-list li { display:flex; gap:11px; align-items:flex-start; font-size:14px; color:#1e3a5f; line-height:1.6; font-weight:500; }
+  .rr-diff-list svg { flex:none; color:#2563eb; margin-top:1px; }
 
-  .hol-terms-accept{display:flex;align-items:flex-start;gap:12px;margin-top:22px;padding:16px 18px;border:1.5px solid #e5e7eb;border-radius:12px;cursor:pointer;background:#fafbff;transition:border-color .15s;}
-  .hol-terms-accept:has(input:checked){border-color:#2563a8;background:#f5f9ff;}
-  .hol-terms-accept--error{border-color:#f7b6b6;}
-  .hol-terms-accept input{position:absolute;opacity:0;width:0;height:0;}
-  .hol-checkbox{flex-shrink:0;width:20px;height:20px;border-radius:6px;border:1.5px solid #cbd5e1;display:flex;align-items:center;justify-content:center;color:#fff;background:#fff;transition:all .15s;margin-top:1px;}
-  .hol-terms-accept:has(input:checked) .hol-checkbox{background:#2563a8;border-color:#2563a8;}
+  /* TIMELINE */
+  .rr-timeline { display:grid; grid-template-columns:repeat(4,1fr); gap:20px; }
+  @media(max-width:860px){ .rr-timeline{grid-template-columns:1fr 1fr;} }
+  @media(max-width:520px){ .rr-timeline{grid-template-columns:1fr;} }
+  .rr-step { background:#fff; border:1px solid #eef0f5; border-radius:16px; padding:26px 22px; }
+  .rr-step-n { font-size:26px; font-weight:800; color:#2563eb; letter-spacing:-.02em; margin-bottom:12px; }
+  .rr-step-title { font-size:16px; font-weight:700; color:#0f1f3d; margin:0 0 8px; }
+  .rr-step-desc { font-size:13.5px; color:#6b7280; line-height:1.65; margin:0; }
 
-  .hol-wizard-nav{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-top:28px;padding-top:22px;border-top:1px solid #f1f3f7;}
-  .hol-btn-ghost{display:inline-flex;align-items:center;justify-content:center;gap:9px;box-sizing:border-box;min-height:48px;line-height:1.2;background:none;border:1.5px solid #e5e7eb;border-radius:9px;padding:14px 28px;font-family:'Poppins',sans-serif;font-size:13.5px;font-weight:700;letter-spacing:.02em;text-transform:uppercase;color:#374151;cursor:pointer;transition:all .15s;}
-  .hol-btn-ghost:hover:not(:disabled){border-color:#cbd5e1;background:#f9fafb;}
-  .hol-submit{display:inline-flex;align-items:center;justify-content:center;gap:9px;box-sizing:border-box;min-height:48px;line-height:1.2;background:linear-gradient(135deg,#1a3c5e 0%,#2563a8 100%);color:#fff;border:1.5px solid transparent;border-radius:9px;font-family:'Poppins',sans-serif;font-size:13.5px;font-weight:700;letter-spacing:.02em;text-transform:uppercase;padding:14px 28px;cursor:pointer;transition:opacity .15s,transform .15s,box-shadow .15s;box-shadow:0 4px 16px rgba(37,99,168,.35);white-space:nowrap;margin-left:auto;}
-  .hol-submit:hover:not(:disabled){opacity:.92;transform:translateY(-1px);box-shadow:0 6px 20px rgba(37,99,168,.45);}
-  .hol-submit:disabled{opacity:.7;cursor:not-allowed;}
-  .hol-spinner{animation:hol-spin .8s linear infinite;}
-  @keyframes hol-spin{to{transform:rotate(360deg);}}
-  @keyframes hol-pop{from{transform:scale(.5);opacity:0}to{transform:scale(1);opacity:1}}
+  /* FAQ */
+  .rr-faq-list { display:flex; flex-direction:column; gap:12px; }
+  .rr-faq { border:1px solid #eef0f5; border-radius:12px; overflow:hidden; background:#fff; transition:border-color .2s,box-shadow .2s; }
+  .rr-faq.open { border-color:#cfe0f7; box-shadow:0 10px 26px -16px rgba(37,99,235,0.3); }
+  .rr-faq-q { width:100%; display:flex; align-items:center; justify-content:space-between; gap:16px; padding:18px 20px; background:none; border:none; cursor:pointer; text-align:left; font-family:'Poppins',sans-serif; font-size:15px; font-weight:600; color:#0f1f3d; }
+  .rr-faq-q svg { flex:none; color:#2563eb; }
+  .rr-faq-a { overflow:hidden; transition:max-height .3s ease; }
+  .rr-faq-a p { margin:0; padding:0 20px 18px; font-size:14px; color:#6b7280; line-height:1.75; }
 
-  @media(max-width:600px){
-    .hol-form-grid{grid-template-columns:1fr;gap:14px;}
-    .hol-input{font-size:16px;}
-  }
+  /* FINAL CTA */
+  .rr-cta-band { text-align:center; }
+  .rr-cta-title { font-size:clamp(26px,3.6vw,44px); font-weight:700; color:#fff; margin:0 0 16px; }
+  .rr-cta-text { font-size:16px; color:rgba(255,255,255,0.6); max-width:520px; margin:0 auto 34px; line-height:1.7; font-weight:300; }
 `;

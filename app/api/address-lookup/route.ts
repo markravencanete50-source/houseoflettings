@@ -65,10 +65,12 @@ export async function GET(request: NextRequest) {
       if (response.status === 404) {
         return NextResponse.json({ addresses: [] });
       }
-      return NextResponse.json(
-        { error: 'Could not look up addresses right now. Please enter it manually.' },
-        { status: 502 }
-      );
+      // Rate-limit (quota exhausted) or any upstream outage: don't surface a
+      // hard error. Address search is a convenience — every form that uses it
+      // also lets the visitor type the address manually — so we return an empty
+      // list with an `unavailable` flag and let the UI invite manual entry
+      // instead of showing a red failure that reads as "the form is broken".
+      return NextResponse.json({ addresses: [], unavailable: true });
     }
 
     const data = (await response.json()) as {
@@ -103,10 +105,10 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ addresses: results });
   } catch (error) {
+    // Network reset / DNS / TLS failure reaching Homedata (e.g. the backend
+    // dropping connections once the quota is hit). Treat it like an outage:
+    // empty list + unavailable flag so the UI falls back to manual entry.
     console.error('Address lookup error:', error);
-    return NextResponse.json(
-      { error: 'Could not look up addresses right now. Please enter it manually.' },
-      { status: 502 }
-    );
+    return NextResponse.json({ addresses: [], unavailable: true });
   }
 }

@@ -85,10 +85,14 @@ export default function PostcodeLookup({
   const [showDropdown, setShowDropdown] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // A soft, non-alarming notice (e.g. address search temporarily unavailable),
+  // shown in amber rather than red, guiding the visitor to type the address.
+  const [notice, setNotice] = useState<string | null>(null);
 
   const applyResult = (list: AddressResult[]) => {
+    setNotice(null);
     if (list.length === 0) {
-      setError('No addresses found for this postcode.');
+      setError('No addresses found for this postcode. Please enter it manually below.');
       setAddresses([]);
       setShowDropdown(false);
     } else {
@@ -127,19 +131,31 @@ export default function PostcodeLookup({
 
     setLoading(true);
     setError(null);
+    setNotice(null);
     setAddresses([]);
 
     try {
       const response = await fetch(`/api/address-lookup?postcode=${encodeURIComponent(key)}`);
-      if (!response.ok) {
-        throw new Error('Failed to fetch addresses.');
+      const data = (await response.json().catch(() => ({}))) as {
+        addresses?: AddressResult[];
+        unavailable?: boolean;
+      };
+      // Service unavailable (quota reached / upstream outage): don't block the
+      // form. Invite manual entry with a soft amber notice, and don't cache so
+      // the lookup works again once the service recovers.
+      if (!response.ok || data.unavailable) {
+        setNotice('Address search is temporarily unavailable. Please type your address in the field below.');
+        setAddresses([]);
+        setShowDropdown(false);
+        return;
       }
-      const data = (await response.json()) as { addresses: AddressResult[] };
-      writeCache(key, data.addresses); // cache even empty results to avoid re-charging
+      const list = data.addresses || [];
+      writeCache(key, list); // cache even empty results to avoid re-charging
       lastKeyRef.current = key;
-      applyResult(data.addresses);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred.');
+      applyResult(list);
+    } catch {
+      // Network error reaching our own route: same graceful fallback.
+      setNotice('Address search is temporarily unavailable. Please type your address in the field below.');
       setAddresses([]);
       setShowDropdown(false);
     } finally {
@@ -175,6 +191,8 @@ export default function PostcodeLookup({
           onChange={(e) => {
             onPostcodeChange(e.target.value);
             setShowDropdown(false);
+            setError(null);
+            setNotice(null);
           }}
           onKeyDown={handleKeyDown}
         />
@@ -211,6 +229,21 @@ export default function PostcodeLookup({
           }}
         >
           {error}
+        </div>
+      )}
+
+      {notice && (
+        <div
+          style={{
+            marginTop: 8,
+            padding: 10,
+            background: '#fef3c7',
+            color: '#92400e',
+            borderRadius: 4,
+            fontSize: 13,
+          }}
+        >
+          {notice}
         </div>
       )}
 

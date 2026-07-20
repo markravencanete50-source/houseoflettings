@@ -102,13 +102,12 @@ export default function LandlordRegistrationPage() {
         </section>
 
         {/* ── SERVICES (pricing packages) ── */}
-        <section style={{ background: '#0f1f3d', padding: 'clamp(56px, 8vw, 96px) clamp(20px, 6%, 80px)', position: 'relative', overflow: 'hidden' }}>
-          <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(ellipse at 80% 20%, rgba(37,99,235,0.14) 0%, transparent 60%)', pointerEvents: 'none' }} />
+        <section style={{ background: '#fff', padding: 'clamp(56px, 8vw, 96px) clamp(20px, 6%, 80px)', position: 'relative', overflow: 'hidden' }}>
           <div style={{ position: 'relative', zIndex: 1, maxWidth: 1080, margin: '0 auto' }}>
             <div style={{ textAlign: 'center', marginBottom: 48 }}>
-              <div className="hol-eyebrow" style={{ color: '#4a90d9' }}>Our Bundles</div>
-              <h2 className="hol-h2" style={{ color: '#fff' }}>Services you can request</h2>
-              <p style={{ fontSize: 15, color: 'rgba(255,255,255,0.5)', maxWidth: 580, margin: '14px auto 0', lineHeight: 1.7 }}>
+              <div className="hol-eyebrow">Our Bundles</div>
+              <h2 className="hol-h2">Services you can request</h2>
+              <p style={{ fontSize: 15, color: '#6b7280', maxWidth: 580, margin: '14px auto 0', lineHeight: 1.7 }}>
                 Each management bundle is charged as a percentage of the monthly rent, with smaller set up fees to get started. Pick the one that fits your portfolio when you register.
               </p>
             </div>
@@ -126,7 +125,7 @@ export default function LandlordRegistrationPage() {
               ))}
             </div>
             <div style={{ textAlign: 'center', marginTop: 40 }}>
-              <Link href="/pricing" className="hol-hero-cta" style={{ background: 'transparent', borderColor: 'rgba(255,255,255,0.4)' }}>
+              <Link href="/pricing" className="hol-hero-cta hol-hero-cta--outline">
                 Compare All Bundles
               </Link>
             </div>
@@ -213,6 +212,8 @@ const PAGE_CSS = `
 
   .hol-hero-cta { display:inline-flex; align-items:center; justify-content:center; gap:9px; box-sizing:border-box; min-height:48px; line-height:1.2; background:#2563eb; color:#fff; text-decoration:none; font-family:'Poppins',sans-serif; font-size:13.5px; font-weight:700; letter-spacing:.02em; text-transform:uppercase; padding:14px 28px; border:1.5px solid transparent; border-radius:9px; transition:background .2s,transform .2s; }
   .hol-hero-cta:hover { background:#1d4ed8; transform:translateY(-2px); }
+  .hol-hero-cta--outline { background:transparent; color:var(--logo-blue); border-color:#2563eb; }
+  .hol-hero-cta--outline:hover { background:#2563eb; color:#fff; }
 
   .hol-why-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:22px; }
   @media(max-width:860px){ .hol-why-grid{grid-template-columns:1fr 1fr;} }

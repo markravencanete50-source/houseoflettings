@@ -12,7 +12,7 @@ import RevealCards from '@/components/RevealCards';
 const WHY = [
   { icon: '⚖️', title: 'Fair, market-aligned rent', desc: 'A review keeps your rent in step with what similar homes nearby actually let for today — fair for you and fair for us.' },
   { icon: '📈', title: 'No sudden shocks', desc: 'Small, evidence-based adjustments once a year are far easier to plan for than one large correction after rent has drifted for years.' },
-  { icon: '🛠️', title: 'Keeps your home maintained', desc: 'A sustainable rent funds ongoing repairs, safety checks and the gas, electrical and EPC compliance that protect you.' },
+  { icon: '🛠️', title: 'A well-maintained home', desc: 'A sustainable rent funds ongoing repairs, safety checks, and the gas, electrical and EPC compliance that keeps you safe.' },
   { icon: '🤝', title: 'Longer, stable tenancies', desc: 'Keeping a good tenant almost always beats an empty property. Reviews are designed to keep you settled, not to move you on.' },
   { icon: '🔍', title: 'Full transparency', desc: 'You see the current figure, the proposed figure and the reasoning behind it — nothing is hidden or automatic.' },
   { icon: '💬', title: 'A conversation, not a demand', desc: 'Happy with the proposal? Accept in a click. Not sure? Open a discussion and tell us the figure that works for you.' },
@@ -22,14 +22,14 @@ const INDUSTRY = [
   { tag: 'Common', title: 'Market-comparable review', desc: 'Most agents review at renewal by comparing your home against similar local properties currently on the market.' },
   { tag: 'Common', title: 'Index-linked increases', desc: 'Some tenancies contain a clause tying the rent to inflation (RPI or CPI), so it rises by a set index each year regardless of the local market.' },
   { tag: 'Statutory', title: 'Section 13 notice', desc: 'For rolling (periodic) tenancies in England, landlords can propose an increase once a year through a formal Section 13 notice.' },
-  { tag: 'Blunt', title: 'Automatic fixed uplift', desc: 'A minority write a flat percentage rise into the contract every year — simple, but it ignores whether the local market actually moved.' },
+  { tag: 'Blunt', title: 'Automatic fixed uplift', desc: 'A minority of agents write a flat percentage rise into the contract every year — simple, but it ignores whether the local market actually moved.' },
 ];
 
 const DIFF = [
   'Evidence-based, never automatic — we benchmark your actual property against live local comparables.',
   'Transparent — you see the current rent, the proposed rent and the reasoning, side by side.',
   'Collaborative — accept online, or propose your own figure and tell us why.',
-  'Fully online — no phone tag, no posted forms; the whole review takes minutes.',
+  'Fully online — no back-and-forth calls, no posted forms; the whole review takes minutes.',
   'A whole-tenancy check-in — we refresh your details, documents and any maintenance in one place.',
 ];
 
@@ -37,7 +37,7 @@ const STEPS = [
   { n: '01', title: 'Market review', desc: 'We benchmark your property against homes currently letting in your area to find its fair market rent.' },
   { n: '02', title: 'Your proposal', desc: 'You receive a clear current-vs-proposed rent, with the reasoning behind the figure.' },
   { n: '03', title: 'You decide online', desc: 'Accept the proposal in a click, or open a discussion and suggest your own figure.' },
-  { n: '04', title: 'Renewal completed', desc: 'We finalise your tenancy renewal and update your details, documents and any repairs together.' },
+  { n: '04', title: 'Renewal completed', desc: 'We finalise your renewal and, in one place, update your details and documents and arrange any repairs.' },
 ];
 
 const STATS = [
@@ -71,10 +71,10 @@ export default function RentReviewOverviewPage() {
           <div className="rr-hero-glow" aria-hidden />
           <div className="rr-hero-inner">
             <div className="rr-badge">Rent Review Process</div>
-            <h1 className="rr-hero-h1">Rent reviews, done the fair, transparent way</h1>
+            <h1 className="rr-hero-h1">Rent reviews, done fairly and transparently</h1>
             <p className="rr-hero-sub">
               Once a year we check your rent against the real local market — with the evidence shown, the reasoning
-              explained, and the final say a conversation, not a demand. Here&rsquo;s why we do it, and how our
+              explained, and the final say a conversation — never a demand. Here&rsquo;s why we do it, and how our
               approach compares with the rest of the industry.
             </p>
             <div className="rr-hero-cta-row">
@@ -302,7 +302,7 @@ const PAGE_CSS = `
   .rr-stat { background:rgba(255,255,255,0.04); border:1px solid rgba(125,180,240,0.22); border-radius:16px; padding:26px 22px; text-align:center; transition:transform .25s,border-color .25s,background .25s; }
   .rr-stat:hover { transform:translateY(-5px); border-color:rgba(125,180,240,0.5); background:rgba(255,255,255,0.06); }
   .rr-stat-big { font-size:clamp(34px,5vw,46px); font-weight:800; color:#fff; line-height:1; letter-spacing:-.02em; }
-  .rr-stat-small { font-size:14px; font-weight:600; color:#7db4f0; margin-left:6px; letter-spacing:0; }
+  .rr-stat-small { font-size:14px; font-weight:600; color:#7db4f0; margin-left:8px; letter-spacing:0; white-space:nowrap; }
   .rr-stat-label { font-size:12.5px; color:rgba(255,255,255,0.6); margin-top:12px; line-height:1.5; }
 
   /* COMPARE */

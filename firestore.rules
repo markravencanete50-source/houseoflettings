@@ -139,6 +139,12 @@ service cloud.firestore {
       allow read, update, delete: if isAdmin();
     }
 
+    // Written server-side only (firebase-admin in /api/rent-review). Same as
+    // the other form collections — no client create rule; admin-read only.
+    match /rentReviews/{id} {
+      allow read, update, delete: if isAdmin();
+    }
+
     // Aggregate website analytics — written and read only via /api/track
     // (admin SDK). No client access.
     match /analytics/{id} {

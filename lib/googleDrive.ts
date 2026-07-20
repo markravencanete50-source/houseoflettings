@@ -40,7 +40,8 @@ export type BackupFormType =
   | "tenant-application"
   | "guarantor"
   | "landlord-registration"
-  | "maintenance";
+  | "maintenance"
+  | "rent-review";
 
 // Folder names match the ones the office already uses in Drive.
 const FORM_FOLDERS: Record<BackupFormType, string> = {
@@ -48,6 +49,7 @@ const FORM_FOLDERS: Record<BackupFormType, string> = {
   guarantor: "Guarantor Form",
   "landlord-registration": "Landlord Registration",
   maintenance: "Maintenance Report",
+  "rent-review": "Rent Review",
 };
 
 export interface BackupFile {

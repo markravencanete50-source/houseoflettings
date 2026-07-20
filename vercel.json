@@ -17,6 +17,9 @@
     },
     "app/api/maintenance/route.ts": {
       "maxDuration": 60
+    },
+    "app/api/rent-review/route.ts": {
+      "maxDuration": 60
     }
   }
 }

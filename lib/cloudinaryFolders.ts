@@ -17,6 +17,7 @@ export const CLOUDINARY_FOLDERS = {
   landlordProperties: 'houseoflettings/landlord-properties', // property photos & floor plans from landlord registrations
   maintenance: 'houseoflettings/maintenance',           // maintenance report photos & videos
   serviceOrders: 'houseoflettings/service-orders',      // service-order proof of payment
+  rentReview: 'houseoflettings/rent-review',            // rent-review documents & maintenance photos
 } as const;
 
 export type CloudinaryFolder = (typeof CLOUDINARY_FOLDERS)[keyof typeof CLOUDINARY_FOLDERS];

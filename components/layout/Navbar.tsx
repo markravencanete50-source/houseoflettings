@@ -42,6 +42,7 @@ const TENANT_ITEMS: NavItem[] = [
   { href: '/listings', label: 'Browse Properties' },
   { href: '/tenant-application', label: 'Tenant Application' },
   { href: '/guarantor', label: 'Guarantor Form' },
+  { href: '/rent-review', label: 'Rent Review' },
   { href: '/maintenance', label: 'Maintenance' },
 ];
 

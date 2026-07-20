@@ -161,9 +161,11 @@ export default function RentReviewApplyPage() {
     setErrors(e => ({ ...e, propertyAddress: '' }));
   };
 
+  // Search-driven: matches appear the moment the tenant starts typing, rather
+  // than dumping the whole catalogue up front.
   const filteredProps = useMemo(() => {
     const q = propSearch.trim().toLowerCase().replace(/\s+/g, '');
-    if (!q) return propertyList.slice(0, 60);
+    if (!q) return [];
     return propertyList.filter(p => `${p.address} ${p.postcode}`.toLowerCase().replace(/\s+/g, '').includes(q)).slice(0, 60);
   }, [propertyList, propSearch]);
 
@@ -188,8 +190,8 @@ export default function RentReviewApplyPage() {
       if (form.hasCCJ === 'yes' && !form.ccjDetails.trim()) e.ccjDetails = 'Please provide brief details';
     } else if (s === 2) {
       if (photoId.urls.length === 0) e.photoId = 'Please upload your photo ID (front and back)';
-      if (payslips.urls.length === 0) e.payslips = 'Please upload your most recent payslip(s)';
-      if (bankStatements.urls.length === 0) e.bankStatements = 'Please upload your bank statements';
+      if (payslips.urls.length === 0) e.payslips = 'Please upload your last 3 months of payslips';
+      if (bankStatements.urls.length === 0) e.bankStatements = 'Please upload your last 3 months of bank statements';
     } else if (s === 3) {
       if (!form.rentDecision) e.rentDecision = 'Please confirm whether you accept the revised rent';
       if (form.rentDecision === 'discuss') {
@@ -305,22 +307,24 @@ export default function RentReviewApplyPage() {
                           <input type="text" className={`hol-input${errors.propertyAddress ? ' hol-input--error' : ''}`} placeholder="Type a postcode or street name…" value={propSearch} onChange={e => setPropSearch(e.target.value)} autoComplete="off" />
                           {errors.propertyAddress && <p className="hol-err">{errors.propertyAddress}</p>}
                         </div>
-                        <div className="rr-picker">
-                          {propertyList.length === 0 ? (
-                            <div className="rr-picker-empty">Loading properties…</div>
-                          ) : filteredProps.length === 0 ? (
-                            <div className="rr-picker-empty">No match. Try a different postcode, or contact us if your property isn’t listed.</div>
-                          ) : (
-                            filteredProps.map((p, i) => (
-                              <button type="button" key={p.id || p.address + i} className="rr-picker-item" onClick={() => selectProperty(p)}>
-                                <span className="rr-picker-addr">{p.address}</span>
-                                {p.postcode && <span className="rr-picker-pc">{p.postcode}</span>}
-                              </button>
-                            ))
-                          )}
-                        </div>
-                        {propertyList.length > 60 && !propSearch && (
-                          <p style={{ fontSize: 12, color: '#9ca3af', margin: '8px 0 0' }}>Showing the first 60, search by postcode to narrow down.</p>
+                        {propSearch.trim() && (
+                          <div className="rr-picker">
+                            {propertyList.length === 0 ? (
+                              <div className="rr-picker-empty">Loading properties…</div>
+                            ) : filteredProps.length === 0 ? (
+                              <div className="rr-picker-empty">No match. Try a different postcode, or contact us if your property isn’t listed.</div>
+                            ) : (
+                              filteredProps.map((p, i) => (
+                                <button type="button" key={p.id || p.address + i} className="rr-picker-item" onClick={() => selectProperty(p)}>
+                                  <span className="rr-picker-addr">{p.address}</span>
+                                  {p.postcode && <span className="rr-picker-pc">{p.postcode}</span>}
+                                </button>
+                              ))
+                            )}
+                          </div>
+                        )}
+                        {!propSearch.trim() && (
+                          <p style={{ fontSize: 12.5, color: '#9ca3af', margin: '10px 0 0' }}>Start typing your postcode or address to find your property.</p>
                         )}
                       </>
                     )}
@@ -401,8 +405,8 @@ export default function RentReviewApplyPage() {
                   <>
                     <StepIntro title="Upload your documents" subtitle="Each working adult on the tenancy should provide these. You can add several files to each." />
                     <UploadField label="Proof of Identification (front & back)" hint="A clear copy of your valid photo ID, passport or driving licence. Add up to 4." accept=".pdf,.jpg,.jpeg,.png,.webp" max={4} state={photoId} setState={setPhotoId} error={errors.photoId} />
-                    <UploadField label="Most Recent Payslip(s)" hint="Your latest payslip to verify your current income. Add up to 6." accept=".pdf,.jpg,.jpeg,.png,.webp" max={6} state={payslips} setState={setPayslips} error={errors.payslips} />
-                    <UploadField label="Bank Statements (last 3 months)" hint="Your three most recent bank statements. Add up to 6." accept=".pdf,.jpg,.jpeg,.png,.webp" max={6} state={bankStatements} setState={setBankStatements} error={errors.bankStatements} />
+                    <UploadField label="Recent Payslips (last 3 months)" hint="Your last 3 months of payslips to verify your current income. Add up to 6." accept=".pdf,.jpg,.jpeg,.png,.webp" max={6} state={payslips} setState={setPayslips} error={errors.payslips} />
+                    <UploadField label="Recent Bank Statements (last 3 months)" hint="Your 3 most recent months of bank statements. Add up to 6." accept=".pdf,.jpg,.jpeg,.png,.webp" max={6} state={bankStatements} setState={setBankStatements} error={errors.bankStatements} />
                   </>
                 )}
 

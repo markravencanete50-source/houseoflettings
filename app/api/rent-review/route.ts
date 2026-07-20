@@ -304,10 +304,12 @@ export async function POST(request: Request) {
         attachments,
       }),
       // Backup only, and never throws: a Drive outage must not lose a review.
+      // Lead the Drive folder name with the PROPERTY ADDRESS (the office locates
+      // rent reviews by property), with the tenant's name after it.
       backupToDrive({
         formType: 'rent-review',
-        label: data.fullName,
-        address: data.propertyAddress,
+        label: data.propertyAddress || data.fullName,
+        address: data.fullName,
         files: driveFiles,
       }),
     ]);

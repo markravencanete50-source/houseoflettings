@@ -1,8 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { rateLimit } from '@/lib/rateLimit';
 
 // Homedata "Address by Postcode" integration.
 // Docs: https://homedata.co.uk/docs/endpoints
-// Keeps the API key server-side and safe from exposure.
+// Keeps the API key server-side and safe from exposure. Rate limited and
+// postcode-validated: this is a metered third-party API, so an unthrottled
+// public proxy is someone else's quota-drain button.
 
 const HOMEDATA_API_KEY = process.env.HOMEDATA_API_KEY;
 // Call the backend host directly. The documented homedata.co.uk/api/v1 host
@@ -18,10 +21,16 @@ export type AddressResult = {
 };
 
 export async function GET(request: NextRequest) {
+  const limited = rateLimit(request, 'address-lookup', 30, 10 * 60 * 1000);
+  if (limited) return limited;
+
   const { searchParams } = new URL(request.url);
   const raw = searchParams.get('postcode');
 
-  if (!raw || raw.trim().length < 3) {
+  // UK postcodes are alphanumeric with an optional space, 5–8 characters.
+  // Loose enough to accept partials the form sends, strict enough to stop
+  // arbitrary strings reaching the paid upstream API.
+  if (!raw || raw.trim().length < 3 || !/^[A-Za-z0-9 ]{3,10}$/.test(raw.trim())) {
     return NextResponse.json(
       { error: 'Postcode is required and must be at least 3 characters.' },
       { status: 400 }

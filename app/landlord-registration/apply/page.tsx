@@ -584,7 +584,7 @@ export default function LandlordRegistrationApplyPage() {
                             <div key={i} className="hol-uploaded" style={{ marginBottom: 6 }}>
                               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="20 6 9 17 4 12" /></svg>
                               <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{st.fileNames[i] || 'Uploaded'}</span>
-                              <a href={url} target="_blank" rel="noreferrer" className="hol-view-link">View</a>
+                              <a href={url} target="_blank" rel="noopener noreferrer" className="hol-view-link">View</a>
                               <button type="button" onClick={() => removeIdFile(d.key, i)} className="hol-remove">Remove</button>
                             </div>
                           ))}
@@ -734,7 +734,7 @@ export default function LandlordRegistrationApplyPage() {
                                   <div className="hol-uploaded">
                                     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="20 6 9 17 4 12" /></svg>
                                     <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{st.fileName || 'Uploaded'}</span>
-                                    <a href={st.url} target="_blank" rel="noreferrer" className="hol-view-link">View</a>
+                                    <a href={st.url} target="_blank" rel="noopener noreferrer" className="hol-view-link">View</a>
                                     <button type="button" onClick={() => setDoc(d.key, { url: '', fileName: '' })} className="hol-remove">Remove</button>
                                   </div>
                                 ) : (
@@ -912,7 +912,7 @@ function PropertyFileField({
         <div key={i} className="hol-uploaded" style={{ marginBottom: 6 }}>
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="20 6 9 17 4 12" /></svg>
           <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{fileNames[i] || 'Uploaded'}</span>
-          <a href={url} target="_blank" rel="noreferrer" className="hol-view-link">View</a>
+          <a href={url} target="_blank" rel="noopener noreferrer" className="hol-view-link">View</a>
           <button type="button" onClick={() => onRemove(i)} className="hol-remove">Remove</button>
         </div>
       ))}

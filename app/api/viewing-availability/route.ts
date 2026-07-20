@@ -1,3 +1,4 @@
+import { rateLimit } from "@/lib/rateLimit";
 import { initializeApp, getApps, cert } from "firebase-admin/app";
 import { getFirestore } from "firebase-admin/firestore";
 import {
@@ -41,6 +42,8 @@ function londonNow() {
 }
 
 export async function GET(request: Request) {
+  const limited = rateLimit(request, "viewing-availability", 120, 10 * 60 * 1000);
+  if (limited) return limited;
   try {
     const { searchParams } = new URL(request.url);
     const date = searchParams.get("date") || "";

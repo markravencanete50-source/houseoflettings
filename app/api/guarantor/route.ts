@@ -2,6 +2,7 @@
 import { initializeApp, getApps, cert } from 'firebase-admin/app';
 import { getFirestore, FieldValue } from 'firebase-admin/firestore';
 import { rateLimit } from '@/lib/rateLimit';
+import { htmlEscapeDeep, sanitizeUploadUrlFieldsDeep } from '@/lib/security';
 import { backupToDrive, namedFiles } from '@/lib/googleDrive';
 
 function getFirestoreClient() {
@@ -162,7 +163,19 @@ export async function POST(request: Request) {
   if (limited) return limited;
   try {
     const body = await request.json();
-    const { pdfBase64, ...data } = body;
+    const { pdfBase64, ...rawData } = body;
+    // A forged PDF payload must stay a string and within the email-attachment
+    // budget; anything else is dropped rather than forwarded.
+    if (pdfBase64 !== undefined && (typeof pdfBase64 !== 'string' || pdfBase64.length > 10_000_000)) {
+      return Response.json({ message: 'Invalid attachment' }, { status: 400 });
+    }
+    // Strip any upload URL that isn't https on our own upload hosts — those
+    // links are stored, emailed to staff as clickable links, and rendered in
+    // the dashboard, so this is the choke point against link injection.
+    const data = sanitizeUploadUrlFieldsDeep(rawData);
+    // User text is interpolated into email HTML below — escape a copy for the
+    // templates while the raw values go to Firestore untouched.
+    const emailData = htmlEscapeDeep(data);
 
     const required = ['guarantorFullName', 'guarantorEmail', 'guarantorMobile', 'guarantorAddress', 'propertyAddress', 'consentComms', 'consentDeclare'];
     for (const field of required) {
@@ -192,14 +205,14 @@ export async function POST(request: Request) {
       sendEmail({
         to: data.guarantorEmail,
         subject: '✅ Your Guarantor Form | House of Lettings',
-        html: confirmationHtml(data),
+        html: confirmationHtml(emailData),
         attachments: pdfAttachment,
       }),
       sendEmail({
         // Tenant-side notifications go to the Leeds office inbox.
         to: process.env.TENANT_ADMIN_EMAIL || 'houseoflettingsleeds@gmail.com',
         subject: `🛡️ New Guarantor Form: ${data.guarantorFullName} (${data.propertyAddress})`,
-        html: adminNotificationHtml(data),
+        html: adminNotificationHtml(emailData),
         attachments: pdfAttachment,
       }),
       backupToDrive({

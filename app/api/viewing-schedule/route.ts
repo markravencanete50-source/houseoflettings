@@ -1,3 +1,4 @@
+import { rateLimit } from "@/lib/rateLimit";
 import { getCitySchedule } from "@/lib/citySchedule";
 import { citiesForDate, type ScheduleMap } from "@/lib/viewingSlots";
 
@@ -5,6 +6,8 @@ import { citiesForDate, type ScheduleMap } from "@/lib/viewingSlots";
 // can show the correct rota (hints, warnings, next-date suggestions) that stays
 // in sync with the office Google Calendar in near-real-time.
 export async function GET(request: Request) {
+  const limited = rateLimit(request, "viewing-schedule", 120, 10 * 60 * 1000);
+  if (limited) return limited;
   try {
     const { searchParams } = new URL(request.url);
     const from = searchParams.get("from") || "";

@@ -1,6 +1,7 @@
 import { initializeApp, getApps, cert } from "firebase-admin/app";
 import { getFirestore, FieldValue } from "firebase-admin/firestore";
 import { rateLimit } from '@/lib/rateLimit';
+import { htmlEscapeDeep } from '@/lib/security';
 
 function getFirestoreClient() {
   if (!getApps().length) {
@@ -61,12 +62,12 @@ export async function POST(request: Request) {
       sendEmail({
         to: data.email,
         subject: "✅ Your Valuation Request | House of Lettings",
-        html: confirmationEmailHtml(data),
+        html: confirmationEmailHtml(htmlEscapeDeep(data)),
       }),
       sendEmail({
         to: process.env.ADMIN_EMAIL || "admin@houseoflettings.co.uk",
         subject: `🔔 New Valuation Request: ${data.fullName}`,
-        html: adminNotificationHtml(data),
+        html: adminNotificationHtml(htmlEscapeDeep(data)),
       }),
     ]);
     return Response.json({ success: true, id: docRef.id }, { status: 201 });

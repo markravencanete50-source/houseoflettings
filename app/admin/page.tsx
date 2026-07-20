@@ -16,6 +16,7 @@ import {
 } from '@/services/admin';
 import { AppUser, Property, propertyAvailability } from '@/lib/types';
 import { STAFF_FEATURES, staffPermissions } from '@/lib/staffAccess';
+import { safeLinkHref } from '@/lib/security';
 
 const AVAILABILITY_META: Record<'available' | 'pending' | 'let-agreed', { label: string; bg: string; color: string }> = {
   'available':  { label: 'Available',  bg: '#e8f5e9', color: '#2e7d32' },
@@ -1404,7 +1405,7 @@ export default function AdminDashboard() {
                                           {urls.map((url: string, i: number) => (
                                             <a
                                               key={i}
-                                              href={url}
+                                              href={safeLinkHref(url)}
                                               target="_blank"
                                               rel="noopener noreferrer"
                                               style={{
@@ -1503,7 +1504,7 @@ export default function AdminDashboard() {
                                 <div style={{ fontSize: 12, fontWeight: 700, color: '#15803d', marginBottom: 6 }}>Proof of payment (verify before starting work)</div>
                                 <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                                   {o.proofOfPaymentUrls!.map((url, i) => (
-                                    <a key={i} href={url} target="_blank" rel="noopener noreferrer" style={{ padding: '4px 10px', background: '#f0fdf4', color: '#15803d', borderRadius: 4, fontSize: 12, fontWeight: 600, textDecoration: 'none', border: '1px solid #bbf7d0' }}>📄 Proof {i + 1}</a>
+                                    <a key={i} href={safeLinkHref(url)} target="_blank" rel="noopener noreferrer" style={{ padding: '4px 10px', background: '#f0fdf4', color: '#15803d', borderRadius: 4, fontSize: 12, fontWeight: 600, textDecoration: 'none', border: '1px solid #bbf7d0' }}>📄 Proof {i + 1}</a>
                                   ))}
                                 </div>
                               </div>
@@ -1581,10 +1582,10 @@ export default function AdminDashboard() {
                                 <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--gray-600)', marginBottom: 6 }}>Evidence</div>
                                 <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                                   {(m.photoUrls || []).map((url, i) => (
-                                    <a key={`p${i}`} href={url} target="_blank" rel="noopener noreferrer" style={{ padding: '4px 10px', background: '#eff6ff', color: '#2563eb', borderRadius: 4, fontSize: 12, fontWeight: 600, textDecoration: 'none', border: '1px solid #bfdbfe' }}>📷 Photo {i + 1}</a>
+                                    <a key={`p${i}`} href={safeLinkHref(url)} target="_blank" rel="noopener noreferrer" style={{ padding: '4px 10px', background: '#eff6ff', color: '#2563eb', borderRadius: 4, fontSize: 12, fontWeight: 600, textDecoration: 'none', border: '1px solid #bfdbfe' }}>📷 Photo {i + 1}</a>
                                   ))}
                                   {(m.videoUrls || []).map((url, i) => (
-                                    <a key={`v${i}`} href={url} target="_blank" rel="noopener noreferrer" style={{ padding: '4px 10px', background: '#f0fdf4', color: '#15803d', borderRadius: 4, fontSize: 12, fontWeight: 600, textDecoration: 'none', border: '1px solid #bbf7d0' }}>🎬 Video {i + 1}</a>
+                                    <a key={`v${i}`} href={safeLinkHref(url)} target="_blank" rel="noopener noreferrer" style={{ padding: '4px 10px', background: '#f0fdf4', color: '#15803d', borderRadius: 4, fontSize: 12, fontWeight: 600, textDecoration: 'none', border: '1px solid #bbf7d0' }}>🎬 Video {i + 1}</a>
                                   ))}
                                 </div>
                               </div>

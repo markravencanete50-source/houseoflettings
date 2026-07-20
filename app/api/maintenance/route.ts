@@ -2,6 +2,7 @@
 import { initializeApp, getApps, cert } from 'firebase-admin/app';
 import { getFirestore, FieldValue } from 'firebase-admin/firestore';
 import { rateLimit } from '@/lib/rateLimit';
+import { htmlEscapeDeep, sanitizeUploadUrlFieldsDeep } from '@/lib/security';
 import { backupToDrive, namedFiles } from '@/lib/googleDrive';
 
 function getFirestoreClient() {
@@ -136,7 +137,16 @@ export async function POST(request: Request) {
   if (limited) return limited;
   try {
     const body = await request.json();
-    const { pdfBase64, ...data } = body;
+    const { pdfBase64, ...rawData } = body;
+    // A forged PDF payload must stay a string and within the email-attachment
+    // budget; anything else is dropped rather than forwarded.
+    if (pdfBase64 !== undefined && (typeof pdfBase64 !== 'string' || pdfBase64.length > 10_000_000)) {
+      return Response.json({ message: 'Invalid attachment' }, { status: 400 });
+    }
+    // Strip any upload URL that isn't https on our own upload hosts — those
+    // links are stored, emailed to staff as clickable links, and rendered in
+    // the dashboard, so this is the choke point against link injection.
+    const data = sanitizeUploadUrlFieldsDeep(rawData);
 
     const required = ['fullName', 'email', 'contactNumber', 'propertyAddress', 'issueDescription', 'whenHappened', 'availability', 'experiencedBefore', 'cause'];
     for (const field of required) {
@@ -145,8 +155,12 @@ export async function POST(request: Request) {
       }
     }
     if (!Array.isArray(data.photoUrls) || data.photoUrls.length < 3) {
-      return Response.json({ message: 'At least 3 photos are required' }, { status: 400 });
+      return Response.json({ message: 'At least 3 valid photos are required' }, { status: 400 });
     }
+
+    // User text is interpolated into email HTML below — escape a copy for the
+    // templates while the raw values go to Firestore untouched.
+    const emailData = htmlEscapeDeep(data);
 
     const db = getFirestoreClient();
     const docRef = await db.collection('maintenanceRequests').add({
@@ -168,14 +182,14 @@ export async function POST(request: Request) {
       sendEmail({
         to: data.email,
         subject: '🔧 Your Maintenance Request | House of Lettings',
-        html: confirmationHtml(data),
+        html: confirmationHtml(emailData),
         attachments: pdfAttachment,
       }),
       sendEmail({
         // Maintenance goes to the main admin inbox alongside the landlord forms.
         to: process.env.ADMIN_EMAIL || 'admin@houseoflettings.co.uk',
         subject: `🔧 New Maintenance Request: ${data.fullName} (${data.propertyAddress})`,
-        html: adminNotificationHtml(data),
+        html: adminNotificationHtml(emailData),
         attachments: pdfAttachment,
       }),
       // Backup only, and never throws: a Drive outage must not lose a repair report.

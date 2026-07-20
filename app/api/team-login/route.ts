@@ -8,7 +8,7 @@ import { NextResponse } from 'next/server';
 import { getAuth } from 'firebase-admin/auth';
 import { getAdminDb } from '@/lib/staffApiAuth';
 import { DEFAULT_STAFF_PERMISSIONS, STAFF_FEATURE_IDS } from '@/lib/staffAccess';
-import { rateLimit } from '@/lib/rateLimit';
+import { rateLimit, rateLimitByKey } from '@/lib/rateLimit';
 
 const SESSION_COOKIE = 'hol_session';
 const EXPIRES_MS = 5 * 24 * 60 * 60 * 1000; // 5 days
@@ -23,6 +23,12 @@ export async function POST(request: Request) {
     if (!email || !password) {
       return NextResponse.json({ message: 'Email and password are required.' }, { status: 400 });
     }
+
+    // Second layer on top of the per-IP limit above: 5 attempts per account
+    // per 15 minutes, so rotating IPs doesn't buy unlimited guesses at one
+    // mailbox. Keyed on the normalised email.
+    const emailLimited = rateLimitByKey('team-login-email', String(email).trim().toLowerCase(), 5, 15 * 60 * 1000);
+    if (emailLimited) return emailLimited;
 
     const key = process.env.NEXT_PUBLIC_FIREBASE_API_KEY;
     if (!key) {

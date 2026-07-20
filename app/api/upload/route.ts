@@ -7,6 +7,22 @@ import { rateLimit } from '@/lib/rateLimit';
 const ALLOWED_TYPES = /^(image\/(jpeg|png|webp|gif|heic|heif|avif)|application\/pdf)$/;
 const MAX_BYTES = 8 * 1024 * 1024; // Vercel body limit is ~4.5MB anyway
 
+// Fallback layer: the Content-Type above is client-declared, so also check the
+// file's magic bytes actually match a type we accept. Cheap, and it stops a
+// renamed executable/HTML file riding in under an image MIME type.
+function matchesSignature(buf: Buffer, mime: string): boolean {
+  if (buf.length < 12) return false;
+  if (mime === 'application/pdf') return buf.subarray(0, 5).toString('latin1') === '%PDF-';
+  if (mime === 'image/jpeg') return buf[0] === 0xff && buf[1] === 0xd8 && buf[2] === 0xff;
+  if (mime === 'image/png') return buf[0] === 0x89 && buf.subarray(1, 4).toString('latin1') === 'PNG';
+  if (mime === 'image/gif') return buf.subarray(0, 3).toString('latin1') === 'GIF';
+  if (mime === 'image/webp')
+    return buf.subarray(0, 4).toString('latin1') === 'RIFF' && buf.subarray(8, 12).toString('latin1') === 'WEBP';
+  // HEIC/HEIF/AVIF are ISO-BMFF: a size box then 'ftyp'.
+  if (/^image\/(heic|heif|avif)$/.test(mime)) return buf.subarray(4, 8).toString('latin1') === 'ftyp';
+  return false;
+}
+
 export async function POST(req: NextRequest) {
   const limited = rateLimit(req, 'upload', 30, 10 * 60 * 1000);
   if (limited) return limited;
@@ -32,6 +48,9 @@ export async function POST(req: NextRequest) {
 
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
+    if (!matchesSignature(buffer, file.type || '')) {
+      return NextResponse.json({ error: 'File content does not match its declared type' }, { status: 415 });
+    }
     const base64 = buffer.toString('base64');
     const dataUri = `data:${file.type || 'image/jpeg'};base64,${base64}`;
 

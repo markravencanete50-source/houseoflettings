@@ -10,6 +10,7 @@ import { priceLine, formatGBP, type OrderSelection, type LineBreakdown } from '@
 import { pushInspectionToCalendar } from '@/lib/googleCalendar';
 import { cityFromText, INSPECTION_DURATION_MIN, type City } from '@/lib/viewingSlots';
 import { rateLimit } from '@/lib/rateLimit';
+import { escapeHtml, htmlEscapeDeep, sanitizeUploadUrls } from '@/lib/security';
 
 type PropertyAssignment = { serviceId?: string; label?: string; postcode?: string; address?: string };
 
@@ -190,9 +191,9 @@ export async function POST(request: Request) {
 
     // Proof of the up-front bank transfer. Required: an order cannot be placed
     // without it (the client also enforces this before submitting).
-    const proofUrls: string[] = Array.isArray(body.proofOfPaymentUrls)
-      ? body.proofOfPaymentUrls.filter((u: any) => typeof u === 'string' && u.trim()).slice(0, 5)
-      : [];
+    // Only https links on our own upload hosts survive — these are emailed to
+    // the office as clickable links and rendered in the staff dashboard.
+    const proofUrls: string[] = sanitizeUploadUrls(body.proofOfPaymentUrls, 5);
     if (proofUrls.length === 0) {
       return Response.json({ message: 'Proof of payment is required to place your order.' }, { status: 400 });
     }
@@ -230,8 +231,8 @@ export async function POST(request: Request) {
 
     // Notify customer + office.
     await Promise.allSettled([
-      sendEmail({ to: customer.email, subject: `Order received (${ref}) | House of Lettings`, html: customerEmailHtml(ref, customer.fullName, lines, total, hasFrom) }),
-      sendEmail({ to: process.env.ADMIN_EMAIL || 'admin@houseoflettings.co.uk', subject: `🔔 New service order: ${ref} · ${formatGBP(total)}`, html: adminEmailHtml(ref, customer, lines, total, hasFrom, properties, inspection, proofUrls) }),
+      sendEmail({ to: customer.email, subject: `Order received (${ref}) | House of Lettings`, html: customerEmailHtml(ref, escapeHtml(customer.fullName), lines, total, hasFrom) }),
+      sendEmail({ to: process.env.ADMIN_EMAIL || 'admin@houseoflettings.co.uk', subject: `🔔 New service order: ${ref} · ${formatGBP(total)}`, html: adminEmailHtml(ref, htmlEscapeDeep(customer), lines, total, hasFrom, htmlEscapeDeep(properties), inspection, proofUrls) }),
     ]);
 
     // If the landlord picked an inspection time, push it to the office calendar

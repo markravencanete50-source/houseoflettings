@@ -9,9 +9,21 @@ type Window = { count: number; resetAt: number };
 const buckets = new Map<string, Window>();
 const MAX_BUCKETS = 10_000; // memory safety valve
 
+// Client-IP header fallback chain. Vercel always sets x-forwarded-for, but if
+// it's ever absent (different host, misconfigured proxy) we fall back through
+// the other common proxy headers rather than letting every request share one
+// bucket only when genuinely unattributable.
+const IP_HEADERS = ['x-forwarded-for', 'x-real-ip', 'x-vercel-forwarded-for', 'cf-connecting-ip'];
+
 function clientIp(request: Request): string {
-  const fwd = request.headers.get('x-forwarded-for');
-  return fwd ? fwd.split(',')[0].trim() : 'unknown';
+  for (const header of IP_HEADERS) {
+    const value = request.headers.get(header);
+    if (value) {
+      const ip = value.split(',')[0].trim();
+      if (ip) return ip;
+    }
+  }
+  return 'unknown';
 }
 
 /**
@@ -24,8 +36,24 @@ export function rateLimit(
   limit: number,
   windowMs: number,
 ): Response | null {
+  return rateLimitByKey(name, clientIp(request), limit, windowMs);
+}
+
+/**
+ * Same fixed-window limiter, keyed by an arbitrary caller-chosen string
+ * instead of the client IP. Use as a second layer where IP alone is too
+ * coarse — e.g. per-email login throttling that a botnet's rotating IPs
+ * can't sidestep.
+ */
+export function rateLimitByKey(
+  name: string,
+  rawKey: string,
+  limit: number,
+  windowMs: number,
+): Response | null {
   const now = Date.now();
-  const key = `${name}:${clientIp(request)}`;
+  // Bound the key so an attacker can't balloon the map with megabyte keys.
+  const key = `${name}:${rawKey.slice(0, 200)}`;
 
   const win = buckets.get(key);
   if (!win || now >= win.resetAt) {

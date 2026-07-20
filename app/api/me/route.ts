@@ -1,3 +1,4 @@
+import { rateLimit } from "@/lib/rateLimit";
 // app/api/me/route.ts
 // Returns the signed-in team member's profile from the HttpOnly session cookie
 // set by /api/team-login. Used by the staff dashboard when the browser can't
@@ -11,6 +12,8 @@ import { DEFAULT_STAFF_PERMISSIONS, STAFF_FEATURE_IDS } from '@/lib/staffAccess'
 export const dynamic = 'force-dynamic';
 
 export async function GET(request: Request) {
+  const limited = rateLimit(request, "me", 120, 10 * 60 * 1000);
+  if (limited) return limited;
   try {
     const cookie = request.headers.get('cookie') || '';
     const match = cookie.match(/(?:^|;\s*)hol_session=([^;]+)/);

@@ -2,9 +2,11 @@
 // Create staff user accounts. Requires admin auth token.
 
 import { NextRequest, NextResponse } from 'next/server';
+import { randomBytes } from 'node:crypto';
 import { cert, initializeApp, getApps } from 'firebase-admin/app';
 import { getAuth } from 'firebase-admin/auth';
 import { getFirestore } from 'firebase-admin/firestore';
+import { rateLimit } from '@/lib/rateLimit';
 
 function getDb() {
   if (!getApps().length) {
@@ -30,6 +32,10 @@ async function getUserRole(uid: string): Promise<string | null> {
 }
 
 export async function POST(request: NextRequest) {
+  // Admin-only route, but still bounded: account creation should never be
+  // rapid-fire even with a valid admin token in hand.
+  const limited = rateLimit(request, 'staff-users', 20, 10 * 60 * 1000);
+  if (limited) return limited;
   try {
     const authHeader = request.headers.get('authorization');
     if (!authHeader?.startsWith('Bearer ')) {
@@ -52,17 +58,20 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { email, name } = body;
+    const email = String(body.email || '').trim();
+    const name = String(body.name || '').trim().slice(0, 200);
 
-    if (!email || !name) {
-      return NextResponse.json({ message: 'Email and name required' }, { status: 400 });
+    if (!email || !name || email.length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      return NextResponse.json({ message: 'A valid email and name are required' }, { status: 400 });
     }
 
-    // Create Firebase Auth user
+    // Create Firebase Auth user. The placeholder password comes from the CSPRNG
+    // — Math.random() is predictable and has no place in a credential. The user
+    // signs in via a password reset, so nobody ever needs to know this value.
     const newUser = await auth.createUser({
       email,
       displayName: name,
-      password: Math.random().toString(36).slice(-12), // Random temp password
+      password: randomBytes(24).toString('base64url'),
     });
 
     // Create user profile in Firestore

@@ -17,6 +17,7 @@ import { citiesForDateLive } from "@/lib/citySchedule";
 import { getWindowsForDate } from "@/lib/calendarAvailability";
 import { pushViewingToCalendar } from "@/lib/googleCalendar";
 import { rateLimit } from '@/lib/rateLimit';
+import { htmlEscapeDeep } from '@/lib/security';
 import {
   composeClientSms,
   composeBusinessSms,
@@ -183,12 +184,12 @@ export async function POST(request: Request) {
       sendEmail({
         to: data.email,
         subject: `✅ Your ${city} Viewing | House of Lettings`,
-        html: clientEmailHtml(data),
+        html: clientEmailHtml(htmlEscapeDeep(data)),
       }),
       sendEmail({
         to: process.env.TENANT_ADMIN_EMAIL || "houseoflettingsleeds@gmail.com",
         subject: `📅 New Viewing: ${data.name} (${city}, ${data.date} ${data.time})`,
-        html: adminEmailHtml({ ...data, _smsSent: isSmsConfigured() }),
+        html: adminEmailHtml({ ...htmlEscapeDeep(data), _smsSent: isSmsConfigured() }),
       }),
     ]);
 

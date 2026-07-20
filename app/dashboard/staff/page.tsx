@@ -13,6 +13,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { signOut } from '@/services/auth';
 import { Property } from '@/lib/types';
 import { STAFF_FEATURES, staffPermissions, type StaffFeature } from '@/lib/staffAccess';
+import { safeLinkHref } from '@/lib/security';
 
 type Tab = StaffFeature;
 
@@ -496,7 +497,7 @@ function StaffDashboardInner() {
                         </td>
                         <td style={{ fontSize: 13 }}>
                           {m.photoUrls?.length
-                            ? <a href={m.photoUrls[0]} target="_blank" rel="noreferrer" style={{ color: '#2563eb', fontWeight: 600 }}>{m.photoUrls.length} photo{m.photoUrls.length > 1 ? 's' : ''}</a>
+                            ? <a href={safeLinkHref(m.photoUrls[0])} target="_blank" rel="noopener noreferrer" style={{ color: '#2563eb', fontWeight: 600 }}>{m.photoUrls.length} photo{m.photoUrls.length > 1 ? 's' : ''}</a>
                             : <span style={{ color: 'var(--gray-400)' }}>-</span>}
                         </td>
                         <td style={{ fontSize: 13, color: 'var(--gray-400)' }}>{fmtDate(m.submittedAt)}</td>

@@ -2,6 +2,7 @@ import { initializeApp, getApps, cert } from "firebase-admin/app";
 import { getFirestore, FieldValue } from "firebase-admin/firestore";
 import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
 import { rateLimit } from '@/lib/rateLimit';
+import { htmlEscapeDeep } from '@/lib/security';
 
 function getFirestoreClient() {
   if (!getApps().length) {
@@ -264,13 +265,13 @@ export async function POST(request: Request) {
       sendEmail({
         to: data.email,
         subject: "📊 Your Instant Valuation Report | House of Lettings",
-        html: confirmationEmailHtml(data),
+        html: confirmationEmailHtml(htmlEscapeDeep(data)),
         attachments: [{ filename: pdfFilename, content: pdfBase64 }],
       }),
       sendEmail({
         to: process.env.ADMIN_EMAIL || "info@houseoflettings.co.uk",
         subject: `📊 New Instant Valuation Lead: ${data.firstName} ${data.lastName}`,
-        html: adminNotificationHtml(data),
+        html: adminNotificationHtml(htmlEscapeDeep(data)),
         reply_to: data.email,
       }),
     ]);

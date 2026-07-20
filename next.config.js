@@ -6,6 +6,11 @@ const securityHeaders = [
   { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
   { key: 'Strict-Transport-Security', value: 'max-age=63072000; includeSubDomains; preload' },
   { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=(), payment=(), usb=()' },
+  // Cut window.opener ties to any popup/tab we open (allow-popups keeps
+  // outbound target="_blank" links working) and refuse Flash/PDF cross-domain
+  // policy probing.
+  { key: 'Cross-Origin-Opener-Policy', value: 'same-origin-allow-popups' },
+  { key: 'X-Permitted-Cross-Domain-Policies', value: 'none' },
 ];
 
 /** @type {import('next').NextConfig} */

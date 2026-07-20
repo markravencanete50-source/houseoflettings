@@ -1,3 +1,4 @@
+import { rateLimit } from "@/lib/rateLimit";
 import { getInspectionAvailableDates, getInspectionSlotsForDate } from "@/lib/inspectionSchedule";
 import type { City } from "@/lib/viewingSlots";
 
@@ -8,6 +9,8 @@ import type { City } from "@/lib/viewingSlots";
 // An optional &city=Leeds|Manchester scopes results to windows the team marked
 // for that city (plus any windows with no city in the title).
 export async function GET(request: Request) {
+  const limited = rateLimit(request, "inspection-availability", 120, 10 * 60 * 1000);
+  if (limited) return limited;
   try {
     const { searchParams } = new URL(request.url);
     const date = searchParams.get("date") || "";

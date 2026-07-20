@@ -1,6 +1,7 @@
 import { initializeApp, getApps, cert } from "firebase-admin/app";
 import { getFirestore, FieldValue } from "firebase-admin/firestore";
 import { rateLimit } from '@/lib/rateLimit';
+import { htmlEscapeDeep } from '@/lib/security';
 
 function getFirestoreClient() {
   if (!getApps().length) {
@@ -86,13 +87,13 @@ export async function POST(request: Request) {
       sendEmail({
         to: data.email,
         subject: "✅ Your Viewing Request | House of Lettings",
-        html: confirmationEmailHtml(data),
+        html: confirmationEmailHtml(htmlEscapeDeep(data)),
       }),
       sendEmail({
         // Tenant-side notifications go to the Leeds office inbox.
         to: process.env.TENANT_ADMIN_EMAIL || "houseoflettingsleeds@gmail.com",
         subject: `🏠 New Viewing Request: ${data.firstName} ${data.lastName}`,
-        html: adminNotificationHtml(data),
+        html: adminNotificationHtml(htmlEscapeDeep(data)),
         reply_to: data.email,
       }),
     ]);

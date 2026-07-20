@@ -6,6 +6,7 @@
 import { initializeApp, getApps, cert } from 'firebase-admin/app';
 import { getFirestore, FieldValue } from 'firebase-admin/firestore';
 import { rateLimit } from '@/lib/rateLimit';
+import { requireStaff } from '@/lib/staffApiAuth';
 
 function getDb() {
   if (!getApps().length) {
@@ -63,7 +64,11 @@ export async function POST(request: Request) {
   }
 }
 
-export async function GET() {
+export async function GET(request: Request) {
+  // The summary (views by country/page/day) is business data for the admin
+  // dashboard, not something the whole internet should be able to read.
+  const auth = await requireStaff(request);
+  if (auth instanceof Response) return auth;
   try {
     const snap = await summaryRef().get();
     const d = (snap.exists ? snap.data() : {}) || {};

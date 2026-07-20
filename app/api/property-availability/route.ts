@@ -1,8 +1,11 @@
+import { rateLimit } from "@/lib/rateLimit";
 import { getPropertyAvailableDates } from "@/lib/calendarAvailability";
 
 // Which dates a specific property has viewing availability on (from the office
 // calendar). Feeds the booking modal's date hints and next-date suggestions.
 export async function GET(request: Request) {
+  const limited = rateLimit(request, "property-availability", 120, 10 * 60 * 1000);
+  if (limited) return limited;
   try {
     const { searchParams } = new URL(request.url);
     const address = searchParams.get("address") || "";

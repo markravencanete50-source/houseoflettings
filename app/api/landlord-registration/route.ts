@@ -2,6 +2,7 @@ import { initializeApp, getApps, cert } from "firebase-admin/app";
 import { getFirestore, FieldValue } from "firebase-admin/firestore";
 import { jsPDF } from "jspdf";
 import { rateLimit } from '@/lib/rateLimit';
+import { htmlEscapeDeep, sanitizeUploadUrlFieldsDeep } from '@/lib/security';
 import { backupToDrive, type BackupFile } from '@/lib/googleDrive';
 
 function getFirestoreClient() {
@@ -309,7 +310,10 @@ export async function POST(request: Request) {
   const limited = rateLimit(request, "landlord-registration", 10, 10 * 60 * 1000);
   if (limited) return limited;
   try {
-    const data = await request.json();
+    // Strip any upload URL that isn't https on our own upload hosts — those
+    // links are stored, emailed to staff as clickable links, and backed up to
+    // Drive, so this is the choke point against link injection.
+    const data = sanitizeUploadUrlFieldsDeep(await request.json());
     const required = ["fullName", "email", "phone", "propertyCount", "address", "selectedPackage"];
     for (const field of required) {
       if (!data[field]?.toString().trim()) {
@@ -337,17 +341,21 @@ export async function POST(request: Request) {
       console.error("landlord-registration PDF generation failed:", pdfErr);
     }
 
+    // User text is interpolated into email HTML below — escape a copy for the
+    // templates while the raw values go to Firestore and the PDF untouched.
+    const emailData = htmlEscapeDeep(data);
+
     await Promise.allSettled([
       sendEmail({
         to: data.email,
         subject: "🏠 Your Landlord Registration | House of Lettings",
-        html: confirmationEmailHtml(data),
+        html: confirmationEmailHtml(emailData),
         attachments,
       }),
       sendEmail({
         to: process.env.ADMIN_EMAIL || "admin@houseoflettings.co.uk",
         subject: `🔔 New Landlord Registration: ${data.fullName}`,
-        html: adminNotificationHtml(data),
+        html: adminNotificationHtml(emailData),
         attachments,
       }),
       // Backup only, and never throws: a Drive outage must not lose a landlord.

@@ -126,5 +126,23 @@ service cloud.firestore {
     match /maintenanceRequests/{id} {
       allow read, update, delete: if isAdmin();
     }
+
+    // Written server-side only (firebase-admin in /api/guarantor and
+    // /api/landlord-registration), same as the collections above — no client
+    // create rule on purpose. Listed explicitly so the record shows they are
+    // admin-read rather than relying silently on the default deny.
+    match /guarantorForms/{id} {
+      allow read, update, delete: if isAdmin();
+    }
+
+    match /landlordRegistrations/{id} {
+      allow read, update, delete: if isAdmin();
+    }
+
+    // Aggregate website analytics — written and read only via /api/track
+    // (admin SDK). No client access.
+    match /analytics/{id} {
+      allow read, write: if false;
+    }
   }
 }

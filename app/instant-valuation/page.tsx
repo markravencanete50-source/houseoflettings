@@ -68,6 +68,106 @@ function chartMoney(v: number): string {
   return fmtGBP(v);
 }
 
+// ─── Derived, dashboard-style scores (indicative, from the inputs) ───────────
+const CONDITION_SCORE: Record<ConditionId, number> = {
+  excellent: 95, good: 80, average: 62, dated: 42, renovation: 24,
+};
+const EPC_SCORE: Record<EpcId, number> = {
+  A: 100, B: 88, C: 74, D: 60, E: 46, F: 32, G: 20, unknown: 55,
+};
+const clamp = (n: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, Math.round(n)));
+
+interface DerivedScores {
+  property: number;   // composite condition + EPC + features
+  demand: number;     // tenant demand indicator
+  epc: number;
+  condition: number;
+  demandLabel: string;
+  annualIncome: number | null;
+  grossYield: number | null;
+}
+
+function demandBand(score: number): string {
+  if (score >= 90) return 'Very High';
+  if (score >= 80) return 'High';
+  if (score >= 70) return 'Strong';
+  if (score >= 60) return 'Moderate';
+  return 'Steady';
+}
+
+function computeScores(
+  input: FullValuationInput,
+  result: FullValuationResult,
+): DerivedScores {
+  const condition = CONDITION_SCORE[input.condition];
+  const epc = EPC_SCORE[input.epc];
+
+  // Features: baths, garden, parking, balcony against a neutral base.
+  let features = 52;
+  features += Math.min(3, Math.max(0, input.bathrooms - 1)) * 7;
+  features += input.garden === 'private' ? 10 : input.garden === 'shared' ? 5 : input.garden === 'patio' ? 4 : 0;
+  features += input.parking === 'garage' ? 10 : input.parking === 'driveway' ? 9 : input.parking === 'allocated' ? 7 : input.parking === 'permit' ? 3 : 0;
+  features += input.balcony ? 6 : 0;
+  features = clamp(features, 0, 100);
+
+  const property = clamp(0.4 * condition + 0.3 * epc + 0.3 * features, 0, 100);
+
+  // Demand: where we operate + local growth + high-churn stock (flats/terraces,
+  // smaller units) all point to stronger tenant demand.
+  const growth = result.rent?.annualGrowthPct ?? result.sale?.annualGrowthPct ?? 3;
+  let demand = 66;
+  if (result.isOperatingArea) demand += 12;
+  demand += Math.min(10, growth * 1.6);
+  if (input.propertyType === 'flat' || input.propertyType === 'terraced') demand += 5;
+  if (input.bedrooms <= 2) demand += 4;
+  if (input.condition === 'excellent' || input.condition === 'good') demand += 3;
+  demand = clamp(demand, 55, 97);
+
+  const annualIncome = result.rent ? result.rent.market * 12 : null;
+  const grossYield =
+    result.rent && result.sale && result.sale.market > 0
+      ? Math.round((result.rent.market * 12 / result.sale.market) * 1000) / 10
+      : null;
+
+  return { property, demand, epc, condition, demandLabel: demandBand(demand), annualIncome, grossYield };
+}
+
+// Circular progress gauge (SVG).
+function ScoreGauge({ score, label, sub }: { score: number; label: string; sub?: string }) {
+  const R = 46, C = 2 * Math.PI * R;
+  const pct = clamp(score, 0, 100) / 100;
+  const color = score >= 75 ? '#2563eb' : score >= 55 ? '#3b82f6' : '#f59e0b';
+  return (
+    <div className="iv-gauge">
+      <svg viewBox="0 0 120 120" width="118" height="118">
+        <circle cx="60" cy="60" r={R} fill="none" stroke="#e5e7eb" strokeWidth="10" />
+        <circle cx="60" cy="60" r={R} fill="none" stroke={color} strokeWidth="10" strokeLinecap="round"
+          strokeDasharray={C} strokeDashoffset={C * (1 - pct)} transform="rotate(-90 60 60)" />
+        <text x="60" y="56" textAnchor="middle" fontSize="26" fontWeight="800" fill="#0f1f3d">{Math.round(score)}</text>
+        <text x="60" y="76" textAnchor="middle" fontSize="11" fill="#9ca3af">/ 100</text>
+      </svg>
+      <span className="iv-gauge__label">{label}</span>
+      {sub && <span className="iv-gauge__sub">{sub}</span>}
+    </div>
+  );
+}
+
+// Horizontal score bar.
+function ScoreBar({ label, score, sub, value }: { label: string; score: number; sub?: string; value?: string }) {
+  const pct = clamp(score, 0, 100);
+  const color = pct >= 75 ? '#2563eb' : pct >= 55 ? '#3b82f6' : '#f59e0b';
+  return (
+    <div className="iv-bar">
+      <div className="iv-bar__head">
+        <span className="iv-bar__label">{label}</span>
+        <span className="iv-bar__val">{value ?? `${pct}/100`}</span>
+      </div>
+      <div className="iv-bar__track"><div className="iv-bar__fill" style={{ width: `${pct}%`, background: color }} /></div>
+      {sub && <span className="iv-bar__sub">{sub}</span>}
+    </div>
+  );
+}
+
 // ─── Value trajectory line chart (inline SVG, no chart library) ───────────────
 // Three points: last year (actual), this year (the estimate), next year
 // (projected from the regional growth rate). The projected segment is dashed.
@@ -318,6 +418,7 @@ export default function InstantValuationPage() {
 
   const rent = report?.result.rent;
   const sale = report?.result.sale;
+  const scores = report ? computeScores(report.property, report.result) : null;
 
   return (
     <>
@@ -566,21 +667,59 @@ export default function InstantValuationPage() {
         {view === 'report' && report && (
           <div className="iv-report">
 
-            <div className="iv-card-wrap">
-              <div className="iv-step-head">
-                <p className="iv-step-head__eyebrow">Your instant valuation</p>
-                <h1 className="iv-step-head__title">
+            {/* ── HERO: address + headline KPI tiles ── */}
+            <div className="iv-hero">
+              <div className="iv-hero__top">
+                <p className="iv-hero__eyebrow">● Instant Valuation Report</p>
+                <h1 className="iv-hero__title">
                   {addressLine1.trim() ? `${addressLine1.trim()}, ` : ''}{report.result.postcode}
                 </h1>
-                <p className="iv-report__area">{report.result.areaLabel}</p>
+                <p className="iv-hero__area">{report.result.areaLabel}</p>
               </div>
+              <div className="iv-kpis">
+                {rent && (
+                  <div className="iv-kpi">
+                    <span className="iv-kpi__label">Market Rent</span>
+                    <span className="iv-kpi__value">{fmtGBP(rent.market)}<small>/mo</small></span>
+                  </div>
+                )}
+                {rent && (
+                  <div className="iv-kpi">
+                    <span className="iv-kpi__label">Est. Annual Income</span>
+                    <span className="iv-kpi__value">{fmtGBP(scores!.annualIncome!)}</span>
+                  </div>
+                )}
+                {sale && (
+                  <div className="iv-kpi">
+                    <span className="iv-kpi__label">Market Value</span>
+                    <span className="iv-kpi__value">{fmtGBP(sale.market)}</span>
+                  </div>
+                )}
+                {scores!.grossYield !== null ? (
+                  <div className="iv-kpi">
+                    <span className="iv-kpi__label">Gross Yield</span>
+                    <span className="iv-kpi__value">{scores!.grossYield}<small>%</small></span>
+                  </div>
+                ) : (
+                  <div className="iv-kpi">
+                    <span className="iv-kpi__label">Tenant Demand</span>
+                    <span className="iv-kpi__value iv-kpi__value--pill">{scores!.demandLabel}</span>
+                  </div>
+                )}
+              </div>
+            </div>
 
-              <div className="iv-summary">
-                <span className="iv-summary__item"><strong>{propType ? PROPERTY_TYPE_LABEL[propType as PropertyTypeId] : ''}</strong></span>
-                <span className="iv-summary__item"><strong>{bedrooms !== '' ? bedroomsLabel(bedrooms) : ''}</strong></span>
-                <span className="iv-summary__item"><strong>{bathrooms} bath{Number(bathrooms) > 1 ? 's' : ''}</strong></span>
-                {condition && <span className="iv-summary__item"><strong>{CONDITION_LABEL[condition as ConditionId].split(' (')[0]}</strong></span>}
-                {epc && <span className="iv-summary__item"><strong>{epc === 'unknown' ? 'EPC n/a' : `EPC ${epc}`}</strong></span>}
+            {/* ── Property chips ── */}
+            <div className="iv-card-wrap iv-card-wrap--pad">
+              <div className="iv-chips">
+                <span className="iv-chip">🏠 {propType ? PROPERTY_TYPE_LABEL[propType as PropertyTypeId] : ''}</span>
+                <span className="iv-chip">🛏 {bedrooms !== '' ? bedroomsLabel(bedrooms) : ''}</span>
+                <span className="iv-chip">🛁 {bathrooms} bath{Number(bathrooms) > 1 ? 's' : ''}</span>
+                {condition && <span className="iv-chip">✨ {CONDITION_LABEL[condition as ConditionId].split(' (')[0]}</span>}
+                {epc && <span className="iv-chip">⚡ {epc === 'unknown' ? 'EPC n/a' : `EPC ${epc}`}</span>}
+                {garden && garden !== 'none' && <span className="iv-chip">🌳 {GARDEN_LABEL[garden as GardenId]}</span>}
+                {parking && parking !== 'none' && <span className="iv-chip">🅿️ {PARKING_LABEL[parking as ParkingId]}</span>}
+                {balcony === true && <span className="iv-chip">🌇 Balcony</span>}
               </div>
 
               {/* Valuation bands */}
@@ -588,7 +727,7 @@ export default function InstantValuationPage() {
                 rent ? { m: rent as ModeValuation, title: 'Estimated Monthly Rent', suffix: '/month' } : null,
                 sale ? { m: sale as ModeValuation, title: 'Estimated Sale Price', suffix: '' } : null,
               ].filter(Boolean) as { m: ModeValuation; title: string; suffix: string }[]).map(({ m, title, suffix }) => (
-                <div className="iv-section" key={m.mode}>
+                <div className="iv-band-block" key={m.mode}>
                   <p className="iv-band__title">{title}</p>
                   <div className="iv-band">
                     <div className="iv-band__col">
@@ -609,20 +748,33 @@ export default function InstantValuationPage() {
                   </div>
                 </div>
               ))}
+            </div>
 
-              {/* Value trajectory: last year → now → projected next year */}
-              <div className="iv-section">
-                <p className="iv-report__h">How the value is trending</p>
-                <div className="iv-charts">
-                  {rent && (
-                    <TrajectoryChart title="Monthly Rent" points={rent.trajectory} suffix="/mo" growthPct={rent.annualGrowthPct} />
-                  )}
-                  {sale && (
-                    <TrajectoryChart title="Sale Price" points={sale.trajectory} suffix="" growthPct={sale.annualGrowthPct} />
-                  )}
+            {/* ── Scores dashboard ── */}
+            <div className="iv-card-wrap iv-card-wrap--pad">
+              <p className="iv-report__h">Property scorecard</p>
+              <div className="iv-scoregrid">
+                <ScoreGauge score={scores!.property} label="Property Score" sub="Condition · EPC · features" />
+                <div className="iv-bars">
+                  <ScoreBar label="Tenant demand" score={scores!.demand} value={scores!.demandLabel} sub={`${scores!.demand}/100 in ${report.result.areaLabel}`} />
+                  <ScoreBar label="Energy efficiency" score={scores!.epc} sub={epc && epc !== 'unknown' ? `EPC rating ${epc}` : 'EPC not provided'} />
+                  <ScoreBar label="Condition" score={scores!.condition} sub={condition ? CONDITION_LABEL[condition as ConditionId].split(' (')[0] : ''} />
                 </div>
-                {report.ai.forecastNote && <p className="iv-report__support">{report.ai.forecastNote}</p>}
               </div>
+            </div>
+
+            {/* ── Value trajectory ── */}
+            <div className="iv-card-wrap iv-card-wrap--pad">
+              <p className="iv-report__h">How the value is trending</p>
+              <div className="iv-charts">
+                {rent && (
+                  <TrajectoryChart title="Monthly Rent" points={rent.trajectory} suffix="/mo" growthPct={rent.annualGrowthPct} />
+                )}
+                {sale && (
+                  <TrajectoryChart title="Sale Price" points={sale.trajectory} suffix="" growthPct={sale.annualGrowthPct} />
+                )}
+              </div>
+              {report.ai.forecastNote && <p className="iv-report__support">{report.ai.forecastNote}</p>}
             </div>
 
             {/* ── PRIMARY CTA (before the detail) ── */}
@@ -642,55 +794,35 @@ export default function InstantValuationPage() {
               </div>
             </div>
 
-            {/* ── DETAIL (narrative) ── */}
-            <div className="iv-card-wrap">
-              {/* AI analysis */}
-              <div className="iv-section">
-                <p className="iv-report__h">Valuation summary</p>
-                <p className="iv-report__p">{report.ai.summary}</p>
-                {report.ai.rentCommentary && <p className="iv-report__p">{report.ai.rentCommentary}</p>}
-                {report.ai.saleCommentary && <p className="iv-report__p">{report.ai.saleCommentary}</p>}
-              </div>
+            {/* ── DETAIL (condensed) ── */}
+            <div className="iv-card-wrap iv-card-wrap--pad">
+              <p className="iv-report__h">Why this valuation</p>
+              <p className="iv-report__p">{report.ai.summary}</p>
 
-              <div className="iv-section">
-                <p className="iv-report__h">What drives this valuation</p>
-                <ul className="iv-report__list">
-                  {report.ai.keyDrivers.map((d, i) => <li key={i}>{d}</li>)}
-                </ul>
-              </div>
-
-              <div className="iv-section">
-                <p className="iv-report__h">Local market outlook</p>
-                <p className="iv-report__p">{report.ai.marketOutlook}</p>
-                <p className="iv-report__support">
-                  Supporting data: {report.result.dataYear} ONS &amp; Zoopla market baselines
-                  {report.result.isOperatingArea
-                    ? ` refined to district level for ${report.result.areaLabel}`
-                    : ` for the ${report.result.regionLabel} region`}
-                  {rent ? ` · regional rents ${rent.annualGrowthPct >= 0 ? '+' : ''}${rent.annualGrowthPct}% YoY` : ''}
-                  {sale ? ` · regional prices ${sale.annualGrowthPct >= 0 ? '+' : ''}${sale.annualGrowthPct}% YoY` : ''}
-                  {' '}· data refreshed {report.result.dataUpdated}.
-                </p>
+              <div className="iv-drivers">
+                {report.ai.keyDrivers.map((d, i) => (
+                  <span className="iv-driver" key={i}>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#2563eb" strokeWidth="3"><polyline points="20 6 9 17 4 12" /></svg>
+                    {d}
+                  </span>
+                ))}
               </div>
 
               {(rent?.adjustments?.length || sale?.adjustments?.length) ? (
-                <div className="iv-section">
-                  <p className="iv-report__h">Feature adjustments applied</p>
-                  <ul className="iv-report__list">
-                    {(rent?.adjustments?.length ? rent : sale)!.adjustments.map((a, i) => (
-                      <li key={i}>{a.label}: {a.pct >= 0 ? '+' : ''}{(a.pct * 100).toFixed(1)}%</li>
-                    ))}
-                  </ul>
+                <div className="iv-adjustments">
+                  {(rent?.adjustments?.length ? rent : sale)!.adjustments.map((a, i) => (
+                    <span className={`iv-adj ${a.pct >= 0 ? 'iv-adj--up' : 'iv-adj--down'}`} key={i}>
+                      {a.label} {a.pct >= 0 ? '+' : ''}{(a.pct * 100).toFixed(1)}%
+                    </span>
+                  ))}
                 </div>
               ) : null}
 
-              <div className="iv-section">
-                <p className="iv-report__disclaimer">
-                  This is an automated, indicative estimate, not a formal valuation. Actual value
-                  depends on the property's exact location, internal specification, presentation and
-                  market conditions. For a precise figure, book a free professional valuation below.
-                </p>
-              </div>
+              <p className="iv-report__support">
+                {report.ai.marketOutlook} Based on {report.result.dataYear} ONS &amp; Zoopla baselines
+                {report.result.isOperatingArea ? ` for ${report.result.areaLabel}` : ` for the ${report.result.regionLabel} region`}.
+                This is an automated, indicative estimate, not a formal valuation.
+              </p>
             </div>
 
             {/* ── EMAIL OPT-IN ── */}
@@ -984,6 +1116,83 @@ const PAGE_CSS = `
   .iv-chart__badge--up { background: #e8f5e9; color: #1b7a3d; }
   .iv-chart__badge--down { background: #fdecea; color: #c0392b; }
   @media (max-width: 560px) { .iv-charts { grid-template-columns: 1fr; } }
+
+  /* ── Hero band + KPI tiles ── */
+  .iv-hero {
+    width: 100%;
+    background: linear-gradient(135deg, #0f1f3d 0%, #1a3560 55%, #22407a 100%);
+    border-radius: 1.5rem; overflow: hidden;
+    box-shadow: 0 10px 30px rgba(15,31,61,0.18);
+  }
+  .iv-hero__top { padding: 1.75rem 2rem 1.25rem; }
+  .iv-hero__eyebrow {
+    font-size: 0.6875rem; font-weight: 700; letter-spacing: 0.14em;
+    text-transform: uppercase; color: #7fb0ff; margin: 0 0 0.6rem;
+  }
+  .iv-hero__title { font-size: 1.5rem; font-weight: 800; color: #fff; margin: 0; line-height: 1.2; }
+  .iv-hero__area { font-size: 0.875rem; color: rgba(255,255,255,0.6); margin: 0.35rem 0 0; }
+  .iv-kpis {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    border-top: 1px solid rgba(255,255,255,0.1);
+  }
+  @media (max-width: 520px) { .iv-kpis { grid-template-columns: 1fr 1fr; } }
+  .iv-kpi {
+    padding: 1.1rem 1.25rem;
+    border-left: 1px solid rgba(255,255,255,0.1);
+    display: flex; flex-direction: column; gap: 0.35rem;
+  }
+  .iv-kpi:first-child { border-left: none; }
+  .iv-kpi__label {
+    font-size: 0.65rem; font-weight: 700; letter-spacing: 0.08em;
+    text-transform: uppercase; color: rgba(255,255,255,0.55);
+  }
+  .iv-kpi__value { font-size: 1.375rem; font-weight: 800; color: #fff; }
+  .iv-kpi__value small { font-size: 0.8125rem; font-weight: 600; color: rgba(255,255,255,0.6); }
+  .iv-kpi__value--pill {
+    align-self: flex-start; font-size: 0.9375rem;
+    background: #16a34a; color: #fff; padding: 0.2rem 0.7rem; border-radius: 1rem;
+  }
+
+  .iv-card-wrap--pad { padding: 1.75rem 2rem; }
+  .iv-card-wrap--pad .iv-report__h { margin-top: 0; }
+
+  /* ── Property chips ── */
+  .iv-chips { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1.5rem; }
+  .iv-chip {
+    font-size: 0.8125rem; font-weight: 600; color: #0f1f3d;
+    background: #f1f5fb; border: 1px solid #e3e9f2;
+    padding: 0.4rem 0.75rem; border-radius: 0.6rem;
+  }
+
+  .iv-band-block { margin-bottom: 1.5rem; }
+  .iv-band-block:last-child { margin-bottom: 0; }
+
+  /* ── Scorecard ── */
+  .iv-scoregrid { display: grid; grid-template-columns: auto 1fr; gap: 1.75rem; align-items: center; }
+  .iv-gauge { display: flex; flex-direction: column; align-items: center; gap: 0.35rem; }
+  .iv-gauge__label { font-size: 0.8125rem; font-weight: 700; color: #0f1f3d; }
+  .iv-gauge__sub { font-size: 0.7rem; color: #9ca3af; }
+  .iv-bars { display: flex; flex-direction: column; gap: 1rem; }
+  .iv-bar__head { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 0.35rem; }
+  .iv-bar__label { font-size: 0.8125rem; font-weight: 600; color: #374151; }
+  .iv-bar__val { font-size: 0.8125rem; font-weight: 800; color: #0f1f3d; }
+  .iv-bar__track { height: 8px; background: #eef1f5; border-radius: 6px; overflow: hidden; }
+  .iv-bar__fill { height: 100%; border-radius: 6px; transition: width 0.5s ease; }
+  .iv-bar__sub { font-size: 0.7rem; color: #9ca3af; display: block; margin-top: 0.3rem; }
+  @media (max-width: 560px) { .iv-scoregrid { grid-template-columns: 1fr; gap: 1.25rem; } }
+
+  /* ── Driver chips + adjustments ── */
+  .iv-drivers { display: flex; flex-direction: column; gap: 0.5rem; margin: 1rem 0; }
+  .iv-driver {
+    display: flex; align-items: flex-start; gap: 0.5rem;
+    font-size: 0.8375rem; color: #374151; line-height: 1.5;
+    background: #f6f9fc; border: 1px solid #eef1f5; border-radius: 0.6rem; padding: 0.55rem 0.75rem;
+  }
+  .iv-driver svg { flex-shrink: 0; margin-top: 0.15rem; }
+  .iv-adjustments { display: flex; flex-wrap: wrap; gap: 0.45rem; margin: 0.5rem 0 1rem; }
+  .iv-adj { font-size: 0.75rem; font-weight: 600; padding: 0.3rem 0.6rem; border-radius: 1rem; }
+  .iv-adj--up { background: #e8f5e9; color: #1b7a3d; }
+  .iv-adj--down { background: #fdecea; color: #c0392b; }
 
   .iv-email-card, .iv-next-card {
     width: 100%;

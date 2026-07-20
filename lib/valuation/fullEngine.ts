@@ -74,21 +74,35 @@ export function bedroomsAdjective(n: number): string {
 }
 
 // ─── Multipliers & adjustments ───────────────────────────────────────────────
+// Property-type multipliers, relative to the tier baseline. Rent and sale
+// differ: in city rental markets flats are the standard stock and barely
+// discount against the average, whereas as a purchase a flat is well below a
+// house. Calibrated against 2026 asking-rent/asking-price comparables (e.g.
+// a 2-bed flat in M5/Salford lets around £1,000–£1,150).
 const PROP_MULT: Record<PropertyTypeId, { sale: number; rent: number }> = {
-  flat:     { sale: 0.78, rent: 0.82 },
-  terraced: { sale: 0.92, rent: 0.90 },
-  semi:     { sale: 1.00, rent: 1.00 },
-  detached: { sale: 1.42, rent: 1.30 },
-  bungalow: { sale: 1.05, rent: 1.00 },
+  flat:     { sale: 0.82, rent: 0.92 },
+  terraced: { sale: 0.92, rent: 1.00 },
+  semi:     { sale: 1.00, rent: 1.06 },
+  detached: { sale: 1.40, rent: 1.28 },
+  bungalow: { sale: 1.05, rent: 1.04 },
 };
 
-const BEDROOM_MULT: Record<number, number> = {
-  0: 0.48, 1: 0.58, 2: 0.80, 3: 1.00, 4: 1.28, 5: 1.55, 6: 1.80,
+// Bedroom multipliers relative to a 3-bed baseline. Rents compress far more
+// than sale prices: a 1-bed flat is roughly half a 3-bed house to BUY, but its
+// RENT is much closer, so rent uses a flatter curve centred near a 2-bed (the
+// modal rental unit).
+const BEDROOM_MULT_SALE: Record<number, number> = {
+  0: 0.52, 1: 0.62, 2: 0.83, 3: 1.00, 4: 1.26, 5: 1.52, 6: 1.78,
 };
-function bedroomMult(n: number): number {
+const BEDROOM_MULT_RENT: Record<number, number> = {
+  0: 0.66, 1: 0.80, 2: 0.96, 3: 1.14, 4: 1.36, 5: 1.58, 6: 1.82,
+};
+function bedroomMult(n: number, mode: ValuationMode): number {
+  const table = mode === 'rent' ? BEDROOM_MULT_RENT : BEDROOM_MULT_SALE;
   const clamped = Math.max(0, Math.min(6, Math.round(n)));
-  const base = BEDROOM_MULT[clamped] ?? 1;
-  return n > 6 ? 1.8 + (n - 6) * 0.2 : base;
+  const top = mode === 'rent' ? 1.82 : 1.78;
+  const perExtra = mode === 'rent' ? 0.18 : 0.2;
+  return n > 6 ? top + (n - 6) * perExtra : (table[clamped] ?? 1);
 }
 
 const CONDITION_PCT: Record<ConditionId, number> = {
@@ -190,7 +204,7 @@ function calcMode(input: FullValuationInput, mode: ValuationMode): ModeValuation
 
   const mid = baseline
     * PROP_MULT[input.propertyType][mode]
-    * bedroomMult(input.bedrooms)
+    * bedroomMult(input.bedrooms, mode)
     * (1 + totalAdjustmentPct);
 
   // Conservative / optimistic band: AVM-style uncertainty, tighter for rent.

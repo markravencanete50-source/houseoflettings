@@ -139,6 +139,7 @@ export default function PostcodeLookup({
       const data = (await response.json().catch(() => ({}))) as {
         addresses?: AddressResult[];
         unavailable?: boolean;
+        partial?: boolean;
       };
       // Service unavailable (quota reached / upstream outage): don't block the
       // form. Invite manual entry with a soft amber notice, and don't cache so
@@ -152,7 +153,16 @@ export default function PostcodeLookup({
       const list = data.addresses || [];
       writeCache(key, list); // cache even empty results to avoid re-charging
       lastKeyRef.current = key;
-      applyResult(list);
+      // `partial` = a postcode-level match from the Google fallback (street +
+      // town, not a full building list). Show it, but prompt for the number.
+      if (data.partial && list.length > 0) {
+        setError(null);
+        setAddresses(list);
+        setShowDropdown(true);
+        setNotice('Select the street to fill the town and postcode, then add your house or flat number.');
+      } else {
+        applyResult(list);
+      }
     } catch {
       // Network error reaching our own route: same graceful fallback.
       setNotice('Address search is temporarily unavailable. Please type your address in the field below.');
@@ -289,9 +299,9 @@ export default function PostcodeLookup({
                 (e.currentTarget as HTMLButtonElement).style.background = 'transparent';
               }}
             >
-              <div style={{ fontWeight: 600, marginBottom: 2 }}>{addr.street}</div>
+              <div style={{ fontWeight: 600, marginBottom: 2 }}>{addr.street || addr.city || addr.postcode}</div>
               <div style={{ fontSize: 12, color: '#6b7280' }}>
-                {[addr.city, addr.county, addr.postcode].filter(Boolean).join(', ')}
+                {[addr.street ? addr.city : '', addr.county, addr.postcode].filter(Boolean).join(', ')}
               </div>
             </button>
           ))}

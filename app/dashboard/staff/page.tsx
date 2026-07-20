@@ -9,6 +9,7 @@ import { useState, useEffect, Suspense, Fragment } from 'react';
 import { useRouter } from 'next/navigation';
 import Navbar from '@/components/layout/Navbar';
 import PropertyForm from '@/components/property/PropertyForm';
+import RentReviewPropertyManager from '@/components/dashboard/RentReviewPropertyManager';
 import { useAuth } from '@/hooks/useAuth';
 import { signOut } from '@/services/auth';
 import { Property, propertyAvailability } from '@/lib/types';
@@ -33,22 +34,17 @@ interface RentReview {
   postcode?: string;
   currentRent?: string;
   proposedRent?: string;
+  effectiveDate?: string;
   rentDecision?: string;
   tenantProposedRent?: string;
   rentDiscussReason?: string;
-  employer?: string;
-  jobTitle?: string;
-  employmentStatus?: string;
-  employmentChanged?: string;
-  employmentChangeDetails?: string;
-  financeChanged?: string; financeChangedDetails?: string;
+  adultOccupants?: string; childOccupants?: string; childrenAges?: string;
+  pets?: string; petDetails?: string;
+  annualIncome?: string;
   hasCCJ?: string; ccjDetails?: string;
-  courtProceedings?: string; courtDetails?: string;
-  ivaBankruptcy?: string; ivaDetails?: string;
-  occupancyChanged?: string; occupancyDetails?: string;
   shareCode?: string;
   hasMaintenance?: string; maintenanceCategory?: string; maintenanceDescription?: string;
-  bankStatementUrls?: string[]; payslipUrls?: string[]; photoIdUrls?: string[]; visaUrls?: string[]; maintenancePhotoUrls?: string[];
+  photoIdUrls?: string[]; payslipUrls?: string[]; bankStatementUrls?: string[]; maintenancePhotoUrls?: string[];
   status: string;
   submittedAt: string | null;
 }
@@ -190,36 +186,29 @@ function RentReviewDetail({ r }: { r: RentReview }) {
       <Row label="Postcode" value={r.postcode} />
       <Row label="Current Rent" value={r.currentRent} />
       <Row label="Proposed New Rent" value={r.proposedRent} />
+      <Row label="Effective Date" value={r.effectiveDate} />
       <Row label="Decision" value={r.rentDecision === 'accept' ? 'Accepts the proposed rent' : r.rentDecision === 'discuss' ? 'Would like to discuss' : '-'} />
       {r.rentDecision === 'discuss' && <Row label="Rent Proposed by Tenant" value={r.tenantProposedRent} />}
       {r.rentDecision === 'discuss' && <Row label="Reason" value={r.rentDiscussReason} />}
 
-      <H>Personal &amp; Employment</H>
+      <H>Tenant &amp; Household</H>
       <Row label="Phone" value={r.phone} />
-      <Row label="Employer" value={r.employer} />
-      <Row label="Job Title" value={r.jobTitle} />
-      <Row label="Employment Status" value={r.employmentStatus} />
-      <Row label="Employment Changed?" value={yn(r.employmentChanged)} />
-      {r.employmentChanged === 'yes' && <Row label="What Changed" value={r.employmentChangeDetails} />}
+      <Row label="Adult Occupants" value={r.adultOccupants} />
+      <Row label="Child Occupants" value={r.childOccupants} />
+      {Number(r.childOccupants) > 0 && <Row label="Children's Ages" value={r.childrenAges} />}
+      <Row label="Pets" value={yn(r.pets)} />
+      {r.pets === 'yes' && <Row label="Pet Details" value={r.petDetails} />}
+      <Row label="Annual Income" value={r.annualIncome} />
 
-      <H>Financial Declaration</H>
-      <Row label="Financial situation changed?" value={yn(r.financeChanged)} />
-      {r.financeChanged === 'yes' && <Row label="Details" value={r.financeChangedDetails} />}
-      <Row label="CCJs since moving in?" value={yn(r.hasCCJ)} />
-      {r.hasCCJ === 'yes' && <Row label="CCJ Details" value={r.ccjDetails} />}
-      <Row label="Court proceedings?" value={yn(r.courtProceedings)} />
-      {r.courtProceedings === 'yes' && <Row label="Court Details" value={r.courtDetails} />}
-      <Row label="IVA or bankruptcy?" value={yn(r.ivaBankruptcy)} />
-      {r.ivaBankruptcy === 'yes' && <Row label="IVA/Bankruptcy Details" value={r.ivaDetails} />}
-      <Row label="Anyone moved in/out?" value={yn(r.occupancyChanged)} />
-      {r.occupancyChanged === 'yes' && <Row label="Occupancy Details" value={r.occupancyDetails} />}
+      <H>Financial Status</H>
+      <Row label="CCJs / financial issues?" value={yn(r.hasCCJ)} />
+      {r.hasCCJ === 'yes' && <Row label="Details" value={r.ccjDetails} />}
+      <Row label="Right to Rent Share Code" value={r.shareCode} />
 
       <H>Documents</H>
-      <Files label="Bank Statements" urls={r.bankStatementUrls} />
+      <Files label="Photo ID (front & back)" urls={r.photoIdUrls} />
       <Files label="Payslips" urls={r.payslipUrls} />
-      <Files label="Photo ID" urls={r.photoIdUrls} />
-      <Files label="Visa" urls={r.visaUrls} />
-      <Row label="Right to Rent Share Code" value={r.shareCode} />
+      <Files label="Bank Statements" urls={r.bankStatementUrls} />
 
       {r.hasMaintenance === 'yes' && (
         <>
@@ -259,6 +248,7 @@ function StaffDashboardInner() {
   const [reviews, setReviews] = useState<GoogleReview[]>([]);
   const [rentReviews, setRentReviews] = useState<RentReview[]>([]);
   const [expandedRR, setExpandedRR] = useState<string | null>(null);
+  const [showRRProps, setShowRRProps] = useState(false);
   const [editingProperty, setEditingProperty] = useState<Property | null>(null);
   const [loaded, setLoaded] = useState<Record<string, boolean>>({});
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -966,8 +956,14 @@ function StaffDashboardInner() {
           {/* ── Rent Reviews ── */}
           {tab === 'rent-reviews' && perms.includes('rent-reviews') && (
             <div>
-              <h1 className="dash-section-title">Rent Reviews</h1>
-              <p style={{ color: 'var(--gray-600)', marginBottom: 24, fontSize: 15 }}>Annual rent reviews submitted by existing tenants. Expand a row to see the full submission and documents; use the status dropdown to keep the team on track.</p>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, flexWrap: 'wrap', marginBottom: 8 }}>
+                <h1 className="dash-section-title" style={{ margin: 0 }}>Rent Reviews</h1>
+                <button onClick={() => setShowRRProps(v => !v)} style={{ padding: '10px 16px', background: showRRProps ? '#e5e7eb' : '#2563eb', color: showRRProps ? '#374151' : '#fff', border: 'none', borderRadius: 6, fontSize: 13, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap' }}>
+                  {showRRProps ? '✕ Close property list' : '🏠 Manage properties'}
+                </button>
+              </div>
+              <p style={{ color: 'var(--gray-600)', marginBottom: 20, fontSize: 15 }}>Annual rent reviews submitted by existing tenants. Expand a row to see the full submission and documents; use the status dropdown to keep the team on track.</p>
+              {showRRProps && <RentReviewPropertyManager authedFetch={authedFetch} />}
               <div className="dash-card" style={{ padding: 0, overflow: 'hidden' }}>
                 <table className="data-table">
                   <thead>

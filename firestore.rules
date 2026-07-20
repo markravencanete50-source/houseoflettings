@@ -145,6 +145,13 @@ service cloud.firestore {
       allow read, update, delete: if isAdmin();
     }
 
+    // The rent-review property catalogue. Read/written only via the Admin SDK
+    // (the public form list and the dashboard manager both go through /api
+    // routes), so no client access is needed.
+    match /rentReviewProperties/{id} {
+      allow read, write: if isAdmin();
+    }
+
     // Aggregate website analytics — written and read only via /api/track
     // (admin SDK). No client access.
     match /analytics/{id} {

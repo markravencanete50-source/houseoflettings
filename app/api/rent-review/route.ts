@@ -75,6 +75,7 @@ function confirmationHtml(d: any) {
         <div class="detail-row"><span class="detail-label">Property</span><span class="detail-value">${d.propertyAddress || '-'}</span></div>
         <div class="detail-row"><span class="detail-label">Current Rent</span><span class="detail-value">${d.currentRent || '-'}</span></div>
         <div class="detail-row"><span class="detail-label">Proposed Rent</span><span class="detail-value">${d.proposedRent || '-'}</span></div>
+        ${d.effectiveDate ? `<div class="detail-row"><span class="detail-label">Effective From</span><span class="detail-value">${d.effectiveDate}</span></div>` : ''}
         <div class="detail-row"><span class="detail-label">Your Decision</span><span class="detail-value">${rentDecisionText(d.rentDecision)}</span></div>
       </div>
       <div class="notice">ℹ️ This submission forms part of your tenancy renewal and rent review. If anything changes, please reply to this email and let us know.</div>
@@ -112,41 +113,34 @@ function adminNotificationHtml(d: any) {
       ${row('Postcode', d.postcode)}
       ${row('Current Rent', d.currentRent)}
       ${row('Proposed New Rent', d.proposedRent)}
+      ${row('Effective Date', d.effectiveDate)}
       ${row('Tenant Decision', rentDecisionText(d.rentDecision))}
       ${d.rentDecision === 'discuss' ? row('Rent Proposed by Tenant', d.tenantProposedRent) : ''}
       ${d.rentDecision === 'discuss' ? row('Reason', d.rentDiscussReason) : ''}
     </table></div>
 
-    <div class="section"><p class="section-title">Personal &amp; Employment</p><table>
+    <div class="section"><p class="section-title">Tenant &amp; Household</p><table>
       ${row('Full Name', d.fullName)}
       ${row('Email', d.email)}
       ${row('Phone', d.phone)}
-      ${row('Employer', d.employer)}
-      ${row('Job Title', d.jobTitle)}
-      ${row('Employment Status', d.employmentStatus)}
-      ${row('Employment Changed?', yn(d.employmentChanged))}
-      ${d.employmentChanged === 'yes' ? row('What changed', d.employmentChangeDetails) : ''}
+      ${row('Adult Occupants', d.adultOccupants)}
+      ${row('Child Occupants', d.childOccupants)}
+      ${Number(d.childOccupants) > 0 ? row('Children&rsquo;s Ages', d.childrenAges) : ''}
+      ${row('Pets', yn(d.pets))}
+      ${d.pets === 'yes' ? row('Pet Details', d.petDetails) : ''}
+      ${row('Annual Income', d.annualIncome)}
     </table></div>
 
-    <div class="section"><p class="section-title">Financial Declaration</p><table>
-      ${row('Financial situation changed?', yn(d.financeChanged))}
-      ${d.financeChanged === 'yes' ? row('Details', d.financeChangedDetails) : ''}
-      ${row('Any CCJs since moving in?', yn(d.hasCCJ))}
-      ${d.hasCCJ === 'yes' ? row('CCJ details', d.ccjDetails) : ''}
-      ${row('Any court proceedings?', yn(d.courtProceedings))}
-      ${d.courtProceedings === 'yes' ? row('Court details', d.courtDetails) : ''}
-      ${row('IVA or bankruptcy?', yn(d.ivaBankruptcy))}
-      ${d.ivaBankruptcy === 'yes' ? row('IVA/bankruptcy details', d.ivaDetails) : ''}
-      ${row('Anyone moved in/out?', yn(d.occupancyChanged))}
-      ${d.occupancyChanged === 'yes' ? row('Occupancy details', d.occupancyDetails) : ''}
+    <div class="section"><p class="section-title">Financial Status</p><table>
+      ${row('CCJs / significant financial issues?', yn(d.hasCCJ))}
+      ${d.hasCCJ === 'yes' ? row('Details', d.ccjDetails) : ''}
+      ${row('Right to Rent Share Code', d.shareCode)}
     </table></div>
 
     <div class="section"><p class="section-title">Documents</p><table>
-      ${fileLinks(d.bankStatementUrls, 'Bank Statements (3 months)')}
-      ${fileLinks(d.payslipUrls, 'Payslips (3 months)')}
-      ${fileLinks(d.photoIdUrls, 'Photo ID')}
-      ${fileLinks(d.visaUrls, 'Visa')}
-      ${row('Right to Rent Share Code', d.shareCode)}
+      ${fileLinks(d.photoIdUrls, 'Photo ID (front &amp; back)')}
+      ${fileLinks(d.payslipUrls, 'Payslips')}
+      ${fileLinks(d.bankStatementUrls, 'Bank Statements')}
     </table></div>
 
     <div class="section"><p class="section-title">Maintenance</p><table>
@@ -203,33 +197,27 @@ function rentReviewPdfBase64(d: any, ref: string): string {
   row('Postcode', d.postcode);
   row('Current Rent', d.currentRent);
   row('Proposed New Rent', d.proposedRent);
+  row('Effective Date', d.effectiveDate);
   row('Tenant Decision', rentDecisionText(d.rentDecision));
   if (d.rentDecision === 'discuss') { row('Rent Proposed by Tenant', d.tenantProposedRent); row('Reason', d.rentDiscussReason); }
 
-  y += 8; section('Personal & Employment');
+  y += 8; section('Tenant & Household');
   row('Full Name', d.fullName); row('Email', d.email); row('Phone', d.phone);
-  row('Employer', d.employer); row('Job Title', d.jobTitle); row('Employment Status', d.employmentStatus);
-  row('Employment Changed?', yn(d.employmentChanged));
-  if (d.employmentChanged === 'yes') row('What changed', d.employmentChangeDetails);
+  row('Adult Occupants', d.adultOccupants); row('Child Occupants', d.childOccupants);
+  if (Number(d.childOccupants) > 0) row("Children's Ages", d.childrenAges);
+  row('Pets', yn(d.pets));
+  if (d.pets === 'yes') row('Pet Details', d.petDetails);
+  row('Annual Income', d.annualIncome);
 
-  y += 8; section('Financial Declaration');
-  row('Financial situation changed?', yn(d.financeChanged));
-  if (d.financeChanged === 'yes') row('Details', d.financeChangedDetails);
-  row('CCJs since moving in?', yn(d.hasCCJ));
-  if (d.hasCCJ === 'yes') row('CCJ details', d.ccjDetails);
-  row('Court proceedings?', yn(d.courtProceedings));
-  if (d.courtProceedings === 'yes') row('Court details', d.courtDetails);
-  row('IVA or bankruptcy?', yn(d.ivaBankruptcy));
-  if (d.ivaBankruptcy === 'yes') row('IVA/bankruptcy details', d.ivaDetails);
-  row('Anyone moved in/out?', yn(d.occupancyChanged));
-  if (d.occupancyChanged === 'yes') row('Occupancy details', d.occupancyDetails);
+  y += 8; section('Financial Status');
+  row('CCJs / significant financial issues?', yn(d.hasCCJ));
+  if (d.hasCCJ === 'yes') row('Details', d.ccjDetails);
+  row('Right to Rent Share Code', d.shareCode);
 
   y += 8; section('Documents');
-  fileRow('Bank Statements', d.bankStatementUrls);
+  fileRow('Photo ID (front & back)', d.photoIdUrls);
   fileRow('Payslips', d.payslipUrls);
-  fileRow('Photo ID', d.photoIdUrls);
-  fileRow('Visa', d.visaUrls);
-  row('Right to Rent Share Code', d.shareCode);
+  fileRow('Bank Statements', d.bankStatementUrls);
 
   y += 8; section('Maintenance');
   row('Issue to report?', yn(d.hasMaintenance));
@@ -293,10 +281,9 @@ export async function POST(request: Request) {
       : undefined;
 
     const driveFiles: BackupFile[] = [
-      ...namedFiles(data.bankStatementUrls, 'Bank Statement'),
-      ...namedFiles(data.payslipUrls, 'Payslip'),
       ...namedFiles(data.photoIdUrls, 'Photo ID'),
-      ...namedFiles(data.visaUrls, 'Visa'),
+      ...namedFiles(data.payslipUrls, 'Payslip'),
+      ...namedFiles(data.bankStatementUrls, 'Bank Statement'),
       ...namedFiles(data.maintenancePhotoUrls, 'Maintenance Photo'),
       ...(pdfBase64 ? [{ base64: pdfBase64, name: `Rent Review ${safeName}` }] : []),
     ];

@@ -659,12 +659,24 @@ function LlxTimeline() {
 // Two cards and three outcome stats. Sells the change in the landlord's week,
 // not the feature list.
 function LlxBeforeAfter() {
-  const without = ['Managing tenants day to day', 'Late-night maintenance calls', 'Legal paperwork and deadlines', 'Void periods and chasing rent'];
-  const withUs = ['A dedicated property manager', 'Rent collected and monitored', 'Compliance handled for you', 'Quality, referenced tenants'];
+  const without = ['Endless emails, calls and phone tag', 'Managing tenants day to day', 'Late-night maintenance calls', 'Legal paperwork and deadlines', 'Void periods and chasing rent'];
+  const withUs = ['Everything handled online, 24/7', 'A dedicated property manager', 'Rent collected and monitored', 'Compliance handled for you', 'Quality, referenced tenants'];
   const stats: { before: string; after: string }[] = [
     { before: '30+ landlord tasks', after: '1 dedicated property manager' },
     { before: 'Multiple contractors to chase', after: 'One point of contact' },
+    { before: 'Chains of emails and calls', after: 'Every step done online' },
     { before: 'Unprotected rental income', after: 'Rent guarantee cover available' },
+  ];
+  // Self-serve online journeys, each a real page. This is the proof behind the
+  // "everything online" claim above — no back-and-forth, available any time.
+  const online: { icon: string; title: string; sub: string; href: string }[] = [
+    { icon: '📅', title: 'Book a viewing', sub: 'Pick a slot online', href: '/book-viewing' },
+    { icon: '🔧', title: 'Report maintenance', sub: 'Log an issue in minutes', href: '/maintenance/report' },
+    { icon: '📝', title: 'Tenant application', sub: 'Apply fully online', href: '/tenant-application' },
+    { icon: '🛡️', title: 'Guarantor form', sub: 'Complete & submit online', href: '/guarantor' },
+    { icon: '🏠', title: 'Landlord registration', sub: 'Onboard in one form', href: '/landlord-registration/apply' },
+    { icon: '📊', title: 'Free valuation', sub: 'Instant, no phone calls', href: '/book-valuation' },
+    { icon: '✨', title: 'Professional services', sub: 'Order add-ons online', href: '/additional-services' },
   ];
   return (
     <section className="llx10-sec">
@@ -715,6 +727,25 @@ function LlxBeforeAfter() {
           .llx10-before { text-align:left; }
           .llx10-arrow { transform:rotate(90deg); }
         }
+        .llx10-online { margin-top:48px; }
+        .llx10-online-head { text-align:center; max-width:680px; margin:0 auto 26px; }
+        .llx10-online-eyebrow { display:inline-flex; align-items:center; gap:7px; font-size:11px; font-weight:700;
+          letter-spacing:.2em; text-transform:uppercase; color:var(--logo-blue); margin-bottom:12px; }
+        .llx10-online-h3 { font-size:clamp(22px,2.9vw,32px); font-weight:700; color:#0f1f3d; margin:0 0 12px; line-height:1.2; text-wrap:balance; }
+        .llx10-online-sub { font-size:14.5px; line-height:1.65; color:#5b6472; margin:0; }
+        .llx10-online-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(212px,1fr)); gap:14px; }
+        .llx10-tile { display:flex; align-items:center; gap:13px; background:#fff; border:1px solid #e5e7eb;
+          border-radius:14px; padding:15px 17px; text-decoration:none;
+          transition:transform .18s ease, box-shadow .18s ease, border-color .18s ease; }
+        .llx10-tile:hover { transform:translateY(-3px); border-color:#bfdbfe; box-shadow:0 20px 38px -26px rgba(37,99,235,.5); }
+        .llx10-tile-ic { flex:none; width:42px; height:42px; border-radius:12px; background:#eff6ff; font-size:20px; line-height:1;
+          display:inline-flex; align-items:center; justify-content:center; }
+        .llx10-tile-tx { display:flex; flex-direction:column; gap:2px; min-width:0; }
+        .llx10-tile-t { font-size:14px; font-weight:700; color:#0f1f3d; }
+        .llx10-tile-s { font-size:12px; font-weight:500; color:#8b93a1; }
+        .llx10-online-foot { text-align:center; margin:26px 0 0; font-size:13.5px; color:#5b6472; }
+        .llx10-online-foot a { color:var(--logo-blue); font-weight:600; text-decoration:none; }
+        .llx10-online-foot a:hover { text-decoration:underline; }
       `}</style>
       <div className="llx10-inner">
         <div className="llx10-head hol-reveal">
@@ -763,6 +794,35 @@ function LlxBeforeAfter() {
               <span className="llx10-after">{s.after}</span>
             </div>
           ))}
+        </div>
+
+        <div className="llx10-online hol-reveal" style={{ animationDelay: '160ms' }}>
+          <div className="llx10-online-head">
+            <div className="llx10-online-eyebrow">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M13 2 3 14h7l-1 8 10-12h-7l1-8z" /></svg>
+              Efficient by design
+            </div>
+            <h3 className="llx10-online-h3">Almost everything, done online</h3>
+            <p className="llx10-online-sub">
+              We&rsquo;ve moved the whole journey online — no chains of emails, no phone tag, no waiting on office hours.
+              Book, apply, report and register in minutes, then let your dedicated manager and our professional maintenance
+              team take it from there.
+            </p>
+          </div>
+          <div className="llx10-online-grid">
+            {online.map(o => (
+              <Link key={o.href} href={o.href} className="llx10-tile">
+                <span className="llx10-tile-ic" aria-hidden="true">{o.icon}</span>
+                <span className="llx10-tile-tx">
+                  <span className="llx10-tile-t">{o.title}</span>
+                  <span className="llx10-tile-s">{o.sub}</span>
+                </span>
+              </Link>
+            ))}
+          </div>
+          <p className="llx10-online-foot">
+            See how it all fits together — <Link href="/pricing">explore our services &amp; process</Link>.
+          </p>
         </div>
       </div>
     </section>

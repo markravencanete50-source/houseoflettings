@@ -119,7 +119,7 @@ export default function RentReviewPropertyManager({
               setErr('');
             }}
           >
-            <option value="">— Select a property to auto-fill address &amp; current rent —</option>
+            <option value="">Select a property to auto-fill address &amp; current rent...</option>
             {portfolio.map(p => (
               <option key={p.id || p.title} value={p.id || p.title}>
                 {p.title} · {p.location} · £{p.price?.toLocaleString('en-GB')}/mo

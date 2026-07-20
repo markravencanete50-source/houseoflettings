@@ -52,18 +52,18 @@ export function buildFallbackAnalysis(
   result: FullValuationResult,
 ): AiAnalysis {
   const drivers: string[] = [
-    `${bedroomsAdjective(input.bedrooms).replace(/^./, c => c.toUpperCase())} ${PROPERTY_TYPE_LABEL[input.propertyType].toLowerCase()} — the biggest single factor in the estimate`,
+    `${bedroomsAdjective(input.bedrooms).replace(/^./, c => c.toUpperCase())} ${PROPERTY_TYPE_LABEL[input.propertyType].toLowerCase()}: the biggest single factor in the estimate`,
     `Location baseline for ${result.areaLabel} drawn from ${result.dataYear} ONS and Zoopla market data`,
   ];
   if (input.bathrooms > 1) drivers.push(`${input.bathrooms} bathrooms add a premium over the local norm`);
   if (input.condition === 'excellent' || input.condition === 'good')
-    drivers.push(`Above-average condition (${CONDITION_LABEL[input.condition].split(' — ')[0].toLowerCase()}) lifts achievable value`);
+    drivers.push(`Above-average condition (${CONDITION_LABEL[input.condition].split(' (')[0].toLowerCase()}) lifts achievable value`);
   if (input.condition === 'dated' || input.condition === 'renovation')
-    drivers.push(`Condition (${CONDITION_LABEL[input.condition].split(' — ')[0].toLowerCase()}) holds the figure back — targeted improvements would raise it`);
+    drivers.push(`Condition (${CONDITION_LABEL[input.condition].split(' (')[0].toLowerCase()}) holds the figure back; targeted improvements would raise it`);
   if (input.epc === 'A' || input.epc === 'B' || input.epc === 'C')
     drivers.push(`A strong energy rating (${input.epc}) is increasingly rewarded by tenants and buyers`);
   if (input.epc === 'F' || input.epc === 'G')
-    drivers.push(`EPC ${input.epc} is below the lettings compliance threshold — improving it protects both value and lettability`);
+    drivers.push(`EPC ${input.epc} is below the lettings compliance threshold; improving it protects both value and lettability`);
   if (input.garden === 'private') drivers.push('A private garden remains one of the most-searched features');
   if (input.parking === 'garage' || input.parking === 'driveway') drivers.push(`${PARKING_LABEL[input.parking]} adds meaningful value in this market`);
 
@@ -83,7 +83,7 @@ export function buildFallbackAnalysis(
     summary: `Based on ${result.dataYear} market data for ${result.areaLabel}, this ${bedroomsAdjective(input.bedrooms)} ${PROPERTY_TYPE_LABEL[input.propertyType].toLowerCase()} sits ${result.rent ? `around ${fmtGBP(result.rent.market)} per month on the rental market` : ''}${result.rent && result.sale ? ' and ' : ''}${result.sale ? `around ${fmtGBP(result.sale.market)} as a sale` : ''}. The figures below show a conservative-to-optimistic band reflecting normal market uncertainty.`,
     keyDrivers: drivers.slice(0, 5),
     marketOutlook: `${rentPart}${salePart}These estimates are anchored to district-level averages${result.isOperatingArea ? ` for ${result.areaLabel}` : ` for the wider ${result.regionLabel} region`}, adjusted for this property's type, size, condition and features.`,
-    recommendation: 'An automated estimate is a strong starting point, but pricing precisely — especially before a rent review or listing — benefits from a local expert seeing the property. Book a free professional valuation and we will confirm the figure in person.',
+    recommendation: 'An automated estimate is a strong starting point, but pricing precisely, especially before a rent review or listing, benefits from a local expert seeing the property. Book a free professional valuation and we will confirm the figure in person.',
     ...(result.rent ? { rentCommentary: `A realistic asking rent is ${fmtGBP(result.rent.market)} per month. Start conservative at ${fmtGBP(result.rent.conservative)} to let quickly, or test ${fmtGBP(result.rent.optimistic)} if the property presents particularly well.` } : {}),
     ...(result.sale ? { saleCommentary: `A realistic marketing price is ${fmtGBP(result.sale.market)}. ${fmtGBP(result.sale.conservative)} positions for a fast sale; ${fmtGBP(result.sale.optimistic)} is achievable in a competitive bidding situation.` } : {}),
   };
@@ -114,7 +114,7 @@ export async function getAiAnalysis(
     result.sale && `Sale estimate: conservative ${fmtGBP(result.sale.conservative)}, market ${fmtGBP(result.sale.market)}, optimistic ${fmtGBP(result.sale.optimistic)} (area baseline ${fmtGBP(result.sale.baseline)}, regional price growth ${result.sale.annualGrowthPct}% YoY)`,
   ].filter(Boolean).join('\n');
 
-  const prompt = `You are a senior UK lettings and sales valuer writing the analysis section of an instant valuation report for a property owner. Be specific, factual and professional. British English. No hype, no exclamation marks.
+  const prompt = `You are a senior UK lettings and sales valuer writing the analysis section of an instant valuation report for a property owner. Be specific, factual and professional. British English. No hype, no exclamation marks, no em dashes.
 
 PROPERTY: ${describeProperty(input)}
 LOCATION: ${result.areaLabel} (${result.regionLabel}). Data year ${result.dataYear}.
@@ -126,8 +126,8 @@ Respond with ONLY a JSON object with these keys:
 - "keyDrivers": array of 4-5 short strings, each one concrete factor driving this property's value (location, size, condition, EPC, features).
 - "marketOutlook": 2-3 sentences on the current ${result.regionLabel} market relevant to this property (rents/prices direction, demand).
 - "recommendation": 1-2 sentences of practical next-step advice for the owner.
-${type !== 'sale' ? '- "rentCommentary": 2 sentences advising how to position the asking rent within the band.\n- "rentAdjustPct": number between -8 and 8 — your % adjustment to the market rent figure if the algorithmic estimate looks off for this property profile, else 0.' : ''}
-${type !== 'let' ? '- "saleCommentary": 2 sentences advising how to position the asking price within the band.\n- "saleAdjustPct": number between -8 and 8 — your % adjustment to the market sale figure if the algorithmic estimate looks off for this property profile, else 0.' : ''}`;
+${type !== 'sale' ? '- "rentCommentary": 2 sentences advising how to position the asking rent within the band.\n- "rentAdjustPct": number between -8 and 8: your % adjustment to the market rent figure if the algorithmic estimate looks off for this property profile, else 0.' : ''}
+${type !== 'let' ? '- "saleCommentary": 2 sentences advising how to position the asking price within the band.\n- "saleAdjustPct": number between -8 and 8: your % adjustment to the market sale figure if the algorithmic estimate looks off for this property profile, else 0.' : ''}`;
 
   try {
     const controller = new AbortController();

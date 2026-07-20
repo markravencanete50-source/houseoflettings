@@ -228,7 +228,7 @@ async function generateReportPdf(contact: Contact, report: ValuationReport): Pro
     x: MARGIN, y: w.y, size: 13, font: w.fontBold, color: w.navy,
   });
   w.y -= 18;
-  w.page.drawText(`${fullAddress(property)} — ${result.areaLabel}`, {
+  w.page.drawText(`${fullAddress(property)}  |  ${result.areaLabel}`, {
     x: MARGIN, y: w.y, size: 11, font: w.font, color: w.grey,
   });
   w.y -= 28;
@@ -362,7 +362,7 @@ ${result.sale ? bandHtml(result.sale, 'Estimated Sale Price', '') : ''}
 <div class="detail-row"><span class="detail-label">Property type</span><span class="detail-value">${PROPERTY_TYPE_LABEL[property.propertyType]}</span></div>
 <div class="detail-row"><span class="detail-label">Bedrooms</span><span class="detail-value">${bedroomsLabel(property.bedrooms)}</span></div>
 <div class="detail-row"><span class="detail-label">Bathrooms</span><span class="detail-value">${property.bathrooms}</span></div>
-<div class="detail-row"><span class="detail-label">Condition</span><span class="detail-value">${CONDITION_LABEL[property.condition].split(' — ')[0]}</span></div>
+<div class="detail-row"><span class="detail-label">Condition</span><span class="detail-value">${CONDITION_LABEL[property.condition].split(' (')[0]}</span></div>
 <div class="detail-row"><span class="detail-label">Energy rating</span><span class="detail-value">${EPC_LABEL[property.epc]}</span></div>
 <div class="detail-row"><span class="detail-label">Garden</span><span class="detail-value">${GARDEN_LABEL[property.garden]}</span></div>
 <div class="detail-row"><span class="detail-label">Balcony</span><span class="detail-value">${property.balcony ? 'Yes' : 'No'}</span></div>
@@ -373,7 +373,7 @@ ${result.sale ? bandHtml(result.sale, 'Estimated Sale Price', '') : ''}
 <p class="section-h">Next step: confirm the figure in person</p>
 <p>${ai.recommendation}</p>
 <p style="text-align:center;"><a class="cta" href="${bookUrl}">Book a Free Professional Valuation</a></p>
-<p class="note">This is an automated, indicative estimate — not a formal valuation. The attached PDF includes the full methodology, market outlook and feature adjustments behind these figures.</p>
+<p class="note">This is an automated, indicative estimate, not a formal valuation. The attached PDF includes the full methodology, market outlook and feature adjustments behind these figures.</p>
 </div>
 <div class="footer">© ${new Date().getFullYear()} House of Lettings Ltd · info@houseoflettings.co.uk · houseoflettings.uk</div>
 </div></body></html>`;
@@ -389,7 +389,7 @@ function adminEmailHtml(contact: Contact, report: ValuationReport): string {
     ['Area', result.areaLabel],
     ['Valuation type', typeLabel(report.type)],
     ['Property', `${bedroomsLabel(property.bedrooms)} ${PROPERTY_TYPE_LABEL[property.propertyType]}, ${property.bathrooms} bath`],
-    ['Condition / EPC', `${CONDITION_LABEL[property.condition].split(' — ')[0]} / ${EPC_LABEL[property.epc]}`],
+    ['Condition / EPC', `${CONDITION_LABEL[property.condition].split(' (')[0]} / ${EPC_LABEL[property.epc]}`],
     ['Features', [GARDEN_LABEL[property.garden], property.balcony ? 'Balcony' : null, PARKING_LABEL[property.parking]].filter(Boolean).join(' · ')],
     ...(result.rent ? [['Rent estimate', `${fmtGBP(result.rent.market)}/mo (range ${fmtGBP(result.rent.conservative)}–${fmtGBP(result.rent.optimistic)})`] as [string, string]] : []),
     ...(result.sale ? [['Sale estimate', `${fmtGBP(result.sale.market)} (range ${fmtGBP(result.sale.conservative)}–${fmtGBP(result.sale.optimistic)})`] as [string, string]] : []),

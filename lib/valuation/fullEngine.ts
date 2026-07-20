@@ -49,8 +49,8 @@ export const PROPERTY_TYPE_LABEL: Record<PropertyTypeId, string> = {
   detached: 'Detached House', bungalow: 'Bungalow',
 };
 export const CONDITION_LABEL: Record<ConditionId, string> = {
-  excellent: 'Excellent — recently renovated', good: 'Good — well maintained',
-  average: 'Average — liveable, some wear', dated: 'Dated — needs modernising',
+  excellent: 'Excellent (recently renovated)', good: 'Good (well maintained)',
+  average: 'Average (liveable, some wear)', dated: 'Dated (needs modernising)',
   renovation: 'Needs full renovation',
 };
 export const EPC_LABEL: Record<EpcId, string> = {

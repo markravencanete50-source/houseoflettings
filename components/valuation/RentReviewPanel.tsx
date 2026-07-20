@@ -173,7 +173,7 @@ export default function RentReviewPanel({ properties, loading, error }: Props) {
     <div>
       <h2 style={{ fontSize: 20, fontWeight: 700, color: '#0f1f3d', margin: '0 0 4px' }}>📈 Rent Review</h2>
       <p style={{ fontSize: 13.5, color: '#6b7280', margin: '0 0 20px', lineHeight: 1.6 }}>
-        Select a property and its details fill in automatically — same questions as the public
+        Select a property and its details fill in automatically, using the same questions as the public
         valuation form, no retyping. Adjust anything, then run the valuation to compare the
         current rent against today's market.
       </p>
@@ -191,7 +191,7 @@ export default function RentReviewPanel({ properties, loading, error }: Props) {
           onChange={(e) => handleSelect(e.target.value)}
           disabled={loading}
         >
-          <option value="">{loading ? 'Loading properties…' : '— Select a property (auto-fills the form) —'}</option>
+          <option value="">{loading ? 'Loading properties…' : 'Select a property (auto-fills the form)...'}</option>
           {properties.map(p => (
             <option key={p.id} value={p.id}>
               {p.title} · {p.location} · £{p.price?.toLocaleString('en-GB')}/mo
@@ -200,7 +200,7 @@ export default function RentReviewPanel({ properties, loading, error }: Props) {
         </select>
         {selected && (
           <p style={{ fontSize: 12.5, color: '#2e7d32', margin: 0 }}>
-            ✓ Details pre-filled from the listing — review the property type, condition and EPC below.
+            ✓ Details pre-filled from the listing. Review the property type, condition and EPC below.
           </p>
         )}
       </div>
@@ -332,11 +332,11 @@ export default function RentReviewPanel({ properties, loading, error }: Props) {
               border: `1px solid ${rentDeltaPct >= 5 ? '#c8e6c9' : rentDeltaPct <= -5 ? '#ffe0b2' : '#e5e7eb'}`,
             }}>
               <p style={{ fontSize: 13.5, color: '#0f1f3d', margin: 0, lineHeight: 1.65 }}>
-                <strong>Current rent {fmtGBP(rentNum)}/mo vs market {fmtGBP(rent.market)}/mo — {rentDeltaPct >= 0 ? '+' : ''}{rentDeltaPct.toFixed(1)}%.</strong>{' '}
+                <strong>Current rent {fmtGBP(rentNum)}/mo vs market {fmtGBP(rent.market)}/mo: {rentDeltaPct >= 0 ? '+' : ''}{rentDeltaPct.toFixed(1)}%.</strong>{' '}
                 {rentDeltaPct >= 5
                   ? `The property appears under-rented. A review towards ${fmtGBP(rent.conservative)}–${fmtGBP(rent.market)}/mo looks supportable (subject to tenancy terms and Section 13 rules).`
                   : rentDeltaPct <= -5
-                    ? 'The current rent is above today\'s market estimate — an increase is unlikely to be supportable right now.'
+                    ? 'The current rent is above today\'s market estimate, so an increase is unlikely to be supportable right now.'
                     : 'The current rent is broadly in line with the market.'}
               </p>
             </div>
@@ -355,7 +355,7 @@ export default function RentReviewPanel({ properties, loading, error }: Props) {
             ))}
           </ul>
           <p style={{ fontSize: 12, color: '#9ca3af', lineHeight: 1.6, margin: 0 }}>
-            Automated, indicative estimate — not a formal valuation. Rent increases for existing
+            Automated, indicative estimate, not a formal valuation. Rent increases for existing
             tenancies must follow the tenancy agreement and statutory notice rules.
           </p>
         </div>

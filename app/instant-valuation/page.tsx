@@ -297,7 +297,7 @@ export default function InstantValuationPage() {
                       placeholder="e.g. LS6 1AA"
                     />
                     {postcodeErr && <p className="iv-error">{postcodeErr}</p>}
-                    <p className="iv-hint">Any UK postcode works. Search it, then pick your address — or type the first line below.</p>
+                    <p className="iv-hint">Any UK postcode works. Search it, then pick your address, or type the first line below.</p>
                   </div>
 
                   <div className="iv-section">
@@ -492,7 +492,7 @@ export default function InstantValuationPage() {
                 <span className="iv-summary__item"><strong>{propType ? PROPERTY_TYPE_LABEL[propType as PropertyTypeId] : ''}</strong></span>
                 <span className="iv-summary__item"><strong>{bedrooms !== '' ? bedroomsLabel(bedrooms) : ''}</strong></span>
                 <span className="iv-summary__item"><strong>{bathrooms} bath{Number(bathrooms) > 1 ? 's' : ''}</strong></span>
-                {condition && <span className="iv-summary__item"><strong>{CONDITION_LABEL[condition as ConditionId].split(' — ')[0]}</strong></span>}
+                {condition && <span className="iv-summary__item"><strong>{CONDITION_LABEL[condition as ConditionId].split(' (')[0]}</strong></span>}
                 {epc && <span className="iv-summary__item"><strong>{epc === 'unknown' ? 'EPC n/a' : `EPC ${epc}`}</strong></span>}
               </div>
 
@@ -565,7 +565,7 @@ export default function InstantValuationPage() {
 
               <div className="iv-section">
                 <p className="iv-report__disclaimer">
-                  This is an automated, indicative estimate — not a formal valuation. Actual value
+                  This is an automated, indicative estimate, not a formal valuation. Actual value
                   depends on the property's exact location, internal specification, presentation and
                   market conditions. For a precise figure, book a free professional valuation below.
                 </p>
@@ -578,7 +578,7 @@ export default function InstantValuationPage() {
                 <>
                   <p className="iv-email-card__title">📬 Would you like this report emailed to you?</p>
                   <p className="iv-email-card__sub">
-                    We'll send the full report as a professionally formatted PDF — figures, analysis and
+                    We'll send the full report as a professionally formatted PDF: figures, analysis and
                     supporting data included. No spam, no obligation.
                   </p>
 
@@ -645,14 +645,14 @@ export default function InstantValuationPage() {
                   <p className="iv-email-card__title">✅ Your report is on its way</p>
                   <p className="iv-email-card__sub">
                     We've emailed your full PDF valuation report to <strong>{lead.email}</strong>.
-                    It should arrive within a few minutes — check your spam folder if not.
+                    It should arrive within a few minutes. Check your spam folder if not.
                   </p>
                 </>
               )}
 
               {emailChoice === 'no' && !emailSent && (
                 <p className="iv-email-card__sub" style={{ marginBottom: 0 }}>
-                  No problem — your valuation stays right here on this page.
+                  No problem. Your valuation stays right here on this page.
                 </p>
               )}
             </div>
@@ -662,7 +662,7 @@ export default function InstantValuationPage() {
               <p className="iv-next-card__title">Want a precise figure?</p>
               <p className="iv-next-card__sub">
                 A free professional valuation with one of our local experts confirms exactly what your
-                property can achieve — no obligation.
+                property can achieve, with no obligation.
               </p>
               <div className="iv-gate__btns">
                 <button className="iv-gate__btn iv-gate__btn--yes" onClick={goToBookValuation}>
@@ -683,7 +683,7 @@ export default function InstantValuationPage() {
               <div className="iv-modal__icon">🏡</div>
               <p className="iv-modal__title">Would you like to book a professional valuation?</p>
               <p className="iv-modal__sub">
-                Our local expert will visit the property and confirm a precise valuation —
+                Our local expert will visit the property and confirm a precise valuation,
                 completely free and with no obligation.
               </p>
               <div className="iv-gate__btns">

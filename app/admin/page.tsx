@@ -1,6 +1,6 @@
 'use client';
 // app/admin/page.tsx
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Fragment } from 'react';
 import { useRouter } from 'next/navigation';
 import Navbar from '@/components/layout/Navbar';
 import PropertyForm from '@/components/property/PropertyForm';
@@ -30,7 +30,7 @@ import {
   updateDoc, addDoc, deleteDoc, serverTimestamp, Timestamp,
 } from 'firebase/firestore';
 
-type Tab = 'analytics' | 'users' | 'properties' | 'post' | 'edit' | 'valuations' | 'reviews' | 'applications' | 'orders' | 'maintenance';
+type Tab = 'analytics' | 'users' | 'properties' | 'post' | 'edit' | 'valuations' | 'reviews' | 'applications' | 'orders' | 'maintenance' | 'rent-reviews';
 
 interface ServiceOrderLine {
   serviceId: string;
@@ -186,6 +186,38 @@ interface MaintenanceRequest {
   createdAt: any;
 }
 
+interface RentReview {
+  id: string;
+  fullName: string;
+  email: string;
+  phone: string;
+  propertyAddress: string;
+  postcode?: string;
+  currentRent?: string;
+  proposedRent?: string;
+  rentDecision?: string;
+  tenantProposedRent?: string;
+  rentDiscussReason?: string;
+  employer?: string;
+  jobTitle?: string;
+  employmentStatus?: string;
+  employmentChanged?: string;
+  employmentChangeDetails?: string;
+  financeChanged?: string; financeChangedDetails?: string;
+  hasCCJ?: string; ccjDetails?: string;
+  courtProceedings?: string; courtDetails?: string;
+  ivaBankruptcy?: string; ivaDetails?: string;
+  occupancyChanged?: string; occupancyDetails?: string;
+  shareCode?: string;
+  hasMaintenance?: string; maintenanceCategory?: string; maintenanceDescription?: string;
+  bankStatementUrls?: string[]; payslipUrls?: string[]; photoIdUrls?: string[]; visaUrls?: string[]; maintenancePhotoUrls?: string[];
+  status: string;
+  createdAt: any;
+}
+
+const RENT_REVIEW_STATUSES = ['pending', 'reviewing', 'agreed', 'completed', 'cancelled'] as const;
+const ynText = (v?: string) => (v === 'yes' ? 'Yes' : v === 'no' ? 'No' : '-');
+
 const EMPTY_REVIEW = {
   author_name: '',
   rating: 5,
@@ -194,6 +226,77 @@ const EMPTY_REVIEW = {
   profile_photo_url: '',
   location: 'leeds' as 'leeds' | 'manchester',
 };
+
+// Expanded detail for one rent review: every declaration + document links.
+function RentReviewDetail({ r }: { r: RentReview }) {
+  const Row = ({ label, value }: { label: string; value?: string }) => (
+    <div style={{ display: 'flex', gap: 10, fontSize: 13, padding: '4px 0' }}>
+      <span style={{ color: 'var(--gray-500)', minWidth: 210, fontWeight: 500 }}>{label}</span>
+      <span style={{ color: 'var(--gray-800)', fontWeight: 600 }}>{value && value.trim() ? value : '-'}</span>
+    </div>
+  );
+  const Files = ({ label, urls }: { label: string; urls?: string[] }) => (
+    <div style={{ display: 'flex', gap: 10, fontSize: 13, padding: '4px 0', alignItems: 'center' }}>
+      <span style={{ color: 'var(--gray-500)', minWidth: 210, fontWeight: 500 }}>{label}</span>
+      {urls && urls.length > 0 ? (
+        <span style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+          {urls.map((u, i) => <a key={i} href={safeLinkHref(u)} target="_blank" rel="noopener noreferrer" style={{ padding: '3px 9px', background: '#eff6ff', color: '#2563eb', borderRadius: 4, fontSize: 12, fontWeight: 600, textDecoration: 'none', border: '1px solid #bfdbfe' }}>📄 File {i + 1}</a>)}
+        </span>
+      ) : <span style={{ color: 'var(--gray-400)' }}>None provided</span>}
+    </div>
+  );
+  const H = ({ children }: { children: React.ReactNode }) => (
+    <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '.06em', textTransform: 'uppercase', color: '#2563eb', margin: '14px 0 4px' }}>{children}</div>
+  );
+  return (
+    <div>
+      <H>Property &amp; Rent</H>
+      <Row label="Property Address" value={r.propertyAddress} />
+      <Row label="Postcode" value={r.postcode} />
+      <Row label="Current Rent" value={r.currentRent} />
+      <Row label="Proposed New Rent" value={r.proposedRent} />
+      <Row label="Decision" value={r.rentDecision === 'accept' ? 'Accepts the proposed rent' : r.rentDecision === 'discuss' ? 'Would like to discuss' : '-'} />
+      {r.rentDecision === 'discuss' && <Row label="Rent Proposed by Tenant" value={r.tenantProposedRent} />}
+      {r.rentDecision === 'discuss' && <Row label="Reason" value={r.rentDiscussReason} />}
+
+      <H>Personal &amp; Employment</H>
+      <Row label="Phone" value={r.phone} />
+      <Row label="Employer" value={r.employer} />
+      <Row label="Job Title" value={r.jobTitle} />
+      <Row label="Employment Status" value={r.employmentStatus} />
+      <Row label="Employment Changed?" value={ynText(r.employmentChanged)} />
+      {r.employmentChanged === 'yes' && <Row label="What Changed" value={r.employmentChangeDetails} />}
+
+      <H>Financial Declaration</H>
+      <Row label="Financial situation changed?" value={ynText(r.financeChanged)} />
+      {r.financeChanged === 'yes' && <Row label="Details" value={r.financeChangedDetails} />}
+      <Row label="CCJs since moving in?" value={ynText(r.hasCCJ)} />
+      {r.hasCCJ === 'yes' && <Row label="CCJ Details" value={r.ccjDetails} />}
+      <Row label="Court proceedings?" value={ynText(r.courtProceedings)} />
+      {r.courtProceedings === 'yes' && <Row label="Court Details" value={r.courtDetails} />}
+      <Row label="IVA or bankruptcy?" value={ynText(r.ivaBankruptcy)} />
+      {r.ivaBankruptcy === 'yes' && <Row label="IVA/Bankruptcy Details" value={r.ivaDetails} />}
+      <Row label="Anyone moved in/out?" value={ynText(r.occupancyChanged)} />
+      {r.occupancyChanged === 'yes' && <Row label="Occupancy Details" value={r.occupancyDetails} />}
+
+      <H>Documents</H>
+      <Files label="Bank Statements" urls={r.bankStatementUrls} />
+      <Files label="Payslips" urls={r.payslipUrls} />
+      <Files label="Photo ID" urls={r.photoIdUrls} />
+      <Files label="Visa" urls={r.visaUrls} />
+      <Row label="Right to Rent Share Code" value={r.shareCode} />
+
+      {r.hasMaintenance === 'yes' && (
+        <>
+          <H>Maintenance</H>
+          <Row label="Category" value={r.maintenanceCategory} />
+          <Row label="Description" value={r.maintenanceDescription} />
+          <Files label="Photos" urls={r.maintenancePhotoUrls} />
+        </>
+      )}
+    </div>
+  );
+}
 
 export default function AdminDashboard() {
   const router = useRouter();
@@ -221,6 +324,8 @@ export default function AdminDashboard() {
   const [expandedOrder, setExpandedOrder] = useState<string | null>(null);
   const [maintenance, setMaintenance] = useState<MaintenanceRequest[]>([]);
   const [expandedMaint, setExpandedMaint] = useState<string | null>(null);
+  const [rentReviews, setRentReviews] = useState<RentReview[]>([]);
+  const [expandedRR, setExpandedRR] = useState<string | null>(null);
   // Per-staff dashboard access editor (Users tab).
   const [accessUser, setAccessUser] = useState<AppUser | null>(null);
   const [accessPerms, setAccessPerms] = useState<string[]>([]);
@@ -255,7 +360,8 @@ export default function AdminDashboard() {
       safe(getDocs(query(collection(db, 'tenantApplications'), orderBy('createdAt', 'desc')))),
       safe(getDocs(query(collection(db, 'serviceOrders'), orderBy('createdAt', 'desc')))),
       safe(getDocs(query(collection(db, 'maintenanceRequests'), orderBy('createdAt', 'desc')))),
-    ]).then(([u, p, a, valSnap, revSnap, appSnap, orderSnap, maintSnap]) => {
+      safe(getDocs(query(collection(db, 'rentReviews'), orderBy('createdAt', 'desc')))),
+    ]).then(([u, p, a, valSnap, revSnap, appSnap, orderSnap, maintSnap, rrSnap]) => {
       if (u) setUsers(u);
       if (p) setProperties(p);
       if (a) setAnalytics(a);
@@ -264,6 +370,7 @@ export default function AdminDashboard() {
       if (appSnap) setApplications(appSnap.docs.map(d => ({ id: d.id, ...d.data() } as TenantApplication)));
       if (orderSnap) setOrders(orderSnap.docs.map(d => ({ id: d.id, ...d.data() } as ServiceOrder)));
       if (maintSnap) setMaintenance(maintSnap.docs.map(d => ({ id: d.id, ...d.data() } as MaintenanceRequest)));
+      if (rrSnap) setRentReviews(rrSnap.docs.map(d => ({ id: d.id, ...d.data() } as RentReview)));
       setLoading(false);
     });
   }, [profile]);
@@ -394,6 +501,18 @@ export default function AdminDashboard() {
     setMaintenance(prev => prev.map(m => m.id === id ? { ...m, status } : m));
   };
 
+  const handleRentReviewStatus = async (id: string, status: string) => {
+    const prev = rentReviews;
+    setRentReviews(rs => rs.map(r => r.id === id ? { ...r, status } : r));
+    try {
+      await updateDoc(doc(db, 'rentReviews', id), { status, updatedAt: serverTimestamp() });
+    } catch (e) {
+      console.error('rent review status update failed:', e);
+      setRentReviews(prev);
+      alert('Could not update the status. Please try again.');
+    }
+  };
+
   const filteredUsers = users.filter(u =>
     u.name.toLowerCase().includes(searchUser.toLowerCase()) ||
     u.email.toLowerCase().includes(searchUser.toLowerCase())
@@ -421,6 +540,7 @@ export default function AdminDashboard() {
     { id: 'valuations', icon: '📋', label: `Valuations (${valuations.length})` },
     { id: 'reviews',    icon: '⭐', label: `Reviews (${reviews.length})` },
     { id: 'applications', icon: '📝', label: `Applications (${applications.length})` },
+    { id: 'rent-reviews', icon: '🔁', label: `Rent Reviews (${rentReviews.length})` },
     { id: 'orders',     icon: '🛒', label: `Orders (${orders.length})` },
     { id: 'maintenance', icon: '🔧', label: `Maintenance (${maintenance.length})` },
     { id: 'post',       icon: '➕', label: 'Post Property' },
@@ -1437,6 +1557,59 @@ export default function AdminDashboard() {
                         </div>
                       );
                     })}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* ── Rent Reviews ── */}
+          {tab === 'rent-reviews' && (
+            <div>
+              <h1 className="dash-section-title">Rent Reviews</h1>
+              <p style={{ color: 'var(--gray-600)', marginBottom: 24, fontSize: 15 }}>
+                Annual rent reviews submitted by existing tenants. Click a row to see the full submission and documents; use the status dropdown to keep the team on track.
+              </p>
+              {rentReviews.length === 0 ? (
+                <div className="dash-card" style={{ textAlign: 'center', padding: 60 }}>
+                  <div style={{ fontSize: 52, marginBottom: 16 }}>🔁</div>
+                  <h3 style={{ fontFamily: 'var(--font-serif)', fontSize: 24, marginBottom: 12 }}>No rent reviews yet</h3>
+                  <p style={{ color: 'var(--gray-400)', fontSize: 15 }}>Rent reviews will appear here when tenants submit them through the website.</p>
+                </div>
+              ) : (
+                <div className="dash-card" style={{ padding: 0, overflow: 'hidden' }}>
+                  <table className="data-table">
+                    <thead>
+                      <tr><th>Tenant</th><th>Property</th><th>Rent</th><th>Decision</th><th>Status</th></tr>
+                    </thead>
+                    <tbody>
+                      {rentReviews.map(r => {
+                        const open = expandedRR === r.id;
+                        const decision = r.rentDecision === 'accept' ? 'Accepts' : r.rentDecision === 'discuss' ? 'Wants to discuss' : '-';
+                        return (
+                          <Fragment key={r.id}>
+                            <tr style={{ cursor: 'pointer' }} onClick={() => setExpandedRR(open ? null : r.id)}>
+                              <td style={{ fontWeight: 600, fontSize: 14 }}>{r.fullName}<div style={{ fontSize: 12, color: 'var(--gray-400)', fontWeight: 400 }}>{r.email}</div></td>
+                              <td style={{ fontSize: 13, color: 'var(--gray-600)', maxWidth: 220 }}>{r.propertyAddress}</td>
+                              <td style={{ fontSize: 13 }}>{r.currentRent ? `£${r.currentRent}` : '-'}{r.proposedRent ? ` → £${r.proposedRent}` : ''}</td>
+                              <td style={{ fontSize: 13 }}>{decision}</td>
+                              <td onClick={e => e.stopPropagation()}>
+                                <select value={r.status} onChange={e => handleRentReviewStatus(r.id, e.target.value)} className="form-select" style={{ width: 150 }}>
+                                  {RENT_REVIEW_STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
+                                </select>
+                              </td>
+                            </tr>
+                            {open && (
+                              <tr>
+                                <td colSpan={5} style={{ background: '#f8fafc', padding: 20 }}>
+                                  <RentReviewDetail r={r} />
+                                </td>
+                              </tr>
+                            )}
+                          </Fragment>
+                        );
+                      })}
+                    </tbody>
+                  </table>
                 </div>
               )}
             </div>

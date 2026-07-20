@@ -7,6 +7,7 @@
 // it reaches the email HTML — same hardening as the other public forms.
 import { initializeApp, getApps, cert } from 'firebase-admin/app';
 import { getFirestore, FieldValue } from 'firebase-admin/firestore';
+import { jsPDF } from 'jspdf';
 import { rateLimit } from '@/lib/rateLimit';
 import { htmlEscapeDeep, sanitizeUploadUrlFieldsDeep } from '@/lib/security';
 import { backupToDrive, namedFiles, type BackupFile } from '@/lib/googleDrive';
@@ -24,7 +25,9 @@ function getFirestoreClient() {
   return getFirestore();
 }
 
-async function sendEmail({ to, subject, html }: { to: string; subject: string; html: string }) {
+type Attachment = { filename: string; content: string };
+
+async function sendEmail({ to, subject, html, attachments }: { to: string; subject: string; html: string; attachments?: Attachment[] }) {
   const res = await fetch('https://api.resend.com/emails', {
     method: 'POST',
     headers: {
@@ -34,6 +37,7 @@ async function sendEmail({ to, subject, html }: { to: string; subject: string; h
     body: JSON.stringify({
       from: process.env.FROM_EMAIL || 'onboarding@resend.dev',
       to, subject, html,
+      ...(attachments && attachments.length > 0 ? { attachments } : {}),
     }),
   });
   if (!res.ok) console.error('Email failed:', await res.json().catch(() => ({})));
@@ -154,6 +158,94 @@ function adminNotificationHtml(d: any) {
   </div></body></html>`;
 }
 
+// A printable PDF copy of the whole review, attached to both emails so the
+// tenant and the office have a record even if the HTML email is mangled.
+function rentReviewPdfBase64(d: any, ref: string): string {
+  const doc = new jsPDF({ unit: 'pt', format: 'a4' });
+  const pageW = doc.internal.pageSize.getWidth();
+  const pageH = doc.internal.pageSize.getHeight();
+  const left = 40;
+  let y = 0;
+
+  doc.setFillColor(26, 60, 94);
+  doc.rect(0, 0, pageW, 76, 'F');
+  doc.setTextColor(255, 255, 255);
+  doc.setFont('helvetica', 'bold'); doc.setFontSize(16);
+  doc.text('Rent Review', left, 34);
+  doc.setFont('helvetica', 'normal'); doc.setFontSize(9);
+  doc.text(`House of Lettings  ·  ${new Date().toLocaleString('en-GB')}  ·  Ref: ${ref}`, left, 54);
+  y = 104;
+
+  const section = (title: string) => {
+    if (y > pageH - 70) { doc.addPage(); y = 44; }
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(11); doc.setTextColor(37, 99, 235);
+    doc.text(title.toUpperCase(), left, y); y += 6;
+    doc.setDrawColor(37, 99, 235); doc.setLineWidth(1);
+    doc.line(left, y, pageW - left, y); y += 16;
+  };
+  const row = (label: string, value?: string) => {
+    if (y > pageH - 50) { doc.addPage(); y = 44; }
+    const val = value != null && String(value).trim() ? String(value) : '-';
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(9.5); doc.setTextColor(107, 114, 128);
+    doc.text(label, left, y);
+    doc.setFont('helvetica', 'normal'); doc.setTextColor(17, 24, 39);
+    const lines = doc.splitTextToSize(val, pageW - left * 2 - 170);
+    doc.text(lines, left + 170, y);
+    const h = Math.max(15, lines.length * 12);
+    doc.setDrawColor(238, 240, 245); doc.setLineWidth(0.5);
+    doc.line(left, y + h - 8, pageW - left, y + h - 8);
+    y += h;
+  };
+  const fileRow = (label: string, urls?: string[]) => row(label, Array.isArray(urls) && urls.length ? `${urls.length} file(s) attached` : 'None provided');
+
+  section('Property & Rent');
+  row('Property Address', d.propertyAddress);
+  row('Postcode', d.postcode);
+  row('Current Rent', d.currentRent);
+  row('Proposed New Rent', d.proposedRent);
+  row('Tenant Decision', rentDecisionText(d.rentDecision));
+  if (d.rentDecision === 'discuss') { row('Rent Proposed by Tenant', d.tenantProposedRent); row('Reason', d.rentDiscussReason); }
+
+  y += 8; section('Personal & Employment');
+  row('Full Name', d.fullName); row('Email', d.email); row('Phone', d.phone);
+  row('Employer', d.employer); row('Job Title', d.jobTitle); row('Employment Status', d.employmentStatus);
+  row('Employment Changed?', yn(d.employmentChanged));
+  if (d.employmentChanged === 'yes') row('What changed', d.employmentChangeDetails);
+
+  y += 8; section('Financial Declaration');
+  row('Financial situation changed?', yn(d.financeChanged));
+  if (d.financeChanged === 'yes') row('Details', d.financeChangedDetails);
+  row('CCJs since moving in?', yn(d.hasCCJ));
+  if (d.hasCCJ === 'yes') row('CCJ details', d.ccjDetails);
+  row('Court proceedings?', yn(d.courtProceedings));
+  if (d.courtProceedings === 'yes') row('Court details', d.courtDetails);
+  row('IVA or bankruptcy?', yn(d.ivaBankruptcy));
+  if (d.ivaBankruptcy === 'yes') row('IVA/bankruptcy details', d.ivaDetails);
+  row('Anyone moved in/out?', yn(d.occupancyChanged));
+  if (d.occupancyChanged === 'yes') row('Occupancy details', d.occupancyDetails);
+
+  y += 8; section('Documents');
+  fileRow('Bank Statements', d.bankStatementUrls);
+  fileRow('Payslips', d.payslipUrls);
+  fileRow('Photo ID', d.photoIdUrls);
+  fileRow('Visa', d.visaUrls);
+  row('Right to Rent Share Code', d.shareCode);
+
+  y += 8; section('Maintenance');
+  row('Issue to report?', yn(d.hasMaintenance));
+  if (d.hasMaintenance === 'yes') {
+    row('Category', d.maintenanceCategory);
+    row('Description', d.maintenanceDescription);
+    fileRow('Photos', d.maintenancePhotoUrls);
+  }
+
+  y += 8; section('Declaration');
+  row('Confirmed accurate & complete', d.declarationAccepted ? 'Yes' : 'No');
+  row('Submitted', new Date().toLocaleString('en-GB'));
+
+  return Buffer.from(doc.output('arraybuffer')).toString('base64');
+}
+
 export async function POST(request: Request) {
   const limited = rateLimit(request, 'rent-review', 10, 10 * 60 * 1000);
   if (limited) return limited;
@@ -187,24 +279,42 @@ export async function POST(request: Request) {
     // Escape a copy for the email templates; Firestore keeps the raw values.
     const emailData = htmlEscapeDeep(data);
 
+    // Printable PDF from the RAW data (plain text, no HTML escaping). Generation
+    // must never block the review or the emails.
+    const safeName = (data.fullName || 'Tenant').toString().trim().replace(/[^a-zA-Z0-9 ]/g, '').replace(/\s+/g, '-');
+    let pdfBase64: string | undefined;
+    try {
+      pdfBase64 = rentReviewPdfBase64(data, docRef.id);
+    } catch (pdfErr) {
+      console.error('rent-review PDF generation failed:', pdfErr);
+    }
+    const attachments: Attachment[] | undefined = pdfBase64
+      ? [{ filename: `Rent-Review-${safeName}.pdf`, content: pdfBase64 }]
+      : undefined;
+
     const driveFiles: BackupFile[] = [
       ...namedFiles(data.bankStatementUrls, 'Bank Statement'),
       ...namedFiles(data.payslipUrls, 'Payslip'),
       ...namedFiles(data.photoIdUrls, 'Photo ID'),
       ...namedFiles(data.visaUrls, 'Visa'),
       ...namedFiles(data.maintenancePhotoUrls, 'Maintenance Photo'),
+      ...(pdfBase64 ? [{ base64: pdfBase64, name: `Rent Review ${safeName}` }] : []),
     ];
 
     await Promise.allSettled([
+      // Tenant confirmation — with the PDF copy for their records.
       sendEmail({
         to: data.email,
         subject: '🔁 Your Rent Review | House of Lettings',
         html: confirmationHtml(emailData),
+        attachments,
       }),
+      // Company / office notification — same PDF attached.
       sendEmail({
         to: process.env.TENANT_ADMIN_EMAIL || process.env.ADMIN_EMAIL || 'admin@houseoflettings.co.uk',
         subject: `🔁 New Rent Review: ${data.fullName} (${data.propertyAddress})`,
         html: adminNotificationHtml(emailData),
+        attachments,
       }),
       // Backup only, and never throws: a Drive outage must not lose a review.
       backupToDrive({

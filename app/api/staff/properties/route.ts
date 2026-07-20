@@ -53,6 +53,57 @@ export async function POST(request: Request) {
   }
 }
 
+// Update a property (availability, active/inactive status, or a full edit from
+// the form). Server-side with the Admin SDK for the same reason POST exists:
+// staff are usually cookie-authenticated with no Firebase client user, so a
+// browser Firestore write would be rejected by the rules.
+export async function PATCH(request: Request) {
+  try {
+    const auth = await requireStaff(request, 'properties');
+    if (auth instanceof Response) return auth;
+
+    const body = await request.json().catch(() => null);
+    if (!body || typeof body !== 'object' || !body.id) {
+      return Response.json({ message: 'A property id is required' }, { status: 400 });
+    }
+
+    // id and provenance fields are ours to control, never the client's.
+    const { id, createdAt, createdByUid, createdByRole, ...updates } = body as Record<string, unknown>;
+    if ('price' in updates) {
+      const p = Number(updates.price);
+      if (Number.isFinite(p) && p > 0) updates.price = p; else delete updates.price;
+    }
+    if ('images' in updates && !Array.isArray(updates.images)) delete updates.images;
+    if (Object.keys(updates).length === 0) {
+      return Response.json({ message: 'No fields to update' }, { status: 400 });
+    }
+    updates.updatedAt = FieldValue.serverTimestamp();
+    updates.updatedByUid = auth.uid;
+
+    await getAdminDb().collection('properties').doc(String(id)).update(updates);
+    return Response.json({ ok: true }, { status: 200 });
+  } catch (e) {
+    console.error('staff/properties PATCH error:', e);
+    return Response.json({ message: 'Internal server error' }, { status: 500 });
+  }
+}
+
+export async function DELETE(request: Request) {
+  try {
+    const auth = await requireStaff(request, 'properties');
+    if (auth instanceof Response) return auth;
+
+    const id = new URL(request.url).searchParams.get('id');
+    if (!id) return Response.json({ message: 'A property id is required' }, { status: 400 });
+
+    await getAdminDb().collection('properties').doc(id).delete();
+    return Response.json({ ok: true }, { status: 200 });
+  } catch (e) {
+    console.error('staff/properties DELETE error:', e);
+    return Response.json({ message: 'Internal server error' }, { status: 500 });
+  }
+}
+
 export async function GET(request: Request) {
   try {
     const auth = await requireStaff(request, 'properties');

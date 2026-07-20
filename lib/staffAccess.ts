@@ -10,13 +10,14 @@
 // the admin dashboard — no code deploy needed.
 
 export const STAFF_FEATURES = [
-  { id: 'properties',   label: 'Properties',    icon: '🏠' },
-  { id: 'applications', label: 'Applications',  icon: '📝' },
-  { id: 'maintenance',  label: 'Maintenance',   icon: '🔧' },
-  { id: 'orders',       label: 'Orders',        icon: '🛒' },
-  { id: 'valuations',   label: 'Valuations',    icon: '📋' },
-  { id: 'reviews',      label: 'Reviews',       icon: '⭐' },
-  { id: 'post',         label: 'Post Property', icon: '➕' },
+  { id: 'properties',    label: 'Properties',    icon: '🏠' },
+  { id: 'applications',  label: 'Applications',  icon: '📝' },
+  { id: 'rent-reviews',  label: 'Rent Reviews',  icon: '🔁' },
+  { id: 'maintenance',   label: 'Maintenance',   icon: '🔧' },
+  { id: 'orders',        label: 'Orders',        icon: '🛒' },
+  { id: 'valuations',    label: 'Valuations',    icon: '📋' },
+  { id: 'reviews',       label: 'Reviews',       icon: '⭐' },
+  { id: 'post',          label: 'Post Property', icon: '➕' },
 ] as const;
 
 export type StaffFeature = (typeof STAFF_FEATURES)[number]['id'];
@@ -25,7 +26,7 @@ export const STAFF_FEATURE_IDS: StaffFeature[] = STAFF_FEATURES.map(f => f.id);
 
 // What a staff member sees when no explicit permissions have been set.
 export const DEFAULT_STAFF_PERMISSIONS: StaffFeature[] = [
-  'properties', 'applications', 'maintenance', 'orders', 'valuations', 'post',
+  'properties', 'applications', 'rent-reviews', 'maintenance', 'orders', 'valuations', 'post',
 ];
 
 // Resolve the feature list for a profile (admin = everything; staff = their

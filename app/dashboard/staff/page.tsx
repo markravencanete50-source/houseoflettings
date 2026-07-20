@@ -5,17 +5,55 @@
 // (lib/staffAccess.ts): admins grant/revoke features per staff member from the
 // admin Users tab, no code change needed. All data goes through the Admin-SDK
 // /api/staff/* routes, which enforce the role AND the feature server-side.
-import { useState, useEffect, Suspense } from 'react';
+import { useState, useEffect, Suspense, Fragment } from 'react';
 import { useRouter } from 'next/navigation';
 import Navbar from '@/components/layout/Navbar';
 import PropertyForm from '@/components/property/PropertyForm';
 import { useAuth } from '@/hooks/useAuth';
 import { signOut } from '@/services/auth';
-import { Property } from '@/lib/types';
+import { Property, propertyAvailability } from '@/lib/types';
 import { STAFF_FEATURES, staffPermissions, type StaffFeature } from '@/lib/staffAccess';
 import { safeLinkHref } from '@/lib/security';
 
-type Tab = StaffFeature;
+// 'edit' is a transient tab (hosts the property editor), not a grantable feature.
+type Tab = StaffFeature | 'edit';
+
+const AVAILABILITY_META: Record<'available' | 'pending' | 'let-agreed', { label: string; bg: string; color: string }> = {
+  'available':  { label: 'Available',  bg: '#e8f5e9', color: '#2e7d32' },
+  'pending':    { label: 'Pending',    bg: '#fff3e0', color: '#ef6c00' },
+  'let-agreed': { label: 'Let Agreed', bg: '#fdecea', color: '#c62828' },
+};
+
+interface RentReview {
+  id: string;
+  fullName: string;
+  email: string;
+  phone: string;
+  propertyAddress: string;
+  postcode?: string;
+  currentRent?: string;
+  proposedRent?: string;
+  rentDecision?: string;
+  tenantProposedRent?: string;
+  rentDiscussReason?: string;
+  employer?: string;
+  jobTitle?: string;
+  employmentStatus?: string;
+  employmentChanged?: string;
+  employmentChangeDetails?: string;
+  financeChanged?: string; financeChangedDetails?: string;
+  hasCCJ?: string; ccjDetails?: string;
+  courtProceedings?: string; courtDetails?: string;
+  ivaBankruptcy?: string; ivaDetails?: string;
+  occupancyChanged?: string; occupancyDetails?: string;
+  shareCode?: string;
+  hasMaintenance?: string; maintenanceCategory?: string; maintenanceDescription?: string;
+  bankStatementUrls?: string[]; payslipUrls?: string[]; photoIdUrls?: string[]; visaUrls?: string[]; maintenancePhotoUrls?: string[];
+  status: string;
+  submittedAt: string | null;
+}
+
+const RR_STATUSES = ['pending', 'reviewing', 'agreed', 'completed', 'cancelled'] as const;
 
 interface TenantApplication {
   id: string;
@@ -122,6 +160,79 @@ function fmtDate(iso: string | null): string {
   return isNaN(d.getTime()) ? '-' : d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
 }
 
+const yn = (v?: string) => (v === 'yes' ? 'Yes' : v === 'no' ? 'No' : '-');
+
+// Expanded detail for one rent review: every declaration + document links.
+function RentReviewDetail({ r }: { r: RentReview }) {
+  const Row = ({ label, value }: { label: string; value?: string }) => (
+    <div style={{ display: 'flex', gap: 10, fontSize: 13, padding: '4px 0' }}>
+      <span style={{ color: 'var(--gray-500)', minWidth: 200, fontWeight: 500 }}>{label}</span>
+      <span style={{ color: 'var(--gray-800)', fontWeight: 600 }}>{value && value.trim() ? value : '-'}</span>
+    </div>
+  );
+  const Files = ({ label, urls }: { label: string; urls?: string[] }) => (
+    <div style={{ display: 'flex', gap: 10, fontSize: 13, padding: '4px 0', alignItems: 'center' }}>
+      <span style={{ color: 'var(--gray-500)', minWidth: 200, fontWeight: 500 }}>{label}</span>
+      {urls && urls.length > 0 ? (
+        <span style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+          {urls.map((u, i) => <a key={i} href={safeLinkHref(u)} target="_blank" rel="noopener noreferrer" style={{ padding: '3px 9px', background: '#eff6ff', color: '#2563eb', borderRadius: 4, fontSize: 12, fontWeight: 600, textDecoration: 'none', border: '1px solid #bfdbfe' }}>📄 File {i + 1}</a>)}
+        </span>
+      ) : <span style={{ color: 'var(--gray-400)' }}>None provided</span>}
+    </div>
+  );
+  const H = ({ children }: { children: React.ReactNode }) => (
+    <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '.06em', textTransform: 'uppercase', color: '#2563eb', margin: '14px 0 4px' }}>{children}</div>
+  );
+  return (
+    <div>
+      <H>Property &amp; Rent</H>
+      <Row label="Property Address" value={r.propertyAddress} />
+      <Row label="Postcode" value={r.postcode} />
+      <Row label="Current Rent" value={r.currentRent} />
+      <Row label="Proposed New Rent" value={r.proposedRent} />
+      <Row label="Decision" value={r.rentDecision === 'accept' ? 'Accepts the proposed rent' : r.rentDecision === 'discuss' ? 'Would like to discuss' : '-'} />
+      {r.rentDecision === 'discuss' && <Row label="Rent Proposed by Tenant" value={r.tenantProposedRent} />}
+      {r.rentDecision === 'discuss' && <Row label="Reason" value={r.rentDiscussReason} />}
+
+      <H>Personal &amp; Employment</H>
+      <Row label="Phone" value={r.phone} />
+      <Row label="Employer" value={r.employer} />
+      <Row label="Job Title" value={r.jobTitle} />
+      <Row label="Employment Status" value={r.employmentStatus} />
+      <Row label="Employment Changed?" value={yn(r.employmentChanged)} />
+      {r.employmentChanged === 'yes' && <Row label="What Changed" value={r.employmentChangeDetails} />}
+
+      <H>Financial Declaration</H>
+      <Row label="Financial situation changed?" value={yn(r.financeChanged)} />
+      {r.financeChanged === 'yes' && <Row label="Details" value={r.financeChangedDetails} />}
+      <Row label="CCJs since moving in?" value={yn(r.hasCCJ)} />
+      {r.hasCCJ === 'yes' && <Row label="CCJ Details" value={r.ccjDetails} />}
+      <Row label="Court proceedings?" value={yn(r.courtProceedings)} />
+      {r.courtProceedings === 'yes' && <Row label="Court Details" value={r.courtDetails} />}
+      <Row label="IVA or bankruptcy?" value={yn(r.ivaBankruptcy)} />
+      {r.ivaBankruptcy === 'yes' && <Row label="IVA/Bankruptcy Details" value={r.ivaDetails} />}
+      <Row label="Anyone moved in/out?" value={yn(r.occupancyChanged)} />
+      {r.occupancyChanged === 'yes' && <Row label="Occupancy Details" value={r.occupancyDetails} />}
+
+      <H>Documents</H>
+      <Files label="Bank Statements" urls={r.bankStatementUrls} />
+      <Files label="Payslips" urls={r.payslipUrls} />
+      <Files label="Photo ID" urls={r.photoIdUrls} />
+      <Files label="Visa" urls={r.visaUrls} />
+      <Row label="Right to Rent Share Code" value={r.shareCode} />
+
+      {r.hasMaintenance === 'yes' && (
+        <>
+          <H>Maintenance</H>
+          <Row label="Category" value={r.maintenanceCategory} />
+          <Row label="Description" value={r.maintenanceDescription} />
+          <Files label="Photos" urls={r.maintenancePhotoUrls} />
+        </>
+      )}
+    </div>
+  );
+}
+
 const EMPTY_REVIEW_FORM = {
   author_name: '', rating: 5, text: '', relative_time_description: '',
   location: 'leeds' as 'leeds' | 'manchester',
@@ -146,6 +257,9 @@ function StaffDashboardInner() {
   const [orders, setOrders] = useState<ServiceOrder[]>([]);
   const [valuations, setValuations] = useState<Valuation[]>([]);
   const [reviews, setReviews] = useState<GoogleReview[]>([]);
+  const [rentReviews, setRentReviews] = useState<RentReview[]>([]);
+  const [expandedRR, setExpandedRR] = useState<string | null>(null);
+  const [editingProperty, setEditingProperty] = useState<Property | null>(null);
   const [loaded, setLoaded] = useState<Record<string, boolean>>({});
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [searchProp, setSearchProp] = useState('');
@@ -182,9 +296,9 @@ function StaffDashboardInner() {
     router.push('/admin-login');
   };
 
-  // Keep the active tab within the permitted set.
+  // Keep the active tab within the permitted set ('edit' is transient, exempt).
   useEffect(() => {
-    if (perms.length > 0 && !perms.includes(tab)) setTab(perms[0]);
+    if (perms.length > 0 && tab !== 'edit' && !perms.includes(tab as StaffFeature)) setTab(perms[0]);
   }, [perms, tab]);
 
   // Use the Firebase ID token when signed in via the client SDK; otherwise the
@@ -198,7 +312,7 @@ function StaffDashboardInner() {
   };
 
   useEffect(() => {
-    if (!profile || !perms.includes(tab)) return;
+    if (!profile || tab === 'edit' || !perms.includes(tab)) return;
     const load = async (path: string, key: string, apply: (j: any) => void) => {
       try {
         const res = await authedFetch(path);
@@ -219,11 +333,69 @@ function StaffDashboardInner() {
     if (tab === 'orders' && !loaded.orders) load('/api/staff/orders', 'orders', j => setOrders(j.orders || []));
     if (tab === 'valuations' && !loaded.valuations) load('/api/staff/valuations', 'valuations', j => setValuations(j.valuations || []));
     if (tab === 'reviews' && !loaded.reviews) load('/api/staff/reviews', 'reviews', j => setReviews(j.reviews || []));
+    if (tab === 'rent-reviews' && !loaded['rent-reviews']) load('/api/staff/rent-reviews', 'rent-reviews', j => setRentReviews(j.reviews || []));
   }, [tab, profile, user]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const reloadProperties = () => {
     setLoaded(l => ({ ...l, properties: false }));
     setTab('properties');
+  };
+
+  // ── Property management (server-side, same cookie auth as every staff route) ──
+  const patchProperty = async (id: string, updates: Record<string, any>): Promise<boolean> => {
+    try {
+      const res = await authedFetch('/api/staff/properties', { method: 'PATCH', body: JSON.stringify({ id, ...updates }) });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      return true;
+    } catch (e) {
+      console.error('property update failed:', e);
+      alert('Could not update the property. Please try again.');
+      return false;
+    }
+  };
+
+  const handleSetAvailability = async (p: Property, availability: 'available' | 'pending' | 'let-agreed') => {
+    const prev = properties;
+    setProperties(ps => ps.map(x => x.id === p.id ? { ...x, availability, letAgreed: availability === 'let-agreed' } : x));
+    if (!(await patchProperty(p.id!, { availability, letAgreed: availability === 'let-agreed' }))) setProperties(prev);
+  };
+
+  const handleToggleProperty = async (p: Property) => {
+    const newStatus = p.status === 'active' ? 'inactive' : 'active';
+    const prev = properties;
+    setProperties(ps => ps.map(x => x.id === p.id ? { ...x, status: newStatus } : x));
+    if (!(await patchProperty(p.id!, { status: newStatus }))) setProperties(prev);
+  };
+
+  const handleDeleteProperty = async (p: Property) => {
+    if (!confirm(`Delete “${p.title}”? This cannot be undone.`)) return;
+    const prev = properties;
+    setProperties(ps => ps.filter(x => x.id !== p.id));
+    try {
+      const res = await authedFetch(`/api/staff/properties?id=${encodeURIComponent(p.id!)}`, { method: 'DELETE' });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    } catch (e) {
+      console.error('property delete failed:', e);
+      setProperties(prev);
+      alert('Could not delete the property. Please try again.');
+    }
+  };
+
+  const handleEditProperty = (p: Property) => { setEditingProperty(p); setTab('edit'); };
+  const handleEditSuccess = () => { setEditingProperty(null); setLoaded(l => ({ ...l, properties: false })); setTab('properties'); };
+  const handleEditCancel = () => { setEditingProperty(null); setTab('properties'); };
+
+  const updateRentReviewStatus = async (id: string, status: string) => {
+    const prev = rentReviews;
+    setRentReviews(rs => rs.map(r => r.id === id ? { ...r, status } : r));
+    try {
+      const res = await authedFetch('/api/staff/rent-reviews', { method: 'PATCH', body: JSON.stringify({ id, status }) });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    } catch (e) {
+      console.error('rent review status update failed:', e);
+      setRentReviews(prev);
+      alert('Could not update the status. Please try again.');
+    }
   };
 
   const updateMaintStatus = async (id: string, status: string) => {
@@ -286,6 +458,7 @@ function StaffDashboardInner() {
   const counts: Record<StaffFeature, number | null> = {
     properties: properties.length,
     applications: applications.length,
+     'rent-reviews': rentReviews.length,
     maintenance: maintenance.length,
     orders: orders.length,
     valuations: valuations.length,
@@ -387,10 +560,13 @@ function StaffDashboardInner() {
               <div className="dash-card" style={{ padding: 0, overflow: 'hidden' }}>
                 <table className="data-table">
                   <thead>
-                    <tr><th>Property</th><th>Location</th><th>Rent</th><th>Status</th><th>Beds</th></tr>
+                    <tr><th>Property</th><th>Location</th><th>Rent</th><th>Status</th><th>Beds</th><th>Actions</th></tr>
                   </thead>
                   <tbody>
-                    {filteredProps.map(p => (
+                    {filteredProps.map(p => {
+                      const av = propertyAvailability(p);
+                      const avMeta = AVAILABILITY_META[av];
+                      return (
                       <tr key={p.id}>
                         <td>
                           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -400,10 +576,26 @@ function StaffDashboardInner() {
                         </td>
                         <td style={{ fontSize: 13, color: 'var(--gray-600)' }}>{p.location}</td>
                         <td style={{ fontWeight: 700, color: 'var(--red)' }}>£{p.price?.toLocaleString()}</td>
-                        <td><StatusBadge status={p.status} /></td>
+                        <td>
+                          <StatusBadge status={p.status} />
+                          <span style={{ display: 'inline-block', marginTop: 4, fontSize: 10, fontWeight: 700, background: avMeta.bg, color: avMeta.color, borderRadius: 3, padding: '2px 7px', textTransform: 'uppercase', letterSpacing: 0.5 }}>{avMeta.label}</span>
+                        </td>
                         <td style={{ fontSize: 13 }}>{p.bedrooms === 0 ? 'Studio' : p.bedrooms}</td>
+                        <td>
+                          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                            <button onClick={() => handleEditProperty(p)} style={{ padding: '5px 10px', background: 'transparent', border: '1px solid #1565c0', color: '#1565c0', borderRadius: 4, fontSize: 11, cursor: 'pointer' }}>✏️ Edit</button>
+                            <button onClick={() => handleToggleProperty(p)} style={{ padding: '5px 10px', background: 'transparent', border: `1px solid ${p.status === 'active' ? '#f57f17' : '#2e7d32'}`, color: p.status === 'active' ? '#f57f17' : '#2e7d32', borderRadius: 4, fontSize: 11, cursor: 'pointer' }}>{p.status === 'active' ? 'Deactivate' : 'Approve'}</button>
+                            <select value={av} onChange={e => handleSetAvailability(p, e.target.value as 'available' | 'pending' | 'let-agreed')} title="Set listing availability" style={{ padding: '5px 8px', borderRadius: 4, fontSize: 11, cursor: 'pointer', border: `1px solid ${avMeta.color}`, color: avMeta.color, background: avMeta.bg, fontWeight: 700 }}>
+                              <option value="available">Available</option>
+                              <option value="pending">Pending</option>
+                              <option value="let-agreed">Let Agreed</option>
+                            </select>
+                            <button onClick={() => handleDeleteProperty(p)} style={{ padding: '5px 10px', background: 'transparent', border: '1px solid #c62828', color: '#c62828', borderRadius: 4, fontSize: 11, cursor: 'pointer' }}>Delete</button>
+                          </div>
+                        </td>
                       </tr>
-                    ))}
+                      );
+                    })}
                   </tbody>
                 </table>
                 {!loaded.properties ? (
@@ -747,6 +939,75 @@ function StaffDashboardInner() {
                   // browser write is unauthenticated and hangs.
                   createVia="/api/staff/properties"
                 />
+              </div>
+            </div>
+          )}
+
+          {/* ── Edit Property ── */}
+          {tab === 'edit' && editingProperty && (
+            <div>
+              <h1 className="dash-section-title">Edit Property</h1>
+              <p style={{ color: 'var(--gray-600)', marginBottom: 24, fontSize: 15 }}>Update this listing&rsquo;s details, photos and features.</p>
+              <div className="dash-card">
+                <PropertyForm
+                  landlordId={editingProperty.landlordId || profile.uid}
+                  landlordName={(editingProperty as any).landlordName || profile.name}
+                  existing={editingProperty}
+                  onSuccess={handleEditSuccess}
+                  onCancel={handleEditCancel}
+                  // Edit server-side too — a cookie-only staff session can't
+                  // write to Firestore directly.
+                  updateVia="/api/staff/properties"
+                />
+              </div>
+            </div>
+          )}
+
+          {/* ── Rent Reviews ── */}
+          {tab === 'rent-reviews' && perms.includes('rent-reviews') && (
+            <div>
+              <h1 className="dash-section-title">Rent Reviews</h1>
+              <p style={{ color: 'var(--gray-600)', marginBottom: 24, fontSize: 15 }}>Annual rent reviews submitted by existing tenants. Expand a row to see the full submission and documents; use the status dropdown to keep the team on track.</p>
+              <div className="dash-card" style={{ padding: 0, overflow: 'hidden' }}>
+                <table className="data-table">
+                  <thead>
+                    <tr><th>Tenant</th><th>Property</th><th>Rent</th><th>Decision</th><th>Status</th><th>Submitted</th></tr>
+                  </thead>
+                  <tbody>
+                    {rentReviews.map(r => {
+                      const open = expandedRR === r.id;
+                      const decision = r.rentDecision === 'accept' ? 'Accepts' : r.rentDecision === 'discuss' ? 'Wants to discuss' : '-';
+                      return (
+                        <Fragment key={r.id}>
+                          <tr style={{ cursor: 'pointer' }} onClick={() => setExpandedRR(open ? null : r.id)}>
+                            <td style={{ fontWeight: 600, fontSize: 14 }}>{r.fullName}<div style={{ fontSize: 12, color: 'var(--gray-400)', fontWeight: 400 }}>{r.email}</div></td>
+                            <td style={{ fontSize: 13, color: 'var(--gray-600)', maxWidth: 220 }}>{r.propertyAddress}</td>
+                            <td style={{ fontSize: 13 }}>{r.currentRent ? `£${r.currentRent}` : '-'}{r.proposedRent ? ` → £${r.proposedRent}` : ''}</td>
+                            <td style={{ fontSize: 13 }}>{decision}</td>
+                            <td onClick={e => e.stopPropagation()}>
+                              <select value={r.status} onChange={e => updateRentReviewStatus(r.id, e.target.value)} className="form-select" style={{ width: 130, fontSize: 12, padding: '5px 8px', border: `1px solid ${badge(r.status).color}`, color: badge(r.status).color, background: badge(r.status).bg, borderRadius: 4, fontWeight: 700 }}>
+                                {RR_STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
+                              </select>
+                            </td>
+                            <td style={{ fontSize: 13, color: 'var(--gray-400)' }}>{fmtDate(r.submittedAt)}</td>
+                          </tr>
+                          {open && (
+                            <tr>
+                              <td colSpan={6} style={{ background: '#f8fafc', padding: 20 }}>
+                                <RentReviewDetail r={r} />
+                              </td>
+                            </tr>
+                          )}
+                        </Fragment>
+                      );
+                    })}
+                  </tbody>
+                </table>
+                {!loaded['rent-reviews'] ? (
+                  <div style={{ padding: 40, textAlign: 'center', color: 'var(--gray-400)' }}>Loading rent reviews…</div>
+                ) : rentReviews.length === 0 ? (
+                  <div style={{ padding: 40, textAlign: 'center', color: 'var(--gray-400)' }}>No rent reviews yet.</div>
+                ) : null}
               </div>
             </div>
           )}

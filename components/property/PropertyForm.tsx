@@ -21,6 +21,12 @@ interface PropertyFormProps {
    * unreachable, never settles at all — the form just span forever.
    */
   createVia?: string;
+  /**
+   * Update an existing property through this server route (PATCH) instead of a
+   * browser Firestore write — for the same cookie-auth reason as createVia. The
+   * staff dashboard passes '/api/staff/properties'.
+   */
+  updateVia?: string;
 }
 
 // ── Amenity toggle pill ──────────────────────────────────────────────────────
@@ -74,7 +80,7 @@ function SectionHeader({ icon, title, subtitle }: { icon: string; title: string;
 }
 
 export default function PropertyForm({
-  landlordId, landlordName, existing, onSuccess, onCancel, adminOverride, createVia,
+  landlordId, landlordName, existing, onSuccess, onCancel, adminOverride, createVia, updateVia,
 }: PropertyFormProps) {
 
   // ── Core fields ─────────────────────────────────────────────────────────
@@ -281,7 +287,21 @@ export default function PropertyForm({
       } as any;
 
       if (existing?.id) {
-        await updateProperty(existing.id, data, []);
+        if (updateVia) {
+          // Server-side edit for staff: they are usually cookie-authenticated
+          // with no Firebase client user, so a browser Firestore write would be
+          // rejected by the rules (same reason createVia exists for new posts).
+          const res = await fetch(updateVia, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'same-origin',
+            body: JSON.stringify({ id: existing.id, ...data }),
+          });
+          const body = await res.json().catch(() => ({}));
+          if (!res.ok) throw new Error(body.message || 'Failed to update property.');
+        } else {
+          await updateProperty(existing.id, data, []);
+        }
       } else if (createVia) {
         const res = await fetch(createVia, {
           method: 'POST',

@@ -10,7 +10,7 @@
 // no code change to add one). The office can also send a personalised link to
 // preselect the property and prefill the rent figures:
 //   /rent-review/apply?address=...&currentRent=950&proposedRent=975&effectiveDate=2026-09-01&name=...&email=...&phone=...
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import Link from 'next/link';
 import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
@@ -90,6 +90,10 @@ export default function RentReviewApplyPage() {
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
   const [errorMsg, setErrorMsg] = useState('');
   const [restored, setRestored] = useState(false);
+  // Rent figures from a personalised link, used ONLY as a fallback when the
+  // chosen property has no rent of its own. Kept in a ref so switching
+  // properties never inherits the previously-selected property's rent.
+  const linkPrefill = useRef({ currentRent: '', proposedRent: '', effectiveDate: '', postcode: '' });
 
   // Load the managed property catalogue.
   useEffect(() => {
@@ -110,6 +114,12 @@ export default function RentReviewApplyPage() {
       const v = params.get(q);
       if (v) (base as any)[key] = v;
     }
+    linkPrefill.current = {
+      currentRent: params.get('currentRent') || '',
+      proposedRent: params.get('proposedRent') || '',
+      effectiveDate: params.get('effectiveDate') || '',
+      postcode: params.get('postcode') || '',
+    };
     try {
       const raw = sessionStorage.getItem(STORAGE_KEY);
       if (raw) {
@@ -148,15 +158,17 @@ export default function RentReviewApplyPage() {
   const setVal = (key: keyof FormState, value: any) => setForm(f => ({ ...f, [key]: value }));
 
   const selectProperty = (p: RentReviewProperty) => {
+    // The chosen property's own rent always wins; the personalised-link values
+    // are only a fallback. Recomputed from `p` every time, so switching
+    // properties never carries over the previous property's figures.
     setForm(f => ({
       ...f,
       propertyId: p.id || '',
       propertyAddress: p.address,
-      postcode: p.postcode || f.postcode,
-      // Only adopt the property's rent figures when the link didn't already set them.
-      currentRent: f.currentRent || p.currentRent || '',
-      proposedRent: f.proposedRent || p.proposedRent || '',
-      effectiveDate: f.effectiveDate || p.effectiveDate || '',
+      postcode: p.postcode || linkPrefill.current.postcode || '',
+      currentRent: p.currentRent || linkPrefill.current.currentRent || '',
+      proposedRent: p.proposedRent || linkPrefill.current.proposedRent || '',
+      effectiveDate: p.effectiveDate || linkPrefill.current.effectiveDate || '',
     }));
     setErrors(e => ({ ...e, propertyAddress: '' }));
   };

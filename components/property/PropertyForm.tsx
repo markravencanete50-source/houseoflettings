@@ -4,6 +4,7 @@ import { useState, useCallback, useRef, useEffect } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { Property } from '@/lib/types';
 import { createProperty, updateProperty } from '@/services/property';
+import { CLOUDINARY_FOLDERS } from '@/lib/cloudinaryFolders';
 
 interface PropertyFormProps {
   landlordId: string;
@@ -236,6 +237,7 @@ export default function PropertyForm({
         await Promise.all(newFileEntries.map(async ({ file }) => {
           const formData = new FormData();
           formData.append('file', file);
+          formData.append('folder', CLOUDINARY_FOLDERS.properties);
           const res = await fetch('/api/upload', { method: 'POST', body: formData });
           const json = await res.json();
           if (!res.ok) throw new Error(json.error || 'Upload failed');

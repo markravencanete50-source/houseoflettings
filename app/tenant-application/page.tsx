@@ -6,6 +6,7 @@ import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
 import { getAllProperties } from '@/services/admin';
 import { Property } from '@/lib/types';
+import { CLOUDINARY_FOLDERS } from '@/lib/cloudinaryFolders';
 
 // The site-standard CTA size, matching components/layout/ServiceHero.module.css
 // (.btn). Back / Continue / Submit all share it so they measure identically.
@@ -272,6 +273,7 @@ function FileUpload({
       for (const file of newFiles) {
         const formData = new FormData();
         formData.append('file', file);
+        formData.append('folder', CLOUDINARY_FOLDERS.tenantApplications);
         const res = await fetch('/api/upload', { method: 'POST', body: formData });
         const data = await res.json();
         if (!data.url) throw new Error(`Failed to upload ${file.name}`);

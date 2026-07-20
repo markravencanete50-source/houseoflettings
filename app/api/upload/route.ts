@@ -2,6 +2,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { v2 as cloudinary } from 'cloudinary';
 import { rateLimit } from '@/lib/rateLimit';
+import { CLOUDINARY_FOLDERS, isAllowedFolder } from '@/lib/cloudinaryFolders';
 
 // The forms that post here only send images and PDFs.
 const ALLOWED_TYPES = /^(image\/(jpeg|png|webp|gif|heic|heif|avif)|application\/pdf)$/;
@@ -36,6 +37,17 @@ export async function POST(req: NextRequest) {
     const formData = await req.formData();
     const file = formData.get('file') as File;
 
+    // Which library the caller's form belongs in. Defaults to properties for
+    // back-compat; any value must be on the canonical allowlist so this route
+    // can't be pointed at an arbitrary folder.
+    const requestedFolder = formData.get('folder');
+    const folder = requestedFolder == null || requestedFolder === ''
+      ? CLOUDINARY_FOLDERS.properties
+      : String(requestedFolder);
+    if (!isAllowedFolder(folder)) {
+      return NextResponse.json({ error: 'Invalid upload folder' }, { status: 400 });
+    }
+
     if (!file || file.size === 0) {
       return NextResponse.json({ error: 'No file provided' }, { status: 400 });
     }
@@ -54,9 +66,7 @@ export async function POST(req: NextRequest) {
     const base64 = buffer.toString('base64');
     const dataUri = `data:${file.type || 'image/jpeg'};base64,${base64}`;
 
-    const result = await cloudinary.uploader.upload(dataUri, {
-      folder: 'houseoflettings/properties',
-    });
+    const result = await cloudinary.uploader.upload(dataUri, { folder });
 
     return NextResponse.json({ url: result.secure_url });
   } catch (err: any) {

@@ -9,6 +9,7 @@ import PostcodeLookup, { type AddressResult } from '@/components/PostcodeLookup'
 import { useCart } from '@/components/services/CartProvider';
 import { priceLine, formatGBP, anyFrom } from '@/lib/serviceCart';
 import { cityFromText, type City } from '@/lib/viewingSlots';
+import { CLOUDINARY_FOLDERS } from '@/lib/cloudinaryFolders';
 
 const BLUE = '#2563eb';
 const GREEN = '#16a34a';
@@ -64,6 +65,7 @@ function ProofUpload({ state, onChange, maxFiles = 3 }: {
       for (const file of newFiles) {
         const fd = new FormData();
         fd.append('file', file);
+        fd.append('folder', CLOUDINARY_FOLDERS.serviceOrders);
         const res = await fetch('/api/upload', { method: 'POST', body: fd });
         const data = await res.json();
         if (!data.url) throw new Error(`Failed to upload ${file.name}`);

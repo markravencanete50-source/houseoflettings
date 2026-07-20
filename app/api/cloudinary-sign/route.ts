@@ -5,14 +5,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { v2 as cloudinary } from 'cloudinary';
 import { rateLimit } from '@/lib/rateLimit';
-
-// Only the folders our own upload forms actually use — a signature for an
-// arbitrary attacker-chosen folder is never issued.
-const ALLOWED_FOLDERS = new Set([
-  'houseoflettings/maintenance',
-  'houseoflettings/guarantor',
-  'houseoflettings/landlord-docs',
-]);
+import { CLOUDINARY_FOLDERS, isAllowedFolder } from '@/lib/cloudinaryFolders';
 
 export async function POST(req: NextRequest) {
   // Uploads are multi-file, so allow bursts — but cap runaway abuse.
@@ -26,8 +19,8 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Cloudinary is not configured' }, { status: 500 });
     }
 
-    const { folder = 'houseoflettings/maintenance' } = await req.json().catch(() => ({}));
-    if (!ALLOWED_FOLDERS.has(folder)) {
+    const { folder = CLOUDINARY_FOLDERS.maintenance } = await req.json().catch(() => ({}));
+    if (!isAllowedFolder(folder)) {
       return NextResponse.json({ error: 'Invalid upload folder' }, { status: 400 });
     }
     const timestamp = Math.round(Date.now() / 1000);

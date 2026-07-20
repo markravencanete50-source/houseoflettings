@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect, useCallback } from 'react';
 import jsPDF from 'jspdf';
+import { CLOUDINARY_FOLDERS } from '@/lib/cloudinaryFolders';
 import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
 import PostcodeLookup, { type AddressResult } from '@/components/PostcodeLookup';
@@ -45,7 +46,7 @@ const STEPS = [
 async function uploadToCloudinary(file: File): Promise<string> {
   const sigRes = await fetch('/api/cloudinary-sign', {
     method: 'POST', headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ folder: 'houseoflettings/guarantor' }),
+    body: JSON.stringify({ folder: CLOUDINARY_FOLDERS.guarantor }),
   });
   if (!sigRes.ok) throw new Error('Could not prepare upload');
   const { cloudName, apiKey, timestamp, folder, signature } = await sigRes.json();

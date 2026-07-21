@@ -174,10 +174,10 @@ function LlxInvestmentSmarter() {
             Highly Recommended
           </div>
           <h2 className="llx1-h2" id="llx1-heading">
-            Make Your Property Investment <span className="llx1-shimmer">Smarter</span>
+            Professional Property <span className="llx1-shimmer">Management</span>
           </h2>
           <p className="llx1-body">
-            Whether you&apos;re letting your first property or growing your portfolio, we&apos;re here to help you maximise rental income, reduce void periods, and manage your investment with confidence, all at an affordable price.
+            Whether you own one property or an established portfolio, our management services are designed to protect your investment and maximise rental performance.
           </p>
           <div className="llx1-benefits">
             <span className="llx1-benefit">
@@ -292,8 +292,8 @@ function LlxWhySwitch() {
       <div className="llx7-inner">
         <div className="llx7-head hol-reveal">
           <div className="llx7-eyebrow">Thinking of Changing Agent?</div>
-          <h2 className="llx7-h2">Why Landlords Switch to House of Lettings</h2>
-          <p className="llx7-sub">The reasons landlords leave their current agent are nearly always the same four. Here is how we answer each one.</p>
+          <h2 className="llx7-h2">Why Landlords Choose House of Lettings</h2>
+          <p className="llx7-sub">The reasons landlords leave their current agent are nearly always the same four. This is how we address them.</p>
         </div>
         <div className="llx7-grid">
           {reasons.map((r, i) => (
@@ -543,7 +543,7 @@ function LlxEverythingWeHandle() {
         </div>
 
         <div className="llx8-cta-row hol-reveal">
-          <p className="llx8-cta-line">Six jobs off your plate, one local team on it.</p>
+          <p className="llx8-cta-line">Six jobs managed on your behalf, one local team on it.</p>
           <Link href="/landlord-registration" className="llx-cta llx8-cta" style={{ ...CTA_STYLE }}>
             Ready to Be Part of House of Lettings?
           </Link>
@@ -568,11 +568,11 @@ const TIMELINE_STEPS: { title: string; body: string; time: string; icon: string 
   { title: 'Viewings', icon: 'door', time: 'Weeks 1–2',
     body: 'We manage every enquiry and run accompanied viewings, so you only hear about serious applicants.' },
   { title: 'Tenant Referenced', icon: 'shield', time: '3–5 days',
-    body: 'Credit, employment, affordability and Right to Rent checks on every adult. Only quality tenants get through.' },
+    body: 'Credit, employment, affordability and Right to Rent checks on every adult. Only tenants who meet our referencing standards proceed.' },
   { title: 'Move In', icon: 'key', time: 'Move-in day',
     body: 'Tenancy signed, deposit protected, inventory completed and the first month’s rent collected before keys change hands.' },
   { title: 'Ongoing Management', icon: 'loop', time: 'Month after month',
-    body: 'Rent, maintenance and compliance handled from here on. You watch the rent arrive.' },
+    body: 'Rent, maintenance and compliance managed on your behalf. Your rental income is paid directly to you.' },
 ];
 
 function TimelineIcon({ kind }: { kind: string }) {
@@ -630,8 +630,8 @@ function LlxTimeline() {
       `}</style>
       <div className="llx9-head hol-reveal">
         <div className="llx9-eyebrow">How It Works</div>
-        <h2 className="llx9-h2">From First Call to Rent in Your Account</h2>
-        <p className="llx9-sub">No apps to learn and nothing to click. This is simply what happens, in order.</p>
+        <h2 className="llx9-h2">Our Management Process</h2>
+        <p className="llx9-sub">No apps to learn and nothing to click. This is what happens, in order.</p>
       </div>
       <div className="llx9-wrap hol-reveal">
         <div className="llx9-rail">
@@ -659,8 +659,8 @@ function LlxTimeline() {
 // Two cards and three outcome stats. Sells the change in the landlord's week,
 // not the feature list.
 function LlxBeforeAfter() {
-  const without = ['Endless emails, calls and phone tag', 'Managing tenants day to day', 'Late-night maintenance calls', 'Legal paperwork and deadlines', 'Void periods and chasing rent'];
-  const withUs = ['Everything handled online, 24/7', 'A dedicated property manager', 'Rent collected and monitored', 'Compliance handled for you', 'Quality, referenced tenants'];
+  const without = ['Multiple contractors', 'Separate suppliers', 'Manual compliance tracking', 'Tenant enquiries', 'Rent collection', 'Administrative workload'];
+  const withUs = ['Dedicated property manager', 'Single point of contact', 'Managed compliance', 'Coordinated maintenance', 'Professional tenant communication', 'Online landlord portal'];
   const stats: { before: string; after: string }[] = [
     { before: '30+ landlord tasks', after: '1 dedicated property manager' },
     { before: 'Multiple contractors to chase', after: 'One point of contact' },
@@ -750,13 +750,13 @@ function LlxBeforeAfter() {
       <div className="llx10-inner">
         <div className="llx10-head hol-reveal">
           <div className="llx10-eyebrow">The Difference</div>
-          <h2 className="llx10-h2">Your Week, Before and After</h2>
+          <h2 className="llx10-h2">The Difference We Make</h2>
         </div>
         <div className="llx10-grid">
           <span className="llx10-vs" aria-hidden="true">VS</span>
           <div className="llx10-card llx10-card-a hol-reveal">
             <span className="llx10-face" aria-hidden="true">😓</span>
-            <h3 className="llx10-lab">Without House of Lettings</h3>
+            <h3 className="llx10-lab">Without us</h3>
             <ul className="llx10-list">
               {without.map(t => (
                 <li key={t}>
@@ -802,7 +802,7 @@ function LlxBeforeAfter() {
               <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M13 2 3 14h7l-1 8 10-12h-7l1-8z" /></svg>
               Efficient by design
             </div>
-            <h3 className="llx10-online-h3">Almost everything, done online</h3>
+            <h3 className="llx10-online-h3">The whole journey, online</h3>
             <p className="llx10-online-sub">
               We&rsquo;ve moved the whole journey online, no chains of emails, no phone tag, no waiting on office hours.
               Book, apply, report and register in minutes, then let your dedicated manager and our professional maintenance
@@ -1149,7 +1149,7 @@ function LlxChooseService() {
         <div className="llx5-head hol-reveal">
           <div className="llx5-eyebrow">Compare Our Landlord Packages</div>
           <h2 className="llx5-h2">Choose the Right Service for Your Property</h2>
-          <p className="llx5-sub">From simply finding you a quality tenant through to fully protecting your rental income. Move through the packages to find the one that fits your goals and budget.</p>
+          <p className="llx5-sub">From finding you a quality tenant through to protecting your rental income. Move through the packages to find the one that fits your goals and budget.</p>
         </div>
 
         <div className="llx5-spectrum hol-reveal" style={{ animationDelay: '60ms' }}>
@@ -1462,7 +1462,7 @@ export default function LandlordsPage() {
       <ServiceHero
         eyebrow="For Landlords · Leeds & Manchester"
         title={<>Better management.<br />Better tenants.<br /><span style={{ color: '#4a90d9' }}>Better returns.</span></>}
-        subtitle="Professional lettings and property management that protects your investment and maximises your returns, across Leeds and Manchester."
+        subtitle="Professional lettings and property management for landlords across Leeds and Manchester. We protect your investment, minimise risk, and maximise long-term returns."
         image="/images/Background_of_the_services.webp"
         imageAlt="House of Lettings agents advising landlord clients"
         ctas={[
@@ -1596,16 +1596,16 @@ export default function LandlordsPage() {
               fontSize: 15, color: '#4b5563', lineHeight: 1.85,
               marginBottom: 32,
             }}>
-              At House of Lettings, we believe landlords deserve more than just a property manager, they deserve a partner. Our local experts in Leeds and Manchester work to maximise your rental yield, keep your property compliant, and take the day to day stress completely off your plate.
+              Your dedicated property manager oversees every aspect of your tenancy, from marketing through to renewal. Our local teams in Leeds and Manchester maximise your rental performance, maintain full compliance, and manage the day-to-day on your behalf.
             </p>
             <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 36px', display: 'flex', flexDirection: 'column', gap: 14 }}>
               {[
                 'Free, no obligation rental valuation',
-                'Transparent pricing, no hidden fees, ever',
-                'Rigorous tenant referencing and screening',
-                'Full compliance with UK lettings legislation',
-                'Rent collection and arrears management',
-                'Dedicated local agent for your portfolio',
+                'Transparent pricing, inclusive of VAT. No hidden fees',
+                'Applicants referenced before they are recommended',
+                'Compliance monitored before every renewal deadline',
+                'Rent collected, monitored and chased',
+                'One dedicated point of contact throughout your tenancy',
               ].map(item => (
                 <li key={item} style={{
                   display: 'flex', alignItems: 'flex-start', gap: 12,

@@ -139,6 +139,20 @@ service cloud.firestore {
       allow read, update, delete: if isAdmin();
     }
 
+    // Signed management agreements. Written and read server-side via the
+    // Admin SDK (/api/landlord-agreement and /api/staff/agreements), and the
+    // dashboards fetch them through those API routes, so no client access is
+    // required. Listed for the record, admin-read only.
+    match /landlordAgreements/{id} {
+      allow read, update, delete: if isAdmin();
+    }
+
+    // Admin-editable agreement wording overrides (settings/agreementTemplate).
+    // Read/written only via the Admin SDK API routes.
+    match /settings/{id} {
+      allow read, write: if false;
+    }
+
     // Written server-side only (firebase-admin in /api/rent-review). Same as
     // the other form collections — no client create rule; admin-read only.
     match /rentReviews/{id} {

@@ -36,6 +36,7 @@ const LANDLORD_ITEMS: NavItem[] = [
   { href: '/book-valuation', label: 'Book Valuation' },
   { href: '/instant-valuation', label: 'Instant Valuation' },
   { href: '/landlord-registration', label: 'Landlord Registration' },
+  { href: '/landlord-agreement', label: 'Sign Agreement' },
 ];
 
 const TENANT_ITEMS: NavItem[] = [

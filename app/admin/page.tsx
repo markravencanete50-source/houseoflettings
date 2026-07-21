@@ -6,6 +6,8 @@ import Navbar from '@/components/layout/Navbar';
 import PropertyForm from '@/components/property/PropertyForm';
 import RentReviewPropertyManager from '@/components/dashboard/RentReviewPropertyManager';
 import RentReviewPanel from '@/components/valuation/RentReviewPanel';
+import AgreementEditor from '@/components/dashboard/AgreementEditor';
+import AgreementTemplateEditor from '@/components/dashboard/AgreementTemplateEditor';
 import { useAuth } from '@/hooks/useAuth';
 import {
   getAllUsers,
@@ -32,7 +34,31 @@ import {
   updateDoc, addDoc, deleteDoc, serverTimestamp, Timestamp,
 } from 'firebase/firestore';
 
-type Tab = 'analytics' | 'users' | 'properties' | 'post' | 'edit' | 'valuations' | 'reviews' | 'applications' | 'orders' | 'maintenance' | 'rent-reviews';
+type Tab = 'analytics' | 'users' | 'properties' | 'post' | 'edit' | 'valuations' | 'reviews' | 'applications' | 'orders' | 'maintenance' | 'rent-reviews' | 'agreements';
+
+interface Agreement {
+  id: string;
+  fullName: string; email: string; phone: string; contactAddress?: string;
+  jointLandlord?: boolean; landlord2Name?: string; landlord2Email?: string; residency?: string;
+  postcode?: string; street?: string; city?: string; county?: string; flatNumber?: string; securityNote?: string;
+  propertyType?: string; bedrooms?: string; bathrooms?: string; receptions?: string; furnishing?: string; parking?: string;
+  currentRent?: string; availableFrom?: string;
+  selectedPackage?: string; selectedPackageId?: string;
+  signatureName?: string; signatureDate?: string; signatureUrl?: string;
+  awaitingSignature?: boolean;
+  status: string;
+  createdAt: string | null;
+}
+
+const AGREEMENT_STATUSES = ['signed', 'countersigned', 'active', 'completed', 'cancelled'] as const;
+const AGREEMENT_STATUS_COLOR: Record<string, { bg: string; color: string }> = {
+  signed:                { bg: '#fff8e1', color: '#f57f17' },
+  'awaiting-signature':  { bg: '#fff3e0', color: '#ef6c00' },
+  countersigned:         { bg: '#e3f2fd', color: '#1565c0' },
+  active:                { bg: '#e8f5e9', color: '#2e7d32' },
+  completed:             { bg: '#ede7f6', color: '#6a1b9a' },
+  cancelled:             { bg: '#fce4ec', color: '#c62828' },
+};
 
 interface ServiceOrderLine {
   serviceId: string;
@@ -322,6 +348,10 @@ export default function AdminDashboard() {
   const [expandedMaint, setExpandedMaint] = useState<string | null>(null);
   const [rentReviews, setRentReviews] = useState<RentReview[]>([]);
   const [expandedRR, setExpandedRR] = useState<string | null>(null);
+  const [agreements, setAgreements] = useState<Agreement[]>([]);
+  const [expandedAgreement, setExpandedAgreement] = useState<string | null>(null);
+  const [editingAgreement, setEditingAgreement] = useState<string | null>(null);
+  const [showAgreementWording, setShowAgreementWording] = useState(false);
   const [showRRProps, setShowRRProps] = useState(false);
   const [showRRCalc, setShowRRCalc] = useState(false);
   // Per-staff dashboard access editor (Users tab).
@@ -337,6 +367,19 @@ export default function AdminDashboard() {
       .then(d => { if (d) setWebStats(d); })
       .catch(() => {});
   }, [profile]);
+
+  // Signed agreements come through the Admin-SDK API (the landlordAgreements
+  // collection has no client Firestore rule), so they load separately from the
+  // client-SDK reads above.
+  useEffect(() => {
+    if (!profile || profile.role !== 'admin') return;
+    let cancelled = false;
+    authedFetch('/api/staff/agreements')
+      .then(r => r.json())
+      .then(j => { if (!cancelled) setAgreements(j.agreements || []); })
+      .catch(() => { /* ignore */ });
+    return () => { cancelled = true; };
+  }, [profile]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (!authLoading && (!profile || profile.role !== 'admin')) {
@@ -499,6 +542,38 @@ export default function AdminDashboard() {
     setMaintenance(prev => prev.map(m => m.id === id ? { ...m, status } : m));
   };
 
+  // Agreements are read/written through the Admin-SDK API (no client rule).
+  const handleAgreementStatus = async (id: string, status: string) => {
+    const prev = agreements;
+    setAgreements(as => as.map(a => a.id === id ? { ...a, status } : a));
+    try {
+      const res = await authedFetch('/api/staff/agreements', { method: 'PATCH', body: JSON.stringify({ id, status }) });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    } catch (e) {
+      console.error('agreement status update failed:', e);
+      setAgreements(prev);
+      alert('Could not update the status. Please try again.');
+    }
+  };
+
+  const saveAgreementEdit = async (id: string, fields: Record<string, any>, mode: 'save' | 'correct' | 'reissue'): Promise<boolean> => {
+    try {
+      const res = await authedFetch('/api/staff/agreements', { method: 'PATCH', body: JSON.stringify({ id, action: 'edit', fields, mode }) });
+      const j = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(j.message || `HTTP ${res.status}`);
+      setAgreements(as => as.map(a => a.id === id
+        ? { ...a, ...fields, ...(mode === 'reissue' ? { status: 'awaiting-signature', awaitingSignature: true } : {}) }
+        : a));
+      setEditingAgreement(null);
+      if (mode === 'correct') alert('Saved. An updated copy has been emailed to the landlord and the office.');
+      if (mode === 'reissue') alert('Saved. A link to review and re-sign has been emailed to the landlord.');
+      return true;
+    } catch (e) {
+      console.error('agreement edit failed:', e);
+      return false;
+    }
+  };
+
   const handleRentReviewStatus = async (id: string, status: string) => {
     const prev = rentReviews;
     setRentReviews(rs => rs.map(r => r.id === id ? { ...r, status } : r));
@@ -538,6 +613,7 @@ export default function AdminDashboard() {
     { id: 'valuations', icon: '📋', label: `Valuations (${valuations.length})` },
     { id: 'reviews',    icon: '⭐', label: `Reviews (${reviews.length})` },
     { id: 'applications', icon: '📝', label: `Applications (${applications.length})` },
+    { id: 'agreements', icon: '📄', label: `Agreements (${agreements.length})` },
     { id: 'rent-reviews', icon: '🔁', label: `Rent Reviews (${rentReviews.length})` },
     { id: 'orders',     icon: '🛒', label: `Orders (${orders.length})` },
     { id: 'maintenance', icon: '🔧', label: `Maintenance (${maintenance.length})` },
@@ -1624,6 +1700,99 @@ export default function AdminDashboard() {
                       })}
                     </tbody>
                   </table>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* ── Landlord Agreements ── */}
+          {tab === 'agreements' && showAgreementWording && (
+            <AgreementTemplateEditor authedFetch={authedFetch} onClose={() => setShowAgreementWording(false)} />
+          )}
+          {tab === 'agreements' && !showAgreementWording && (
+            <div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12, flexWrap: 'wrap' }}>
+                <h1 className="dash-section-title" style={{ margin: 0 }}>Landlord Agreements</h1>
+                <button onClick={() => setShowAgreementWording(true)} style={{ background: '#eff5ff', color: '#2563eb', border: '1px solid #dbe4ff', borderRadius: 8, padding: '9px 16px', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
+                  ✎ Edit agreement wording
+                </button>
+              </div>
+              <p style={{ color: 'var(--gray-600)', margin: '8px 0 24px', fontSize: 15 }}>
+                Signed management agreements from landlords. Set the status as each progresses, or Edit to correct a landlord’s details or change the package, then save, email a corrected copy, or re-issue for signature.
+              </p>
+              {agreements.length === 0 ? (
+                <div className="dash-card" style={{ textAlign: 'center', color: 'var(--gray-400)', fontSize: 15, padding: '56px 24px' }}>
+                  No signed agreements yet. They&rsquo;ll appear here as landlords sign.
+                </div>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                  {agreements.map(a => {
+                    const isOpen = expandedAgreement === a.id;
+                    const propLine = [a.flatNumber, a.street, a.city, a.postcode].filter(Boolean).join(', ');
+                    const when = a.createdAt ? new Date(a.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : '';
+                    const badge = AGREEMENT_STATUS_COLOR[a.status] || AGREEMENT_STATUS_COLOR.signed;
+                    return (
+                      <div key={a.id} className="dash-card" style={{ padding: 0, overflow: 'hidden' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '16px 20px', flexWrap: 'wrap' }}>
+                          <div style={{ minWidth: 0, flex: 1 }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+                              <strong style={{ fontSize: 15, color: 'var(--navy)' }}>{a.fullName || '-'}</strong>
+                              <span style={{ display: 'inline-block', padding: '3px 10px', borderRadius: 20, fontSize: 11, fontWeight: 700, textTransform: 'uppercase', background: badge.bg, color: badge.color }}>{a.status}</span>
+                            </div>
+                            <div style={{ fontSize: 12.5, color: 'var(--gray-400)', marginTop: 3 }}>
+                              {a.selectedPackage || 'Package not set'} · {propLine || 'No property'} · {when}
+                            </div>
+                          </div>
+                          <select
+                            value={AGREEMENT_STATUSES.includes(a.status as any) ? a.status : 'signed'}
+                            onChange={e => handleAgreementStatus(a.id, e.target.value)}
+                            onClick={e => e.stopPropagation()}
+                            className="form-select" style={{ width: 150, textTransform: 'capitalize' }}
+                          >
+                            {AGREEMENT_STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
+                          </select>
+                          <button onClick={() => { setEditingAgreement(editingAgreement === a.id ? null : a.id); setExpandedAgreement(null); }} style={{ background: 'none', border: '1px solid var(--gray-200)', borderRadius: 6, padding: '5px 12px', cursor: 'pointer', color: '#2563eb', fontSize: 13, fontWeight: 600 }}>
+                            {editingAgreement === a.id ? 'Close' : 'Edit'}
+                          </button>
+                          <button onClick={() => { setExpandedAgreement(isOpen ? null : a.id); setEditingAgreement(null); }} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--gray-600)', fontSize: 13, fontWeight: 600 }}>
+                            {isOpen ? 'Hide ▲' : 'Details ▼'}
+                          </button>
+                        </div>
+                        {editingAgreement === a.id && (
+                          <AgreementEditor
+                            agreement={a as Record<string, any>}
+                            onSave={(fields, mode) => saveAgreementEdit(a.id, fields, mode)}
+                            onCancel={() => setEditingAgreement(null)}
+                          />
+                        )}
+                        {isOpen && (
+                          <div style={{ borderTop: '1px solid var(--gray-100)', padding: '16px 20px', background: '#fafbfc', fontSize: 13, color: 'var(--gray-600)' }}>
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(220px,1fr))', gap: '8px 24px' }}>
+                              <div><strong style={{ color: 'var(--navy)' }}>Email:</strong> {a.email || '-'}</div>
+                              <div><strong style={{ color: 'var(--navy)' }}>Phone:</strong> {a.phone || '-'}</div>
+                              <div><strong style={{ color: 'var(--navy)' }}>Contact address:</strong> {a.contactAddress || '-'}</div>
+                              {a.jointLandlord && a.landlord2Name && <div><strong style={{ color: 'var(--navy)' }}>Joint landlord:</strong> {a.landlord2Name}</div>}
+                              <div><strong style={{ color: 'var(--navy)' }}>Residency:</strong> {a.residency === 'non-resident' ? 'Non-resident (NRL)' : 'UK-resident'}</div>
+                              <div><strong style={{ color: 'var(--navy)' }}>Property:</strong> {propLine || '-'}</div>
+                              <div><strong style={{ color: 'var(--navy)' }}>Type / beds:</strong> {[a.propertyType, a.bedrooms && `${a.bedrooms} bed`, a.furnishing].filter(Boolean).join(' · ') || '-'}</div>
+                              <div><strong style={{ color: 'var(--navy)' }}>Expected rent:</strong> {a.currentRent ? `£${a.currentRent}/month` : '-'}</div>
+                              <div><strong style={{ color: 'var(--navy)' }}>Available from:</strong> {a.availableFrom || '-'}</div>
+                              <div><strong style={{ color: 'var(--navy)' }}>Package:</strong> {a.selectedPackage || '-'}</div>
+                              <div><strong style={{ color: 'var(--navy)' }}>Signed by:</strong> {a.signatureName || a.fullName} {a.signatureDate ? `on ${a.signatureDate}` : ''}</div>
+                            </div>
+                            {a.signatureUrl && (
+                              <div style={{ marginTop: 12 }}>
+                                <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--navy)', marginBottom: 6 }}>Signature</div>
+                                <a href={safeLinkHref(a.signatureUrl)} target="_blank" rel="noopener noreferrer">
+                                  <img src={safeLinkHref(a.signatureUrl)} alt="Landlord signature" style={{ maxHeight: 80, border: '1px solid var(--gray-200)', borderRadius: 6, background: '#fff', padding: 4 }} />
+                                </a>
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
               )}
             </div>

@@ -553,6 +553,116 @@ function LlxEverythingWeHandle() {
   );
 }
 
+// ── ANNUAL RENT REVIEW ──────────────────────────────────────────────────────
+// Reassurance that management is proactive, not passive: every managed
+// property's rent is reviewed once a year against the local market, so a
+// landlord's returns never quietly drift behind. Left copy + a dark summary
+// card echoing the rent-review tool, matching the LlxInvestmentSmarter layout.
+function LlxAnnualRentReview() {
+  const points: { t: string; d: string }[] = [
+    { t: 'Reviewed every year, without prompting', d: 'Each tenancy is checked at renewal, so you never have to ask or remember.' },
+    { t: 'Backed by local market evidence', d: 'Benchmarked against similar homes recently let across Leeds and Manchester.' },
+    { t: 'Your returns, protected', d: 'Rent stays in line with the market, so your income never falls quietly behind.' },
+  ];
+  return (
+    <section className="llxrr-sec" aria-labelledby="llxrr-h">
+      <style>{`
+        .llxrr-sec { background:#fff; padding:clamp(64px,9vw,110px) clamp(20px,7%,100px); font-family:'Poppins',sans-serif; }
+        .llxrr-grid { max-width:1100px; margin:0 auto; display:grid; grid-template-columns:repeat(auto-fit,minmax(min(320px,100%),1fr)); gap:clamp(36px,5vw,60px); align-items:center; }
+        .llxrr-eyebrow { font-size:11px; font-weight:700; letter-spacing:.24em; text-transform:uppercase; color:var(--logo-blue); margin-bottom:14px; }
+        .llxrr-h2 { font-size:clamp(28px,3.8vw,46px); font-weight:700; color:#0f1f3d; line-height:1.15; margin:0 0 18px; text-wrap:balance; }
+        .llxrr-body { font-size:15px; font-weight:300; color:#4b5563; line-height:1.85; margin:0 0 28px; max-width:520px; text-wrap:pretty; }
+        .llxrr-points { list-style:none; margin:0 0 32px; padding:0; display:flex; flex-direction:column; gap:16px; }
+        .llxrr-pt { display:flex; align-items:flex-start; gap:13px; }
+        .llxrr-tick { flex:none; width:24px; height:24px; border-radius:50%; background:#f0fdf4; color:var(--price-green); display:inline-flex; align-items:center; justify-content:center; margin-top:1px; }
+        .llxrr-pt-t { font-size:14.5px; font-weight:700; color:#0f1f3d; margin:0 0 2px; }
+        .llxrr-pt-d { font-size:13.5px; font-weight:300; color:#4b5563; line-height:1.6; margin:0; }
+        .llxrr-cta { background:#2563eb; color:#fff; box-shadow:0 14px 30px -14px rgba(37,99,235,.6); transition:all .22s ease; }
+        .llxrr-cta:hover { background:#1d4ed8; color:#fff; transform:translateY(-2px); }
+        /* Dark summary card, echoing the rent-review tool's card */
+        .llxrr-card { position:relative; overflow:hidden; border-radius:20px; background:linear-gradient(160deg,#15294c 0%,#0c1a33 100%); border:1px solid rgba(255,255,255,.09); box-shadow:0 40px 80px -34px rgba(4,10,26,.6); padding:clamp(24px,3vw,32px); max-width:440px; margin:0 auto; width:100%; }
+        .llxrr-card-head { display:flex; align-items:flex-start; justify-content:space-between; gap:14px; padding-bottom:16px; border-bottom:1px solid rgba(147,197,253,.14); }
+        .llxrr-kicker { font-size:10.5px; font-weight:700; letter-spacing:.14em; text-transform:uppercase; color:#7db4f0; }
+        .llxrr-addr { font-size:17px; font-weight:800; color:#fff; margin-top:5px; }
+        .llxrr-badge { flex:none; display:inline-flex; align-items:center; gap:6px; font-size:10.5px; font-weight:700; color:#4ade80; background:rgba(74,222,128,.14); border:1px solid rgba(74,222,128,.3); padding:5px 10px; border-radius:999px; white-space:nowrap; }
+        .llxrr-dot { width:6px; height:6px; border-radius:50%; background:#4ade80; }
+        .llxrr-figs { display:grid; grid-template-columns:1fr auto 1fr; align-items:center; gap:10px; margin:18px 0; }
+        .llxrr-fig { text-align:center; }
+        .llxrr-fig-l { font-size:10px; font-weight:600; letter-spacing:.06em; text-transform:uppercase; color:rgba(255,255,255,.55); }
+        .llxrr-fig-v { font-size:23px; font-weight:800; color:#fff; margin-top:6px; }
+        .llxrr-fig-v.up { color:#4ade80; }
+        .llxrr-arrow { color:#7db4f0; display:inline-flex; }
+        .llxrr-meta { display:flex; flex-direction:column; }
+        .llxrr-row { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:11px 0; border-top:1px solid rgba(147,197,253,.1); font-size:13px; }
+        .llxrr-row span { color:rgba(255,255,255,.6); }
+        .llxrr-row b { color:#fff; font-weight:600; }
+        .llxrr-note { display:flex; gap:10px; align-items:flex-start; background:rgba(37,99,235,.14); border:1px solid rgba(96,165,250,.28); border-radius:12px; padding:13px 15px; margin-top:16px; }
+        .llxrr-note-ic { flex:none; color:#7db4f0; margin-top:1px; }
+        .llxrr-note p { font-size:12.5px; color:rgba(255,255,255,.82); line-height:1.55; margin:0; }
+      `}</style>
+      <div className="llxrr-grid">
+        <div className="hol-reveal">
+          <div className="llxrr-eyebrow">Proactive Management</div>
+          <h2 className="llxrr-h2" id="llxrr-h">We review your rent every year</h2>
+          <p className="llxrr-body">
+            Once a year, we review the rent on every property we manage against current local comparables in Leeds and Manchester. We look after your investment as if it were our own, so the rent never quietly falls behind the market and your returns stay where they should be.
+          </p>
+          <ul className="llxrr-points">
+            {points.map(p => (
+              <li key={p.t} className="llxrr-pt">
+                <span className="llxrr-tick" aria-hidden="true">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
+                </span>
+                <div>
+                  <p className="llxrr-pt-t">{p.t}</p>
+                  <p className="llxrr-pt-d">{p.d}</p>
+                </div>
+              </li>
+            ))}
+          </ul>
+          <Link href="/book-valuation" className="llx-cta llxrr-cta" style={{ ...CTA_STYLE }}>
+            Book a Free Valuation
+          </Link>
+        </div>
+        <div className="hol-reveal" style={{ animationDelay: '120ms' }}>
+          <div className="llxrr-card">
+            <div className="llxrr-card-head">
+              <div>
+                <div className="llxrr-kicker">Annual Rent Review</div>
+                <div className="llxrr-addr">Your Property</div>
+              </div>
+              <span className="llxrr-badge"><span className="llxrr-dot" aria-hidden="true" />Reviewed</span>
+            </div>
+            <div className="llxrr-figs">
+              <div className="llxrr-fig">
+                <div className="llxrr-fig-l">Current rent</div>
+                <div className="llxrr-fig-v">£950</div>
+              </div>
+              <span className="llxrr-arrow" aria-hidden="true">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
+              </span>
+              <div className="llxrr-fig">
+                <div className="llxrr-fig-l">Market-aligned</div>
+                <div className="llxrr-fig-v up">£995</div>
+              </div>
+            </div>
+            <div className="llxrr-meta">
+              <div className="llxrr-row"><span>Benchmarked against</span><b>Local comparables</b></div>
+              <div className="llxrr-row"><span>Reviewed</span><b>Every 12 months</b></div>
+            </div>
+            <div className="llxrr-note">
+              <span className="llxrr-note-ic" aria-hidden="true">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><path d="M12 16v-4M12 8h.01" /></svg>
+              </span>
+              <p>Kept in line with the market, with the evidence shown and no action needed from you.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 // ── S9 · TIMELINE ───────────────────────────────────────────────────────────
 // Deliberately not interactive: no clicks, no hovers, just scrolling. Seven
 // blocks down a vertical rail; the rail draws itself in as the section enters
@@ -1493,6 +1603,9 @@ export default function LandlordsPage() {
 
       {/* ── S8 · EVERYTHING WE HANDLE ───────────────────────── */}
       <LlxEverythingWeHandle />
+
+      {/* ── ANNUAL RENT REVIEW (proactive management reassurance) ─ */}
+      <LlxAnnualRentReview />
 
       {/* ── WHY HOUSE OF LETTINGS ───────────────────────────── */}
       <section style={{

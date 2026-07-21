@@ -27,6 +27,7 @@ function Ic({ name, size = 22 }: { name: string; size?: number }) {
     case 'search': return (<svg {...c}><circle cx="11" cy="11" r="7" /><path d="M21 21l-4.3-4.3" /></svg>);
     case 'doc': return (<svg {...c}><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><path d="M14 2v6h6" /></svg>);
     case 'arrow': return (<svg {...c}><path d="M5 12h14M12 5l7 7-7 7" /></svg>);
+    case 'info': return (<svg {...c}><circle cx="12" cy="12" r="10" /><path d="M12 16v-4" /><path d="M12 8h.01" /></svg>);
     default: return null;
   }
 }
@@ -97,38 +98,116 @@ export default function RentReviewOverviewPage() {
 
       <div style={{ fontFamily: "'Poppins', sans-serif" }}>
 
-        {/* ── HERO ── */}
+        {/* ── HERO (logged-in landlord portal, two-column) ── */}
         <header className="rr-hero">
+          <div className="rr-hero-bg" aria-hidden />
           <div className="rr-hero-glow" aria-hidden />
-          <div className="rr-hero-inner">
-            <div className="rr-badge">Rent Review Process</div>
-            <h1 className="rr-hero-h1">Rent reviews, done fairly and transparently</h1>
-            <p className="rr-hero-sub">
-              Once a year we check your rent against the real local market, with the evidence shown, the reasoning
-              explained, and the final say a conversation, never a demand.
-            </p>
-            <div className="rr-hero-cta-row">
-              <Link href="/rent-review/apply" className="rr-cta rr-cta--primary">
-                Rent Review <Ic name="arrow" size={16} />
-              </Link>
-              <a href="#why" className="rr-cta rr-cta--ghost">Why we do it</a>
-            </div>
-            <p className="rr-hero-note">For existing tenants · Accept or discuss online</p>
-          </div>
+          <div className="rr-hero-grid">
 
-          {/* Feature strip anchored to the hero base (qualitative, no figures) */}
-          <div className="rr-features">
-            {FEATURES.map(f => (
-              <div key={f.title} className="rr-feature">
-                <span className="rr-feature-ic"><Ic name={f.icon} size={20} /></span>
-                <div>
-                  <div className="rr-feature-t">{f.title}</div>
-                  <div className="rr-feature-d">{f.desc}</div>
+            {/* Left — purpose, evidence, action */}
+            <div className="rr-hero-copy">
+              <div className="rr-badge">Annual Rent Review</div>
+              <h1 className="rr-hero-h1">Annual rent reviews backed by real local market data.</h1>
+              <p className="rr-hero-sub">
+                Every year we compare your property&rsquo;s rent against similar homes recently let in your area.
+              </p>
+              <p className="rr-hero-sub rr-hero-sub--2">
+                You&rsquo;ll see the market evidence, understand our recommendation, and decide whether to accept
+                or discuss the review online.
+              </p>
+
+              <ul className="rr-assure">
+                <li className="rr-assure-item"><span className="rr-assure-ic"><Ic name="check" size={13} /></span>Takes around 2&ndash;3 minutes</li>
+                <li className="rr-assure-item"><span className="rr-assure-ic"><Ic name="check" size={13} /></span>No phone calls required</li>
+                <li className="rr-assure-item"><span className="rr-assure-ic"><Ic name="check" size={13} /></span>You remain in control</li>
+              </ul>
+
+              <div className="rr-hero-cta-row">
+                <Link href="/rent-review/apply" className="rr-cta rr-cta--primary">
+                  Start Rent Review <Ic name="arrow" size={16} />
+                </Link>
+                <a href="#how" className="rr-cta rr-cta--ghost">How the Review Works</a>
+              </div>
+            </div>
+
+            {/* Right — realistic dashboard preview */}
+            <div className="rr-hero-visual">
+              <div className="rr-card" role="group" aria-label="Rent review summary preview">
+                <div className="rr-card-head">
+                  <div>
+                    <div className="rr-card-eyebrow">Annual Rent Review</div>
+                    <div className="rr-card-addr">12 Example Street</div>
+                  </div>
+                  <span className="rr-card-status"><span className="rr-card-status-dot" aria-hidden />Ready for Review</span>
+                </div>
+
+                <div className="rr-card-figures">
+                  <div className="rr-fig">
+                    <div className="rr-fig-label">Current rent</div>
+                    <div className="rr-fig-value">£850<span>pcm</span></div>
+                  </div>
+                  <div className="rr-fig rr-fig--accent">
+                    <div className="rr-fig-label">Recommendation</div>
+                    <div className="rr-fig-value">£900<span>pcm</span></div>
+                  </div>
+                  <div className="rr-fig">
+                    <div className="rr-fig-label">Market range</div>
+                    <div className="rr-fig-value rr-fig-value--sm">£890&ndash;£940</div>
+                  </div>
+                </div>
+
+                <div className="rr-card-meta">
+                  <div className="rr-meta"><span>Confidence</span><b>High</b></div>
+                  <div className="rr-meta"><span>Based on</span><b>14 comparable properties</b></div>
+                </div>
+
+                <div className="rr-card-bars">
+                  <div className="rr-bar-row">
+                    <span className="rr-bar-label">Current rent</span>
+                    <span className="rr-bar"><i style={{ width: '72%' }} /></span>
+                    <span className="rr-bar-val">£850</span>
+                  </div>
+                  <div className="rr-bar-row">
+                    <span className="rr-bar-label">Market average</span>
+                    <span className="rr-bar"><i className="rr-bar-i--full" style={{ width: '100%' }} /></span>
+                    <span className="rr-bar-val">£915</span>
+                  </div>
+                  <div className="rr-bar-row">
+                    <span className="rr-bar-label">Recommendation</span>
+                    <span className="rr-bar"><i className="rr-bar-i--rec" style={{ width: '85%' }} /></span>
+                    <span className="rr-bar-val">£900</span>
+                  </div>
+                </div>
+
+                <div className="rr-card-panel">
+                  <span className="rr-panel-ic"><Ic name="info" size={16} /></span>
+                  <div>
+                    <div className="rr-panel-t">Market summary</div>
+                    <p>Comparable homes nearby have achieved between £890 and £940 per month over the past six months.</p>
+                  </div>
                 </div>
               </div>
-            ))}
+            </div>
+
           </div>
         </header>
+
+        {/* ── FEATURE STRIP (own section below the hero) ── */}
+        <section className="rr-sec rr-features-sec" style={{ background: '#fff' }}>
+          <div className="rr-wrap">
+            <div className="rr-features-grid">
+              {FEATURES.map((f, i) => (
+                <div key={f.title} className="rr-feature hol-reveal" style={{ animationDelay: `${i * 55}ms` }}>
+                  <span className="rr-feature-ic"><Ic name={f.icon} size={20} /></span>
+                  <div>
+                    <div className="rr-feature-t">{f.title}</div>
+                    <div className="rr-feature-d">{f.desc}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
 
         {/* ── WHY ── */}
         <section id="why" className="rr-sec" style={{ background: '#fff' }}>
@@ -151,7 +230,7 @@ export default function RentReviewOverviewPage() {
         </section>
 
         {/* ── PROCESS (visual stepper — the centrepiece) ── */}
-        <section className="rr-sec" style={{ background: '#f7f8fa' }}>
+        <section id="how" className="rr-sec" style={{ background: '#f7f8fa', scrollMarginTop: '80px' }}>
           <div className="rr-wrap">
             <div className="rr-head hol-reveal">
               <div className="hol-eyebrow">The Process</div>
@@ -302,40 +381,94 @@ const PAGE_CSS = `
   .rr-lead { font-size:15.5px; color:#6b7280; max-width:620px; margin:16px auto 0; line-height:1.75; }
   .rr-hero-h1, .rr-hero-sub, .rr-lead, .rr-why-desc, .rr-ind-item p, .rr-diff-list li, .rr-step2-desc, .rr-faq-q, .rr-faq-a p, .rr-cta-text, .hol-h2 { overflow-wrap:break-word; }
 
-  /* HERO */
-  .rr-hero { position:relative; overflow:hidden; text-align:center; background:#0b1a34;
-    background-image:radial-gradient(ellipse at 72% 10%, rgba(37,99,235,0.32) 0%, transparent 55%), radial-gradient(ellipse at 10% 92%, rgba(37,99,235,0.14) 0%, transparent 52%);
-    padding:calc(68px + clamp(60px,9vw,116px)) clamp(20px,5%,5%) clamp(120px,14vw,160px); }
-  .rr-hero-glow { position:absolute; top:-28%; left:50%; width:min(760px,90%); height:520px; transform:translateX(-50%);
-    background:radial-gradient(circle, rgba(96,165,250,0.22) 0%, transparent 65%); filter:blur(12px); animation:rr-float 9s ease-in-out infinite; pointer-events:none; }
-  @keyframes rr-float { 0%,100%{transform:translateX(-50%) translateY(0);} 50%{transform:translateX(-50%) translateY(24px);} }
-  .rr-hero-inner { position:relative; z-index:1; max-width:760px; margin:0 auto; animation:rr-hero-in .8s cubic-bezier(.22,1,.36,1) both; }
-  @keyframes rr-hero-in { from{opacity:0; transform:translateY(20px);} to{opacity:1; transform:none;} }
-  .rr-badge { display:inline-block; background:rgba(96,165,250,0.16); color:#bfdbfe; font-size:11px; font-weight:700; letter-spacing:3px; text-transform:uppercase; padding:6px 15px; border-radius:20px; margin-bottom:22px; border:1px solid rgba(96,165,250,0.3); }
-  .rr-hero-h1 { font-size:clamp(30px,6vw,60px); font-weight:800; color:#fff; line-height:1.08; margin:0 0 20px; letter-spacing:-.02em; }
-  .rr-hero-sub { font-size:clamp(15.5px,1.8vw,18px); color:rgba(255,255,255,0.68); max-width:620px; margin:0 auto 34px; line-height:1.7; font-weight:300; }
-  .rr-hero-cta-row { display:flex; gap:14px; justify-content:center; flex-wrap:wrap; }
-  .rr-hero-note { font-size:12.5px; color:rgba(255,255,255,0.45); margin-top:18px; }
+  /* HERO — logged-in landlord portal, two-column */
+  .rr-hero { position:relative; overflow:hidden; background:#0b1a34;
+    background-image:radial-gradient(ellipse 900px 620px at 82% 6%, rgba(37,99,235,0.30) 0%, transparent 60%), radial-gradient(ellipse 760px 520px at 4% 96%, rgba(37,99,235,0.14) 0%, transparent 58%);
+    display:flex; align-items:center; min-height:min(88vh, 920px);
+    padding:calc(68px + 92px) clamp(20px,5vw,64px) 120px; }
+  /* Extremely light abstract blueprint grid (~4% opacity) */
+  .rr-hero-bg { position:absolute; inset:0; pointer-events:none;
+    background-image:linear-gradient(rgba(147,197,253,0.045) 1px, transparent 1px), linear-gradient(90deg, rgba(147,197,253,0.045) 1px, transparent 1px);
+    background-size:44px 44px; -webkit-mask-image:radial-gradient(ellipse 80% 80% at 60% 40%, #000 30%, transparent 88%); mask-image:radial-gradient(ellipse 80% 80% at 60% 40%, #000 30%, transparent 88%); }
+  .rr-hero-glow { position:absolute; top:-24%; right:6%; width:min(620px,70%); height:520px;
+    background:radial-gradient(circle, rgba(96,165,250,0.18) 0%, transparent 66%); filter:blur(14px); animation:rr-float 10s ease-in-out infinite; pointer-events:none; }
+  @keyframes rr-float { 0%,100%{transform:translateY(0);} 50%{transform:translateY(22px);} }
 
-  .rr-cta { display:inline-flex; align-items:center; justify-content:center; gap:9px; box-sizing:border-box; min-height:50px; line-height:1.2; font-family:'Poppins',sans-serif; font-size:13.5px; font-weight:700; letter-spacing:.02em; text-transform:uppercase; padding:14px 30px; border-radius:12px; text-decoration:none; border:1.5px solid transparent; transition:background .2s,transform .2s,box-shadow .2s,border-color .2s; }
+  .rr-hero-grid { position:relative; z-index:1; width:100%; max-width:1280px; margin:0 auto;
+    display:grid; grid-template-columns:1fr 1.18fr; gap:80px; align-items:center; }
+  @media(max-width:940px){ .rr-hero-grid{ grid-template-columns:1fr; gap:44px; } .rr-hero-h1{ max-width:none; } .rr-hero-visual{ max-width:520px; } }
+
+  .rr-hero-copy { animation:rr-hero-in .8s cubic-bezier(.22,1,.36,1) both; }
+  @keyframes rr-hero-in { from{opacity:0; transform:translateY(18px);} to{opacity:1; transform:none;} }
+  .rr-badge { display:inline-block; background:rgba(96,165,250,0.16); color:#bfdbfe; font-size:11px; font-weight:700; letter-spacing:2px; text-transform:uppercase; padding:6px 14px; border-radius:20px; margin-bottom:22px; border:1px solid rgba(96,165,250,0.28); }
+  .rr-hero-h1 { font-size:clamp(34px,4.6vw,60px); font-weight:800; color:#fff; line-height:1.05; margin:0 0 28px; letter-spacing:-.025em; max-width:12ch; }
+  .rr-hero-sub { font-size:clamp(15px,1.5vw,17px); color:#c7d2e3; max-width:580px; margin:0; line-height:1.7; font-weight:300; }
+  .rr-hero-sub--2 { margin-top:14px; }
+  .rr-assure { list-style:none; margin:32px 0 0; padding:0; display:flex; flex-wrap:wrap; gap:24px; }
+  .rr-assure-item { display:flex; align-items:center; gap:9px; font-size:13.5px; font-weight:500; color:#dbe4f2; }
+  .rr-assure-ic { flex:none; width:22px; height:22px; border-radius:50%; background:rgba(96,165,250,0.16); color:#93c5fd; display:grid; place-items:center; }
+  .rr-hero-cta-row { display:flex; gap:16px; flex-wrap:wrap; margin-top:36px; }
+
+  .rr-cta { display:inline-flex; align-items:center; justify-content:center; gap:9px; box-sizing:border-box; min-height:50px; line-height:1.2; font-family:'Poppins',sans-serif; font-size:13.5px; font-weight:700; letter-spacing:.02em; text-transform:uppercase; padding:14px 30px; border-radius:12px; text-decoration:none; border:1.5px solid transparent; transition:background .2s,transform .2s,box-shadow .2s,border-color .2s,color .2s; }
+  .rr-cta:focus-visible { outline:3px solid #93c5fd; outline-offset:3px; }
   .rr-cta--primary { background:#2563eb; color:#fff; box-shadow:0 12px 28px -12px rgba(37,99,235,.75); }
   .rr-cta--primary:hover { background:#1d4ed8; transform:translateY(-2px); box-shadow:0 18px 36px -14px rgba(37,99,235,.85); }
   .rr-cta--ghost { background:transparent; color:#dbe9ff; border-color:rgba(255,255,255,0.28); }
-  .rr-cta--ghost:hover { border-color:rgba(255,255,255,0.6); transform:translateY(-2px); }
+  .rr-cta--ghost:hover { background:#fff; color:#0f1f3d; border-color:#fff; transform:translateY(-2px); }
   .rr-cta--lg { min-height:56px; font-size:14px; padding:16px 40px; }
+  .rr-hero-cta-row .rr-cta { min-height:52px; border-radius:14px; }
 
-  /* FEATURE STRIP (overlaps the hero base) */
-  .rr-features { position:relative; z-index:2; max-width:1000px; margin:clamp(44px,7vw,72px) auto -64px; padding:0 clamp(20px,5%,5%);
-    display:grid; grid-template-columns:repeat(4,1fr); gap:14px; }
-  @media(max-width:820px){ .rr-features{ grid-template-columns:1fr 1fr; margin-bottom:-52px; } }
-  @media(max-width:460px){ .rr-features{ grid-template-columns:1fr; } }
-  .rr-feature { display:flex; align-items:center; gap:13px; background:#fff; border:1px solid #eef0f5; border-radius:14px; padding:16px 18px; box-shadow:0 18px 40px -26px rgba(15,31,61,.4); }
+  /* DASHBOARD PREVIEW CARD (right column) */
+  .rr-hero-visual { animation:rr-card-in .9s .1s cubic-bezier(.22,1,.36,1) both; }
+  @keyframes rr-card-in { from{opacity:0; transform:translateY(10px);} to{opacity:1; transform:none;} }
+  .rr-card { position:relative; background:linear-gradient(180deg, rgba(255,255,255,0.065) 0%, rgba(255,255,255,0.025) 100%);
+    border:1px solid rgba(147,197,253,0.18); border-radius:20px; padding:24px;
+    box-shadow:0 40px 80px -40px rgba(0,0,0,0.65); -webkit-backdrop-filter:blur(14px); backdrop-filter:blur(14px);
+    transition:transform .3s ease, box-shadow .3s ease; }
+  .rr-card:hover { transform:translateY(-4px); box-shadow:0 52px 96px -42px rgba(0,0,0,0.7); }
+  .rr-card-head { display:flex; align-items:flex-start; justify-content:space-between; gap:16px; padding-bottom:18px; border-bottom:1px solid rgba(147,197,253,0.12); }
+  .rr-card-eyebrow { font-size:10.5px; font-weight:700; letter-spacing:.14em; text-transform:uppercase; color:#93c5fd; }
+  .rr-card-addr { font-size:18px; font-weight:700; color:#fff; margin-top:5px; }
+  .rr-card-status { flex:none; display:inline-flex; align-items:center; gap:7px; font-size:11px; font-weight:700; color:#6ee7b7; background:rgba(16,185,129,0.12); border:1px solid rgba(16,185,129,0.30); padding:5px 11px; border-radius:20px; white-space:nowrap; }
+  .rr-card-status-dot { width:7px; height:7px; border-radius:50%; background:#34d399; box-shadow:0 0 0 3px rgba(52,211,153,0.18); }
+
+  .rr-card-figures { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin:18px 0; }
+  .rr-fig { background:rgba(255,255,255,0.03); border:1px solid rgba(147,197,253,0.10); border-radius:12px; padding:14px 14px 15px; }
+  .rr-fig--accent { background:rgba(37,99,235,0.16); border-color:rgba(96,165,250,0.42); }
+  .rr-fig-label { font-size:10px; font-weight:600; letter-spacing:.06em; text-transform:uppercase; color:rgba(199,210,227,0.72); }
+  .rr-fig-value { font-size:23px; font-weight:800; color:#fff; margin-top:7px; letter-spacing:-.01em; }
+  .rr-fig-value span { font-size:12px; font-weight:500; color:rgba(199,210,227,0.72); margin-left:3px; }
+  .rr-fig-value--sm { font-size:16px; }
+
+  .rr-card-meta { display:flex; flex-direction:column; }
+  .rr-meta { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:11px 0; border-top:1px solid rgba(147,197,253,0.08); font-size:13px; }
+  .rr-meta span { color:rgba(199,210,227,0.76); }
+  .rr-meta b { color:#fff; font-weight:600; }
+
+  .rr-card-bars { display:flex; flex-direction:column; gap:12px; margin:18px 0; }
+  .rr-bar-row { display:grid; grid-template-columns:104px 1fr auto; align-items:center; gap:12px; }
+  .rr-bar-label { font-size:11.5px; color:rgba(199,210,227,0.78); }
+  .rr-bar { height:8px; border-radius:999px; background:rgba(255,255,255,0.07); overflow:hidden; }
+  .rr-bar i { display:block; height:100%; border-radius:999px; background:linear-gradient(90deg,#2563eb,#60a5fa); transform-origin:left; animation:rr-bar .9s .35s both cubic-bezier(.22,1,.36,1); }
+  .rr-bar-i--full { background:linear-gradient(90deg,#3b82f6,#93c5fd); opacity:.85; }
+  .rr-bar-i--rec { background:linear-gradient(90deg,#2563eb,#7dd3fc); }
+  @keyframes rr-bar { from{transform:scaleX(0);} to{transform:scaleX(1);} }
+  .rr-bar-val { font-size:11.5px; font-weight:700; color:#dbe9ff; }
+
+  .rr-card-panel { display:flex; gap:12px; align-items:flex-start; background:rgba(37,99,235,0.14); border:1px solid rgba(96,165,250,0.28); border-radius:14px; padding:14px 16px; margin-top:4px; }
+  .rr-panel-ic { flex:none; width:30px; height:30px; border-radius:9px; background:rgba(96,165,250,0.20); color:#93c5fd; display:grid; place-items:center; }
+  .rr-panel-t { font-size:11px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:#bfdbfe; margin-bottom:4px; }
+  .rr-card-panel p { font-size:12.5px; color:rgba(199,210,227,0.88); line-height:1.55; margin:0; }
+
+  /* FEATURE STRIP — own section below the hero */
+  .rr-features-sec { padding-top:clamp(56px,7vw,84px); padding-bottom:clamp(56px,7vw,84px); }
+  .rr-features-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:16px; }
+  @media(max-width:820px){ .rr-features-grid{ grid-template-columns:1fr 1fr; } }
+  @media(max-width:460px){ .rr-features-grid{ grid-template-columns:1fr; } }
+  .rr-feature { display:flex; align-items:center; gap:13px; background:#fff; border:1px solid #eef0f5; border-radius:16px; padding:18px 18px; box-shadow:0 10px 30px -20px rgba(15,31,61,.35); }
   .rr-feature-ic { flex:none; width:42px; height:42px; border-radius:12px; background:var(--rr-accent-soft); color:var(--rr-accent); display:grid; place-items:center; }
   .rr-feature-t { font-size:14px; font-weight:700; color:#0f1f3d; }
   .rr-feature-d { font-size:12px; color:#6b7280; margin-top:2px; }
-
-  /* the section right after the hero clears the overlapping strip */
-  .rr-hero + .rr-sec { padding-top:calc(64px + clamp(64px,9vw,120px)); }
 
   /* WHY grid */
   .rr-why-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:20px; }
@@ -411,11 +544,17 @@ const PAGE_CSS = `
   /* Phones */
   @media(max-width:600px){
     .rr-sec { padding:clamp(52px,12vw,72px) 18px; }
-    .rr-hero + .rr-sec { padding-top:clamp(64px,16vw,88px); }
-    .rr-hero { padding:calc(64px + 44px) 18px 92px; }
+    .rr-hero { min-height:auto; padding:calc(64px + 40px) 18px 72px; }
+    .rr-hero-h1 { margin-bottom:22px; }
+    .rr-assure { gap:14px 22px; }
     .rr-hero-cta-row { flex-direction:column; gap:10px; }
     .rr-hero-cta-row .rr-cta { width:100%; }
     .rr-cta--lg { width:100%; }
+    .rr-card { padding:20px; }
+    .rr-card-figures { gap:10px; }
+    .rr-fig { padding:12px 11px; }
+    .rr-fig-value { font-size:20px; }
+    .rr-bar-row { grid-template-columns:88px 1fr auto; }
     .rr-why-card, .rr-compare-col, .rr-step2-body { padding:20px 18px; }
     .rr-head { margin-bottom:32px; }
     .rr-faq-q { padding:15px 16px; font-size:14.5px; }
@@ -424,7 +563,8 @@ const PAGE_CSS = `
 
   /* Reduced motion */
   @media (prefers-reduced-motion: reduce){
-    .rr-hero-glow, .rr-hero-inner { animation:none !important; }
-    .rr-cta, .rr-why-card, .rr-faq, .rr-faq-a, .rr-faq-q svg, .rr-feature { transition:none !important; }
+    .rr-hero-glow, .rr-hero-copy, .rr-hero-visual, .rr-bar i { animation:none !important; }
+    .rr-bar i { transform:none !important; }
+    .rr-cta, .rr-why-card, .rr-faq, .rr-faq-a, .rr-faq-q svg, .rr-feature, .rr-card { transition:none !important; }
   }
 `;

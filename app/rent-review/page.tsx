@@ -539,12 +539,14 @@ const PAGE_CSS = `
   .rr-hero-grid { position:relative; z-index:1; width:100%; max-width:1280px; margin:0 auto;
     display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1.18fr); gap:80px; align-items:center; }
   .rr-hero-copy, .rr-hero-visual { min-width:0; }
-  @media(max-width:940px){ .rr-hero-grid{ grid-template-columns:minmax(0,1fr); gap:44px; } .rr-hero-h1{ max-width:none; } .rr-hero-visual{ max-width:520px; } }
+  @media(max-width:940px){ .rr-hero-grid{ grid-template-columns:minmax(0,1fr); gap:44px; } .rr-hero-visual{ max-width:520px; } }
 
   .rr-hero-copy { animation:rr-hero-in .8s cubic-bezier(.22,1,.36,1) both; }
   @keyframes rr-hero-in { from{opacity:0; transform:translateY(18px);} to{opacity:1; transform:none;} }
   .rr-badge { display:inline-block; background:rgba(96,165,250,0.16); color:#bfdbfe; font-size:11px; font-weight:700; letter-spacing:2px; text-transform:uppercase; padding:6px 14px; border-radius:20px; margin-bottom:22px; border:1px solid rgba(96,165,250,0.28); }
-  .rr-hero-h1 { font-size:clamp(34px,4.6vw,60px); font-weight:800; color:#fff; line-height:1.05; margin:0 0 28px; letter-spacing:-.025em; max-width:12ch; }
+  .rr-hero-h1 { font-size:clamp(34px,4.6vw,60px); font-weight:800; color:#fff; line-height:1.05; margin:0 0 28px; letter-spacing:-.025em; }
+  /* Cap headline width only in the two-column layout; stacked layouts use the full column. */
+  @media(min-width:941px){ .rr-hero-h1 { max-width:12ch; } }
   .rr-hero-sub { font-size:clamp(15px,1.5vw,17px); color:#c7d2e3; max-width:580px; margin:0; line-height:1.7; font-weight:300; }
   .rr-hero-sub--2 { margin-top:14px; }
   .rr-assure { list-style:none; margin:32px 0 0; padding:0; display:flex; flex-wrap:wrap; gap:24px; }

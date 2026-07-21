@@ -1,8 +1,7 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
-import PostcodeLookup, { type AddressResult } from "@/components/PostcodeLookup";
 import {
   citiesForDateIn,
   isCityScheduledIn,
@@ -20,7 +19,6 @@ const EMPTY_FORM = {
   lastName: "",
   email: "",
   phone: "",
-  postcode: "",
   // Viewing appointment (the calendar)
   city: "",   // 'Manchester' | 'Leeds', drives slot availability
   date: "",   // YYYY-MM-DD
@@ -188,8 +186,6 @@ interface TenantEnquiryModalProps {
   onClose: () => void;
   propertyTitle?: string;
   propertyPrice?: number;
-  /** Postcode of the property being enquired about, pre-fills the postcode field. */
-  propertyPostcode?: string;
   /** City the property is in, auto-detected by the listing page. When set, the
    *  tenant isn't asked to choose, the viewing is locked to this city. */
   propertyCity?: City | null;
@@ -203,7 +199,6 @@ export default function TenantEnquiryModal({
   onClose,
   propertyTitle,
   propertyPrice,
-  propertyPostcode,
   propertyCity,
   propertyAddress,
 }: TenantEnquiryModalProps) {
@@ -311,15 +306,6 @@ export default function TenantEnquiryModal({
     return () => { document.body.style.overflow = ""; };
   }, [isOpen]);
 
-  // Pre-fill the postcode from the property being viewed, so the tenant is
-  // never asked for something the page already knows. Only fills an empty
-  // field, anything they typed themselves is kept.
-  useEffect(() => {
-    if (isOpen && propertyPostcode) {
-      setForm(f => (f.postcode ? f : { ...f, postcode: propertyPostcode }));
-    }
-  }, [isOpen, propertyPostcode]);
-
   // Lock the viewing to the property's detected city so the tenant is never
   // asked something the page already knows. Clears any stale time selection.
   useEffect(() => {
@@ -327,11 +313,6 @@ export default function TenantEnquiryModal({
       setForm(f => (f.city === propertyCity ? f : { ...f, city: propertyCity, time: "" }));
     }
   }, [isOpen, propertyCity]);
-
-  const handlePostcodeSelect = useCallback((data: AddressResult) => {
-    setForm(f => ({ ...f, postcode: data.postcode || f.postcode }));
-    setErrors(er => ({ ...er, postcode: "" }));
-  }, []);
 
   const set = (key: string) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const val = e.target.value;
@@ -406,7 +387,6 @@ export default function TenantEnquiryModal({
             lastName: form.lastName,
             email: form.email,
             phone: form.phone,
-            postcode: form.postcode,
             city: form.city,
             propertyTitle,
             propertyAddress: propertyAddress || "",
@@ -454,7 +434,6 @@ export default function TenantEnquiryModal({
           city: form.city,
           date: form.date,
           time: form.time,
-          postcode: form.postcode,
           propertyTitle,
           propertyAddress: propertyAddress || "",
           // Screening answers, mapped to the booking API's field names.
@@ -606,16 +585,6 @@ export default function TenantEnquiryModal({
                     <label className="hol-label">Phone number<span className="hol-req">*</span></label>
                     <input type="tel" className={`hol-input${errors.phone ? " hol-input--error" : ""}`} placeholder="e.g. 07700 900123" value={form.phone} onChange={set("phone")} autoComplete="tel"/>
                     {errors.phone && <p className="hol-err">{errors.phone}</p>}
-                  </div>
-                  <div className="hol-field">
-                    <label className="hol-label">{propertyPostcode ? "Property postcode" : "What property postcode are you looking for?"}</label>
-                    <PostcodeLookup
-                      postcode={form.postcode}
-                      onPostcodeChange={(v) => setForm(f => ({ ...f, postcode: v }))}
-                      onSelect={handlePostcodeSelect}
-                      inputClassName="hol-input"
-                      placeholder="e.g. M1 1AE"
-                    />
                   </div>
                 </div>
 

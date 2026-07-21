@@ -34,12 +34,12 @@ function Ic({ name, size = 22 }: { name: string; size?: number }) {
 }
 
 const WHY = [
-  { icon: 'scale', title: 'Fair, market-aligned rent', desc: 'A review keeps your rent in step with what similar homes nearby actually let for today, fair for you and fair for us.' },
-  { icon: 'shield', title: 'No sudden shocks', desc: 'Small, evidence-based adjustments once a year are far easier to plan for than one large correction after rent has drifted for years.' },
-  { icon: 'wrench', title: 'A well-maintained home', desc: 'A sustainable rent funds ongoing repairs, safety checks, and the gas, electrical and EPC compliance that keeps you safe.' },
-  { icon: 'home', title: 'Longer, stable tenancies', desc: 'Keeping a good tenant almost always beats an empty property. Reviews are designed to keep you settled, not to move you on.' },
-  { icon: 'eye', title: 'Full transparency', desc: 'You see the current figure, the proposed figure and the reasoning behind it, nothing is hidden or automatic.' },
-  { icon: 'chat', title: 'A conversation, not a demand', desc: 'Happy with the proposal? Accept in a click. Not sure? Open a discussion and tell us the figure that works for you.' },
+  { icon: 'scale', title: 'Fair, Market-Aligned Rent', desc: 'We compare your rent with similar properties in your local area to ensure it reflects current market conditions. This helps keep the rent fair for both you and your landlord.' },
+  { icon: 'shield', title: 'Predictable Adjustments', desc: 'Annual, evidence-based reviews help avoid significant rent increases that can occur when rent has remained unchanged for several years.' },
+  { icon: 'wrench', title: 'A Well-Maintained Home', desc: 'A sustainable rent helps fund essential repairs, routine maintenance, safety inspections, and compliance with gas, electrical, and EPC regulations.' },
+  { icon: 'home', title: 'Stable, Long-Term Tenancies', desc: 'Retaining responsible tenants benefits everyone. Our review process is designed to support long-term tenancies wherever possible.' },
+  { icon: 'eye', title: 'Transparent Decisions', desc: 'You will see your current rent, the proposed rent, and the market evidence supporting the recommendation. Every decision is explained clearly.' },
+  { icon: 'chat', title: 'A Collaborative Process', desc: 'If you agree with the proposal, you can accept it online. If you have concerns, you can start a discussion and share your preferred rent.' },
 ];
 
 // Qualitative feature strip (no figures) shown right under the hero.
@@ -52,32 +52,32 @@ const FEATURES = [
 
 // The dark "context" band — qualitative points, deliberately no statistics.
 const CONTEXT = [
-  { icon: 'scale', text: 'Reviewed once a year, in line with your tenancy renewal.' },
-  { icon: 'search', text: 'Benchmarked against similar homes currently letting nearby.' },
-  { icon: 'eye', text: 'Every proposed figure comes with the reasoning behind it.' },
-  { icon: 'chat', text: 'Accept online, or open a conversation, the final say is yours.' },
+  { icon: 'scale', text: 'Reviewed annually as part of your tenancy renewal.' },
+  { icon: 'search', text: 'Benchmarked against comparable properties currently available in your local area.' },
+  { icon: 'eye', text: 'Every recommendation is supported by clear market evidence.' },
+  { icon: 'chat', text: 'Accept the proposal online or discuss it with us before any changes are made.' },
 ];
 
 const INDUSTRY = [
-  { tag: 'Common', title: 'Market-comparable review', desc: 'Most agents review at renewal by comparing your home against similar local properties currently on the market.' },
-  { tag: 'Common', title: 'Index-linked increases', desc: 'Some tenancies contain a clause tying the rent to inflation (RPI or CPI), so it rises by a set index each year regardless of the local market.' },
-  { tag: 'Statutory', title: 'Section 13 notice', desc: 'For rolling (periodic) tenancies in England, landlords can propose an increase once a year through a formal Section 13 notice.' },
-  { tag: 'Blunt', title: 'Automatic fixed uplift', desc: 'A minority of agents write a flat percentage rise into the contract every year. It is simple, but it ignores whether the local market actually moved.' },
+  { tag: 'Most common', variant: 'common', title: 'Market Comparison Review', desc: 'Many letting agents review rent at renewal by comparing the property with similar homes currently available in the local market.' },
+  { tag: 'Common', variant: 'common', title: 'Index-Linked Increases', desc: 'Some tenancy agreements include a clause linking rent increases to inflation, such as the Consumer Prices Index (CPI) or Retail Prices Index (RPI), regardless of local market conditions.' },
+  { tag: 'Statutory', variant: 'statutory', title: 'Section 13 Notice', desc: 'For periodic tenancies in England, landlords may propose a rent increase once each year by serving a formal Section 13 notice.' },
+  { tag: 'Less common', variant: 'blunt', title: 'Fixed Annual Increase', desc: 'Some tenancy agreements include a fixed annual percentage increase. While straightforward, this approach does not take local market conditions into account.' },
 ];
 
 const DIFF = [
-  'Evidence-based, never automatic, we benchmark your actual property against live local comparables.',
-  'Transparent, you see the current rent, the proposed rent and the reasoning, side by side.',
-  'Collaborative, accept online, or propose your own figure and tell us why.',
-  'Fully online, no back-and-forth calls, no posted forms; the whole review takes minutes.',
-  'A whole-tenancy check-in, we refresh your details, documents and any maintenance in one place.',
+  { title: 'Evidence-Based', desc: 'Every recommendation is based on comparable local properties and current market data. No increases are automatic.' },
+  { title: 'Transparent', desc: 'You can view your current rent, the proposed rent, and the evidence supporting our recommendation in one place.' },
+  { title: 'Collaborative', desc: 'Accept the proposal online or submit your own suggested rent with supporting comments for our review.' },
+  { title: 'Fully Online', desc: 'Complete the entire rent review process online without paper forms or unnecessary correspondence.' },
+  { title: 'Complete Tenancy Review', desc: 'Alongside your rent review, we update your tenancy details, documents, and maintenance records to ensure everything remains current.' },
 ];
 
 const STEPS = [
-  { n: '1', title: 'Market review', desc: 'We benchmark your property against homes currently letting in your area to find its fair market rent.' },
-  { n: '2', title: 'Your proposal', desc: 'You receive a clear current-versus-proposed rent, with the reasoning behind the figure.' },
-  { n: '3', title: 'You decide online', desc: 'Accept the proposal in a click, or open a discussion and suggest your own figure.' },
-  { n: '4', title: 'Renewal completed', desc: 'We finalise your renewal and update your details, documents and any repairs in one place.' },
+  { n: '1', title: 'Market Review', desc: 'We compare your property with similar homes currently available to rent in your local area to determine a fair market rent.' },
+  { n: '2', title: 'Your Proposal', desc: 'You receive a clear comparison showing your current rent, the proposed rent, and the evidence supporting our recommendation.' },
+  { n: '3', title: 'Your Decision', desc: 'Accept the proposal online or start a discussion and submit your preferred rent for consideration.' },
+  { n: '4', title: 'Renewal Complete', desc: 'Once an agreement has been reached, we complete your tenancy renewal and update your records, documents, and any outstanding maintenance information.' },
 ];
 
 const FAQS = [
@@ -254,8 +254,8 @@ export default function RentReviewOverviewPage() {
           <div className="rr-wrap">
             <div className="rr-head hol-reveal">
               <div className="hol-eyebrow">Why We Do It</div>
-              <h2 className="hol-h2">Why we review the rent each year</h2>
-              <p className="rr-lead">A rent review isn&rsquo;t about squeezing more out of your tenancy. Done properly, it protects the home you live in and the relationship we have with you.</p>
+              <h2 className="hol-h2">Why We Review Your Rent Each Year</h2>
+              <p className="rr-lead">A rent review is not about increasing your rent unnecessarily. When carried out properly, it helps maintain a fair tenancy, supports the upkeep of your home, and strengthens our long-term relationship with you.</p>
             </div>
             <div className="rr-why-grid">
               {WHY.map((item, i) => (
@@ -274,8 +274,8 @@ export default function RentReviewOverviewPage() {
           <div className="rr-wrap">
             <div className="rr-head hol-reveal">
               <div className="hol-eyebrow">The Process</div>
-              <h2 className="hol-h2">How your rent review works</h2>
-              <p className="rr-lead">Four simple steps, all online, at your own pace.</p>
+              <h2 className="hol-h2">How Your Rent Review Works</h2>
+              <p className="rr-lead">Complete your rent review online in four simple steps.</p>
             </div>
             <ol className="rr-steps2">
               {STEPS.map((s, i) => (
@@ -298,10 +298,10 @@ export default function RentReviewOverviewPage() {
             <div className="rr-context">
               <div className="rr-context-copy hol-reveal">
                 <div className="hol-eyebrow" style={{ color: 'var(--rr-accent-bright)' }}>The Context</div>
-                <h2 className="hol-h2" style={{ color: '#fff' }}>What the market tells us</h2>
+                <h2 className="hol-h2" style={{ color: '#fff' }}>What the Market Tells Us</h2>
                 <p className="rr-lead" style={{ color: 'rgba(255,255,255,0.6)', margin: '16px 0 0' }}>
-                  Local rents move year to year with supply and demand. Reviewing regularly, and evidencing every figure,
-                  keeps things fair and predictable, instead of letting rent drift until a big correction is unavoidable.
+                  Rental values change over time as supply and demand fluctuate. Regular reviews, supported by local
+                  market evidence, help ensure your rent remains fair, accurate, and predictable.
                 </p>
               </div>
               <ul className="rr-context-list hol-reveal" style={{ animationDelay: '80ms' }}>
@@ -321,8 +321,8 @@ export default function RentReviewOverviewPage() {
           <div className="rr-wrap">
             <div className="rr-head hol-reveal">
               <div className="hol-eyebrow">The Industry</div>
-              <h2 className="hol-h2">How rent reviews work across the industry</h2>
-              <p className="rr-lead">Estate and lettings agents take a few different routes. Some are fairer and clearer than others, here&rsquo;s the landscape, and where we sit in it.</p>
+              <h2 className="hol-h2">How Rent Reviews Are Managed Across the Industry</h2>
+              <p className="rr-lead">Letting agents and landlords use a range of approaches when reviewing rent. Some methods are more transparent and evidence-based than others.</p>
             </div>
             <div className="rr-compare">
               <div className="rr-compare-col hol-reveal">
@@ -333,7 +333,7 @@ export default function RentReviewOverviewPage() {
                 <div className="rr-ind-list">
                   {INDUSTRY.map(item => (
                     <div key={item.title} className="rr-ind-item">
-                      <span className={`rr-chip rr-chip--${item.tag.toLowerCase()}`}>{item.tag}</span>
+                      <span className={`rr-chip rr-chip--${item.variant}`}>{item.tag}</span>
                       <div>
                         <h4>{item.title}</h4>
                         <p>{item.desc}</p>
@@ -345,11 +345,14 @@ export default function RentReviewOverviewPage() {
               <div className="rr-compare-col rr-compare-col--us hol-reveal" style={{ animationDelay: '90ms' }}>
                 <div className="rr-compare-head">
                   <span className="rr-compare-tag rr-compare-tag--us">House of Lettings</span>
-                  <h3>How we do it differently</h3>
+                  <h3>How We Review Rent</h3>
                 </div>
                 <ul className="rr-diff-list">
                   {DIFF.map(d => (
-                    <li key={d}><span className="rr-diff-ic"><Ic name="check" size={16} /></span><span>{d}</span></li>
+                    <li key={d.title}>
+                      <span className="rr-diff-ic"><Ic name="check" size={16} /></span>
+                      <span><strong className="rr-diff-title">{d.title}</strong>{d.desc}</span>
+                    </li>
                   ))}
                 </ul>
               </div>
@@ -721,7 +724,8 @@ const PAGE_CSS = `
   .rr-chip--statutory { color:#92400e; background:#fef3c7; }
   .rr-chip--blunt { color:#9f1239; background:#ffe4e6; }
   .rr-diff-list { list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:14px; }
-  .rr-diff-list li { display:flex; gap:11px; align-items:flex-start; font-size:14px; color:#1e3a5f; line-height:1.6; font-weight:500; }
+  .rr-diff-list li { display:flex; gap:11px; align-items:flex-start; font-size:14px; color:#4b5f78; line-height:1.6; font-weight:400; }
+  .rr-diff-title { display:block; color:#0f1f3d; font-weight:700; margin-bottom:2px; }
   /* Green ticks, matching the pricing page's light-section ticks (.pr-tick) */
   .rr-diff-ic { flex:none; width:22px; height:22px; border-radius:50%; background:#e7f6ee; color:#16a34a; display:grid; place-items:center; margin-top:1px; }
   .rr-diff-ic svg { stroke-width:3; }

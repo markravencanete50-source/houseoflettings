@@ -1,9 +1,8 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState } from "react";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
-import PostcodeLookup, { type AddressResult } from "@/components/PostcodeLookup";
 
 export default function BookViewingPage() {
   const [formData, setFormData] = useState({
@@ -11,17 +10,12 @@ export default function BookViewingPage() {
     lastName: "",
     email: "",
     phone: "",
-    postcode: "",
     moveIn: "",
     tenancy: "",
   });
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-
-  const handlePostcodeSelect = useCallback((data: AddressResult) => {
-    setFormData((prev) => ({ ...prev, postcode: data.postcode || prev.postcode }));
-  }, []);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
@@ -45,7 +39,6 @@ export default function BookViewingPage() {
           lastName: formData.lastName,
           email: formData.email,
           phone: formData.phone,
-          postcode: formData.postcode,
           moveBy: formData.moveIn,
           stayDuration: tenancyLabels[formData.tenancy] || formData.tenancy,
           source: "book-viewing-page",
@@ -230,18 +223,6 @@ export default function BookViewingPage() {
                       <label style={labelStyle}>Phone Number <span style={{ color: "#ef4444" }}>*</span></label>
                       <input name="phone" type="tel" required value={formData.phone} onChange={handleChange} placeholder="e.g. 07700 900123" style={inputStyle} />
                     </div>
-                  </div>
-
-                  {/* Postcode */}
-                  <div>
-                    <label style={labelStyle}>Property Postcode</label>
-                    <PostcodeLookup
-                      postcode={formData.postcode}
-                      onPostcodeChange={(v) => setFormData((prev) => ({ ...prev, postcode: v }))}
-                      onSelect={handlePostcodeSelect}
-                      inputStyle={inputStyle}
-                      placeholder="e.g. M1 1AE"
-                    />
                   </div>
 
                   {/* Move-in */}

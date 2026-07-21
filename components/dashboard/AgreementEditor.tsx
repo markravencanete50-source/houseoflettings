@@ -67,7 +67,7 @@ export default function AgreementEditor({
         <Cell t="Full name"><input style={inp} value={f.fullName} onChange={e => set('fullName', e.target.value)} /></Cell>
         <Cell t="Email"><input style={inp} value={f.email} onChange={e => set('email', e.target.value)} /></Cell>
         <Cell t="Phone"><input style={inp} value={f.phone} onChange={e => set('phone', e.target.value)} /></Cell>
-        <Cell t="Contact address"><input style={inp} value={f.contactAddress} onChange={e => set('contactAddress', e.target.value)} /></Cell>
+        <Cell t="Billing address"><input style={inp} value={f.contactAddress} onChange={e => set('contactAddress', e.target.value)} /></Cell>
         <Cell t="Residency">
           <select style={inp} value={f.residency} onChange={e => set('residency', e.target.value)}>
             <option value="">Select…</option>

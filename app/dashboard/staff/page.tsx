@@ -110,6 +110,7 @@ interface Agreement {
   signatureName?: string;
   signatureDate?: string;
   signatureUrl?: string;
+  signature2Name?: string; signature2Url?: string;
   landlord2Email?: string; county?: string; securityNote?: string;
   selectedPackageId?: string;
   awaitingSignature?: boolean;
@@ -952,7 +953,7 @@ function StaffDashboardInner() {
                             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(220px,1fr))', gap: '8px 24px' }}>
                               <div><strong style={{ color: 'var(--navy)' }}>Email:</strong> {a.email || '-'}</div>
                               <div><strong style={{ color: 'var(--navy)' }}>Phone:</strong> {a.phone || '-'}</div>
-                              <div><strong style={{ color: 'var(--navy)' }}>Contact address:</strong> {a.contactAddress || '-'}</div>
+                              <div><strong style={{ color: 'var(--navy)' }}>Billing address:</strong> {a.contactAddress || '-'}</div>
                               {a.jointLandlord && a.landlord2Name && <div><strong style={{ color: 'var(--navy)' }}>Joint landlord:</strong> {a.landlord2Name}</div>}
                               <div><strong style={{ color: 'var(--navy)' }}>Residency:</strong> {a.residency === 'non-resident' ? 'Non-resident (NRL)' : 'UK-resident'}</div>
                               <div><strong style={{ color: 'var(--navy)' }}>Property:</strong> {propLine || '-'}</div>
@@ -962,12 +963,24 @@ function StaffDashboardInner() {
                               <div><strong style={{ color: 'var(--navy)' }}>Package:</strong> {a.selectedPackage || '-'}</div>
                               <div><strong style={{ color: 'var(--navy)' }}>Signed by:</strong> {a.signatureName || a.fullName} {a.signatureDate ? `on ${a.signatureDate}` : ''}</div>
                             </div>
-                            {a.signatureUrl && (
-                              <div style={{ marginTop: 12 }}>
-                                <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--navy)', marginBottom: 6 }}>Signature</div>
-                                <a href={safeLinkHref(a.signatureUrl)} target="_blank" rel="noopener noreferrer">
-                                  <img src={safeLinkHref(a.signatureUrl)} alt="Landlord signature" style={{ maxHeight: 80, border: '1px solid var(--gray-200)', borderRadius: 6, background: '#fff', padding: 4 }} />
-                                </a>
+                            {(a.signatureUrl || a.signature2Url) && (
+                              <div style={{ marginTop: 12, display: 'flex', gap: 24, flexWrap: 'wrap' }}>
+                                {a.signatureUrl && (
+                                  <div>
+                                    <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--navy)', marginBottom: 6 }}>Signature — {a.signatureName || a.fullName}</div>
+                                    <a href={safeLinkHref(a.signatureUrl)} target="_blank" rel="noopener noreferrer">
+                                      <img src={safeLinkHref(a.signatureUrl)} alt="Landlord signature" style={{ maxHeight: 80, border: '1px solid var(--gray-200)', borderRadius: 6, background: '#fff', padding: 4 }} />
+                                    </a>
+                                  </div>
+                                )}
+                                {a.signature2Url && (
+                                  <div>
+                                    <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--navy)', marginBottom: 6 }}>Second landlord — {a.signature2Name || a.landlord2Name}</div>
+                                    <a href={safeLinkHref(a.signature2Url)} target="_blank" rel="noopener noreferrer">
+                                      <img src={safeLinkHref(a.signature2Url)} alt="Second landlord signature" style={{ maxHeight: 80, border: '1px solid var(--gray-200)', borderRadius: 6, background: '#fff', padding: 4 }} />
+                                    </a>
+                                  </div>
+                                )}
                               </div>
                             )}
                           </div>

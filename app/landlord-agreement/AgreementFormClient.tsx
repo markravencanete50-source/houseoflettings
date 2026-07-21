@@ -69,6 +69,7 @@ const EMPTY = {
   selectedPackageId: '', selectedPackage: '',
   termsAccepted: false,
   signatureName: '', signatureDate: '',
+  signature2Name: '', // second (joint) landlord, when jointLandlord is on
 };
 type FormState = typeof EMPTY;
 
@@ -104,10 +105,14 @@ export default function AgreementFormClient() {
   const [couponChecking, setCouponChecking] = useState(false);
 
   // Signature: a drawn/uploaded PNG data URL kept in memory (never persisted to
-  // sessionStorage; it is large and re-drawing is trivial).
+  // sessionStorage; it is large and re-drawing is trivial). A second slot is
+  // used for the joint landlord when jointLandlord is on.
   const [signatureData, setSignatureData] = useState<string | null>(null);
+  const [signature2Data, setSignature2Data] = useState<string | null>(null);
   const [uploadingSig, setUploadingSig] = useState(false);
+  const [uploadingSig2, setUploadingSig2] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
+  const fileRef2 = useRef<HTMLInputElement>(null);
 
   const bundle = findBundle(form.selectedPackageId) || findBundle(form.selectedPackage);
 
@@ -196,7 +201,7 @@ export default function AgreementFormClient() {
       if (!form.fullName.trim()) return 'Please enter the landlord’s full name.';
       if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(form.email.trim())) return 'Please enter a valid email address.';
       if (!form.phone.trim()) return 'Please enter a contact telephone number.';
-      if (!form.contactAddress.trim()) return 'Please enter your contact address.';
+      if (!form.contactAddress.trim()) return 'Please enter your billing address.';
       if (form.jointLandlord && !form.landlord2Name.trim()) return 'Please enter the second landlord’s name, or turn off joint landlord.';
     }
     if (s === 1) {
@@ -221,8 +226,10 @@ export default function AgreementFormClient() {
   };
   const back = () => { setError(''); setStep(s => Math.max(s - 1, 0)); };
 
-  const onUploadSignature = async (file: File) => {
-    setUploadingSig(true);
+  const onUploadSignature = async (file: File, which: 1 | 2 = 1) => {
+    const setUploading = which === 2 ? setUploadingSig2 : setUploadingSig;
+    const setData = which === 2 ? setSignature2Data : setSignatureData;
+    setUploading(true);
     setError('');
     try {
       const reader = new FileReader();
@@ -231,17 +238,21 @@ export default function AgreementFormClient() {
         reader.onerror = rej;
         reader.readAsDataURL(file);
       });
-      setSignatureData(dataUrl);
+      setData(dataUrl);
     } catch {
       setError('Could not read that image. Please try another file.');
     } finally {
-      setUploadingSig(false);
+      setUploading(false);
     }
   };
 
   const submit = async () => {
     if (!form.signatureName.trim()) { setError('Please type your full name to confirm your signature.'); return; }
     if (!signatureData) { setError('Please add your signature by drawing it or uploading an image.'); return; }
+    if (form.jointLandlord) {
+      if (!form.signature2Name.trim()) { setError('Please type the second landlord’s full name to confirm their signature.'); return; }
+      if (!signature2Data) { setError('Please add the second landlord’s signature by drawing it or uploading an image.'); return; }
+    }
     if (!bundle) { setError('Please choose a service.'); return; }
     setSubmitting(true);
     setError('');
@@ -254,11 +265,21 @@ export default function AgreementFormClient() {
         signatureUrl = await uploadToCloudinary(file);
       } catch { /* non-fatal: the data URL still reaches the PDF/email */ }
 
+      // Second (joint) landlord signature, uploaded the same way.
+      let signature2Url = '';
+      if (form.jointLandlord && signature2Data) {
+        try {
+          const file2 = dataUrlToFile(signature2Data, `signature2-${Date.now()}.png`);
+          signature2Url = await uploadToCloudinary(file2);
+        } catch { /* non-fatal */ }
+      }
+
       const payload = {
         ...form,
         selectedPackage: bundle.label,
         signatureUrl,
         signatureImage: signatureData, // NOT a *Url field, so it survives sanitising
+        ...(form.jointLandlord && signature2Data ? { signature2Url, signature2Image: signature2Data } : {}),
         ...(coupon ? { couponCode: coupon.code } : {}),
         ...(isResume ? { agreementId: resumeId, reissueToken: resumeToken } : {}),
       };
@@ -360,8 +381,8 @@ export default function AgreementFormClient() {
                 <Field label="Telephone number" req>
                   <input className="la-in" value={form.phone} onChange={e => set('phone', e.target.value)} placeholder="07…" />
                 </Field>
-                <Field label="Contact address" req>
-                  <input className="la-in" value={form.contactAddress} onChange={e => set('contactAddress', e.target.value)} placeholder="Your correspondence address" />
+                <Field label="Billing address" req>
+                  <input className="la-in" value={form.contactAddress} onChange={e => set('contactAddress', e.target.value)} placeholder="Your billing / correspondence address" />
                 </Field>
               </div>
 
@@ -612,45 +633,66 @@ export default function AgreementFormClient() {
             <section key={step} className="la-step-pane">
               <h2>Sign the agreement</h2>
               <p className="la-sub">
-                Add your signature below for the <strong>{bundle.label}</strong> agreement. Draw it with your finger
-                or mouse, or upload a photo of your signature.
+                Add {form.jointLandlord ? 'both signatures' : 'your signature'} below for the <strong>{bundle.label}</strong> agreement.
+                Draw with a finger or mouse, or upload a photo of the signature.
               </p>
 
+              {/* Landlord 1 */}
+              {form.jointLandlord && <div className="la-sig-legend">Landlord 1{form.fullName ? ` — ${form.fullName}` : ''}</div>}
               <SignaturePad onChange={setSignatureData} />
-
               <div className="la-or">or</div>
               <div>
                 <button type="button" className="la-upload-btn" onClick={() => fileRef.current?.click()} disabled={uploadingSig}>
                   {uploadingSig ? 'Reading…' : '⬆ Upload an image of your signature'}
                 </button>
-                <input
-                  ref={fileRef}
-                  type="file"
-                  accept="image/png,image/jpeg,image/webp"
-                  hidden
-                  onChange={e => { const f = e.target.files?.[0]; if (f) onUploadSignature(f); e.target.value = ''; }}
-                />
+                <input ref={fileRef} type="file" accept="image/png,image/jpeg,image/webp" hidden
+                  onChange={e => { const f = e.target.files?.[0]; if (f) onUploadSignature(f, 1); e.target.value = ''; }} />
               </div>
-
               {signatureData && (
                 <div className="la-sig-preview">
                   <span className="la-sig-ok">✓ Signature captured</span>
                   <img src={signatureData} alt="Your signature" />
                 </div>
               )}
-
               <div className="la-grid" style={{ marginTop: 18 }}>
                 <Field label="Type your full name to confirm" req>
                   <input className="la-in" value={form.signatureName} onChange={e => set('signatureName', e.target.value)} placeholder="Full legal name" />
                 </Field>
                 <Field label="Date">
-                  <input className="la-in" value={form.signatureDate} onChange={e => set('signatureDate', e.target.value)} />
+                  <input type="date" className="la-in" value={form.signatureDate} onChange={e => set('signatureDate', e.target.value)} />
                 </Field>
               </div>
 
+              {/* Landlord 2 (joint) */}
+              {form.jointLandlord && (
+                <div className="la-sig2">
+                  <div className="la-sig-legend">Landlord 2{form.landlord2Name ? ` — ${form.landlord2Name}` : ' (joint landlord)'}</div>
+                  <SignaturePad onChange={setSignature2Data} penColor="#0a162f" />
+                  <div className="la-or">or</div>
+                  <div>
+                    <button type="button" className="la-upload-btn" onClick={() => fileRef2.current?.click()} disabled={uploadingSig2}>
+                      {uploadingSig2 ? 'Reading…' : '⬆ Upload an image of the second landlord’s signature'}
+                    </button>
+                    <input ref={fileRef2} type="file" accept="image/png,image/jpeg,image/webp" hidden
+                      onChange={e => { const f = e.target.files?.[0]; if (f) onUploadSignature(f, 2); e.target.value = ''; }} />
+                  </div>
+                  {signature2Data && (
+                    <div className="la-sig-preview">
+                      <span className="la-sig-ok">✓ Second signature captured</span>
+                      <img src={signature2Data} alt="Second landlord signature" />
+                    </div>
+                  )}
+                  <div className="la-grid" style={{ marginTop: 18 }}>
+                    <Field label="Second landlord’s full name to confirm" req>
+                      <input className="la-in" value={form.signature2Name} onChange={e => set('signature2Name', e.target.value)} placeholder="Full legal name" />
+                    </Field>
+                  </div>
+                </div>
+              )}
+
               <p className="la-fineprint">
                 An electronic signature is legally binding under the Electronic Communications Act 2000. A signed PDF
-                copy will be emailed to you and to House of Lettings.
+                copy will be emailed to {form.jointLandlord ? 'both landlords' : 'you'} and to House of Lettings.
               </p>
             </section>
           )}
@@ -752,6 +794,8 @@ const STYLES = `
 .la-or{text-align:center;color:#9ca3af;font-size:13px;font-weight:600;margin:14px 0;}
 .la-upload-btn{width:100%;border:1.5px dashed #cbd5e1;background:#fff;border-radius:10px;padding:13px;font-size:14px;font-weight:600;color:#374151;cursor:pointer;}
 .la-upload-btn:hover{border-color:#2563eb;color:#2563eb;}
+.la-sig-legend{font-size:13px;font-weight:800;color:#2563eb;margin:0 0 8px;text-transform:uppercase;letter-spacing:.04em;}
+.la-sig2{margin-top:26px;padding-top:22px;border-top:2px dashed #dbe4ff;animation:laFadeUp .4s ease both;}
 .la-sig-preview{margin-top:16px;display:flex;flex-direction:column;gap:8px;align-items:flex-start;animation:laFadeUp .35s ease both;}
 .la-sig-ok{color:#16a34a;font-weight:700;font-size:13px;}
 .la-sig-preview img{max-height:110px;max-width:100%;border:1px solid #e5e7eb;border-radius:8px;background:#fff;padding:6px;}
@@ -799,7 +843,7 @@ const STYLES = `
   .la-coupon-apply{width:100%;}
 }
 @media (prefers-reduced-motion:reduce){
-  .la-step-pane,.la-sig-preview,.la-coupon,.la-coupon-ok,.la-error{animation:none;}
+  .la-step-pane,.la-sig-preview,.la-coupon,.la-coupon-ok,.la-error,.la-sig2{animation:none;}
   .la-bundle,.la-btn,.la-step-dot,.la-progress span,.la-bundle-radio{transition:none;}
   .la-bundle:hover,.la-btn-solid:hover{transform:none;}
 }

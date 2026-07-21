@@ -150,6 +150,9 @@ export async function PATCH(request: Request) {
 
       if (mode === 'correct' && bundle) {
         merged.signatureImage = await fetchSignatureDataUrl(existing.signatureUrl);
+        if (merged.jointLandlord && existing.signature2Url) {
+          merged.signature2Image = await fetchSignatureDataUrl(existing.signature2Url);
+        }
         const template = await loadAgreementTemplate(db);
         const emailData = htmlEscapeDeep(merged);
         await issueAgreementDocuments({ data: merged, bundle, ref: id, template, emailData, corrected: true });

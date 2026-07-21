@@ -29,6 +29,7 @@ function getFirestoreClient() {
 function driveBackupFiles(data: any, pdfBase64?: string): BackupFile[] {
   const files: BackupFile[] = [];
   if (data.signatureUrl) files.push({ url: data.signatureUrl, name: 'Landlord Signature' });
+  if (data.signature2Url) files.push({ url: data.signature2Url, name: 'Second Landlord Signature' });
   if (pdfBase64) files.push({ base64: pdfBase64, name: 'Signed Agreement' });
   return files;
 }
@@ -64,7 +65,7 @@ export async function POST(request: Request) {
     // is the durable record. The raw image is only needed to build the PDF.
     // Coupon fields are stripped and re-added from the coupon document — the
     // client-claimed discount is never trusted.
-    const { signatureImage, agreementId: _a, reissueToken: _t, couponCode: _c, couponDiscount: _d, ...toStore } = data;
+    const { signatureImage, signature2Image, agreementId: _a, reissueToken: _t, couponCode: _c, couponDiscount: _d, ...toStore } = data;
 
     const couponCode = (data.couponCode || '').toString().trim().toUpperCase();
     const agreementRef = agreementId

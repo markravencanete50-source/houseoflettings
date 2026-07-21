@@ -16,7 +16,7 @@ import type { Bundle } from '@/lib/bundles';
 
 export type Attachment = { filename: string; content: string };
 
-export async function sendAgreementEmail({ to, subject, html, attachments }: { to: string; subject: string; html: string; attachments?: Attachment[] }) {
+export async function sendAgreementEmail({ to, subject, html, attachments }: { to: string | string[]; subject: string; html: string; attachments?: Attachment[] }) {
   const res = await fetch('https://api.resend.com/emails', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${process.env.RESEND_API_KEY}` },
@@ -172,6 +172,22 @@ export function agreementPdfBase64(data: any, bundle: Bundle, ref: string, templ
   doc.setFont('helvetica', 'normal'); doc.setTextColor(110, 118, 130);
   doc.text('House of Lettings Limited', rx, sigTop + 36);
 
+  // Second (joint) landlord signature, on its own row beneath.
+  const hasSig2 = (typeof data.signature2Image === 'string' && data.signature2Image.startsWith('data:image')) || data.signature2Name;
+  if (data.jointLandlord && hasSig2) {
+    y = sigTop + 42;
+    ensure(40);
+    const sig2Top = y;
+    if (typeof data.signature2Image === 'string' && data.signature2Image.startsWith('data:image')) {
+      try { doc.addImage(data.signature2Image, 'PNG', left, sig2Top, 60, 24); } catch { /* skip on decode failure */ }
+    }
+    doc.setDrawColor(150, 160, 175); doc.line(left, sig2Top + 26, left + 70, sig2Top + 26);
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(9); doc.setTextColor(20, 26, 40);
+    doc.text(`Second Landlord: ${data.signature2Name || data.landlord2Name || ''}`, left, sig2Top + 31);
+    doc.setFont('helvetica', 'normal'); doc.setTextColor(110, 118, 130);
+    doc.text(`Date: ${data.signatureDate || new Date().toLocaleDateString('en-GB')}`, left, sig2Top + 36);
+  }
+
   return Buffer.from(doc.output('arraybuffer')).toString('base64');
 }
 
@@ -210,7 +226,7 @@ export function landlordEmailHtml(data: any, bundle: Bundle, opts: { corrected?:
       <div style="font-size:14px;color:#111827;padding:6px 0;border-bottom:1px solid #eef0f5;"><span style="color:#6b7280;">Property:</span> <strong>${propertyLine(data) || '-'}</strong></div>
       <div style="font-size:14px;color:#111827;padding:6px 0;border-bottom:1px solid #eef0f5;"><span style="color:#6b7280;">Service:</span> <strong>${bundle.label}</strong></div>
       <div style="font-size:14px;color:#111827;padding:6px 0;border-bottom:1px solid #eef0f5;"><span style="color:#6b7280;">Fees:</span> <strong>${feeLine(bundle, couponFromData(data))}</strong></div>
-      <div style="font-size:14px;color:#111827;padding:6px 0;"><span style="color:#6b7280;">Signed by:</span> <strong>${data.signatureName || data.fullName}</strong> on ${data.signatureDate}</div>
+      <div style="font-size:14px;color:#111827;padding:6px 0;"><span style="color:#6b7280;">Signed by:</span> <strong>${data.signatureName || data.fullName}</strong>${data.jointLandlord && (data.signature2Name || data.landlord2Name) ? ` and <strong>${data.signature2Name || data.landlord2Name}</strong>` : ''} on ${data.signatureDate}</div>
     </div>
     <p style="font-size:13px;line-height:1.6;color:#6b7280;margin:16px 0 0;">The full agreement, including all terms and conditions and your signature, is in the attached PDF.${opts.corrected ? '' : ' Our team has been notified and will be in touch shortly to begin.'}</p>
     <p style="font-size:13px;line-height:1.6;color:#6b7280;margin:12px 0 0;">If anything above is not right, simply reply to this email.</p>
@@ -265,9 +281,13 @@ export async function issueAgreementDocuments(opts: {
   }
   const attachments = pdfBase64 ? [{ filename: `management-agreement-${ref}.pdf`, content: pdfBase64 }] : undefined;
 
+  // Send the landlord copy to both landlords when it is a joint tenancy.
+  const landlordTo = [data.email, ...(data.jointLandlord && data.landlord2Email ? [data.landlord2Email] : [])]
+    .filter((e: string) => e && e.includes('@'));
+
   await Promise.allSettled([
     sendAgreementEmail({
-      to: data.email,
+      to: landlordTo.length ? landlordTo : data.email,
       subject: corrected
         ? `📄 Updated copy of your ${bundle.label} agreement | House of Lettings`
         : `🖊️ Your signed ${bundle.label} agreement | House of Lettings`,

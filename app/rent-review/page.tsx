@@ -4,7 +4,7 @@
 // reviews, the market context, how the wider industry compares, and the
 // process. The multi-step form lives at /rent-review/apply. Metadata + JSON-LD
 // are in app/rent-review/layout.tsx.
-import { useState } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
@@ -88,8 +88,48 @@ const FAQS = [
   { q: 'Why do you ask for documents again?', a: 'A renewal is a good moment to refresh your referencing, recent bank statements, payslips and ID confirm your circumstances are up to date. It only takes a few minutes and you can upload everything securely online.' },
 ];
 
+// Steps for the "See a Sample Review" walkthrough modal.
+const SAMPLE_STEPS = [
+  { title: 'We gather the evidence' },
+  { title: 'You see the proposal' },
+  { title: 'You decide' },
+];
+
 export default function RentReviewOverviewPage() {
   const [openFaq, setOpenFaq] = useState<number | null>(0);
+
+  // "See a Sample Review" walkthrough modal
+  const [sampleOpen, setSampleOpen] = useState(false);
+  const [sampleStep, setSampleStep] = useState(0);
+  const dialogRef = useRef<HTMLDivElement>(null);
+
+  const openSample = useCallback(() => { setSampleStep(0); setSampleOpen(true); }, []);
+  const closeSample = useCallback(() => { setSampleOpen(false); }, []);
+
+  // Focus trap, Escape-to-close, scroll lock, and focus return to the trigger.
+  useEffect(() => {
+    if (!sampleOpen) return;
+    const prevActive = document.activeElement as HTMLElement | null;
+    document.body.style.overflow = 'hidden';
+    const t = setTimeout(() => dialogRef.current?.focus(), 20);
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') { closeSample(); return; }
+      if (e.key === 'Tab' && dialogRef.current) {
+        const f = dialogRef.current.querySelectorAll<HTMLElement>('button, a[href], [tabindex]:not([tabindex="-1"])');
+        if (!f.length) return;
+        const first = f[0], last = f[f.length - 1];
+        if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+        else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+      }
+    };
+    document.addEventListener('keydown', onKey);
+    return () => {
+      document.body.style.overflow = '';
+      document.removeEventListener('keydown', onKey);
+      clearTimeout(t);
+      prevActive?.focus?.();
+    };
+  }, [sampleOpen, closeSample]);
 
   return (
     <>
@@ -99,47 +139,55 @@ export default function RentReviewOverviewPage() {
 
       <div style={{ fontFamily: "'Poppins', sans-serif" }}>
 
-        {/* ── HERO (logged-in landlord portal, two-column) ── */}
+        {/* ── HERO (tenant-facing rent-review explainer, two-column) ── */}
         <header className="rr-hero">
           <div className="rr-hero-bg" aria-hidden />
           <div className="rr-hero-glow" aria-hidden />
           <div className="rr-hero-grid">
 
-            {/* Left — purpose, evidence, action */}
+            {/* Left — reassurance, evidence, action */}
             <div className="rr-hero-copy">
-              <div className="rr-badge">Annual Rent Review</div>
-              <h1 className="rr-hero-h1">Annual rent reviews backed by real local market data.</h1>
+              <div className="rr-badge">Annual Rent Review · For existing tenants</div>
+              <h1 className="rr-hero-h1">Your rent review, backed by real local evidence.</h1>
               <p className="rr-hero-sub">
-                Every year we compare your property&rsquo;s rent against similar homes recently let in your area.
+                Once a year we check your rent against similar homes letting nearby. You&rsquo;ll see the current
+                figure, the proposed figure, and the reasoning behind it.
               </p>
               <p className="rr-hero-sub rr-hero-sub--2">
-                You&rsquo;ll see the market evidence, understand our recommendation, and decide whether to accept
-                or discuss the review online.
+                Then accept in a click, or open a discussion &mdash; nothing changes without you.
               </p>
 
               <ul className="rr-assure">
-                <li className="rr-assure-item"><span className="rr-assure-ic"><Ic name="check" size={13} /></span>Takes around 2&ndash;3 minutes</li>
-                <li className="rr-assure-item"><span className="rr-assure-ic"><Ic name="check" size={13} /></span>No phone calls required</li>
-                <li className="rr-assure-item"><span className="rr-assure-ic"><Ic name="check" size={13} /></span>You remain in control</li>
+                <li className="rr-assure-item"><span className="rr-assure-ic"><Ic name="check" size={13} /></span>Evidence from real local lets</li>
+                <li className="rr-assure-item"><span className="rr-assure-ic"><Ic name="check" size={13} /></span>About 3 minutes, all online</li>
+                <li className="rr-assure-item"><span className="rr-assure-ic"><Ic name="check" size={13} /></span>Accept or discuss &mdash; your choice</li>
               </ul>
 
               <div className="rr-hero-cta-row">
                 <Link href="/rent-review/apply" className="rr-cta rr-cta--primary">
-                  Start Rent Review <Ic name="arrow" size={16} />
+                  Start My Rent Review <Ic name="arrow" size={16} />
                 </Link>
-                <a href="#how" className="rr-cta rr-cta--ghost">How the Review Works</a>
+                <button type="button" onClick={openSample} className="rr-cta rr-cta--ghost">See a Sample Review</button>
               </div>
+              <p className="rr-cta-note">You&rsquo;ll confirm your details, then see your proposed rent.</p>
             </div>
 
-            {/* Right — live Leeds & Manchester market snapshot + feature chips */}
+            {/* Right — Leeds & Manchester market snapshot (opens sample walkthrough) + feature chips */}
             <div className="rr-hero-visual">
-              <div className="rr-card" role="group" aria-label="Leeds and Manchester annual market value">
+              <div
+                className="rr-card rr-card--tappable"
+                role="button"
+                tabIndex={0}
+                aria-label="See a sample rent review, Leeds and Manchester annual market value"
+                onClick={openSample}
+                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openSample(); } }}
+              >
                 <div className="rr-card-head">
                   <div>
                     <div className="rr-card-eyebrow">Annual Market Value</div>
                     <div className="rr-card-addr">Leeds &amp; Manchester</div>
                   </div>
-                  <span className="rr-card-status"><span className="rr-card-status-dot" aria-hidden />Live data</span>
+                  <span className="rr-card-status">Sample review</span>
                 </div>
 
                 <div className="rr-cities">
@@ -158,11 +206,11 @@ export default function RentReviewOverviewPage() {
                 </div>
 
                 <div className="rr-card-meta">
-                  <div className="rr-meta"><span>Confidence</span><b>High</b></div>
-                  <div className="rr-meta"><span>Based on</span><b>14 comparable properties</b></div>
+                  <div className="rr-meta"><span>Local evidence</span><b>28 recent local lets</b></div>
+                  <div className="rr-meta"><span>Reviewed</span><b>Once a year</b></div>
                 </div>
 
-                <div className="rr-card-bars">
+                <div className="rr-card-bars" aria-hidden="true">
                   <div className="rr-bar-row">
                     <span className="rr-bar-label">Leeds avg</span>
                     <span className="rr-bar"><i style={{ width: '87%' }} /></span>
@@ -174,6 +222,7 @@ export default function RentReviewOverviewPage() {
                     <span className="rr-bar-val">£1,150</span>
                   </div>
                 </div>
+                <p className="rr-sr-only">Average monthly rent for comparable homes: Leeds £995, Manchester £1,150.</p>
 
                 <div className="rr-card-panel">
                   <span className="rr-panel-ic"><Ic name="info" size={16} /></span>
@@ -349,6 +398,108 @@ export default function RentReviewOverviewPage() {
 
         <Footer />
       </div>
+
+      {/* ── SAMPLE REVIEW MODAL (anxiety-killer walkthrough) ── */}
+      {sampleOpen && (
+        <div className="rr-modal-overlay" onClick={(e) => { if (e.target === e.currentTarget) closeSample(); }}>
+          <div
+            className="rr-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="rr-sample-title"
+            ref={dialogRef}
+            tabIndex={-1}
+          >
+            <span className="rr-modal-handle" aria-hidden />
+            <button type="button" className="rr-modal-close" onClick={closeSample} aria-label="Close sample review">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M18 6 6 18M6 6l12 12" /></svg>
+            </button>
+
+            <div className="rr-modal-eyebrow">Sample review · what you&rsquo;ll see</div>
+            <h2 id="rr-sample-title" className="rr-modal-title">{SAMPLE_STEPS[sampleStep].title}</h2>
+
+            <div className="rr-modal-progress" aria-hidden>
+              {SAMPLE_STEPS.map((s, i) => (
+                <button
+                  key={s.title}
+                  type="button"
+                  className={`rr-modal-dot${i === sampleStep ? ' is-active' : ''}${i < sampleStep ? ' is-done' : ''}`}
+                  onClick={() => setSampleStep(i)}
+                  aria-label={`Go to step ${i + 1}: ${s.title}`}
+                />
+              ))}
+            </div>
+
+            <div className="rr-modal-body">
+              {sampleStep === 0 && (
+                <>
+                  <p className="rr-modal-text">
+                    We compare your home against similar properties recently let nearby &mdash; benchmarked across
+                    Leeds and Manchester &mdash; so every figure is grounded in the real local market, never guesswork.
+                  </p>
+                  <div className="rr-modal-evi">
+                    {[
+                      { a: '2-bed flat · LS8, Leeds', b: '£940 pcm' },
+                      { a: '2-bed flat · M20, Manchester', b: '£1,120 pcm' },
+                      { a: '2-bed terrace · LS6, Leeds', b: '£905 pcm' },
+                    ].map(r => (
+                      <div key={r.a} className="rr-modal-evi-row"><span>{r.a}</span><b>{r.b}</b></div>
+                    ))}
+                  </div>
+                </>
+              )}
+
+              {sampleStep === 1 && (
+                <>
+                  <p className="rr-modal-text">
+                    You see your current rent and the proposed rent side by side, with the local range it sits in.
+                    A review can go up, stay the same, or find no change is needed &mdash; the market decides, and you
+                    see the evidence either way.
+                  </p>
+                  <div className="rr-modal-compare">
+                    <div className="rr-modal-cmp"><span>Current rent</span><b>£850 pcm</b></div>
+                    <div className="rr-modal-cmp rr-modal-cmp--accent"><span>Proposed rent</span><b>£875 pcm</b></div>
+                    <div className="rr-modal-cmp"><span>Local range</span><b>£840&ndash;£940</b></div>
+                  </div>
+                  <p className="rr-modal-note">The proposed figure sits inside the local range &mdash; often below the average.</p>
+                </>
+              )}
+
+              {sampleStep === 2 && (
+                <>
+                  <p className="rr-modal-text">
+                    When you&rsquo;re ready, you choose. Accept the proposed rent online in a click, or open a
+                    discussion and tell us the figure you feel is fair. Nothing changes without you.
+                  </p>
+                  <div className="rr-modal-options">
+                    <div className="rr-modal-opt"><span className="rr-modal-opt-ic"><Ic name="check" size={16} /></span>Accept online</div>
+                    <div className="rr-modal-opt"><span className="rr-modal-opt-ic"><Ic name="chat" size={16} /></span>Discuss with us</div>
+                  </div>
+                </>
+              )}
+            </div>
+
+            <div className="rr-modal-foot">
+              <button
+                type="button"
+                className="rr-cta rr-cta--ghost rr-cta--sm"
+                onClick={() => (sampleStep === 0 ? closeSample() : setSampleStep(s => s - 1))}
+              >
+                {sampleStep === 0 ? 'Close' : 'Back'}
+              </button>
+              {sampleStep < SAMPLE_STEPS.length - 1 ? (
+                <button type="button" className="rr-cta rr-cta--primary rr-cta--sm" onClick={() => setSampleStep(s => s + 1)}>
+                  Next <Ic name="arrow" size={15} />
+                </button>
+              ) : (
+                <Link href="/rent-review/apply" className="rr-cta rr-cta--primary rr-cta--sm">
+                  Start My Rent Review <Ic name="arrow" size={15} />
+                </Link>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }
@@ -409,11 +560,17 @@ const PAGE_CSS = `
   .rr-cta--ghost { background:transparent; color:#dbe9ff; border-color:rgba(255,255,255,0.28); }
   .rr-cta--ghost:hover { background:#fff; color:#0f1f3d; border-color:#fff; transform:translateY(-2px); }
   .rr-cta--lg { min-height:56px; font-size:14px; padding:16px 40px; }
+  .rr-cta--sm { min-height:46px; font-size:12.5px; padding:12px 20px; border-radius:12px; }
   .rr-hero-cta-row .rr-cta { min-height:52px; border-radius:14px; }
+  .rr-cta-note { font-size:12.5px; color:#94a3b8; margin:14px 0 0; line-height:1.5; }
+
+  .rr-sr-only { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0; }
 
   /* DASHBOARD PREVIEW CARD (right column) */
   .rr-hero-visual { animation:rr-card-in .9s .1s cubic-bezier(.22,1,.36,1) both; }
   @keyframes rr-card-in { from{opacity:0; transform:translateY(10px);} to{opacity:1; transform:none;} }
+  .rr-card--tappable { cursor:pointer; }
+  .rr-card--tappable:focus-visible { outline:3px solid #93c5fd; outline-offset:4px; }
   .rr-card { position:relative; background:linear-gradient(180deg, rgba(255,255,255,0.065) 0%, rgba(255,255,255,0.025) 100%);
     border:1px solid rgba(147,197,253,0.18); border-radius:20px; padding:24px;
     box-shadow:0 40px 80px -40px rgba(0,0,0,0.65); -webkit-backdrop-filter:blur(14px); backdrop-filter:blur(14px);
@@ -422,8 +579,8 @@ const PAGE_CSS = `
   .rr-card-head { display:flex; align-items:flex-start; justify-content:space-between; gap:16px; padding-bottom:18px; border-bottom:1px solid rgba(147,197,253,0.12); }
   .rr-card-eyebrow { font-size:10.5px; font-weight:700; letter-spacing:.14em; text-transform:uppercase; color:#93c5fd; }
   .rr-card-addr { font-size:18px; font-weight:700; color:#fff; margin-top:5px; }
-  .rr-card-status { flex:none; display:inline-flex; align-items:center; gap:7px; font-size:11px; font-weight:700; color:#6ee7b7; background:rgba(16,185,129,0.12); border:1px solid rgba(16,185,129,0.30); padding:5px 11px; border-radius:20px; white-space:nowrap; }
-  .rr-card-status-dot { width:7px; height:7px; border-radius:50%; background:#34d399; box-shadow:0 0 0 3px rgba(52,211,153,0.18); }
+  /* Honest "Sample review" label — neutral gray, never dressed up as a live/positive state */
+  .rr-card-status { flex:none; display:inline-flex; align-items:center; gap:7px; font-size:10.5px; font-weight:600; letter-spacing:.04em; color:#94a3b8; background:rgba(148,163,184,0.10); border:1px solid rgba(148,163,184,0.24); padding:5px 11px; border-radius:20px; white-space:nowrap; }
 
   .rr-cities { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; margin:18px 0; }
   .rr-city { min-width:0; background:rgba(255,255,255,0.03); border:1px solid rgba(147,197,253,0.12); border-radius:14px; padding:15px 15px 16px; }
@@ -463,6 +620,47 @@ const PAGE_CSS = `
   .rr-feat-ic { flex:none; width:36px; height:36px; border-radius:10px; background:rgba(96,165,250,0.14); color:#93c5fd; display:grid; place-items:center; }
   .rr-feat-t { font-size:13px; font-weight:700; color:#eaf1fb; }
   .rr-feat-d { font-size:11px; color:rgba(199,210,227,0.70); margin-top:2px; line-height:1.4; }
+
+  /* SAMPLE REVIEW MODAL */
+  .rr-modal-overlay { position:fixed; inset:0; z-index:1000; background:rgba(7,18,38,0.62); -webkit-backdrop-filter:blur(8px); backdrop-filter:blur(8px); display:flex; align-items:center; justify-content:center; padding:20px; animation:rr-ov-in .2s ease-out; }
+  @keyframes rr-ov-in { from{opacity:0;} to{opacity:1;} }
+  .rr-modal { position:relative; width:100%; max-width:560px; max-height:90vh; overflow-y:auto; background:#0F1E38; border:1px solid rgba(255,255,255,0.08); border-radius:20px; padding:28px 28px 24px; color:#fff; outline:none; box-shadow:0 40px 90px -30px rgba(0,0,0,0.72); animation:rr-modal-in .28s cubic-bezier(.22,1,.36,1); }
+  @keyframes rr-modal-in { from{opacity:0; transform:translateY(8px) scale(.96);} to{opacity:1; transform:none;} }
+  .rr-modal-handle { display:none; }
+  .rr-modal-close { position:absolute; top:16px; right:16px; width:36px; height:36px; border-radius:50%; border:none; background:rgba(255,255,255,0.06); color:#c7d2e3; display:grid; place-items:center; cursor:pointer; transition:background .18s,color .18s; }
+  .rr-modal-close:hover { background:rgba(255,255,255,0.12); color:#fff; }
+  .rr-modal-close:focus-visible { outline:2px solid #2563eb; outline-offset:2px; }
+  .rr-modal-eyebrow { font-size:11px; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:#93c5fd; margin-bottom:10px; }
+  .rr-modal-title { font-family:'Poppins',sans-serif; font-size:22px; font-weight:700; color:#fff; letter-spacing:-.01em; margin:0 40px 16px 0; line-height:1.2; }
+  .rr-modal-progress { display:flex; gap:8px; margin-bottom:20px; }
+  .rr-modal-dot { flex:1; height:5px; border-radius:999px; border:none; padding:0; background:rgba(255,255,255,0.12); cursor:pointer; transition:background .2s; }
+  .rr-modal-dot.is-active { background:#2563eb; }
+  .rr-modal-dot.is-done { background:rgba(37,99,235,0.55); }
+  .rr-modal-dot:focus-visible { outline:2px solid #93c5fd; outline-offset:3px; }
+  .rr-modal-body { min-height:150px; }
+  .rr-modal-text { font-size:14.5px; color:#c7d2e3; line-height:1.65; margin:0 0 18px; }
+  .rr-modal-evi { display:flex; flex-direction:column; gap:8px; }
+  .rr-modal-evi-row { display:flex; justify-content:space-between; align-items:center; gap:12px; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); border-radius:10px; padding:12px 14px; font-size:13px; color:#c7d2e3; }
+  .rr-modal-evi-row b { color:#fff; font-weight:700; }
+  .rr-modal-compare { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px; }
+  .rr-modal-cmp { min-width:0; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); border-radius:12px; padding:13px 12px; }
+  .rr-modal-cmp span { display:block; font-size:10.5px; text-transform:uppercase; letter-spacing:.05em; color:#94a3b8; font-weight:600; }
+  .rr-modal-cmp b { display:block; font-size:18px; font-weight:800; color:#fff; margin-top:6px; letter-spacing:-.01em; }
+  .rr-modal-cmp--accent { background:rgba(37,99,235,0.16); border-color:rgba(96,165,250,0.42); }
+  .rr-modal-note { font-size:12.5px; color:#94a3b8; line-height:1.55; margin:14px 0 0; }
+  .rr-modal-options { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+  .rr-modal-opt { display:flex; align-items:center; gap:10px; background:rgba(255,255,255,0.04); border:1px solid rgba(147,197,253,0.20); border-radius:12px; padding:15px 16px; font-size:13.5px; font-weight:600; color:#eaf1fb; }
+  .rr-modal-opt-ic { flex:none; width:30px; height:30px; border-radius:9px; background:rgba(96,165,250,0.16); color:#93c5fd; display:grid; place-items:center; }
+  .rr-modal-foot { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-top:24px; padding-top:20px; border-top:1px solid rgba(255,255,255,0.08); }
+  @media(max-width:640px){
+    .rr-modal-overlay { align-items:flex-end; padding:0; }
+    .rr-modal { max-width:none; max-height:88vh; border-radius:20px 20px 0 0; padding:16px 18px calc(20px + env(safe-area-inset-bottom)); animation:rr-sheet-in .32s cubic-bezier(.22,1,.36,1); }
+    @keyframes rr-sheet-in { from{transform:translateY(100%);} to{transform:translateY(0);} }
+    .rr-modal-handle { display:block; width:40px; height:4px; border-radius:999px; background:rgba(255,255,255,0.22); margin:2px auto 14px; }
+    .rr-modal-close { top:12px; right:12px; }
+    .rr-modal-options { grid-template-columns:1fr; }
+    .rr-modal-foot .rr-cta--sm { flex:1; }
+  }
 
   /* WHY grid */
   .rr-why-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:20px; }
@@ -557,8 +755,8 @@ const PAGE_CSS = `
 
   /* Reduced motion */
   @media (prefers-reduced-motion: reduce){
-    .rr-hero-glow, .rr-hero-copy, .rr-hero-visual, .rr-bar i { animation:none !important; }
+    .rr-hero-glow, .rr-hero-copy, .rr-hero-visual, .rr-bar i, .rr-modal, .rr-modal-overlay { animation:none !important; }
     .rr-bar i { transform:none !important; }
-    .rr-cta, .rr-why-card, .rr-faq, .rr-faq-a, .rr-faq-q svg, .rr-feat, .rr-card { transition:none !important; }
+    .rr-cta, .rr-why-card, .rr-faq, .rr-faq-a, .rr-faq-q svg, .rr-feat, .rr-card, .rr-modal-close, .rr-modal-dot { transition:none !important; }
   }
 `;

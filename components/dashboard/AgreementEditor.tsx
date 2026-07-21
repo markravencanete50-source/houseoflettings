@@ -114,7 +114,7 @@ export default function AgreementEditor({
           </select>
         </Cell>
         <Cell t="Expected rent (£/month)"><input style={inp} value={f.currentRent} onChange={e => set('currentRent', e.target.value.replace(/[^\d]/g, ''))} /></Cell>
-        <Cell t="Available from"><input style={inp} value={f.availableFrom} onChange={e => set('availableFrom', e.target.value)} /></Cell>
+        <Cell t="Available from"><input type="date" style={inp} value={f.availableFrom} onChange={e => set('availableFrom', e.target.value)} /></Cell>
         <Cell t="Package">
           <select style={inp} value={f.selectedPackage} onChange={e => {
             const b = BUNDLES.find(x => x.label === e.target.value);

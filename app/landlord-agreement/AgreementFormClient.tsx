@@ -408,7 +408,7 @@ export default function AgreementFormClient() {
                   <input className="la-in" inputMode="numeric" value={form.currentRent} onChange={e => set('currentRent', e.target.value.replace(/[^\d]/g, ''))} placeholder="e.g. 950" />
                 </Field>
                 <Field label="Available from">
-                  <input className="la-in" value={form.availableFrom} onChange={e => set('availableFrom', e.target.value)} placeholder="e.g. Immediately / 1 Aug 2026" />
+                  <input type="date" className="la-in" value={form.availableFrom} onChange={e => set('availableFrom', e.target.value)} />
                 </Field>
                 <Field label="Security code / access note (optional)">
                   <input className="la-in" value={form.securityNote} onChange={e => set('securityNote', e.target.value)} />

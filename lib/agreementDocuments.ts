@@ -36,6 +36,16 @@ export function propertyMeta(data: any): string {
     .filter(Boolean).join(' · ');
 }
 
+// Available-from is stored as yyyy-mm-dd (date picker); show it readably, but
+// leave any older free-text value ("Immediately") untouched.
+export function fmtAvailable(v?: string): string {
+  if (!v) return '';
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(v.trim());
+  if (!m) return v;
+  const d = new Date(`${v}T00:00:00`);
+  return isNaN(d.getTime()) ? v : d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+}
+
 export function feeLine(b: Bundle): string {
   return b.mgmtFee
     ? `${b.setupFee} set up, then ${b.mgmtFee} management fee of the monthly rent`
@@ -101,7 +111,7 @@ export function agreementPdfBase64(data: any, bundle: Bundle, ref: string, templ
   kv('Address', propertyLine(data));
   kv('Details', propertyMeta(data));
   if (data.currentRent) kv('Expected Rent', `£${data.currentRent} per month`);
-  if (data.availableFrom) kv('Available From', data.availableFrom);
+  if (data.availableFrom) kv('Available From', fmtAvailable(data.availableFrom));
 
   heading('Service Selected');
   kv('Package', bundle.label);

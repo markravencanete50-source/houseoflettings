@@ -365,6 +365,17 @@ function StaffDashboardInner() {
     if (tab === 'rent-reviews' && !loaded['rent-reviews']) load('/api/staff/rent-reviews', 'rent-reviews', j => setRentReviews(j.reviews || []));
   }, [tab, profile, user]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Eager-load agreements once so the sidebar shows the received count without
+  // needing to open the tab first.
+  useEffect(() => {
+    if (!profile || !perms.includes('agreements') || loaded.agreements) return;
+    authedFetch('/api/staff/agreements')
+      .then(r => r.json())
+      .then(j => setAgreements(j.agreements || []))
+      .catch(() => { /* ignore */ })
+      .finally(() => setLoaded(l => ({ ...l, agreements: true })));
+  }, [profile]); // eslint-disable-line react-hooks/exhaustive-deps
+
   const reloadProperties = () => {
     setLoaded(l => ({ ...l, properties: false }));
     setTab('properties');

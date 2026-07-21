@@ -16,6 +16,7 @@ const CONDITIONS     = ['excellent', 'good', 'average', 'dated', 'renovation'];
 const EPCS           = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'unknown'];
 const GARDENS        = ['private', 'shared', 'patio', 'none'];
 const PARKINGS       = ['garage', 'driveway', 'allocated', 'permit', 'on_street', 'none'];
+const FURNISHINGS    = ['furnished', 'part-furnished', 'unfurnished'];
 const TYPES          = ['let', 'sale', 'both'];
 
 function applyNudge(mode: ModeValuation | undefined, pct: number): ModeValuation | undefined {
@@ -55,6 +56,9 @@ export async function POST(request: Request) {
     if (!EPCS.includes(body.epc)) return Response.json({ message: 'Invalid EPC rating' }, { status: 400 });
     if (!GARDENS.includes(body.garden)) return Response.json({ message: 'Invalid garden option' }, { status: 400 });
     if (!PARKINGS.includes(body.parking)) return Response.json({ message: 'Invalid parking option' }, { status: 400 });
+    // Furnishing is optional — validate only when provided.
+    if (body.furnishing != null && body.furnishing !== '' && !FURNISHINGS.includes(body.furnishing))
+      return Response.json({ message: 'Invalid furnishing option' }, { status: 400 });
 
     const input: FullValuationInput = {
       postcode: normalisePostcode(postcode),
@@ -67,6 +71,7 @@ export async function POST(request: Request) {
       garden: body.garden,
       balcony: Boolean(body.balcony),
       parking: body.parking,
+      ...(FURNISHINGS.includes(body.furnishing) ? { furnishing: body.furnishing } : {}),
     };
 
     const result = computeFullValuation(input, type);

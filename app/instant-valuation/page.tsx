@@ -17,9 +17,9 @@ import Footer from '@/components/layout/Footer';
 import PostcodeLookup, { type AddressResult } from '@/components/PostcodeLookup';
 import {
   isValidUKPostcode, fmtGBP, bedroomsLabel,
-  PROPERTY_TYPE_LABEL, CONDITION_LABEL, GARDEN_LABEL, PARKING_LABEL,
+  PROPERTY_TYPE_LABEL, CONDITION_LABEL, GARDEN_LABEL, FURNISHING_LABEL,
   type ValuationType, type PropertyTypeId, type ConditionId, type EpcId,
-  type GardenId, type ParkingId, type FullValuationInput, type FullValuationResult,
+  type GardenId, type ParkingId, type FurnishingId, type FullValuationInput, type FullValuationResult,
   type ModeValuation, type TrajectoryPoint,
 } from '@/lib/valuation/fullEngine';
 import type { AiAnalysis } from '@/lib/ai/groqValuation';
@@ -60,6 +60,50 @@ function bookBedsLabel(n: number): string {
   if (n >= 4) return '4+ Bedrooms';
   return `${n} Bedroom${n > 1 ? 's' : ''}`;
 }
+
+// Full parking list, mirroring the admin post-property form. Each option maps
+// down to one of the engine's canonical parking categories for the valuation
+// (the same approach the Rent Review tool uses), so the estimate stays sound
+// while shoppers can still pick their exact parking type. Only the first 6 show
+// by default; the rest are behind a "see more" toggle.
+const IV_PARKING_OPTIONS: { id: string; label: string; icon: string; engine: ParkingId }[] = [
+  { id: 'none',                     label: 'No parking',              icon: '🚫', engine: 'none' },
+  { id: 'off-street',               label: 'Off-street',              icon: '🅿️', engine: 'driveway' },
+  { id: 'driveway-private',         label: 'Private driveway',        icon: '🛣️', engine: 'driveway' },
+  { id: 'single-garage',            label: 'Single garage',           icon: '🚪', engine: 'garage' },
+  { id: 'double-garage',            label: 'Double garage',           icon: '🚪', engine: 'garage' },
+  { id: 'allocated',                label: 'Allocated space',         icon: '📍', engine: 'allocated' },
+  { id: 'residents',                label: "Residents'",              icon: '🎫', engine: 'permit' },
+  { id: 'street-permit',            label: 'Street (permit)',         icon: '🎫', engine: 'permit' },
+  { id: 'street-no-permit',         label: 'Street (no permit)',      icon: '🚗', engine: 'on_street' },
+  { id: 'driveway-shared',          label: 'Shared driveway',         icon: '🛣️', engine: 'allocated' },
+  { id: 'garage',                   label: 'Garage',                  icon: '🚪', engine: 'garage' },
+  { id: 'garage-detached',          label: 'Detached garage',         icon: '🚪', engine: 'garage' },
+  { id: 'garage-integral',          label: 'Integral garage',         icon: '🚪', engine: 'garage' },
+  { id: 'garage-en-bloc',           label: 'Garage en bloc',          icon: '🚪', engine: 'garage' },
+  { id: 'garage-carport',           label: 'Carport',                 icon: '🚙', engine: 'driveway' },
+  { id: 'gated',                    label: 'Gated',                   icon: '🚧', engine: 'allocated' },
+  { id: 'rear',                     label: 'Rear of property',        icon: '↩️', engine: 'driveway' },
+  { id: 'undercroft',               label: 'Undercroft',              icon: '🏚️', engine: 'allocated' },
+  { id: 'underground',              label: 'Underground',             icon: '🅿️', engine: 'allocated' },
+  { id: 'underground-allocated',    label: 'Underground (allocated)', icon: '🅿️', engine: 'allocated' },
+  { id: 'underground-no-allocated', label: 'Underground (unallocated)', icon: '🅿️', engine: 'on_street' },
+  { id: 'communal-no-allocated',    label: 'Communal (unallocated)',  icon: '🅿️', engine: 'on_street' },
+  { id: 'ev-private',               label: 'EV charging (private)',   icon: '⚡', engine: 'driveway' },
+  { id: 'ev-shared',                label: 'EV charging (shared)',    icon: '⚡', engine: 'allocated' },
+  { id: 'disabled-available',       label: 'Disabled parking',        icon: '♿', engine: 'permit' },
+  { id: 'disabled-not-available',   label: 'No disabled parking',     icon: '🚫', engine: 'none' },
+  { id: 'other',                    label: 'Other',                   icon: '❓', engine: 'on_street' },
+];
+const IV_PARKING_INITIAL = 6;
+const parkingEngineId = (id: string): ParkingId => IV_PARKING_OPTIONS.find(o => o.id === id)?.engine ?? 'none';
+const parkingDisplayLabel = (id: string): string => IV_PARKING_OPTIONS.find(o => o.id === id)?.label ?? '';
+
+const IV_FURNISHING_OPTIONS: { id: FurnishingId; label: string; icon: string }[] = [
+  { id: 'furnished',      label: 'Furnished',      icon: '🛋️' },
+  { id: 'part-furnished', label: 'Part-Furnished', icon: '🪑' },
+  { id: 'unfurnished',    label: 'Unfurnished',    icon: '📦' },
+];
 
 // Compact money for chart labels: £680, £160k, £177.5k.
 function chartMoney(v: number): string {
@@ -268,7 +312,9 @@ export default function InstantValuationPage() {
   const [epc,       setEpc]       = useState<EpcId | ''>('');
   const [garden,    setGarden]    = useState<GardenId | ''>('');
   const [balcony,   setBalcony]   = useState<boolean | ''>('');
-  const [parking,   setParking]   = useState<ParkingId | ''>('');
+  const [furnishing, setFurnishing] = useState<FurnishingId | ''>('');
+  const [parking,   setParking]   = useState<string>('');   // full-list option id (mapped to engine on submit)
+  const [showAllParking, setShowAllParking] = useState(false);
 
   // Report
   const [generating, setGenerating] = useState(false);
@@ -291,7 +337,7 @@ export default function InstantValuationPage() {
     propType !== '' && bedrooms !== '';
   const step2Complete =
     bathrooms !== '' && condition !== '' && epc !== '' &&
-    garden !== '' && balcony !== '' && parking !== '';
+    garden !== '' && balcony !== '' && furnishing !== '' && parking !== '';
 
   const validatePostcode = (): boolean => {
     const raw = postcode.trim();
@@ -332,7 +378,7 @@ export default function InstantValuationPage() {
           addressLine1: addressLine1.trim(),
           propertyType: propType,
           bedrooms, bathrooms, condition, epc, garden,
-          balcony, parking,
+          balcony, parking: parkingEngineId(parking), furnishing,
         }),
       });
       const json = await res.json().catch(() => ({}));
@@ -405,7 +451,7 @@ export default function InstantValuationPage() {
     setAddressLine1(''); setCity('');
     setPropType(''); setBedrooms(''); setBathrooms('');
     setCondition(''); setEpc('');
-    setBalcony(''); setGarden(''); setParking('');
+    setBalcony(''); setGarden(''); setParking(''); setFurnishing(''); setShowAllParking(false);
     setReport(null); setGenError('');
     setEmailChoice(null); setEmailSent(false); setEmailError('');
     setLead({ firstName: '', lastName: '', email: '', phone: '' });
@@ -626,16 +672,22 @@ export default function InstantValuationPage() {
                   </div>
 
                   <div className="iv-section">
+                    <p className="iv-section__q">How is the property furnished?</p>
+                    <div className="iv-opts iv-opts--3">
+                      {IV_FURNISHING_OPTIONS.map(({ id, label, icon }) => (
+                        <button key={id} onClick={() => setFurnishing(id)}
+                          className={`iv-opt ${furnishing === id ? 'iv-opt--active' : ''}`}>
+                          <span className="iv-opt__icon">{icon}</span>
+                          <span className="iv-opt__label">{label}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="iv-section">
                     <p className="iv-section__q">What type of parking is available?</p>
                     <div className="iv-opts iv-opts--3">
-                      {([
-                        { id: 'garage',    label: 'Garage',                icon: '🚪' },
-                        { id: 'driveway',  label: 'Driveway (off-street)', icon: '🛣️' },
-                        { id: 'allocated', label: 'Allocated Space',       icon: '🅿️' },
-                        { id: 'permit',    label: 'Permit Parking',        icon: '🎫' },
-                        { id: 'on_street', label: 'On-Street',             icon: '🚗' },
-                        { id: 'none',      label: 'No Parking',            icon: '🚫' },
-                      ] as { id: ParkingId; label: string; icon: string }[]).map(({ id, label, icon }) => (
+                      {(showAllParking ? IV_PARKING_OPTIONS : IV_PARKING_OPTIONS.slice(0, IV_PARKING_INITIAL)).map(({ id, label, icon }) => (
                         <button key={id} onClick={() => setParking(id)}
                           className={`iv-opt ${parking === id ? 'iv-opt--active' : ''}`}>
                           <span className="iv-opt__icon">{icon}</span>
@@ -643,6 +695,9 @@ export default function InstantValuationPage() {
                         </button>
                       ))}
                     </div>
+                    <button type="button" className="iv-more-toggle" onClick={() => setShowAllParking((s) => !s)}>
+                      {showAllParking ? '▲ Show fewer' : `▼ See more parking options (${IV_PARKING_OPTIONS.length - IV_PARKING_INITIAL} more)`}
+                    </button>
                   </div>
 
                   {genError && (
@@ -718,7 +773,8 @@ export default function InstantValuationPage() {
                 {condition && <span className="iv-chip">✨ {CONDITION_LABEL[condition as ConditionId].split(' (')[0]}</span>}
                 {epc && <span className="iv-chip">⚡ {epc === 'unknown' ? 'EPC n/a' : `EPC ${epc}`}</span>}
                 {garden && garden !== 'none' && <span className="iv-chip">🌳 {GARDEN_LABEL[garden as GardenId]}</span>}
-                {parking && parking !== 'none' && <span className="iv-chip">🅿️ {PARKING_LABEL[parking as ParkingId]}</span>}
+                {furnishing && <span className="iv-chip">🛋️ {FURNISHING_LABEL[furnishing as FurnishingId]}</span>}
+                {parking && parking !== 'none' && <span className="iv-chip">🅿️ {parkingDisplayLabel(parking)}</span>}
                 {balcony === true && <span className="iv-chip">🌇 Balcony</span>}
               </div>
 
@@ -1029,6 +1085,13 @@ const PAGE_CSS = `
   }
   .iv-pill:hover { background: #f6f9fc; border-color: #c7d2e0; }
   .iv-pill--active { border-color: #2563eb; background: #eff5ff; color: #1d4ed8; }
+
+  .iv-more-toggle {
+    margin-top: 0.75rem; background: none; border: none; padding: 0.45rem 0;
+    color: #2563eb; font-size: 0.8125rem; font-weight: 600; cursor: pointer;
+    font-family: inherit; transition: color 0.18s;
+  }
+  .iv-more-toggle:hover { color: #1d4ed8; text-decoration: underline; }
 
   .iv-input {
     padding: 0.8125rem 1rem;

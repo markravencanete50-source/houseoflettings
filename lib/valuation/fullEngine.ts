@@ -29,6 +29,7 @@ export type ConditionId    = 'excellent' | 'good' | 'average' | 'dated' | 'renov
 export type EpcId          = 'A' | 'B' | 'C' | 'D' | 'E' | 'F' | 'G' | 'unknown';
 export type GardenId       = 'private' | 'shared' | 'patio' | 'none';
 export type ParkingId      = 'garage' | 'driveway' | 'allocated' | 'permit' | 'on_street' | 'none';
+export type FurnishingId   = 'furnished' | 'part-furnished' | 'unfurnished';
 
 export interface FullValuationInput {
   postcode:     string;
@@ -41,6 +42,7 @@ export interface FullValuationInput {
   garden:       GardenId;
   balcony:      boolean;
   parking:      ParkingId;
+  furnishing?:  FurnishingId;  // affects rent only; optional for callers that don't collect it
 }
 
 // ─── Labels (shared by UI, PDF and emails) ───────────────────────────────────
@@ -64,6 +66,9 @@ export const GARDEN_LABEL: Record<GardenId, string> = {
 export const PARKING_LABEL: Record<ParkingId, string> = {
   garage: 'Garage', driveway: 'Driveway (off-street)', allocated: 'Allocated space',
   permit: 'Permit parking', on_street: 'On-street parking', none: 'No parking',
+};
+export const FURNISHING_LABEL: Record<FurnishingId, string> = {
+  furnished: 'Furnished', 'part-furnished': 'Part-furnished', unfurnished: 'Unfurnished',
 };
 export function bedroomsLabel(n: number): string {
   return n === 0 ? 'Studio' : `${n} bedroom${n > 1 ? 's' : ''}`;
@@ -116,6 +121,12 @@ const GARDEN_PCT: Record<GardenId, number> = {
 };
 const PARKING_PCT: Record<ParkingId, number> = {
   garage: 0.05, driveway: 0.045, allocated: 0.035, permit: 0.01, on_street: 0, none: 0,
+};
+// Furnishing affects lettings only — a furnished let typically commands a small
+// premium, while it makes little difference to a sale price (buyers usually want
+// the property empty). Applied in rent mode only (see calcMode).
+const FURNISHING_PCT: Record<FurnishingId, number> = {
+  furnished: 0.05, 'part-furnished': 0.02, unfurnished: 0,
 };
 const BALCONY_PCT = 0.025;
 const BATHROOM_PCT_PER_EXTRA = 0.035;
@@ -199,6 +210,9 @@ function calcMode(input: FullValuationInput, mode: ValuationMode): ModeValuation
   if (input.balcony) adjustments.push({ label: 'Balcony', pct: BALCONY_PCT });
   if (PARKING_PCT[input.parking] !== 0)
     adjustments.push({ label: PARKING_LABEL[input.parking], pct: PARKING_PCT[input.parking] });
+  // Furnishing is a rental-only factor.
+  if (mode === 'rent' && input.furnishing && FURNISHING_PCT[input.furnishing] !== 0)
+    adjustments.push({ label: FURNISHING_LABEL[input.furnishing], pct: FURNISHING_PCT[input.furnishing] });
 
   const totalAdjustmentPct = adjustments.reduce((s, a) => s + a.pct, 0);
 

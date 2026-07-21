@@ -780,15 +780,15 @@ export default function PropertyDetailClient() {
                     <h4 style={{ fontSize: 13, fontWeight: 700, color: '#222', marginBottom: 12, textTransform: 'uppercase', letterSpacing: 0.5 }}>
                       Features &amp; Amenities
                     </h4>
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '8px 16px' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                       {amenityRows.map(feat => (
-                        <div key={feat.label} style={{ display: 'flex', justifyContent: 'space-between', gap: 10, fontSize: 14 }}>
+                        <div key={feat.label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 14, fontSize: 14 }}>
                           <span style={{ color: '#444', flexShrink: 0 }}>{feat.label}</span>
                           {feat.plain
                             ? <span style={{ fontWeight: 600, color: '#222', textAlign: 'right' }}>{feat.text || 'N/A'}</span>
                             : feat.present
                               ? <span style={{ color: '#166534', fontWeight: 600, textAlign: 'right' }}>✓ {feat.text}</span>
-                              : <span style={{ color: '#c62828', fontWeight: 600 }}>✗</span>
+                              : <span style={{ color: '#c62828', fontWeight: 600, textAlign: 'right' }}>✗ No</span>
                           }
                         </div>
                       ))}
@@ -966,15 +966,15 @@ export default function PropertyDetailClient() {
                     <h4 style={{ fontSize: 13, fontWeight: 700, color: '#222', marginBottom: 12, textTransform: 'uppercase', letterSpacing: 0.5 }}>
                       Features &amp; Amenities
                     </h4>
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '8px 16px' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                       {amenityRows.map(feat => (
-                        <div key={feat.label} style={{ display: 'flex', justifyContent: 'space-between', gap: 10, fontSize: 14 }}>
+                        <div key={feat.label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 14, fontSize: 14 }}>
                           <span style={{ color: '#444', flexShrink: 0 }}>{feat.label}</span>
                           {feat.plain
                             ? <span style={{ fontWeight: 600, color: '#222', textAlign: 'right' }}>{feat.text || 'N/A'}</span>
                             : feat.present
                               ? <span style={{ color: '#166534', fontWeight: 600, textAlign: 'right' }}>✓ {feat.text}</span>
-                              : <span style={{ color: '#c62828', fontWeight: 600 }}>✗</span>
+                              : <span style={{ color: '#c62828', fontWeight: 600, textAlign: 'right' }}>✗ No</span>
                           }
                         </div>
                       ))}

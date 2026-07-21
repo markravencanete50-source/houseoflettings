@@ -148,13 +148,12 @@ export default function RentReviewOverviewPage() {
             {/* Left — reassurance, evidence, action */}
             <div className="rr-hero-copy">
               <div className="rr-badge">Annual Rent Review · For existing tenants</div>
-              <h1 className="rr-hero-h1">Your rent review, backed by real local evidence.</h1>
+              <h1 className="rr-hero-h1">Your rent review, supported by local market data.</h1>
               <p className="rr-hero-sub">
-                Once a year we check your rent against similar homes letting nearby. You&rsquo;ll see the current
-                figure, the proposed figure, and the reasoning behind it.
+                Each year, we compare your rent with similar properties in your area.
               </p>
               <p className="rr-hero-sub rr-hero-sub--2">
-                Then accept in a click, or open a discussion &mdash; nothing changes without you.
+                You&rsquo;ll see your current rent, our recommended rent, and the evidence behind our assessment.
               </p>
 
               <ul className="rr-assure">
@@ -472,7 +471,7 @@ export default function RentReviewOverviewPage() {
                     discussion and tell us the figure you feel is fair. Nothing changes without you.
                   </p>
                   <div className="rr-modal-options">
-                    <div className="rr-modal-opt"><span className="rr-modal-opt-ic"><Ic name="check" size={16} /></span>Accept online</div>
+                    <div className="rr-modal-opt"><span className="rr-modal-opt-ic rr-modal-opt-ic--green"><Ic name="check" size={16} /></span>Accept online</div>
                     <div className="rr-modal-opt"><span className="rr-modal-opt-ic"><Ic name="chat" size={16} /></span>Discuss with us</div>
                   </div>
                 </>
@@ -550,7 +549,9 @@ const PAGE_CSS = `
   .rr-hero-sub--2 { margin-top:14px; }
   .rr-assure { list-style:none; margin:32px 0 0; padding:0; display:flex; flex-wrap:wrap; gap:24px; }
   .rr-assure-item { display:flex; align-items:center; gap:9px; font-size:13.5px; font-weight:500; color:#dbe4f2; }
-  .rr-assure-ic { flex:none; width:22px; height:22px; border-radius:50%; background:rgba(96,165,250,0.16); color:#93c5fd; display:grid; place-items:center; }
+  /* Green tick circles, matching the pricing page's dark-section ticks (.pr-vis-tick) */
+  .rr-assure-ic { flex:none; width:22px; height:22px; border-radius:50%; background:rgba(74,222,128,0.16); color:#4ade80; display:grid; place-items:center; }
+  .rr-assure-ic svg { stroke-width:3; }
   .rr-hero-cta-row { display:flex; gap:16px; flex-wrap:wrap; margin-top:36px; }
 
   .rr-cta { display:inline-flex; align-items:center; justify-content:center; gap:9px; box-sizing:border-box; min-height:50px; line-height:1.2; font-family:'Poppins',sans-serif; font-size:13.5px; font-weight:700; letter-spacing:.02em; text-transform:uppercase; padding:14px 30px; border-radius:12px; text-decoration:none; border:1.5px solid transparent; transition:background .2s,transform .2s,box-shadow .2s,border-color .2s,color .2s; }
@@ -651,6 +652,8 @@ const PAGE_CSS = `
   .rr-modal-options { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
   .rr-modal-opt { display:flex; align-items:center; gap:10px; background:rgba(255,255,255,0.04); border:1px solid rgba(147,197,253,0.20); border-radius:12px; padding:15px 16px; font-size:13.5px; font-weight:600; color:#eaf1fb; }
   .rr-modal-opt-ic { flex:none; width:30px; height:30px; border-radius:9px; background:rgba(96,165,250,0.16); color:#93c5fd; display:grid; place-items:center; }
+  .rr-modal-opt-ic--green { background:rgba(74,222,128,0.16); color:#4ade80; }
+  .rr-modal-opt-ic--green svg { stroke-width:3; }
   .rr-modal-foot { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-top:24px; padding-top:20px; border-top:1px solid rgba(255,255,255,0.08); }
   @media(max-width:640px){
     .rr-modal-overlay { align-items:flex-end; padding:0; }
@@ -717,7 +720,9 @@ const PAGE_CSS = `
   .rr-chip--blunt { color:#9f1239; background:#ffe4e6; }
   .rr-diff-list { list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:14px; }
   .rr-diff-list li { display:flex; gap:11px; align-items:flex-start; font-size:14px; color:#1e3a5f; line-height:1.6; font-weight:500; }
-  .rr-diff-ic { flex:none; width:22px; height:22px; border-radius:6px; background:var(--rr-accent-soft); color:var(--rr-accent); display:grid; place-items:center; margin-top:1px; }
+  /* Green ticks, matching the pricing page's light-section ticks (.pr-tick) */
+  .rr-diff-ic { flex:none; width:22px; height:22px; border-radius:50%; background:#e7f6ee; color:#16a34a; display:grid; place-items:center; margin-top:1px; }
+  .rr-diff-ic svg { stroke-width:3; }
 
   /* FAQ */
   .rr-faq-list { display:flex; flex-direction:column; gap:12px; }

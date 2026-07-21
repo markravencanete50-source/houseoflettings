@@ -9,7 +9,9 @@ const ValuationModal = lazy(() => import('@/components/ValuationModal'));
 // The long multi-step forms are hidden behind this bar's fixed position at the
 // bottom of the screen, and a stray "Book a Valuation" mid-application is a
 // distraction rather than a shortcut, so the FAB is suppressed on them.
-const HIDDEN_ON = ['/tenant-application', '/guarantor', '/landlord-registration'];
+// It's also hidden on the listings pages, where it overlaps the property cards
+// and its "Search Properties" link just points back to the page you're on.
+const HIDDEN_ON = ['/tenant-application', '/guarantor', '/landlord-registration', '/listings'];
 
 export default function MobileFAB() {
   const pathname = usePathname();

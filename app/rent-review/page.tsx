@@ -28,6 +28,7 @@ function Ic({ name, size = 22 }: { name: string; size?: number }) {
     case 'doc': return (<svg {...c}><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><path d="M14 2v6h6" /></svg>);
     case 'arrow': return (<svg {...c}><path d="M5 12h14M12 5l7 7-7 7" /></svg>);
     case 'info': return (<svg {...c}><circle cx="12" cy="12" r="10" /><path d="M12 16v-4" /><path d="M12 8h.01" /></svg>);
+    case 'trend': return (<svg {...c}><polyline points="3 17 9 11 13 15 21 7" /><polyline points="15 7 21 7 21 13" /></svg>);
     default: return null;
   }
 }
@@ -130,29 +131,29 @@ export default function RentReviewOverviewPage() {
               </div>
             </div>
 
-            {/* Right — realistic dashboard preview */}
+            {/* Right — live Leeds & Manchester market snapshot + feature chips */}
             <div className="rr-hero-visual">
-              <div className="rr-card" role="group" aria-label="Rent review summary preview">
+              <div className="rr-card" role="group" aria-label="Leeds and Manchester annual market value">
                 <div className="rr-card-head">
                   <div>
-                    <div className="rr-card-eyebrow">Annual Rent Review</div>
-                    <div className="rr-card-addr">12 Example Street</div>
+                    <div className="rr-card-eyebrow">Annual Market Value</div>
+                    <div className="rr-card-addr">Leeds &amp; Manchester</div>
                   </div>
-                  <span className="rr-card-status"><span className="rr-card-status-dot" aria-hidden />Ready for Review</span>
+                  <span className="rr-card-status"><span className="rr-card-status-dot" aria-hidden />Live data</span>
                 </div>
 
-                <div className="rr-card-figures">
-                  <div className="rr-fig">
-                    <div className="rr-fig-label">Current rent</div>
-                    <div className="rr-fig-value">£850<span>pcm</span></div>
+                <div className="rr-cities">
+                  <div className="rr-city">
+                    <div className="rr-city-name"><span className="rr-city-dot rr-city-dot--l" aria-hidden />Leeds</div>
+                    <div className="rr-city-val">£995<span>pcm</span></div>
+                    <div className="rr-city-range">£900&ndash;£1,100</div>
+                    <div className="rr-city-trend"><Ic name="trend" size={13} />4.2% / yr</div>
                   </div>
-                  <div className="rr-fig rr-fig--accent">
-                    <div className="rr-fig-label">Recommendation</div>
-                    <div className="rr-fig-value">£900<span>pcm</span></div>
-                  </div>
-                  <div className="rr-fig">
-                    <div className="rr-fig-label">Market range</div>
-                    <div className="rr-fig-value rr-fig-value--sm">£890&ndash;£940</div>
+                  <div className="rr-city">
+                    <div className="rr-city-name"><span className="rr-city-dot rr-city-dot--m" aria-hidden />Manchester</div>
+                    <div className="rr-city-val">£1,150<span>pcm</span></div>
+                    <div className="rr-city-range">£980&ndash;£1,300</div>
+                    <div className="rr-city-trend"><Ic name="trend" size={13} />5.1% / yr</div>
                   </div>
                 </div>
 
@@ -163,19 +164,14 @@ export default function RentReviewOverviewPage() {
 
                 <div className="rr-card-bars">
                   <div className="rr-bar-row">
-                    <span className="rr-bar-label">Current rent</span>
-                    <span className="rr-bar"><i style={{ width: '72%' }} /></span>
-                    <span className="rr-bar-val">£850</span>
+                    <span className="rr-bar-label">Leeds avg</span>
+                    <span className="rr-bar"><i style={{ width: '87%' }} /></span>
+                    <span className="rr-bar-val">£995</span>
                   </div>
                   <div className="rr-bar-row">
-                    <span className="rr-bar-label">Market average</span>
-                    <span className="rr-bar"><i className="rr-bar-i--full" style={{ width: '100%' }} /></span>
-                    <span className="rr-bar-val">£915</span>
-                  </div>
-                  <div className="rr-bar-row">
-                    <span className="rr-bar-label">Recommendation</span>
-                    <span className="rr-bar"><i className="rr-bar-i--rec" style={{ width: '85%' }} /></span>
-                    <span className="rr-bar-val">£900</span>
+                    <span className="rr-bar-label">Manchester avg</span>
+                    <span className="rr-bar"><i className="rr-bar-i--rec" style={{ width: '100%' }} /></span>
+                    <span className="rr-bar-val">£1,150</span>
                   </div>
                 </div>
 
@@ -183,31 +179,27 @@ export default function RentReviewOverviewPage() {
                   <span className="rr-panel-ic"><Ic name="info" size={16} /></span>
                   <div>
                     <div className="rr-panel-t">Market summary</div>
-                    <p>Comparable homes nearby have achieved between £890 and £940 per month over the past six months.</p>
+                    <p>Comparable homes across Leeds and Manchester have let between £900 and £1,300 per month over the past six months.</p>
                   </div>
                 </div>
+              </div>
+
+              {/* Feature chips — anchored directly below the market card */}
+              <div className="rr-feats">
+                {FEATURES.map((f, i) => (
+                  <div key={f.title} className="rr-feat" style={{ animationDelay: `${i * 55}ms` }}>
+                    <span className="rr-feat-ic"><Ic name={f.icon} size={18} /></span>
+                    <div>
+                      <div className="rr-feat-t">{f.title}</div>
+                      <div className="rr-feat-d">{f.desc}</div>
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
 
           </div>
         </header>
-
-        {/* ── FEATURE STRIP (own section below the hero) ── */}
-        <section className="rr-sec rr-features-sec" style={{ background: '#fff' }}>
-          <div className="rr-wrap">
-            <div className="rr-features-grid">
-              {FEATURES.map((f, i) => (
-                <div key={f.title} className="rr-feature hol-reveal" style={{ animationDelay: `${i * 55}ms` }}>
-                  <span className="rr-feature-ic"><Ic name={f.icon} size={20} /></span>
-                  <div>
-                    <div className="rr-feature-t">{f.title}</div>
-                    <div className="rr-feature-d">{f.desc}</div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
 
         {/* ── WHY ── */}
         <section id="why" className="rr-sec" style={{ background: '#fff' }}>
@@ -433,13 +425,16 @@ const PAGE_CSS = `
   .rr-card-status { flex:none; display:inline-flex; align-items:center; gap:7px; font-size:11px; font-weight:700; color:#6ee7b7; background:rgba(16,185,129,0.12); border:1px solid rgba(16,185,129,0.30); padding:5px 11px; border-radius:20px; white-space:nowrap; }
   .rr-card-status-dot { width:7px; height:7px; border-radius:50%; background:#34d399; box-shadow:0 0 0 3px rgba(52,211,153,0.18); }
 
-  .rr-card-figures { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px; margin:18px 0; }
-  .rr-fig { min-width:0; background:rgba(255,255,255,0.03); border:1px solid rgba(147,197,253,0.10); border-radius:12px; padding:14px 14px 15px; }
-  .rr-fig--accent { background:rgba(37,99,235,0.16); border-color:rgba(96,165,250,0.42); }
-  .rr-fig-label { font-size:10px; font-weight:600; letter-spacing:.06em; text-transform:uppercase; color:rgba(199,210,227,0.72); }
-  .rr-fig-value { font-size:23px; font-weight:800; color:#fff; margin-top:7px; letter-spacing:-.01em; }
-  .rr-fig-value span { font-size:12px; font-weight:500; color:rgba(199,210,227,0.72); margin-left:3px; }
-  .rr-fig-value--sm { font-size:16px; }
+  .rr-cities { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; margin:18px 0; }
+  .rr-city { min-width:0; background:rgba(255,255,255,0.03); border:1px solid rgba(147,197,253,0.12); border-radius:14px; padding:15px 15px 16px; }
+  .rr-city-name { display:flex; align-items:center; gap:8px; font-size:11.5px; font-weight:700; letter-spacing:.05em; text-transform:uppercase; color:#dbe9ff; }
+  .rr-city-dot { flex:none; width:8px; height:8px; border-radius:50%; }
+  .rr-city-dot--l { background:#60a5fa; }
+  .rr-city-dot--m { background:#7dd3fc; }
+  .rr-city-val { font-size:26px; font-weight:800; color:#fff; margin-top:10px; letter-spacing:-.01em; }
+  .rr-city-val span { font-size:12px; font-weight:500; color:rgba(199,210,227,0.72); margin-left:4px; }
+  .rr-city-range { font-size:12px; color:rgba(199,210,227,0.70); margin-top:4px; }
+  .rr-city-trend { display:inline-flex; align-items:center; gap:5px; margin-top:11px; font-size:11px; font-weight:700; color:#6ee7b7; background:rgba(16,185,129,0.12); border:1px solid rgba(16,185,129,0.26); padding:3px 9px; border-radius:20px; }
 
   .rr-card-meta { display:flex; flex-direction:column; }
   .rr-meta { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:11px 0; border-top:1px solid rgba(147,197,253,0.08); font-size:13px; }
@@ -461,15 +456,13 @@ const PAGE_CSS = `
   .rr-panel-t { font-size:11px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:#bfdbfe; margin-bottom:4px; }
   .rr-card-panel p { font-size:12.5px; color:rgba(199,210,227,0.88); line-height:1.55; margin:0; }
 
-  /* FEATURE STRIP — own section below the hero */
-  .rr-features-sec { padding-top:clamp(56px,7vw,84px); padding-bottom:clamp(56px,7vw,84px); }
-  .rr-features-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:16px; }
-  @media(max-width:820px){ .rr-features-grid{ grid-template-columns:1fr 1fr; } }
-  @media(max-width:460px){ .rr-features-grid{ grid-template-columns:1fr; } }
-  .rr-feature { display:flex; align-items:center; gap:13px; background:#fff; border:1px solid #eef0f5; border-radius:16px; padding:18px 18px; box-shadow:0 10px 30px -20px rgba(15,31,61,.35); }
-  .rr-feature-ic { flex:none; width:42px; height:42px; border-radius:12px; background:var(--rr-accent-soft); color:var(--rr-accent); display:grid; place-items:center; }
-  .rr-feature-t { font-size:14px; font-weight:700; color:#0f1f3d; }
-  .rr-feature-d { font-size:12px; color:#6b7280; margin-top:2px; }
+  /* FEATURE CHIPS — anchored below the market card in the right column */
+  .rr-feats { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; margin-top:16px; }
+  @media(max-width:460px){ .rr-feats{ grid-template-columns:1fr; } }
+  .rr-feat { display:flex; align-items:flex-start; gap:11px; min-width:0; background:rgba(255,255,255,0.045); border:1px solid rgba(147,197,253,0.14); border-radius:14px; padding:13px 14px; }
+  .rr-feat-ic { flex:none; width:36px; height:36px; border-radius:10px; background:rgba(96,165,250,0.14); color:#93c5fd; display:grid; place-items:center; }
+  .rr-feat-t { font-size:13px; font-weight:700; color:#eaf1fb; }
+  .rr-feat-d { font-size:11px; color:rgba(199,210,227,0.70); margin-top:2px; line-height:1.4; }
 
   /* WHY grid */
   .rr-why-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:20px; }
@@ -552,10 +545,10 @@ const PAGE_CSS = `
     .rr-hero-cta-row .rr-cta { width:100%; }
     .rr-cta--lg { width:100%; }
     .rr-card { padding:20px; }
-    .rr-card-figures { gap:10px; }
-    .rr-fig { padding:12px 11px; }
-    .rr-fig-value { font-size:20px; }
-    .rr-bar-row { grid-template-columns:88px 1fr auto; }
+    .rr-cities { gap:10px; }
+    .rr-city { padding:13px 12px 14px; }
+    .rr-city-val { font-size:22px; }
+    .rr-bar-row { grid-template-columns:88px minmax(0,1fr) auto; }
     .rr-why-card, .rr-compare-col, .rr-step2-body { padding:20px 18px; }
     .rr-head { margin-bottom:32px; }
     .rr-faq-q { padding:15px 16px; font-size:14.5px; }
@@ -566,6 +559,6 @@ const PAGE_CSS = `
   @media (prefers-reduced-motion: reduce){
     .rr-hero-glow, .rr-hero-copy, .rr-hero-visual, .rr-bar i { animation:none !important; }
     .rr-bar i { transform:none !important; }
-    .rr-cta, .rr-why-card, .rr-faq, .rr-faq-a, .rr-faq-q svg, .rr-feature, .rr-card { transition:none !important; }
+    .rr-cta, .rr-why-card, .rr-faq, .rr-faq-a, .rr-faq-q svg, .rr-feat, .rr-card { transition:none !important; }
   }
 `;

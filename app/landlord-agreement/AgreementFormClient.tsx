@@ -491,9 +491,11 @@ export default function AgreementFormClient() {
                 })}
               </div>
 
-              {/* One-time discount coupon (issued by the office) */}
-              <div className="la-coupon">
-                <div className="la-coupon-title">🎟️ Have a discount coupon?</div>
+              {/* One-time discount coupon — revealed once a service is chosen,
+                  so it reads as "for this package" rather than a generic field. */}
+              {bundle && (
+              <div className="la-coupon" key={bundle.id}>
+                <div className="la-coupon-title">🎟️ Have a discount coupon for {bundle.label}?</div>
                 {coupon ? (
                   <div className="la-coupon-ok">
                     <div>
@@ -520,6 +522,7 @@ export default function AgreementFormClient() {
                 )}
                 {couponMsg && <div className="la-coupon-msg">{couponMsg}</div>}
               </div>
+              )}
             </section>
           )}
 
@@ -762,7 +765,8 @@ const STYLES = `
 .la-btn-solid:disabled{opacity:.6;cursor:default;transform:none;box-shadow:none;}
 .la-btn-ghost{background:#fff;color:#374151;border-color:#d1d5db;}
 .la-btn-ghost:hover{border-color:#94a3b8;background:#f8fafc;}
-.la-coupon{margin-top:20px;padding:16px 18px;background:#fdfaf3;border:1px dashed #e5d9b8;border-radius:12px;}
+.la-coupon{margin-top:20px;padding:16px 18px;background:#fdfaf3;border:1px dashed #e5d9b8;border-radius:12px;animation:laReveal .4s cubic-bezier(.4,0,.2,1) both;}
+@keyframes laReveal{from{opacity:0;transform:translateY(-8px) scale(.98);}to{opacity:1;transform:translateY(0) scale(1);}}
 .la-coupon-title{font-size:13.5px;font-weight:700;color:#0a162f;margin-bottom:10px;}
 .la-coupon-row{display:flex;gap:10px;}
 .la-coupon-in{max-width:240px;font-family:monospace;letter-spacing:.05em;text-transform:uppercase;}
@@ -795,7 +799,7 @@ const STYLES = `
   .la-coupon-apply{width:100%;}
 }
 @media (prefers-reduced-motion:reduce){
-  .la-step-pane,.la-sig-preview,.la-coupon-ok,.la-error{animation:none;}
+  .la-step-pane,.la-sig-preview,.la-coupon,.la-coupon-ok,.la-error{animation:none;}
   .la-bundle,.la-btn,.la-step-dot,.la-progress span,.la-bundle-radio{transition:none;}
   .la-bundle:hover,.la-btn-solid:hover{transform:none;}
 }

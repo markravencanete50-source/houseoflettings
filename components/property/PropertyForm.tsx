@@ -286,6 +286,15 @@ export default function PropertyForm({
         ...(adminOverride ?? {}),
       } as any;
 
+      // Firestore (both the Web and Admin SDKs) rejects `undefined`, which fails
+      // the entire save — e.g. editing a property whose `featured` flag is
+      // undefined. Optional fields left blank are already sent as null; strip any
+      // stray undefined so a listing always posts whether or not every optional
+      // field (like Size) was filled in.
+      Object.keys(data).forEach((k) => {
+        if ((data as Record<string, unknown>)[k] === undefined) delete (data as Record<string, unknown>)[k];
+      });
+
       if (existing?.id) {
         if (updateVia) {
           // Server-side edit for staff: they are usually cookie-authenticated
@@ -552,9 +561,9 @@ export default function PropertyForm({
         </div>
 
         <div className="form-group">
-          <label className="form-label">Size (sqft)</label>
+          <label className="form-label">Size <span style={{ color: 'var(--gray-400)', fontWeight: 400 }}>(sqft, optional)</span></label>
           <input className="form-input" type="number" value={sqft} onChange={e => setSqft(e.target.value)}
-            placeholder="e.g. 750" min="0" />
+            placeholder="e.g. 750 — leave blank if unknown" min="0" />
         </div>
 
         <div className="form-group">

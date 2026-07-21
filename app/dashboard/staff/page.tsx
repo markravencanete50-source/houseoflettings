@@ -324,9 +324,11 @@ function StaffDashboardInner() {
     router.push('/admin-login');
   };
 
-  // Keep the active tab within the permitted set ('edit' is transient, exempt).
+  // Keep the active tab within the permitted, routable set ('edit' is
+  // transient, exempt; 'coupons' is a permission flag with no page of its own).
   useEffect(() => {
-    if (perms.length > 0 && tab !== 'edit' && !perms.includes(tab as StaffFeature)) setTab(perms[0]);
+    const routablePerms = perms.filter(p => p !== 'coupons') as Tab[];
+    if (routablePerms.length > 0 && tab !== 'edit' && !routablePerms.includes(tab)) setTab(routablePerms[0]);
   }, [perms, tab]);
 
   // Use the Firebase ID token when signed in via the client SDK; otherwise the
@@ -532,6 +534,7 @@ function StaffDashboardInner() {
     properties: properties.length,
     applications: applications.length,
     agreements: agreements.length,
+    coupons: null,
      'rent-reviews': rentReviews.length,
     maintenance: maintenance.length,
     orders: orders.length,
@@ -540,7 +543,9 @@ function StaffDashboardInner() {
     post: null,
   };
 
-  const navItems = STAFF_FEATURES.filter(f => perms.includes(f.id)).map(f => ({
+  // 'coupons' is a permission flag (gates the Coupons tool inside the
+  // Agreements tab), not a sidebar page of its own — exclude it from the nav.
+  const navItems = STAFF_FEATURES.filter(f => f.id !== 'coupons' && perms.includes(f.id)).map(f => ({
     id: f.id as Tab,
     icon: f.icon,
     label: counts[f.id] === null ? f.label : `${f.label} (${counts[f.id]})`,
@@ -874,17 +879,19 @@ function StaffDashboardInner() {
           {tab === 'agreements' && perms.includes('agreements') && showAgreementWording && profile.role === 'admin' && (
             <AgreementTemplateEditor authedFetch={authedFetch} onClose={() => setShowAgreementWording(false)} />
           )}
-          {tab === 'agreements' && perms.includes('agreements') && showCoupons && !showAgreementWording && (
+          {tab === 'agreements' && perms.includes('agreements') && perms.includes('coupons') && showCoupons && !showAgreementWording && (
             <CouponManager authedFetch={authedFetch} onClose={() => setShowCoupons(false)} />
           )}
-          {tab === 'agreements' && perms.includes('agreements') && !showCoupons && !(showAgreementWording && profile.role === 'admin') && (
+          {tab === 'agreements' && perms.includes('agreements') && !(perms.includes('coupons') && showCoupons) && !(showAgreementWording && profile.role === 'admin') && (
             <div>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12, flexWrap: 'wrap' }}>
                 <h1 className="dash-section-title" style={{ margin: 0 }}>Landlord Agreements</h1>
                 <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-                  <button onClick={() => setShowCoupons(true)} style={{ background: '#f0fdf4', color: '#15803d', border: '1px solid #bbf7d0', borderRadius: 8, padding: '9px 16px', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
-                    🎟️ Coupons
-                  </button>
+                  {perms.includes('coupons') && (
+                    <button onClick={() => setShowCoupons(true)} style={{ background: '#f0fdf4', color: '#15803d', border: '1px solid #bbf7d0', borderRadius: 8, padding: '9px 16px', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
+                      🎟️ Coupons
+                    </button>
+                  )}
                   {profile.role === 'admin' && (
                     <button onClick={() => setShowAgreementWording(true)} style={{ background: '#eff5ff', color: '#2563eb', border: '1px solid #dbe4ff', borderRadius: 8, padding: '9px 16px', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
                       ✎ Edit agreement wording

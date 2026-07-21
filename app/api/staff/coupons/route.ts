@@ -1,6 +1,9 @@
 // app/api/staff/coupons/route.ts
 // One-time discount coupons for the landlord agreement, issued per-landlord
-// from the staff/admin dashboards (gated on the 'agreements' feature).
+// from the staff/admin dashboards. Gated on the 'coupons' feature — deliberately
+// separate from 'agreements' (which is on by default for all staff) so viewing
+// signed agreements never implies the power to issue discounts. Admins always
+// have it; a staff member needs it granted explicitly from the Users tab.
 //   GET   — list coupons, newest first
 //   POST  — { bundleId, discount, note? } -> creates a coupon and returns it.
 //           The discount is a fixed £ amount off the package's setup fee
@@ -28,7 +31,7 @@ function generateCode(): string {
 }
 
 export async function GET(request: Request) {
-  const auth = await requireStaff(request, 'agreements');
+  const auth = await requireStaff(request, 'coupons');
   if (auth instanceof Response) return auth;
   try {
     const snap = await getAdminDb().collection(COUPON_COLLECTION)
@@ -45,7 +48,7 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
-  const auth = await requireStaff(request, 'agreements');
+  const auth = await requireStaff(request, 'coupons');
   if (auth instanceof Response) return auth;
   try {
     const body = await request.json().catch(() => ({}));
@@ -90,7 +93,7 @@ export async function POST(request: Request) {
 }
 
 export async function PATCH(request: Request) {
-  const auth = await requireStaff(request, 'agreements');
+  const auth = await requireStaff(request, 'coupons');
   if (auth instanceof Response) return auth;
   try {
     const body = await request.json().catch(() => ({}));

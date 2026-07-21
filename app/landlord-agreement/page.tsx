@@ -1,6 +1,7 @@
 // app/landlord-agreement/page.tsx
 // Server wrapper: SEO metadata + canonical, then the interactive sign form.
 import type { Metadata } from 'next';
+import { Suspense } from 'react';
 import AgreementFormClient from './AgreementFormClient';
 
 export const metadata: Metadata = {
@@ -11,5 +12,9 @@ export const metadata: Metadata = {
 };
 
 export default function LandlordAgreementPage() {
-  return <AgreementFormClient />;
+  return (
+    <Suspense fallback={null}>
+      <AgreementFormClient />
+    </Suspense>
+  );
 }

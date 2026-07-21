@@ -7,6 +7,13 @@
 // service schedule and fees are derived from lib/bundles.ts so pricing never
 // drifts between the pricing pages and the signed agreement.
 //
+// The legal clause wording (the intro and every general clause) can be edited
+// by an admin without a code deploy: an AgreementTemplate stored in Firestore
+// overrides the defaults below. buildAgreementSections(bundle, template) merges
+// the two. The per-package Service list and the Fees figures are deliberately
+// NOT part of the template — they stay driven by lib/bundles.ts so an edit here
+// can never make the agreement disagree with /pricing.
+//
 // This module is framework-free (no server-only imports) so the sign form,
 // the /api PDF builder and the email templates can all import the SAME text —
 // what the landlord reads on screen is exactly what is written to the PDF.
@@ -29,6 +36,7 @@ export const AGENT_DETAILS = {
 
 export const AGREEMENT_TITLE = 'Residential Lettings & Management Agreement';
 
+// Default intro. Overridable via template.intro.
 export const AGREEMENT_INTRO =
   'This Agreement is between the Landlord and House of Lettings Limited (the Agent), who will act as the Landlord’s sole letting and management agent for the Property. It sets out the scope of services, fees, and the terms and conditions forming a legally binding contract. By signing, the Landlord agrees to these terms for this Property and any future property managed by the Agent, unless otherwise agreed in writing. If unsure of any obligations, the Landlord is advised to seek independent legal advice. This Agreement complies with the Provision of Services Regulations 2009 (SI 2999).';
 
@@ -39,10 +47,20 @@ export type AgreementSection = {
   groups?: { heading: string; items: string[] }[];
 };
 
-// The general clauses that are identical for every package. Numbering is filled
-// in by buildAgreementSections so the dynamic Service (2) and Fees (3) sections
-// keep the sequence correct.
-const APPOINTMENT: Omit<AgreementSection, 'n'> = {
+// A general legal clause, addressed by a stable key so an admin override in the
+// stored template can target it even if its position or title changes.
+export type Clause = { key: string; title: string; paras: string[] };
+
+// An admin's overrides, stored in Firestore (settings/agreementTemplate). Only
+// legal wording lives here — never the service lists or fee figures.
+export type AgreementTemplate = {
+  intro?: string;
+  clauses?: Record<string, { title?: string; paras?: string[] }>;
+};
+
+// Clause 1, before the Service and Fees sections.
+const APPOINTMENT: Clause = {
+  key: 'appointment',
   title: 'Appointment & Authority',
   paras: [
     'The Landlord confirms they are the legal owner of the Property and are entitled to let it. Necessary consents from mortgage lenders, freeholders, or others have been obtained.',
@@ -51,14 +69,18 @@ const APPOINTMENT: Omit<AgreementSection, 'n'> = {
   ],
 };
 
-const GENERAL_TAIL: Omit<AgreementSection, 'n'>[] = [
+// The general clauses that follow the Service and Fees sections. Keyed and
+// ordered; every one is editable via the template.
+const TAIL_CLAUSES: Clause[] = [
   {
+    key: 'continuation',
     title: 'Continuation Fee',
     paras: [
       'A continuation fee of £199.00 (including VAT, where applicable) shall be payable every 12 months where the tenancy continues, including on a statutory periodic basis, whether or not a new tenancy agreement is entered into. This fee covers a rent review every 12 months, ongoing compliance checks, updates to tenancy documentation where required, compliance with Tenancy Deposit Scheme requirements, and relevant tenant referencing or checks where applicable.',
     ],
   },
   {
+    key: 'deposit',
     title: 'Deposit & Holding Funds',
     paras: [
       'The Agent will register tenancy deposits in a Government scheme, unless instructed otherwise for Let Only services.',
@@ -67,6 +89,7 @@ const GENERAL_TAIL: Omit<AgreementSection, 'n'>[] = [
     ],
   },
   {
+    key: 'compliance',
     title: 'Legal & Regulatory Compliance',
     paras: [
       'The Landlord must ensure the Property complies with all safety and letting regulations, including but not limited to Gas Safety, Electrical Safety (EICR), Fire, Smoke and CO Alarm Regulations, EPC and Licensing (HMO / Selective Licensing), and Furniture & Furnishings Safety.',
@@ -75,6 +98,7 @@ const GENERAL_TAIL: Omit<AgreementSection, 'n'>[] = [
     ],
   },
   {
+    key: 'maintenance',
     title: 'Maintenance & Repairs',
     paras: [
       'The Property must be handed over in a safe, lettable condition, with all fixtures and appliances in working order and compliant with relevant safety legislation.',
@@ -84,6 +108,7 @@ const GENERAL_TAIL: Omit<AgreementSection, 'n'>[] = [
     ],
   },
   {
+    key: 'termination',
     title: 'Termination',
     paras: [
       'Either party may terminate this Agreement by giving three (3) months’ written notice. Early termination will incur a fee equal to one month’s rent.',
@@ -95,6 +120,7 @@ const GENERAL_TAIL: Omit<AgreementSection, 'n'>[] = [
     ],
   },
   {
+    key: 'legalAction',
     title: 'Legal Action & Rent Recovery',
     paras: [
       'The Agent will chase late rent for up to 28 days. Thereafter, the Landlord may appoint a solicitor at their own expense.',
@@ -102,6 +128,7 @@ const GENERAL_TAIL: Omit<AgreementSection, 'n'>[] = [
     ],
   },
   {
+    key: 'overseas',
     title: 'Overseas Landlords',
     paras: [
       'The Landlord must declare whether they are a Resident Landlord or a Non-Resident Landlord for tax purposes under the HMRC Non-Resident Landlord (NRL) Scheme.',
@@ -112,6 +139,7 @@ const GENERAL_TAIL: Omit<AgreementSection, 'n'>[] = [
     ],
   },
   {
+    key: 'miscellaneous',
     title: 'Miscellaneous',
     paras: [
       'Notices may be served by hand, post, or email. Notices are deemed received by post 2 working days after posting, by email the next working day, if hand-delivered before 4:30 pm the same day, and if hand-delivered after 4:30 pm the next working day.',
@@ -121,6 +149,7 @@ const GENERAL_TAIL: Omit<AgreementSection, 'n'>[] = [
     ],
   },
   {
+    key: 'complaints',
     title: 'Complaints & Disputes',
     paras: [
       'Complaints should be made in writing to the Agent; if unresolved, they may be escalated to The Property Ombudsman.',
@@ -128,14 +157,31 @@ const GENERAL_TAIL: Omit<AgreementSection, 'n'>[] = [
   },
 ];
 
+// Every editable legal clause, in document order, for the admin wording editor
+// (the Service and Fees sections are intentionally excluded).
+export const EDITABLE_CLAUSES: Clause[] = [APPOINTMENT, ...TAIL_CLAUSES];
+
+/** The effective intro after applying an admin override. */
+export function effectiveIntro(template?: AgreementTemplate | null): string {
+  const t = template?.intro?.trim();
+  return t ? t : AGREEMENT_INTRO;
+}
+
+/** A clause with any admin override (title / paragraphs) applied. */
+export function resolveClause(clause: Clause, template?: AgreementTemplate | null): Clause {
+  const o = template?.clauses?.[clause.key];
+  if (!o) return clause;
+  const title = o.title?.trim() ? o.title.trim() : clause.title;
+  const paras = Array.isArray(o.paras) && o.paras.length ? o.paras : clause.paras;
+  return { ...clause, title, paras };
+}
+
 // The fees clause is driven entirely by the selected bundle so a fee shown on
-// /pricing is the fee written into the signed agreement.
+// /pricing is the fee written into the signed agreement. Not template-editable.
 function feesParas(bundle: Bundle): string[] {
   const paras: string[] = [];
   if (bundle.mgmtFee) {
-    paras.push(
-      `Tenant Find & Setup Fee: ${bundle.setupFee}. Management Fee: ${bundle.mgmtFee} of the monthly rent collected.`,
-    );
+    paras.push(`Tenant Find & Setup Fee: ${bundle.setupFee}. Management Fee: ${bundle.mgmtFee} of the monthly rent collected.`);
   } else {
     paras.push(`Tenant Find & Setup Fee: ${bundle.setupFee}. There is no ongoing management fee for this service.`);
   }
@@ -160,23 +206,18 @@ export function findBundle(idOrLabel: string | undefined | null): Bundle | undef
 
 /**
  * The full ordered agreement for a given package. Section 2 (Service) and
- * section 3 (Fees) are built from the bundle; everything else is the general
- * contract. Consumed identically by the on-screen review, the PDF and the email
- * so the three can never disagree.
+ * section 3 (Fees) are built from the bundle; every other clause is a general
+ * clause with any admin template override applied. Consumed identically by the
+ * on-screen review, the PDF and the email so the three can never disagree.
  */
-export function buildAgreementSections(bundle: Bundle): AgreementSection[] {
-  const sections: Omit<AgreementSection, 'n'>[] = [
-    APPOINTMENT,
-    {
-      title: 'The Service',
-      paras: [serviceIntro(bundle)],
-      groups: bundle.groups,
-    },
-    {
-      title: 'Fees',
-      paras: feesParas(bundle),
-    },
-    ...GENERAL_TAIL,
+export function buildAgreementSections(bundle: Bundle, template?: AgreementTemplate | null): AgreementSection[] {
+  const appointment = resolveClause(APPOINTMENT, template);
+  const tail = TAIL_CLAUSES.map((c) => resolveClause(c, template));
+  const ordered: Omit<AgreementSection, 'n'>[] = [
+    { title: appointment.title, paras: appointment.paras },
+    { title: 'The Service', paras: [serviceIntro(bundle)], groups: bundle.groups },
+    { title: 'Fees', paras: feesParas(bundle) },
+    ...tail.map((c) => ({ title: c.title, paras: c.paras })),
   ];
-  return sections.map((s, i) => ({ ...s, n: i + 1 }));
+  return ordered.map((s, i) => ({ ...s, n: i + 1 }));
 }

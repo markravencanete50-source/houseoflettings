@@ -1,0 +1,58 @@
+// app/api/landlord-agreement/resume/route.ts
+// Public, token-guarded read used by the sign form when a landlord returns via a
+// re-issue link (?id=&token=). Returns just the fields needed to pre-fill the
+// form so they can review the corrected agreement and re-sign. No signature or
+// token is ever returned.
+import { initializeApp, getApps, cert } from 'firebase-admin/app';
+import { getFirestore } from 'firebase-admin/firestore';
+import { rateLimit } from '@/lib/rateLimit';
+
+function db() {
+  if (!getApps().length) {
+    initializeApp({
+      credential: cert({
+        projectId: process.env.FIREBASE_PROJECT_ID,
+        clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+        privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
+      }),
+    });
+  }
+  return getFirestore();
+}
+
+// The form fields we hand back for pre-fill (never signature / token / status).
+const RESUME_FIELDS = [
+  'fullName', 'email', 'phone', 'contactAddress',
+  'jointLandlord', 'landlord2Name', 'landlord2Email', 'residency',
+  'postcode', 'street', 'city', 'county', 'flatNumber',
+  'propertyType', 'bedrooms', 'bathrooms', 'receptions',
+  'furnishing', 'parking', 'availableFrom', 'currentRent', 'securityNote',
+  'selectedPackageId', 'selectedPackage',
+] as const;
+
+export async function GET(request: Request) {
+  const limited = rateLimit(request, 'landlord-agreement-resume', 30, 10 * 60 * 1000);
+  if (limited) return limited;
+  try {
+    const url = new URL(request.url);
+    const id = (url.searchParams.get('id') || '').trim();
+    const token = (url.searchParams.get('token') || '').trim();
+    if (!id || !token) return Response.json({ message: 'Missing link parameters.' }, { status: 400 });
+
+    const snap = await db().collection('landlordAgreements').doc(id).get();
+    const data = snap.data();
+    if (!snap.exists || !data) return Response.json({ message: 'Agreement not found.' }, { status: 404 });
+
+    const valid = data.reissueToken && data.reissueToken === token
+      && (!data.reissueExpires || data.reissueExpires > Date.now());
+    if (!valid) return Response.json({ message: 'This signing link is invalid or has expired.' }, { status: 403 });
+
+    const fields: Record<string, unknown> = {};
+    for (const k of RESUME_FIELDS) if (data[k] !== undefined) fields[k] = data[k];
+
+    return Response.json({ id, fields }, { status: 200 });
+  } catch (e) {
+    console.error('landlord-agreement resume error:', e);
+    return Response.json({ message: 'Internal server error.' }, { status: 500 });
+  }
+}

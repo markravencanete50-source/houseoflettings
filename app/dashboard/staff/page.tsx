@@ -11,6 +11,8 @@ import Navbar from '@/components/layout/Navbar';
 import PropertyForm from '@/components/property/PropertyForm';
 import RentReviewPropertyManager from '@/components/dashboard/RentReviewPropertyManager';
 import RentReviewPanel from '@/components/valuation/RentReviewPanel';
+import AgreementEditor from '@/components/dashboard/AgreementEditor';
+import AgreementTemplateEditor from '@/components/dashboard/AgreementTemplateEditor';
 import { useAuth } from '@/hooks/useAuth';
 import { signOut } from '@/services/auth';
 import { Property, propertyAvailability } from '@/lib/types';
@@ -107,6 +109,9 @@ interface Agreement {
   signatureName?: string;
   signatureDate?: string;
   signatureUrl?: string;
+  landlord2Email?: string; county?: string; securityNote?: string;
+  selectedPackageId?: string;
+  awaitingSignature?: boolean;
   status: string;
   createdAt: string | null;
 }
@@ -146,6 +151,7 @@ const badge = (status: string): { bg: string; color: string } => {
     pending:       { bg: '#fff8e1', color: '#f57f17' },
     open:          { bg: '#fff8e1', color: '#f57f17' },
     signed:        { bg: '#fff8e1', color: '#f57f17' },
+    'awaiting-signature': { bg: '#fff3e0', color: '#ef6c00' },
     countersigned: { bg: '#e3f2fd', color: '#1565c0' },
     reviewing:     { bg: '#e3f2fd', color: '#1565c0' },
     'in-progress': { bg: '#e3f2fd', color: '#1565c0' },
@@ -271,6 +277,8 @@ function StaffDashboardInner() {
   const [orders, setOrders] = useState<ServiceOrder[]>([]);
   const [agreements, setAgreements] = useState<Agreement[]>([]);
   const [expandedAgreement, setExpandedAgreement] = useState<string | null>(null);
+  const [editingAgreement, setEditingAgreement] = useState<string | null>(null);
+  const [showAgreementWording, setShowAgreementWording] = useState(false);
   const [valuations, setValuations] = useState<Valuation[]>([]);
   const [reviews, setReviews] = useState<GoogleReview[]>([]);
   const [rentReviews, setRentReviews] = useState<RentReview[]>([]);
@@ -416,6 +424,24 @@ function StaffDashboardInner() {
       console.error('agreement status update failed:', e);
       setAgreements(prev);
       alert('Could not update the status. Please try again.');
+    }
+  };
+
+  const saveAgreementEdit = async (id: string, fields: Record<string, any>, mode: 'save' | 'correct' | 'reissue'): Promise<boolean> => {
+    try {
+      const res = await authedFetch('/api/staff/agreements', { method: 'PATCH', body: JSON.stringify({ id, action: 'edit', fields, mode }) });
+      const j = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(j.message || `HTTP ${res.status}`);
+      setAgreements(as => as.map(a => a.id === id
+        ? { ...a, ...fields, ...(mode === 'reissue' ? { status: 'awaiting-signature', awaitingSignature: true } : {}) }
+        : a));
+      setEditingAgreement(null);
+      if (mode === 'correct') alert('Saved. An updated copy has been emailed to the landlord and the office.');
+      if (mode === 'reissue') alert('Saved. A link to review and re-sign has been emailed to the landlord.');
+      return true;
+    } catch (e) {
+      console.error('agreement edit failed:', e);
+      return false;
     }
   };
 
@@ -832,11 +858,21 @@ function StaffDashboardInner() {
           )}
 
           {/* ── Agreements ── */}
-          {tab === 'agreements' && perms.includes('agreements') && (
+          {tab === 'agreements' && perms.includes('agreements') && showAgreementWording && profile.role === 'admin' && (
+            <AgreementTemplateEditor authedFetch={authedFetch} onClose={() => setShowAgreementWording(false)} />
+          )}
+          {tab === 'agreements' && perms.includes('agreements') && !(showAgreementWording && profile.role === 'admin') && (
             <div>
-              <h1 className="dash-section-title">Landlord Agreements</h1>
-              <p style={{ color: 'var(--gray-600)', marginBottom: 24, fontSize: 15 }}>
-                Signed management agreements from landlords. Set the status as each one progresses; the signed PDF was emailed to the landlord and the office when it was submitted.
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12, flexWrap: 'wrap' }}>
+                <h1 className="dash-section-title" style={{ margin: 0 }}>Landlord Agreements</h1>
+                {profile.role === 'admin' && (
+                  <button onClick={() => setShowAgreementWording(true)} style={{ background: '#eff5ff', color: '#2563eb', border: '1px solid #dbe4ff', borderRadius: 8, padding: '9px 16px', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
+                    ✎ Edit agreement wording
+                  </button>
+                )}
+              </div>
+              <p style={{ color: 'var(--gray-600)', margin: '8px 0 24px', fontSize: 15 }}>
+                Signed management agreements from landlords. Set the status as each one progresses, or Edit to correct a landlord’s details or change the package, then save, email a corrected copy, or re-issue for signature.
               </p>
               {!loaded.agreements ? (
                 <div className="dash-card" style={{ textAlign: 'center', color: 'var(--gray-400)', padding: 40 }}>Loading agreements…</div>
@@ -869,10 +905,20 @@ function StaffDashboardInner() {
                           >
                             {AGREEMENT_STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
                           </select>
-                          <button onClick={() => setExpandedAgreement(isOpen ? null : a.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--gray-600)', fontSize: 13, fontWeight: 600 }}>
+                          <button onClick={() => { setEditingAgreement(editingAgreement === a.id ? null : a.id); setExpandedAgreement(null); }} style={{ background: 'none', border: '1px solid var(--gray-200)', borderRadius: 6, padding: '5px 12px', cursor: 'pointer', color: '#2563eb', fontSize: 13, fontWeight: 600 }}>
+                            {editingAgreement === a.id ? 'Close' : 'Edit'}
+                          </button>
+                          <button onClick={() => { setExpandedAgreement(isOpen ? null : a.id); setEditingAgreement(null); }} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--gray-600)', fontSize: 13, fontWeight: 600 }}>
                             {isOpen ? 'Hide ▲' : 'Details ▼'}
                           </button>
                         </div>
+                        {editingAgreement === a.id && (
+                          <AgreementEditor
+                            agreement={a as Record<string, any>}
+                            onSave={(fields, mode) => saveAgreementEdit(a.id, fields, mode)}
+                            onCancel={() => setEditingAgreement(null)}
+                          />
+                        )}
                         {isOpen && (
                           <div style={{ borderTop: '1px solid var(--gray-100)', padding: '16px 20px', background: '#fafbfc', fontSize: 13, color: 'var(--gray-600)' }}>
                             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(220px,1fr))', gap: '8px 24px' }}>

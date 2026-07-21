@@ -13,6 +13,7 @@
 // writes into the signed PDF. Signing is free: no DocuSign, no Stripe.
 import { useState, useEffect, useCallback, useRef } from 'react';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
 import PostcodeLookup, { type AddressResult } from '@/components/PostcodeLookup';
@@ -21,9 +22,10 @@ import { BUNDLES } from '@/lib/bundles';
 import { CLOUDINARY_FOLDERS } from '@/lib/cloudinaryFolders';
 import {
   AGENT_DETAILS,
-  AGREEMENT_INTRO,
+  effectiveIntro,
   buildAgreementSections,
   findBundle,
+  type AgreementTemplate,
 } from '@/lib/agreementContent';
 
 // ── Cloudinary direct upload (bypasses Vercel's ~4.5MB body limit) ──────────
@@ -64,7 +66,7 @@ const EMPTY = {
   postcode: '', street: '', city: '', county: '', flatNumber: '',
   propertyType: '', bedrooms: '', bathrooms: '', receptions: '',
   furnishing: '', parking: '', availableFrom: '', currentRent: '', securityNote: '',
-  selectedPackageId: '',
+  selectedPackageId: '', selectedPackage: '',
   termsAccepted: false,
   signatureName: '', signatureDate: '',
 };
@@ -80,9 +82,16 @@ const FURNISHINGS = ['Furnished', 'Part-furnished', 'Unfurnished'];
 const PARKINGS = ['None', 'On-street', 'Driveway', 'Garage', 'Allocated space'];
 
 export default function AgreementFormClient() {
+  const searchParams = useSearchParams();
+  const resumeId = searchParams.get('agreementId') || '';
+  const resumeToken = searchParams.get('token') || '';
+  const isResume = !!(resumeId && resumeToken);
+
   const [step, setStep] = useState(0);
   const [form, setForm] = useState<FormState>(EMPTY);
   const [restored, setRestored] = useState(false);
+  const [template, setTemplate] = useState<AgreementTemplate | null>(null);
+  const [resumeLoading, setResumeLoading] = useState(isResume);
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [done, setDone] = useState<{ ref: string } | null>(null);
@@ -93,24 +102,51 @@ export default function AgreementFormClient() {
   const [uploadingSig, setUploadingSig] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
-  const bundle = findBundle(form.selectedPackageId);
+  const bundle = findBundle(form.selectedPackageId) || findBundle(form.selectedPackage);
 
-  // Restore a saved draft (text fields only) once on mount.
+  // Load the admin-editable clause wording (falls back to code defaults).
   useEffect(() => {
+    let cancelled = false;
+    fetch('/api/agreement-template')
+      .then(r => r.json())
+      .then(j => { if (!cancelled) setTemplate(j.template || {}); })
+      .catch(() => { if (!cancelled) setTemplate({}); });
+    return () => { cancelled = true; };
+  }, []);
+
+  // On mount: in resume mode, pre-fill from the server (the landlord came back
+  // via a re-issue link to re-sign); otherwise restore any saved draft.
+  useEffect(() => {
+    const today = new Date().toLocaleDateString('en-GB');
+    if (isResume) {
+      fetch(`/api/landlord-agreement/resume?id=${encodeURIComponent(resumeId)}&token=${encodeURIComponent(resumeToken)}`)
+        .then(async r => {
+          const j = await r.json().catch(() => ({}));
+          if (!r.ok) throw new Error(j.message || 'This signing link is invalid or has expired.');
+          setForm(f => ({ ...EMPTY, ...f, ...j.fields, signatureDate: today }));
+          setStep(3); // jump to the agreement review, then Sign
+          setResumeLoading(false); // success: show the form
+          setRestored(true);
+        })
+        // On error, keep the loading screen so it shows the error (not an empty
+        // form) — the link is invalid, expired, or the record is gone.
+        .catch((e: any) => { setError(e.message || 'Could not load your agreement.'); setRestored(true); });
+      return;
+    }
     try {
       const raw = sessionStorage.getItem(STORAGE_KEY);
       if (raw) setForm({ ...EMPTY, ...JSON.parse(raw) });
     } catch { /* ignore */ }
-    // Default the signature date to today (en-GB) if not already set.
-    setForm(f => (f.signatureDate ? f : { ...f, signatureDate: new Date().toLocaleDateString('en-GB') }));
+    setForm(f => (f.signatureDate ? f : { ...f, signatureDate: today }));
     setRestored(true);
-  }, []);
+  }, [isResume, resumeId, resumeToken]);
 
   // Persist after restore so StrictMode's double-mount can't wipe the draft.
+  // Never persist a re-issue session (it belongs to a specific record).
   useEffect(() => {
-    if (!restored) return;
+    if (!restored || isResume) return;
     try { sessionStorage.setItem(STORAGE_KEY, JSON.stringify(form)); } catch { /* ignore */ }
-  }, [form, restored]);
+  }, [form, restored, isResume]);
 
   useEffect(() => { window.scrollTo({ top: 0, behavior: 'smooth' }); }, [step]);
 
@@ -189,6 +225,7 @@ export default function AgreementFormClient() {
         selectedPackage: bundle.label,
         signatureUrl,
         signatureImage: signatureData, // NOT a *Url field, so it survives sanitising
+        ...(isResume ? { agreementId: resumeId, reissueToken: resumeToken } : {}),
       };
       const res = await fetch('/api/landlord-agreement', {
         method: 'POST',
@@ -231,16 +268,32 @@ export default function AgreementFormClient() {
     );
   }
 
+  if (resumeLoading) {
+    return (
+      <>
+        <Navbar />
+        <main className="la-wrap">
+          <div className="la-card" style={{ textAlign: 'center', color: '#6b7280' }}>
+            {error ? <p className="la-error" style={{ marginTop: 0 }}>{error}</p> : 'Loading your agreement…'}
+          </div>
+        </main>
+        <Footer />
+        <style>{STYLES}</style>
+      </>
+    );
+  }
+
   return (
     <>
       <Navbar />
       <main className="la-wrap">
         <header className="la-head">
           <span className="la-eyebrow">Landlord Agreement</span>
-          <h1>Sign your management agreement</h1>
+          <h1>{isResume ? 'Review and re-sign your agreement' : 'Sign your management agreement'}</h1>
           <p>
-            Choose your service, review the Residential Lettings &amp; Management Agreement, accept the terms and
-            sign online. It takes a few minutes and there is no cost to sign.
+            {isResume
+              ? 'Your agreement has been updated. Please review the details below and sign again to confirm the current terms.'
+              : 'Choose your service, review the Residential Lettings & Management Agreement, accept the terms and sign online. It takes a few minutes and there is no cost to sign.'}
           </p>
         </header>
 
@@ -380,7 +433,7 @@ export default function AgreementFormClient() {
                       type="button"
                       key={b.id}
                       className={`la-bundle ${active ? 'active' : ''}`}
-                      onClick={() => set('selectedPackageId', b.id)}
+                      onClick={() => setForm(f => ({ ...f, selectedPackageId: b.id, selectedPackage: b.label }))}
                     >
                       <div className="la-bundle-top">
                         <span className="la-bundle-name">{b.label}</span>
@@ -411,7 +464,7 @@ export default function AgreementFormClient() {
               <div className="la-agreement" role="document">
                 <div className="la-ag-head">
                   <h3>Residential Lettings &amp; Management Agreement</h3>
-                  <p>{AGREEMENT_INTRO}</p>
+                  <p>{effectiveIntro(template)}</p>
                 </div>
 
                 <div className="la-parties">
@@ -441,7 +494,7 @@ export default function AgreementFormClient() {
                   </div>
                 </div>
 
-                {buildAgreementSections(bundle).map(sec => (
+                {buildAgreementSections(bundle, template).map(sec => (
                   <div key={sec.n} className="la-clause">
                     <h4>{sec.n}. {sec.title}</h4>
                     {sec.paras?.map((p, i) => <p key={i}>{sec.n}.{i + 1} {p}</p>)}

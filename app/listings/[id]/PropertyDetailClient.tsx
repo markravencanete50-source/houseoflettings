@@ -14,6 +14,25 @@ import TenantEnquiryModal from '@/components/property/TenantEnquiryModal';
 import LetAgreedRibbon from '@/components/property/LetAgreedRibbon';
 import { cityFromText } from '@/lib/viewingSlots';
 
+// Human-readable labels for the amenity codes captured in the post-property form,
+// so the listing shows the actual parking/garden type rather than just a tick.
+const PARKING_LABELS: Record<string, string> = {
+  none: 'No parking', 'off-street': 'Off-street', residents: "Residents'",
+  'street-no-permit': 'Street (no permit)', 'street-permit': 'Street (permit)',
+  'driveway-private': 'Private driveway', 'driveway-shared': 'Shared driveway',
+  'single-garage': 'Single garage', 'double-garage': 'Double garage', garage: 'Garage',
+  'garage-en-bloc': 'Garage en bloc', 'garage-carport': 'Carport', 'garage-detached': 'Detached garage',
+  'garage-integral': 'Integral garage', gated: 'Gated', rear: 'Rear of property',
+  undercroft: 'Undercroft', underground: 'Underground',
+  'underground-allocated': 'Underground (allocated)', 'underground-no-allocated': 'Underground (unallocated)',
+  'communal-no-allocated': 'Communal (unallocated)', 'ev-private': 'EV charging (private)',
+  'ev-shared': 'EV charging (shared)', 'disabled-available': 'Disabled parking',
+  'disabled-not-available': 'No disabled parking', other: 'Other',
+};
+const GARDEN_LABELS: Record<string, string> = {
+  none: 'No garden', private: 'Private garden', shared: 'Shared garden', communal: 'Communal grounds',
+};
+
 export default function PropertyDetailClient() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
@@ -140,6 +159,45 @@ export default function PropertyDetailClient() {
   const contactPhone = isLeeds ? '+44 113 868 9212' : '+44 161 768 1758';
   const contactPhoneHref = isLeeds ? 'tel:+441138689212' : 'tel:+441617681758';
   const images = property.images || [];
+
+  const furnishedLabel = property.furnished ? property.furnished.charAt(0).toUpperCase() + property.furnished.slice(1) : 'N/A';
+  const gardenPresent = !!property.garden && property.garden !== 'none';
+  const parkingPresent = !!property.parking && property.parking !== 'none';
+
+  // Rows shared by the mobile and desktop "Features & Amenities" panels, so both
+  // surface the actual posted values (type of parking/garden, not just a tick).
+  const amenityRows: { label: string; text: string | null; present: boolean; plain?: boolean }[] = [
+    { label: 'Property type', text: property.propertyType === 'room' ? 'Room in shared house' : 'Whole property', present: true, plain: true },
+    { label: 'Furnishing', text: furnishedLabel, present: true, plain: true },
+    { label: 'Garden', text: gardenPresent ? (GARDEN_LABELS[property.garden as string] || 'Yes') : null, present: gardenPresent },
+    { label: 'Parking', text: parkingPresent ? (PARKING_LABELS[property.parking as string] || 'Yes') : null, present: parkingPresent },
+    { label: 'Balcony / Terrace', text: property.balcony ? 'Yes' : null, present: !!property.balcony },
+  ];
+
+  // Rows shared by the mobile and desktop "Pricing Details" panels.
+  const pricingRows: { label: string; value: string; color?: string }[] = [
+    { label: 'Rent PCM', value: `£${property.price.toLocaleString()}` },
+    { label: 'Deposit', value: property.depositAmount ? `£${property.depositAmount.toLocaleString()}` : 'N/A' },
+    { label: 'Bills Included', value: property.billsIncluded ? '✓ Yes' : '✗ No', color: property.billsIncluded ? '#166534' : '#c62828' },
+    {
+      label: 'Available From',
+      value: property.availableFrom
+        ? new Date(property.availableFrom).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
+        : 'Now',
+    },
+  ];
+
+  // Shared button style so the "Watch Video Tour" button matches the "Book a
+  // Viewing" button size in each column.
+  const videoBtnStyle: React.CSSProperties = {
+    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+    // 11.5px + the 1.5px border = 13px, matching the borderless "Book a Viewing"
+    // button's padding so both buttons are exactly the same height.
+    width: '100%', boxSizing: 'border-box', padding: '11.5px 14px',
+    background: '#fff', color: '#1a3c5e', border: '1.5px solid #1a3c5e', borderRadius: 6,
+    fontSize: 14, fontWeight: 600, letterSpacing: '0.5px', textTransform: 'uppercase',
+    cursor: 'pointer', textDecoration: 'none', fontFamily: "'Poppins', sans-serif",
+  };
 
   return (
     <>
@@ -683,8 +741,18 @@ export default function PropertyDetailClient() {
                   </div>
                 </div>
 
-                {/* ── MOBILE ONLY: Pricing Details + Features ── */}
+                {/* ── MOBILE ONLY: Video tour + Pricing Details + Features ── */}
                 <div className="hol-mobile-extras">
+                  {property.videoTourUrl && (
+                    <a
+                      href={property.videoTourUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{ ...videoBtnStyle, borderRadius: 8, marginTop: 16 }}
+                    >
+                      🎥 Watch Video Tour
+                    </a>
+                  )}
                   <div style={{
                     background: '#fff', border: '1px solid var(--gray-200)',
                     borderRadius: 8, padding: '16px 20px', marginTop: 16,
@@ -692,22 +760,17 @@ export default function PropertyDetailClient() {
                     <h4 style={{ fontSize: 13, fontWeight: 700, color: '#222', marginBottom: 12, textTransform: 'uppercase', letterSpacing: 0.5 }}>
                       Pricing Details
                     </h4>
-                    {[
-                      { label: 'Rent PCM', value: `£${property.price.toLocaleString()}` },
-                      { label: 'Deposit', value: property.depositAmount ? `£${property.depositAmount.toLocaleString()}` : 'N/A' },
-                      { label: 'Bills Included', value: property.billsIncluded ? '✓ Yes' : '✗ No', color: property.billsIncluded ? '#166534' : '#c62828' },
-                      {
-                        label: 'Available From',
-                        value: property.availableFrom
-                          ? new Date(property.availableFrom).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
-                          : 'Now',
-                      },
-                    ].map(r => (
+                    {pricingRows.map(r => (
                       <div key={r.label} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8, fontSize: 14 }}>
                         <span style={{ color: '#444' }}>{r.label}</span>
-                        <span style={{ fontWeight: 600, color: (r as any).color || '#222' }}>{r.value}</span>
+                        <span style={{ fontWeight: 600, color: r.color || '#222' }}>{r.value}</span>
                       </div>
                     ))}
+                    {property.billsIncluded && property.billsNote && (
+                      <div style={{ fontSize: 12.5, color: '#555', lineHeight: 1.5, marginTop: 2 }}>
+                        {property.billsNote}
+                      </div>
+                    )}
                   </div>
 
                   <div style={{
@@ -718,17 +781,14 @@ export default function PropertyDetailClient() {
                       Features &amp; Amenities
                     </h4>
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '8px 16px' }}>
-                      {[
-                        { label: 'Garden', value: property.garden && property.garden !== 'none', isText: false },
-                        { label: 'Parking', value: property.parking && property.parking !== 'none', isText: false },
-                        { label: 'Balcony', value: property.balcony, isText: false },
-                        { label: 'Furnishing', value: property.furnished ? property.furnished.charAt(0).toUpperCase() + property.furnished.slice(1) : null, isText: true },
-                      ].map(feat => (
-                        <div key={feat.label} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 14 }}>
-                          <span style={{ color: '#444' }}>{feat.label}</span>
-                          {feat.isText
-                            ? <span style={{ fontWeight: 600, color: '#222' }}>{feat.value as string || 'N/A'}</span>
-                            : <span style={{ color: feat.value ? '#166534' : '#c62828', fontWeight: 600 }}>{feat.value ? '✓' : '✗'}</span>
+                      {amenityRows.map(feat => (
+                        <div key={feat.label} style={{ display: 'flex', justifyContent: 'space-between', gap: 10, fontSize: 14 }}>
+                          <span style={{ color: '#444', flexShrink: 0 }}>{feat.label}</span>
+                          {feat.plain
+                            ? <span style={{ fontWeight: 600, color: '#222', textAlign: 'right' }}>{feat.text || 'N/A'}</span>
+                            : feat.present
+                              ? <span style={{ color: '#166534', fontWeight: 600, textAlign: 'right' }}>✓ {feat.text}</span>
+                              : <span style={{ color: '#c62828', fontWeight: 600 }}>✗</span>
                           }
                         </div>
                       ))}
@@ -808,6 +868,17 @@ export default function PropertyDetailClient() {
                       BOOK A VIEWING
                     </button>
 
+                    {property.videoTourUrl && (
+                      <a
+                        href={property.videoTourUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{ ...videoBtnStyle, marginBottom: 10 }}
+                      >
+                        🎥 Watch Video Tour
+                      </a>
+                    )}
+
                     {/* Agent-only: exact calendar event title to open viewing
                         availability for this property (matched by first line + postcode). */}
                     {profile?.role === 'admin' && property.location && (
@@ -874,22 +945,17 @@ export default function PropertyDetailClient() {
                     <h4 style={{ fontSize: 13, fontWeight: 700, color: '#222', marginBottom: 12, textTransform: 'uppercase', letterSpacing: 0.5 }}>
                       Pricing Details
                     </h4>
-                    {[
-                      { label: 'Rent PCM', value: `£${property.price.toLocaleString()}` },
-                      { label: 'Deposit', value: property.depositAmount ? `£${property.depositAmount.toLocaleString()}` : 'N/A' },
-                      { label: 'Bills Included', value: property.billsIncluded ? '✓ Yes' : '✗ No', color: property.billsIncluded ? '#166534' : '#c62828' },
-                      {
-                        label: 'Available From',
-                        value: property.availableFrom
-                          ? new Date(property.availableFrom).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
-                          : 'Now',
-                      },
-                    ].map(r => (
+                    {pricingRows.map(r => (
                       <div key={r.label} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8, fontSize: 14 }}>
                         <span style={{ color: '#444' }}>{r.label}</span>
-                        <span style={{ fontWeight: 600, color: (r as any).color || '#222' }}>{r.value}</span>
+                        <span style={{ fontWeight: 600, color: r.color || '#222' }}>{r.value}</span>
                       </div>
                     ))}
+                    {property.billsIncluded && property.billsNote && (
+                      <div style={{ fontSize: 12.5, color: '#555', lineHeight: 1.5, marginTop: 2 }}>
+                        {property.billsNote}
+                      </div>
+                    )}
                   </div>
 
                   {/* Features & Amenities */}
@@ -901,17 +967,14 @@ export default function PropertyDetailClient() {
                       Features &amp; Amenities
                     </h4>
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '8px 16px' }}>
-                      {[
-                        { label: 'Garden', value: property.garden && property.garden !== 'none', isText: false },
-                        { label: 'Parking', value: property.parking && property.parking !== 'none', isText: false },
-                        { label: 'Balcony', value: property.balcony, isText: false },
-                        { label: 'Furnishing', value: property.furnished ? property.furnished.charAt(0).toUpperCase() + property.furnished.slice(1) : null, isText: true },
-                      ].map(feat => (
-                        <div key={feat.label} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 14 }}>
-                          <span style={{ color: '#444' }}>{feat.label}</span>
-                          {feat.isText
-                            ? <span style={{ fontWeight: 600, color: '#222' }}>{feat.value as string || 'N/A'}</span>
-                            : <span style={{ color: feat.value ? '#166534' : '#c62828', fontWeight: 600 }}>{feat.value ? '✓' : '✗'}</span>
+                      {amenityRows.map(feat => (
+                        <div key={feat.label} style={{ display: 'flex', justifyContent: 'space-between', gap: 10, fontSize: 14 }}>
+                          <span style={{ color: '#444', flexShrink: 0 }}>{feat.label}</span>
+                          {feat.plain
+                            ? <span style={{ fontWeight: 600, color: '#222', textAlign: 'right' }}>{feat.text || 'N/A'}</span>
+                            : feat.present
+                              ? <span style={{ color: '#166534', fontWeight: 600, textAlign: 'right' }}>✓ {feat.text}</span>
+                              : <span style={{ color: '#c62828', fontWeight: 600 }}>✗</span>
                           }
                         </div>
                       ))}

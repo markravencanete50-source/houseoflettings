@@ -75,6 +75,17 @@ export default function PropertyCard({ property, distanceMiles }: PropertyCardPr
         )}
         {propertyAvailability(property) === 'let-agreed' && <LetAgreedRibbon fontSize={16} />}
         {propertyAvailability(property) === 'pending' && <LetAgreedRibbon fontSize={16} label="Pending" color="#ef6c00" />}
+        {property.videoTourUrl && (
+          <span style={{
+            position: 'absolute', bottom: 12, left: 12,
+            background: 'rgba(15,31,61,0.82)', color: '#fff',
+            fontSize: 11, fontWeight: 600, fontFamily: "'Poppins', sans-serif",
+            padding: '4px 10px', borderRadius: 999, letterSpacing: '0.3px',
+            display: 'flex', alignItems: 'center', gap: 5, pointerEvents: 'none',
+          }}>
+            🎥 Video tour
+          </span>
+        )}
       </div>
 
       {/* Body */}

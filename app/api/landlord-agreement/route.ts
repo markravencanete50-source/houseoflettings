@@ -59,36 +59,88 @@ export async function POST(request: Request) {
     // against the existing record before updating it in place.
     const agreementId = (data.agreementId || '').toString().trim();
     const reissueToken = (data.reissueToken || '').toString().trim();
-    let docId = agreementId;
 
     // Keep the base64 signature out of Firestore (kept lean); the Cloudinary URL
     // is the durable record. The raw image is only needed to build the PDF.
-    const { signatureImage, agreementId: _a, reissueToken: _t, ...toStore } = data;
+    // Coupon fields are stripped and re-added from the coupon document — the
+    // client-claimed discount is never trusted.
+    const { signatureImage, agreementId: _a, reissueToken: _t, couponCode: _c, couponDiscount: _d, ...toStore } = data;
 
-    if (agreementId) {
-      const ref = db.collection('landlordAgreements').doc(agreementId);
-      const snap = await ref.get();
-      const existing = snap.data();
-      if (!snap.exists || !existing) return Response.json({ message: 'Agreement not found' }, { status: 404 });
-      const valid = existing.reissueToken && existing.reissueToken === reissueToken
-        && (!existing.reissueExpires || existing.reissueExpires > Date.now());
-      if (!valid) return Response.json({ message: 'This signing link is invalid or has expired.' }, { status: 403 });
-      await ref.update({
-        ...toStore,
-        status: 'signed',
-        reissueToken: FieldValue.delete(),
-        reissueExpires: FieldValue.delete(),
-        updatedAt: FieldValue.serverTimestamp(),
-      });
+    const couponCode = (data.couponCode || '').toString().trim().toUpperCase();
+    const agreementRef = agreementId
+      ? db.collection('landlordAgreements').doc(agreementId)
+      : db.collection('landlordAgreements').doc();
+    const docId = agreementRef.id;
+
+    // One transaction covers the re-issue token check, the coupon redemption
+    // and the agreement write, so a coupon can only ever be redeemed once and
+    // never without the agreement actually being recorded.
+    let clientError: { message: string; status: number } | null = null;
+    let redeemedDiscount = 0;
+    await db.runTransaction(async tx => {
+      // ── All reads first (Firestore transaction rule) ──
+      const couponRef = couponCode ? db.collection('agreementCoupons').doc(couponCode) : null;
+      const cSnap = couponRef ? await tx.get(couponRef) : null;
+      const aSnap = agreementId ? await tx.get(agreementRef) : null;
+
+      let couponFields: Record<string, unknown> = {};
+      if (couponRef && cSnap) {
+        const c = cSnap.data();
+        if (!cSnap.exists || !c) { clientError = { message: 'That coupon code was not found.', status: 400 }; return; }
+        if (c.status !== 'active') { clientError = { message: 'This coupon has already been used or is no longer active.', status: 400 }; return; }
+        if (c.bundleId !== bundle.id) { clientError = { message: `This coupon is for the ${c.bundleLabel} package.`, status: 400 }; return; }
+        couponFields = { couponCode, couponDiscount: c.discount };
+        redeemedDiscount = c.discount;
+      }
+      if (agreementId) {
+        const existing = aSnap?.data();
+        if (!aSnap?.exists || !existing) { clientError = { message: 'Agreement not found', status: 404 }; return; }
+        const valid = existing.reissueToken && existing.reissueToken === reissueToken
+          && (!existing.reissueExpires || existing.reissueExpires > Date.now());
+        if (!valid) { clientError = { message: 'This signing link is invalid or has expired.', status: 403 }; return; }
+      }
+
+      // ── Writes ──
+      if (couponRef) {
+        tx.update(couponRef, {
+          status: 'used',
+          usedAt: FieldValue.serverTimestamp(),
+          usedBy: { name: data.fullName, email: data.email },
+          agreementId: docId,
+        });
+      }
+      if (agreementId) {
+        tx.update(agreementRef, {
+          ...toStore,
+          ...couponFields,
+          status: 'signed',
+          reissueToken: FieldValue.delete(),
+          reissueExpires: FieldValue.delete(),
+          updatedAt: FieldValue.serverTimestamp(),
+        });
+      } else {
+        tx.set(agreementRef, {
+          ...toStore,
+          ...couponFields,
+          status: 'signed',
+          source: 'website-landlord-agreement',
+          createdAt: FieldValue.serverTimestamp(),
+          updatedAt: FieldValue.serverTimestamp(),
+        });
+      }
+    });
+    if (clientError) {
+      const { message, status } = clientError;
+      return Response.json({ message }, { status });
+    }
+
+    // The documents must show the SERVER-verified discount.
+    if (couponCode && redeemedDiscount > 0) {
+      data.couponCode = couponCode;
+      data.couponDiscount = redeemedDiscount;
     } else {
-      const ref = await db.collection('landlordAgreements').add({
-        ...toStore,
-        status: 'signed',
-        source: 'website-landlord-agreement',
-        createdAt: FieldValue.serverTimestamp(),
-        updatedAt: FieldValue.serverTimestamp(),
-      });
-      docId = ref.id;
+      delete data.couponCode;
+      delete data.couponDiscount;
     }
 
     const template = await loadAgreementTemplate(db);

@@ -13,6 +13,7 @@ import RentReviewPropertyManager from '@/components/dashboard/RentReviewProperty
 import RentReviewPanel from '@/components/valuation/RentReviewPanel';
 import AgreementEditor from '@/components/dashboard/AgreementEditor';
 import AgreementTemplateEditor from '@/components/dashboard/AgreementTemplateEditor';
+import CouponManager from '@/components/dashboard/CouponManager';
 import { useAuth } from '@/hooks/useAuth';
 import { signOut } from '@/services/auth';
 import { Property, propertyAvailability } from '@/lib/types';
@@ -279,6 +280,7 @@ function StaffDashboardInner() {
   const [expandedAgreement, setExpandedAgreement] = useState<string | null>(null);
   const [editingAgreement, setEditingAgreement] = useState<string | null>(null);
   const [showAgreementWording, setShowAgreementWording] = useState(false);
+  const [showCoupons, setShowCoupons] = useState(false);
   const [valuations, setValuations] = useState<Valuation[]>([]);
   const [reviews, setReviews] = useState<GoogleReview[]>([]);
   const [rentReviews, setRentReviews] = useState<RentReview[]>([]);
@@ -872,15 +874,23 @@ function StaffDashboardInner() {
           {tab === 'agreements' && perms.includes('agreements') && showAgreementWording && profile.role === 'admin' && (
             <AgreementTemplateEditor authedFetch={authedFetch} onClose={() => setShowAgreementWording(false)} />
           )}
-          {tab === 'agreements' && perms.includes('agreements') && !(showAgreementWording && profile.role === 'admin') && (
+          {tab === 'agreements' && perms.includes('agreements') && showCoupons && !showAgreementWording && (
+            <CouponManager authedFetch={authedFetch} onClose={() => setShowCoupons(false)} />
+          )}
+          {tab === 'agreements' && perms.includes('agreements') && !showCoupons && !(showAgreementWording && profile.role === 'admin') && (
             <div>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12, flexWrap: 'wrap' }}>
                 <h1 className="dash-section-title" style={{ margin: 0 }}>Landlord Agreements</h1>
-                {profile.role === 'admin' && (
-                  <button onClick={() => setShowAgreementWording(true)} style={{ background: '#eff5ff', color: '#2563eb', border: '1px solid #dbe4ff', borderRadius: 8, padding: '9px 16px', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
-                    ✎ Edit agreement wording
+                <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+                  <button onClick={() => setShowCoupons(true)} style={{ background: '#f0fdf4', color: '#15803d', border: '1px solid #bbf7d0', borderRadius: 8, padding: '9px 16px', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
+                    🎟️ Coupons
                   </button>
-                )}
+                  {profile.role === 'admin' && (
+                    <button onClick={() => setShowAgreementWording(true)} style={{ background: '#eff5ff', color: '#2563eb', border: '1px solid #dbe4ff', borderRadius: 8, padding: '9px 16px', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
+                      ✎ Edit agreement wording
+                    </button>
+                  )}
+                </div>
               </div>
               <p style={{ color: 'var(--gray-600)', margin: '8px 0 24px', fontSize: 15 }}>
                 Signed management agreements from landlords. Set the status as each one progresses, or Edit to correct a landlord’s details or change the package, then save, email a corrected copy, or re-issue for signature.

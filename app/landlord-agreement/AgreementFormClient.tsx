@@ -96,6 +96,13 @@ export default function AgreementFormClient() {
   const [submitting, setSubmitting] = useState(false);
   const [done, setDone] = useState<{ ref: string } | null>(null);
 
+  // One-time discount coupon (issued by the office for a specific landlord).
+  // Validated server-side here for preview, and redeemed atomically on submit.
+  const [couponInput, setCouponInput] = useState('');
+  const [coupon, setCoupon] = useState<{ code: string; discount: number; bundleId: string; bundleLabel: string; setupFee: number; finalFee: number } | null>(null);
+  const [couponMsg, setCouponMsg] = useState('');
+  const [couponChecking, setCouponChecking] = useState(false);
+
   // Signature: a drawn/uploaded PNG data URL kept in memory (never persisted to
   // sessionStorage; it is large and re-drawing is trivial).
   const [signatureData, setSignatureData] = useState<string | null>(null);
@@ -151,6 +158,33 @@ export default function AgreementFormClient() {
   useEffect(() => { window.scrollTo({ top: 0, behavior: 'smooth' }); }, [step]);
 
   const set = <K extends keyof FormState>(k: K, v: FormState[K]) => setForm(f => ({ ...f, [k]: v }));
+
+  // A coupon belongs to ONE package — drop it if the landlord switches away.
+  useEffect(() => {
+    if (coupon && form.selectedPackageId && coupon.bundleId !== form.selectedPackageId) {
+      setCoupon(null);
+      setCouponMsg(`Coupon ${coupon.code} removed — it is only valid for ${coupon.bundleLabel}.`);
+    }
+  }, [form.selectedPackageId, coupon]);
+
+  const applyCoupon = async () => {
+    const code = couponInput.trim().toUpperCase();
+    if (!code) { setCouponMsg('Enter your coupon code first.'); return; }
+    setCouponChecking(true);
+    setCouponMsg('');
+    try {
+      const res = await fetch(`/api/landlord-agreement/coupon?code=${encodeURIComponent(code)}&bundleId=${encodeURIComponent(form.selectedPackageId || '')}`);
+      const j = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(j.message || 'Could not check that code.');
+      setCoupon(j.coupon);
+      setCouponInput('');
+    } catch (e: any) {
+      setCoupon(null);
+      setCouponMsg(e.message || 'Could not check that code.');
+    } finally {
+      setCouponChecking(false);
+    }
+  };
 
   const onAddress = useCallback((a: AddressResult) => {
     setForm(f => ({ ...f, street: a.street, city: a.city, county: a.county, postcode: a.postcode }));
@@ -225,6 +259,7 @@ export default function AgreementFormClient() {
         selectedPackage: bundle.label,
         signatureUrl,
         signatureImage: signatureData, // NOT a *Url field, so it survives sanitising
+        ...(coupon ? { couponCode: coupon.code } : {}),
         ...(isResume ? { agreementId: resumeId, reissueToken: resumeToken } : {}),
       };
       const res = await fetch('/api/landlord-agreement', {
@@ -306,11 +341,14 @@ export default function AgreementFormClient() {
             </li>
           ))}
         </ol>
+        <div className="la-progress" aria-hidden>
+          <span style={{ width: `${(step / (STEPS.length - 1)) * 100}%` }} />
+        </div>
 
         <div className="la-card">
           {/* ── Step 1: Landlord ── */}
           {step === 0 && (
-            <section>
+            <section key={step} className="la-step-pane">
               <h2>Landlord details</h2>
               <div className="la-grid">
                 <Field label="Full name (as it should appear on the agreement)" req>
@@ -346,7 +384,7 @@ export default function AgreementFormClient() {
 
           {/* ── Step 2: Property ── */}
           {step === 1 && (
-            <section>
+            <section key={step} className="la-step-pane">
               <h2>Property details</h2>
               <p className="la-sub">The property you are instructing us to let and manage.</p>
               <Field label="Postcode & address" req>
@@ -419,7 +457,7 @@ export default function AgreementFormClient() {
 
           {/* ── Step 3: Service ── */}
           {step === 2 && (
-            <section>
+            <section key={step} className="la-step-pane">
               <h2>Choose your service</h2>
               <p className="la-sub">
                 Your agreement covers the package you select here. You can see exactly what each includes on our{' '}
@@ -452,12 +490,42 @@ export default function AgreementFormClient() {
                   );
                 })}
               </div>
+
+              {/* One-time discount coupon (issued by the office) */}
+              <div className="la-coupon">
+                <div className="la-coupon-title">🎟️ Have a discount coupon?</div>
+                {coupon ? (
+                  <div className="la-coupon-ok">
+                    <div>
+                      <b>{coupon.code}</b> applied — {coupon.bundleLabel} setup fee £{coupon.setupFee} − £{coupon.discount} = <b>£{coupon.finalFee}</b>
+                    </div>
+                    <button type="button" className="la-coupon-remove" onClick={() => { setCoupon(null); setCouponMsg(''); }}>Remove</button>
+                  </div>
+                ) : (
+                  <div className="la-coupon-row">
+                    <input
+                      className="la-in la-coupon-in"
+                      value={couponInput}
+                      onChange={e => { setCouponInput(e.target.value.toUpperCase()); setCouponMsg(''); }}
+                      onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); applyCoupon(); } }}
+                      placeholder="e.g. HOL-A7K2XM"
+                      autoCapitalize="characters"
+                      autoCorrect="off"
+                      spellCheck={false}
+                    />
+                    <button type="button" className="la-btn la-btn-solid la-coupon-apply" onClick={applyCoupon} disabled={couponChecking}>
+                      {couponChecking ? 'Checking…' : 'Apply'}
+                    </button>
+                  </div>
+                )}
+                {couponMsg && <div className="la-coupon-msg">{couponMsg}</div>}
+              </div>
             </section>
           )}
 
           {/* ── Step 4: Agreement ── */}
           {step === 3 && bundle && (
-            <section>
+            <section key={step} className="la-step-pane">
               <h2>Your agreement</h2>
               <p className="la-sub">Please read the agreement carefully before you accept and sign.</p>
 
@@ -494,7 +562,7 @@ export default function AgreementFormClient() {
                   </div>
                 </div>
 
-                {buildAgreementSections(bundle, template).map(sec => (
+                {buildAgreementSections(bundle, template, coupon ? { code: coupon.code, discount: coupon.discount } : undefined).map(sec => (
                   <div key={sec.n} className="la-clause">
                     <h4>{sec.n}. {sec.title}</h4>
                     {sec.paras?.map((p, i) => <p key={i}>{sec.n}.{i + 1} {p}</p>)}
@@ -538,7 +606,7 @@ export default function AgreementFormClient() {
 
           {/* ── Step 5: Sign ── */}
           {step === 4 && bundle && (
-            <section>
+            <section key={step} className="la-step-pane">
               <h2>Sign the agreement</h2>
               <p className="la-sub">
                 Add your signature below for the <strong>{bundle.label}</strong> agreement. Draw it with your finger
@@ -620,13 +688,19 @@ const STYLES = `
 .la-eyebrow{display:inline-block;background:#eff5ff;color:#2563eb;font-weight:700;font-size:12px;letter-spacing:.08em;text-transform:uppercase;padding:5px 12px;border-radius:6px;margin-bottom:12px;}
 .la-head h1{font-size:30px;font-weight:800;margin:0 0 10px;color:#0a162f;}
 .la-head p{font-size:15px;line-height:1.6;color:#5b6577;max-width:620px;margin:0 auto;}
-.la-steps{display:flex;justify-content:center;gap:0;list-style:none;padding:0;margin:0 0 24px;flex-wrap:wrap;}
-.la-steps li{display:flex;align-items:center;gap:8px;color:#94a3b8;font-size:13px;font-weight:600;padding:0 10px;}
+.la-steps{display:flex;justify-content:center;gap:0;list-style:none;padding:0;margin:0 0 10px;flex-wrap:wrap;}
+.la-steps li{display:flex;align-items:center;gap:8px;color:#94a3b8;font-size:13px;font-weight:600;padding:0 10px;transition:color .3s ease;}
 .la-steps li.active{color:#2563eb;}
 .la-steps li.done{color:#16a34a;}
-.la-step-dot{width:26px;height:26px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;background:#eef2f7;font-size:12px;font-weight:700;color:inherit;}
-.la-steps li.active .la-step-dot{background:#2563eb;color:#fff;}
-.la-steps li.done .la-step-dot{background:#16a34a;color:#fff;}
+.la-step-dot{width:26px;height:26px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;background:#eef2f7;font-size:12px;font-weight:700;color:inherit;transition:background .3s ease,transform .3s cubic-bezier(.34,1.56,.64,1),box-shadow .3s ease;}
+.la-steps li.active .la-step-dot{background:#2563eb;color:#fff;transform:scale(1.18);box-shadow:0 0 0 5px rgba(37,99,235,.14);}
+.la-steps li.done .la-step-dot{background:#16a34a;color:#fff;animation:laPop .35s cubic-bezier(.34,1.56,.64,1);}
+.la-progress{max-width:420px;height:4px;background:#eef2f7;border-radius:99px;margin:0 auto 24px;overflow:hidden;}
+.la-progress span{display:block;height:100%;background:linear-gradient(90deg,#2563eb,#16a34a);border-radius:99px;transition:width .5s cubic-bezier(.4,0,.2,1);}
+.la-step-pane{animation:laFadeUp .4s cubic-bezier(.4,0,.2,1) both;}
+@keyframes laFadeUp{from{opacity:0;transform:translateY(14px);}to{opacity:1;transform:translateY(0);}}
+@keyframes laPop{0%{transform:scale(.5);}70%{transform:scale(1.15);}100%{transform:scale(1);}}
+@keyframes laShake{0%,100%{transform:translateX(0);}20%{transform:translateX(-5px);}40%{transform:translateX(5px);}60%{transform:translateX(-3px);}80%{transform:translateX(3px);}}
 .la-card{background:#fff;border:1px solid #e5e7eb;border-radius:16px;padding:32px;box-shadow:0 4px 24px rgba(15,31,61,.05);}
 .la-card h2{font-size:21px;font-weight:800;margin:0 0 6px;color:#0a162f;}
 .la-sub{font-size:14px;color:#6b7280;margin:0 0 18px;line-height:1.55;}
@@ -634,7 +708,8 @@ const STYLES = `
 .la-field{display:flex;flex-direction:column;gap:6px;}
 .la-label{font-size:13px;font-weight:600;color:#374151;}
 .la-req{color:#dc2626;}
-.la-in{width:100%;border:1.5px solid #d1d5db;border-radius:9px;padding:11px 13px;font-size:15px;font-family:inherit;color:#0f1f3d;background:#fff;box-sizing:border-box;}
+.la-in{width:100%;border:1.5px solid #d1d5db;border-radius:9px;padding:11px 13px;font-size:15px;font-family:inherit;color:#0f1f3d;background:#fff;box-sizing:border-box;transition:border-color .2s ease,box-shadow .2s ease;}
+.la-in:hover{border-color:#b6c3d6;}
 .la-in:focus{outline:none;border-color:#2563eb;box-shadow:0 0 0 3px rgba(37,99,235,.12);}
 .la-check{display:flex;gap:10px;align-items:flex-start;font-size:14px;color:#374151;line-height:1.5;cursor:pointer;}
 .la-check input{margin-top:3px;width:17px;height:17px;flex-shrink:0;accent-color:#2563eb;}
@@ -642,16 +717,18 @@ const STYLES = `
 .la-radio input{width:17px;height:17px;accent-color:#2563eb;}
 .la-link{color:#dc2626;font-weight:600;text-decoration:underline;}
 .la-bundles{display:flex;flex-direction:column;gap:12px;}
-.la-bundle{position:relative;text-align:left;border:2px solid #e5e7eb;border-radius:12px;padding:16px 44px 16px 18px;background:#fff;cursor:pointer;transition:border-color .15s,background .15s;}
-.la-bundle:hover{border-color:#c7d2fe;}
-.la-bundle.active{border-color:#2563eb;background:#f5f8ff;}
+.la-bundle{position:relative;text-align:left;border:2px solid #e5e7eb;border-radius:12px;padding:16px 44px 16px 18px;background:#fff;cursor:pointer;transition:border-color .2s ease,background .2s ease,transform .2s ease,box-shadow .2s ease;}
+.la-bundle:hover{border-color:#c7d2fe;transform:translateY(-2px);box-shadow:0 8px 20px rgba(15,31,61,.08);}
+.la-bundle:active{transform:translateY(0) scale(.995);}
+.la-bundle.active{border-color:#2563eb;background:#f5f8ff;box-shadow:0 6px 18px rgba(37,99,235,.12);}
 .la-bundle-top{display:flex;align-items:center;gap:10px;}
 .la-bundle-name{font-size:16px;font-weight:800;color:#0a162f;}
 .la-bundle-badge{background:#2563eb;color:#fff;font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;padding:3px 8px;border-radius:20px;}
 .la-bundle-fee{font-size:14px;color:#374151;margin-top:5px;}
 .la-fee-fig{color:#16a34a;font-weight:800;font-style:normal;}
 .la-bundle-blurb{font-size:12.5px;color:#6b7280;margin-top:3px;}
-.la-bundle-radio{position:absolute;right:16px;top:50%;transform:translateY(-50%);font-size:22px;color:#2563eb;}
+.la-bundle-radio{position:absolute;right:16px;top:50%;transform:translateY(-50%);font-size:22px;color:#2563eb;transition:transform .25s cubic-bezier(.34,1.56,.64,1);}
+.la-bundle.active .la-bundle-radio{transform:translateY(-50%) scale(1.25);}
 .la-agreement{border:1px solid #e5e7eb;border-radius:12px;background:#fafbfc;padding:22px;max-height:440px;overflow-y:auto;}
 .la-ag-head h3{font-size:17px;font-weight:800;margin:0 0 8px;color:#0a162f;}
 .la-ag-head p{font-size:12.5px;line-height:1.6;color:#4b5563;margin:0 0 14px;}
@@ -672,29 +749,54 @@ const STYLES = `
 .la-or{text-align:center;color:#9ca3af;font-size:13px;font-weight:600;margin:14px 0;}
 .la-upload-btn{width:100%;border:1.5px dashed #cbd5e1;background:#fff;border-radius:10px;padding:13px;font-size:14px;font-weight:600;color:#374151;cursor:pointer;}
 .la-upload-btn:hover{border-color:#2563eb;color:#2563eb;}
-.la-sig-preview{margin-top:16px;display:flex;flex-direction:column;gap:8px;align-items:flex-start;}
+.la-sig-preview{margin-top:16px;display:flex;flex-direction:column;gap:8px;align-items:flex-start;animation:laFadeUp .35s ease both;}
 .la-sig-ok{color:#16a34a;font-weight:700;font-size:13px;}
 .la-sig-preview img{max-height:110px;max-width:100%;border:1px solid #e5e7eb;border-radius:8px;background:#fff;padding:6px;}
 .la-fineprint{font-size:12px;color:#9ca3af;line-height:1.5;margin-top:14px;}
-.la-error{margin-top:18px;background:#fef2f2;border:1px solid #fecaca;color:#b91c1c;font-size:14px;font-weight:600;padding:12px 14px;border-radius:9px;}
+.la-error{margin-top:18px;background:#fef2f2;border:1px solid #fecaca;color:#b91c1c;font-size:14px;font-weight:600;padding:12px 14px;border-radius:9px;animation:laShake .4s ease;}
 .la-nav{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-top:26px;}
-.la-btn{padding:14px 28px;font-size:13.5px;font-weight:700;border-radius:9px;min-height:48px;line-height:1.2;box-sizing:border-box;border:1.5px solid transparent;cursor:pointer;font-family:inherit;}
+.la-btn{padding:14px 28px;font-size:13.5px;font-weight:700;border-radius:9px;min-height:48px;line-height:1.2;box-sizing:border-box;border:1.5px solid transparent;cursor:pointer;font-family:inherit;transition:background .2s ease,transform .15s ease,box-shadow .2s ease;}
+.la-btn:active{transform:scale(.97);}
 .la-btn-solid{background:#2563eb;color:#fff;}
-.la-btn-solid:hover{background:#1d4ed8;}
-.la-btn-solid:disabled{opacity:.6;cursor:default;}
+.la-btn-solid:hover{background:#1d4ed8;transform:translateY(-1px);box-shadow:0 6px 16px rgba(37,99,235,.3);}
+.la-btn-solid:disabled{opacity:.6;cursor:default;transform:none;box-shadow:none;}
 .la-btn-ghost{background:#fff;color:#374151;border-color:#d1d5db;}
+.la-btn-ghost:hover{border-color:#94a3b8;background:#f8fafc;}
+.la-coupon{margin-top:20px;padding:16px 18px;background:#fdfaf3;border:1px dashed #e5d9b8;border-radius:12px;}
+.la-coupon-title{font-size:13.5px;font-weight:700;color:#0a162f;margin-bottom:10px;}
+.la-coupon-row{display:flex;gap:10px;}
+.la-coupon-in{max-width:240px;font-family:monospace;letter-spacing:.05em;text-transform:uppercase;}
+.la-coupon-apply{padding:11px 22px;min-height:0;}
+.la-coupon-ok{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;background:#f0fdf4;border:1px solid #bbf7d0;color:#15803d;font-size:13.5px;padding:11px 14px;border-radius:9px;animation:laFadeUp .3s ease both;}
+.la-coupon-remove{background:none;border:none;color:#dc2626;font-size:12.5px;font-weight:700;cursor:pointer;padding:0;}
+.la-coupon-msg{margin-top:9px;font-size:13px;font-weight:600;color:#b45309;}
 .la-done{text-align:center;}
 .la-done-tick{width:64px;height:64px;border-radius:50%;background:#dcfce7;color:#16a34a;font-size:34px;display:flex;align-items:center;justify-content:center;margin:0 auto 18px;}
 .la-done h1{font-size:26px;font-weight:800;color:#0a162f;margin:0 0 12px;}
 .la-done p{font-size:15px;line-height:1.65;color:#4b5563;max-width:560px;margin:0 auto 10px;}
 .la-ref{font-family:monospace;font-size:13px;color:#9ca3af;}
 @media (max-width:600px){
+  .la-wrap{padding:26px 14px 60px;}
   .la-grid{grid-template-columns:1fr;}
   .la-parties{grid-template-columns:1fr;}
   .la-head h1{font-size:24px;}
-  .la-card{padding:22px 18px;}
+  .la-card{padding:22px 16px;border-radius:14px;}
   .la-in{font-size:16px;}
   .la-step-label{display:none;}
-  .la-btn{padding:14px 20px;}
+  .la-steps li{padding:0 6px;}
+  .la-nav{position:sticky;bottom:0;background:linear-gradient(to top,#fff 75%,rgba(255,255,255,0));padding:14px 0 6px;margin-top:20px;}
+  .la-btn{padding:14px 20px;flex:1;}
+  .la-nav > span{display:none;}
+  .la-bundle{padding:14px 40px 14px 15px;}
+  .la-bundle:hover{transform:none;box-shadow:none;}
+  .la-agreement{max-height:360px;padding:16px 14px;}
+  .la-coupon-row{flex-direction:column;}
+  .la-coupon-in{max-width:none;}
+  .la-coupon-apply{width:100%;}
+}
+@media (prefers-reduced-motion:reduce){
+  .la-step-pane,.la-sig-preview,.la-coupon-ok,.la-error{animation:none;}
+  .la-bundle,.la-btn,.la-step-dot,.la-progress span,.la-bundle-radio{transition:none;}
+  .la-bundle:hover,.la-btn-solid:hover{transform:none;}
 }
 `;

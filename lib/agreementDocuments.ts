@@ -8,7 +8,9 @@ import {
   AGENT_DETAILS,
   effectiveIntro,
   buildAgreementSections,
+  discountedSetupFee,
   type AgreementTemplate,
+  type CouponInfo,
 } from '@/lib/agreementContent';
 import type { Bundle } from '@/lib/bundles';
 
@@ -46,14 +48,26 @@ export function fmtAvailable(v?: string): string {
   return isNaN(d.getTime()) ? v : d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
 }
 
-export function feeLine(b: Bundle): string {
+// A signed record carries couponCode/couponDiscount when a one-time discount
+// code was redeemed at signing.
+export function couponFromData(data: any): CouponInfo | undefined {
+  const code = (data?.couponCode || '').toString().trim();
+  const discount = Number(data?.couponDiscount);
+  return code && discount > 0 ? { code, discount } : undefined;
+}
+
+export function feeLine(b: Bundle, coupon?: CouponInfo | null): string {
+  const setup = coupon
+    ? `£${discountedSetupFee(b, coupon)} set up (was ${b.setupFee}, coupon ${coupon.code} −£${coupon.discount})`
+    : `${b.setupFee} set up`;
   return b.mgmtFee
-    ? `${b.setupFee} set up, then ${b.mgmtFee} management fee of the monthly rent`
-    : `${b.setupFee} one time, no ongoing management fee`;
+    ? `${setup}, then ${b.mgmtFee} management fee of the monthly rent`
+    : `${setup}, one time — no ongoing management fee`;
 }
 
 // ── Signed PDF ──────────────────────────────────────────────────────────────
 export function agreementPdfBase64(data: any, bundle: Bundle, ref: string, template?: AgreementTemplate | null): string {
+  const coupon = couponFromData(data);
   const doc = new jsPDF();
   const pageW = doc.internal.pageSize.getWidth();
   const pageH = doc.internal.pageSize.getHeight();
@@ -115,10 +129,11 @@ export function agreementPdfBase64(data: any, bundle: Bundle, ref: string, templ
 
   heading('Service Selected');
   kv('Package', bundle.label);
-  kv('Fees', feeLine(bundle));
+  kv('Fees', feeLine(bundle, coupon));
+  if (coupon) kv('Coupon', `${coupon.code} — £${coupon.discount} off the setup fee (one-time use, redeemed)`);
 
   // Full clauses (Service schedule is a bundle-driven bullet list).
-  buildAgreementSections(bundle, template).forEach(sec => {
+  buildAgreementSections(bundle, template, coupon).forEach(sec => {
     heading(`${sec.n}. ${sec.title}`);
     sec.paras?.forEach((p, i) => para(`${sec.n}.${i + 1}  ${p}`));
     sec.groups?.forEach(g => {
@@ -153,7 +168,7 @@ export function agreementPdfBase64(data: any, bundle: Bundle, ref: string, templ
   const rx = left + 100;
   doc.setDrawColor(150, 160, 175); doc.line(rx, sigTop + 26, rx + 70, sigTop + 26);
   doc.setFont('helvetica', 'bold'); doc.setTextColor(20, 26, 40);
-  doc.text('For the Agent: Mr Kasra Belyani', rx, sigTop + 31);
+  doc.text('For the Agent: KASRA BELYANI', rx, sigTop + 31);
   doc.setFont('helvetica', 'normal'); doc.setTextColor(110, 118, 130);
   doc.text('House of Lettings Limited', rx, sigTop + 36);
 
@@ -194,7 +209,7 @@ export function landlordEmailHtml(data: any, bundle: Bundle, opts: { corrected?:
     <div style="background:#f8f9ff;border-radius:12px;padding:18px 22px;">
       <div style="font-size:14px;color:#111827;padding:6px 0;border-bottom:1px solid #eef0f5;"><span style="color:#6b7280;">Property:</span> <strong>${propertyLine(data) || '-'}</strong></div>
       <div style="font-size:14px;color:#111827;padding:6px 0;border-bottom:1px solid #eef0f5;"><span style="color:#6b7280;">Service:</span> <strong>${bundle.label}</strong></div>
-      <div style="font-size:14px;color:#111827;padding:6px 0;border-bottom:1px solid #eef0f5;"><span style="color:#6b7280;">Fees:</span> <strong>${feeLine(bundle)}</strong></div>
+      <div style="font-size:14px;color:#111827;padding:6px 0;border-bottom:1px solid #eef0f5;"><span style="color:#6b7280;">Fees:</span> <strong>${feeLine(bundle, couponFromData(data))}</strong></div>
       <div style="font-size:14px;color:#111827;padding:6px 0;"><span style="color:#6b7280;">Signed by:</span> <strong>${data.signatureName || data.fullName}</strong> on ${data.signatureDate}</div>
     </div>
     <p style="font-size:13px;line-height:1.6;color:#6b7280;margin:16px 0 0;">The full agreement, including all terms and conditions and your signature, is in the attached PDF.${opts.corrected ? '' : ' Our team has been notified and will be in touch shortly to begin.'}</p>
@@ -221,7 +236,8 @@ export function adminEmailHtml(data: any, bundle: Bundle, opts: { corrected?: bo
       <tr><td style="padding:9px 10px;border-bottom:1px solid #eef0f5;font-weight:600;color:#6b7280;">Property</td><td style="padding:9px 10px;border-bottom:1px solid #eef0f5;">${propertyLine(data) || '-'}</td></tr>
       <tr><td style="padding:9px 10px;border-bottom:1px solid #eef0f5;font-weight:600;color:#6b7280;">Property details</td><td style="padding:9px 10px;border-bottom:1px solid #eef0f5;">${propertyMeta(data) || '-'}</td></tr>
       <tr><td style="padding:9px 10px;border-bottom:1px solid #eef0f5;font-weight:600;color:#6b7280;">Expected rent</td><td style="padding:9px 10px;border-bottom:1px solid #eef0f5;">${data.currentRent ? `£${data.currentRent}/month` : '-'}</td></tr>
-      <tr><td style="padding:9px 10px;border-bottom:1px solid #eef0f5;font-weight:600;color:#6b7280;">Package</td><td style="padding:9px 10px;border-bottom:1px solid #eef0f5;"><strong>${bundle.label}</strong> (${feeLine(bundle)})</td></tr>
+      <tr><td style="padding:9px 10px;border-bottom:1px solid #eef0f5;font-weight:600;color:#6b7280;">Package</td><td style="padding:9px 10px;border-bottom:1px solid #eef0f5;"><strong>${bundle.label}</strong> (${feeLine(bundle, couponFromData(data))})</td></tr>
+      ${couponFromData(data) ? `<tr><td style="padding:9px 10px;border-bottom:1px solid #eef0f5;font-weight:600;color:#6b7280;">Coupon redeemed</td><td style="padding:9px 10px;border-bottom:1px solid #eef0f5;"><strong>${couponFromData(data)!.code}</strong> — £${couponFromData(data)!.discount} off the setup fee</td></tr>` : ''}
       <tr><td style="padding:9px 10px;border-bottom:1px solid #eef0f5;font-weight:600;color:#6b7280;">Signed by</td><td style="padding:9px 10px;border-bottom:1px solid #eef0f5;">${data.signatureName || data.fullName} on ${data.signatureDate}</td></tr>
       <tr><td style="padding:9px 10px;font-weight:600;color:#6b7280;">Signature</td><td style="padding:9px 10px;">${sigLink}</td></tr>
     </table>

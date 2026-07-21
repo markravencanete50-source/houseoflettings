@@ -176,14 +176,33 @@ export function resolveClause(clause: Clause, template?: AgreementTemplate | nul
   return { ...clause, title, paras };
 }
 
+// A one-time discount coupon applied to the setup fee (a fixed £ amount, not a
+// percentage). Issued per-landlord from the dashboard; single use.
+export type CouponInfo = { code: string; discount: number };
+
+/** The numeric setup fee of a bundle, e.g. "£399" -> 399. */
+export function setupFeeAmount(bundle: Bundle): number {
+  return parseInt(bundle.setupFee.replace(/[^\d]/g, ''), 10) || 0;
+}
+
+/** Setup fee after a coupon, never below zero. */
+export function discountedSetupFee(bundle: Bundle, coupon?: CouponInfo | null): number {
+  const base = setupFeeAmount(bundle);
+  return coupon ? Math.max(0, base - coupon.discount) : base;
+}
+
 // The fees clause is driven entirely by the selected bundle so a fee shown on
 // /pricing is the fee written into the signed agreement. Not template-editable.
-function feesParas(bundle: Bundle): string[] {
+function feesParas(bundle: Bundle, coupon?: CouponInfo | null): string[] {
   const paras: string[] = [];
+  let setupSentence = `Tenant Find & Setup Fee: ${bundle.setupFee}.`;
+  if (coupon) {
+    setupSentence = `Tenant Find & Setup Fee: ${bundle.setupFee}. A one-time discount of £${coupon.discount} has been applied under coupon ${coupon.code}, making the setup fee payable £${discountedSetupFee(bundle, coupon)}. The coupon applies to the setup fee only and cannot be reused.`;
+  }
   if (bundle.mgmtFee) {
-    paras.push(`Tenant Find & Setup Fee: ${bundle.setupFee}. Management Fee: ${bundle.mgmtFee} of the monthly rent collected.`);
+    paras.push(`${setupSentence} Management Fee: ${bundle.mgmtFee} of the monthly rent collected.`);
   } else {
-    paras.push(`Tenant Find & Setup Fee: ${bundle.setupFee}. There is no ongoing management fee for this service.`);
+    paras.push(`${setupSentence} There is no ongoing management fee for this service.`);
   }
   paras.push(
     'Any additional services, one-off works, or discretionary costs not included within the selected service plan shall be charged separately. Such charges will be confirmed in writing prior to instruction and applied in accordance with House of Lettings’ standard terms and conditions.',
@@ -210,13 +229,13 @@ export function findBundle(idOrLabel: string | undefined | null): Bundle | undef
  * clause with any admin template override applied. Consumed identically by the
  * on-screen review, the PDF and the email so the three can never disagree.
  */
-export function buildAgreementSections(bundle: Bundle, template?: AgreementTemplate | null): AgreementSection[] {
+export function buildAgreementSections(bundle: Bundle, template?: AgreementTemplate | null, coupon?: CouponInfo | null): AgreementSection[] {
   const appointment = resolveClause(APPOINTMENT, template);
   const tail = TAIL_CLAUSES.map((c) => resolveClause(c, template));
   const ordered: Omit<AgreementSection, 'n'>[] = [
     { title: appointment.title, paras: appointment.paras },
     { title: 'The Service', paras: [serviceIntro(bundle)], groups: bundle.groups },
-    { title: 'Fees', paras: feesParas(bundle) },
+    { title: 'Fees', paras: feesParas(bundle, coupon) },
     ...tail.map((c) => ({ title: c.title, paras: c.paras })),
   ];
   return ordered.map((s, i) => ({ ...s, n: i + 1 }));

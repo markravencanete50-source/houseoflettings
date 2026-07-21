@@ -12,6 +12,7 @@
 export const STAFF_FEATURES = [
   { id: 'properties',    label: 'Properties',    icon: '🏠' },
   { id: 'applications',  label: 'Applications',  icon: '📝' },
+  { id: 'agreements',    label: 'Agreements',    icon: '📄' },
   { id: 'rent-reviews',  label: 'Rent Reviews',  icon: '🔁' },
   { id: 'maintenance',   label: 'Maintenance',   icon: '🔧' },
   { id: 'orders',        label: 'Orders',        icon: '🛒' },
@@ -26,7 +27,7 @@ export const STAFF_FEATURE_IDS: StaffFeature[] = STAFF_FEATURES.map(f => f.id);
 
 // What a staff member sees when no explicit permissions have been set.
 export const DEFAULT_STAFF_PERMISSIONS: StaffFeature[] = [
-  'properties', 'applications', 'rent-reviews', 'maintenance', 'orders', 'valuations', 'post',
+  'properties', 'applications', 'agreements', 'rent-reviews', 'maintenance', 'orders', 'valuations', 'post',
 ];
 
 // Resolve the feature list for a profile (admin = everything; staff = their

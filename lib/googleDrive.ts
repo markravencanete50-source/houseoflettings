@@ -40,6 +40,7 @@ export type BackupFormType =
   | "tenant-application"
   | "guarantor"
   | "landlord-registration"
+  | "landlord-agreement"
   | "maintenance"
   | "rent-review";
 
@@ -48,6 +49,7 @@ const FORM_FOLDERS: Record<BackupFormType, string> = {
   "tenant-application": "Tenant Application",
   guarantor: "Guarantor Form",
   "landlord-registration": "Landlord Registration",
+  "landlord-agreement": "Landlord Agreements",
   maintenance: "Maintenance Report",
   "rent-review": "Rent Review",
 };

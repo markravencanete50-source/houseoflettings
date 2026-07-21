@@ -12,6 +12,7 @@ const LANDLORD_LINKS: FooterLink[] = [
   { href: '/book-valuation', label: 'Book a Valuation' },
   { href: '/instant-valuation', label: 'Instant Valuation' },
   { href: '/landlord-registration', label: 'Landlord Registration' },
+  { href: '/landlord-agreement', label: 'Sign Management Agreement' },
 ];
 
 const TENANT_LINKS: FooterLink[] = [

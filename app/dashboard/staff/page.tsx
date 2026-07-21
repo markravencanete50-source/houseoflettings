@@ -91,6 +91,28 @@ interface ServiceOrder {
   createdAt: string | null;
 }
 
+interface Agreement {
+  id: string;
+  fullName: string;
+  email: string;
+  phone: string;
+  contactAddress?: string;
+  jointLandlord?: boolean;
+  landlord2Name?: string;
+  residency?: string;
+  postcode?: string; street?: string; city?: string; flatNumber?: string;
+  propertyType?: string; bedrooms?: string; bathrooms?: string; furnishing?: string; parking?: string;
+  currentRent?: string; availableFrom?: string;
+  selectedPackage?: string;
+  signatureName?: string;
+  signatureDate?: string;
+  signatureUrl?: string;
+  status: string;
+  createdAt: string | null;
+}
+
+const AGREEMENT_STATUSES = ['signed', 'countersigned', 'active', 'completed', 'cancelled'] as const;
+
 interface Valuation {
   id: string;
   fullName: string;
@@ -123,6 +145,8 @@ const badge = (status: string): { bg: string; color: string } => {
   const map: Record<string, { bg: string; color: string }> = {
     pending:       { bg: '#fff8e1', color: '#f57f17' },
     open:          { bg: '#fff8e1', color: '#f57f17' },
+    signed:        { bg: '#fff8e1', color: '#f57f17' },
+    countersigned: { bg: '#e3f2fd', color: '#1565c0' },
     reviewing:     { bg: '#e3f2fd', color: '#1565c0' },
     'in-progress': { bg: '#e3f2fd', color: '#1565c0' },
     contacted:     { bg: '#e3f2fd', color: '#1565c0' },
@@ -245,6 +269,8 @@ function StaffDashboardInner() {
   const [applications, setApplications] = useState<TenantApplication[]>([]);
   const [maintenance, setMaintenance] = useState<MaintenanceRequest[]>([]);
   const [orders, setOrders] = useState<ServiceOrder[]>([]);
+  const [agreements, setAgreements] = useState<Agreement[]>([]);
+  const [expandedAgreement, setExpandedAgreement] = useState<string | null>(null);
   const [valuations, setValuations] = useState<Valuation[]>([]);
   const [reviews, setReviews] = useState<GoogleReview[]>([]);
   const [rentReviews, setRentReviews] = useState<RentReview[]>([]);
@@ -325,6 +351,7 @@ function StaffDashboardInner() {
     if (tab === 'applications' && !loaded.applications) load('/api/staff/applications', 'applications', j => setApplications(j.applications || []));
     if (tab === 'maintenance' && !loaded.maintenance) load('/api/staff/maintenance', 'maintenance', j => setMaintenance(j.requests || []));
     if (tab === 'orders' && !loaded.orders) load('/api/staff/orders', 'orders', j => setOrders(j.orders || []));
+    if (tab === 'agreements' && !loaded.agreements) load('/api/staff/agreements', 'agreements', j => setAgreements(j.agreements || []));
     if (tab === 'valuations' && !loaded.valuations) load('/api/staff/valuations', 'valuations', j => setValuations(j.valuations || []));
     if (tab === 'reviews' && !loaded.reviews) load('/api/staff/reviews', 'reviews', j => setReviews(j.reviews || []));
     if (tab === 'rent-reviews' && !loaded['rent-reviews']) load('/api/staff/rent-reviews', 'rent-reviews', j => setRentReviews(j.reviews || []));
@@ -378,6 +405,19 @@ function StaffDashboardInner() {
   const handleEditProperty = (p: Property) => { setEditingProperty(p); setTab('edit'); };
   const handleEditSuccess = () => { setEditingProperty(null); setLoaded(l => ({ ...l, properties: false })); setTab('properties'); };
   const handleEditCancel = () => { setEditingProperty(null); setTab('properties'); };
+
+  const updateAgreementStatus = async (id: string, status: string) => {
+    const prev = agreements;
+    setAgreements(as => as.map(a => a.id === id ? { ...a, status } : a));
+    try {
+      const res = await authedFetch('/api/staff/agreements', { method: 'PATCH', body: JSON.stringify({ id, status }) });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    } catch (e) {
+      console.error('agreement status update failed:', e);
+      setAgreements(prev);
+      alert('Could not update the status. Please try again.');
+    }
+  };
 
   const updateRentReviewStatus = async (id: string, status: string) => {
     const prev = rentReviews;
@@ -452,6 +492,7 @@ function StaffDashboardInner() {
   const counts: Record<StaffFeature, number | null> = {
     properties: properties.length,
     applications: applications.length,
+    agreements: agreements.length,
      'rent-reviews': rentReviews.length,
     maintenance: maintenance.length,
     orders: orders.length,
@@ -778,6 +819,81 @@ function StaffDashboardInner() {
                                     <a key={i} href={url} target="_blank" rel="noopener noreferrer" style={{ padding: '4px 10px', background: '#f0fdf4', color: '#15803d', borderRadius: 4, fontSize: 12, fontWeight: 600, textDecoration: 'none', border: '1px solid #bbf7d0' }}>📄 Proof {i + 1}</a>
                                   ))}
                                 </div>
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* ── Agreements ── */}
+          {tab === 'agreements' && perms.includes('agreements') && (
+            <div>
+              <h1 className="dash-section-title">Landlord Agreements</h1>
+              <p style={{ color: 'var(--gray-600)', marginBottom: 24, fontSize: 15 }}>
+                Signed management agreements from landlords. Set the status as each one progresses; the signed PDF was emailed to the landlord and the office when it was submitted.
+              </p>
+              {!loaded.agreements ? (
+                <div className="dash-card" style={{ textAlign: 'center', color: 'var(--gray-400)', padding: 40 }}>Loading agreements…</div>
+              ) : agreements.length === 0 ? (
+                <div className="dash-card" style={{ textAlign: 'center', color: 'var(--gray-400)', fontSize: 15, padding: '56px 24px' }}>
+                  No signed agreements yet.
+                </div>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                  {agreements.map(a => {
+                    const isOpen = expandedAgreement === a.id;
+                    const propLine = [a.flatNumber, a.street, a.city, a.postcode].filter(Boolean).join(', ');
+                    return (
+                      <div key={a.id} className="dash-card" style={{ padding: 0, overflow: 'hidden' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '16px 20px', flexWrap: 'wrap' }}>
+                          <div style={{ minWidth: 0, flex: 1 }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+                              <strong style={{ fontSize: 15, color: 'var(--navy)' }}>{a.fullName || '-'}</strong>
+                              <StatusBadge status={a.status} />
+                            </div>
+                            <div style={{ fontSize: 12.5, color: 'var(--gray-400)', marginTop: 3 }}>
+                              {a.selectedPackage || 'Package not set'} · {propLine || 'No property'} · {fmtDate(a.createdAt)}
+                            </div>
+                          </div>
+                          <select
+                            value={AGREEMENT_STATUSES.includes(a.status as any) ? a.status : 'signed'}
+                            onChange={e => updateAgreementStatus(a.id, e.target.value)}
+                            onClick={e => e.stopPropagation()}
+                            style={{ padding: '6px 10px', borderRadius: 6, border: '1px solid var(--gray-200)', fontSize: 13, background: '#fff', textTransform: 'capitalize' }}
+                          >
+                            {AGREEMENT_STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
+                          </select>
+                          <button onClick={() => setExpandedAgreement(isOpen ? null : a.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--gray-600)', fontSize: 13, fontWeight: 600 }}>
+                            {isOpen ? 'Hide ▲' : 'Details ▼'}
+                          </button>
+                        </div>
+                        {isOpen && (
+                          <div style={{ borderTop: '1px solid var(--gray-100)', padding: '16px 20px', background: '#fafbfc', fontSize: 13, color: 'var(--gray-600)' }}>
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(220px,1fr))', gap: '8px 24px' }}>
+                              <div><strong style={{ color: 'var(--navy)' }}>Email:</strong> {a.email || '-'}</div>
+                              <div><strong style={{ color: 'var(--navy)' }}>Phone:</strong> {a.phone || '-'}</div>
+                              <div><strong style={{ color: 'var(--navy)' }}>Contact address:</strong> {a.contactAddress || '-'}</div>
+                              {a.jointLandlord && a.landlord2Name && <div><strong style={{ color: 'var(--navy)' }}>Joint landlord:</strong> {a.landlord2Name}</div>}
+                              <div><strong style={{ color: 'var(--navy)' }}>Residency:</strong> {a.residency === 'non-resident' ? 'Non-resident (NRL)' : 'UK-resident'}</div>
+                              <div><strong style={{ color: 'var(--navy)' }}>Property:</strong> {propLine || '-'}</div>
+                              <div><strong style={{ color: 'var(--navy)' }}>Type / beds:</strong> {[a.propertyType, a.bedrooms && `${a.bedrooms} bed`, a.furnishing].filter(Boolean).join(' · ') || '-'}</div>
+                              <div><strong style={{ color: 'var(--navy)' }}>Expected rent:</strong> {a.currentRent ? `£${a.currentRent}/month` : '-'}</div>
+                              <div><strong style={{ color: 'var(--navy)' }}>Available from:</strong> {a.availableFrom || '-'}</div>
+                              <div><strong style={{ color: 'var(--navy)' }}>Package:</strong> {a.selectedPackage || '-'}</div>
+                              <div><strong style={{ color: 'var(--navy)' }}>Signed by:</strong> {a.signatureName || a.fullName} {a.signatureDate ? `on ${a.signatureDate}` : ''}</div>
+                            </div>
+                            {a.signatureUrl && (
+                              <div style={{ marginTop: 12 }}>
+                                <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--navy)', marginBottom: 6 }}>Signature</div>
+                                <a href={safeLinkHref(a.signatureUrl)} target="_blank" rel="noopener noreferrer">
+                                  <img src={safeLinkHref(a.signatureUrl)} alt="Landlord signature" style={{ maxHeight: 80, border: '1px solid var(--gray-200)', borderRadius: 6, background: '#fff', padding: 4 }} />
+                                </a>
                               </div>
                             )}
                           </div>

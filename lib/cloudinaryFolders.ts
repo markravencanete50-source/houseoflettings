@@ -18,6 +18,7 @@ export const CLOUDINARY_FOLDERS = {
   maintenance: 'houseoflettings/maintenance',           // maintenance report photos & videos
   serviceOrders: 'houseoflettings/service-orders',      // service-order proof of payment
   rentReview: 'houseoflettings/rent-review',            // rent-review documents & maintenance photos
+  agreements: 'houseoflettings/agreements',             // signed management-agreement signatures & attachments
 } as const;
 
 export type CloudinaryFolder = (typeof CLOUDINARY_FOLDERS)[keyof typeof CLOUDINARY_FOLDERS];

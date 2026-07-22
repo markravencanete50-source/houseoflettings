@@ -46,11 +46,20 @@ export async function requireStaff(request: Request, feature?: StaffFeature): Pr
   // has a valid cookie.
   getAdminDb(); // ensure the admin app is initialised before getAuth()
   let uid: string | null = null;
+  let tokenEmail: string | null = null;
   if (authHeader?.startsWith('Bearer ')) {
-    try { uid = (await getAuth().verifyIdToken(authHeader.substring(7))).uid; } catch { /* try cookie */ }
+    try {
+      const decoded = await getAuth().verifyIdToken(authHeader.substring(7));
+      uid = decoded.uid;
+      tokenEmail = decoded.email ?? null;
+    } catch { /* try cookie */ }
   }
   if (!uid && cookie) {
-    try { uid = (await getAuth().verifySessionCookie(cookie, true)).uid; } catch { /* invalid cookie */ }
+    try {
+      const decoded = await getAuth().verifySessionCookie(cookie, true);
+      uid = decoded.uid;
+      tokenEmail = decoded.email ?? null;
+    } catch { /* invalid cookie */ }
   }
   if (!uid) {
     return Response.json({ message: 'Unauthorized' }, { status: 401 });
@@ -60,7 +69,18 @@ export async function requireStaff(request: Request, feature?: StaffFeature): Pr
   const data = snap.data() || {};
   let role = data.role;
   // Owner/dev dual-access emails act as admin here even if stored as 'landlord'.
-  if (role !== 'staff' && role !== 'admin' && isDualAccessEmail(data.email)) role = 'admin';
+  // Prefer the VERIFIED token/cookie email over the Firestore doc's `email`
+  // field: the owner account is stored with role 'landlord' and its user doc may
+  // carry no email at all, which left the dual-access promotion to fall through
+  // to 403 — so an authenticated owner's admin write (e.g. posting a property
+  // from /admin) was rejected server-side and never saved, even though the
+  // client sent a valid token. The token email is authoritative and always
+  // present for a Google/password sign-in, and firestore.rules already keys the
+  // same dual-access check off request.auth.token.email — this aligns the server
+  // gate with the rules. Falls back to the doc email so nothing that worked before
+  // stops working.
+  const email = tokenEmail || data.email;
+  if (role !== 'staff' && role !== 'admin' && isDualAccessEmail(email)) role = 'admin';
   if (role !== 'staff' && role !== 'admin') {
     return Response.json({ message: 'Forbidden' }, { status: 403 });
   }

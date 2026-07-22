@@ -10,6 +10,7 @@ import AgreementEditor from '@/components/dashboard/AgreementEditor';
 import AgreementTemplateEditor from '@/components/dashboard/AgreementTemplateEditor';
 import CouponManager from '@/components/dashboard/CouponManager';
 import LandlordsPanel from '@/components/dashboard/LandlordsPanel';
+import SecondLandlordDetails from '@/components/dashboard/SecondLandlordDetails';
 import { useAuth } from '@/hooks/useAuth';
 import { isDualAccessEmail } from '@/lib/dualAccess';
 
@@ -55,6 +56,9 @@ interface Agreement {
   signatureName?: string; signatureDate?: string; signatureUrl?: string;
   signature2Name?: string; signature2Url?: string;
   awaitingSignature?: boolean;
+  secondLandlordStatus?: string;
+  secondLandlord?: Record<string, any>;
+  landlord2Phone?: string;
   status: string;
   createdAt: string | null;
 }
@@ -1760,6 +1764,11 @@ export default function AdminDashboard() {
                             <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
                               <strong style={{ fontSize: 15, color: 'var(--navy)' }}>{a.fullName || '-'}</strong>
                               <span style={{ display: 'inline-block', padding: '3px 10px', borderRadius: 20, fontSize: 11, fontWeight: 700, textTransform: 'uppercase', background: badge.bg, color: badge.color }}>{a.status}</span>
+                              {a.secondLandlordStatus && (
+                                <span style={{ display: 'inline-block', padding: '2px 9px', borderRadius: 20, fontSize: 11, fontWeight: 700, ...(a.secondLandlordStatus === 'completed' ? { background: '#e8f5e9', color: '#2e7d32' } : a.secondLandlordStatus === 'declined' ? { background: '#fdecea', color: '#c62828' } : { background: '#fff3e0', color: '#ef6c00' }) }}>
+                                  👥 {a.secondLandlordStatus === 'completed' ? 'Joint signed' : a.secondLandlordStatus === 'declined' ? 'Joint declined' : 'Joint pending'}
+                                </span>
+                              )}
                             </div>
                             <div style={{ fontSize: 12.5, color: 'var(--gray-400)', marginTop: 3 }}>
                               {a.selectedPackage || 'Package not set'} · {propLine || 'No property'} · {when}
@@ -1822,6 +1831,7 @@ export default function AdminDashboard() {
                                 )}
                               </div>
                             )}
+                            <SecondLandlordDetails a={a as Record<string, any>} />
                           </div>
                         )}
                       </div>

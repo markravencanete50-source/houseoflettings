@@ -15,6 +15,7 @@ import AgreementEditor from '@/components/dashboard/AgreementEditor';
 import AgreementTemplateEditor from '@/components/dashboard/AgreementTemplateEditor';
 import CouponManager from '@/components/dashboard/CouponManager';
 import LandlordsPanel from '@/components/dashboard/LandlordsPanel';
+import SecondLandlordDetails from '@/components/dashboard/SecondLandlordDetails';
 import { useAuth } from '@/hooks/useAuth';
 import { signOut } from '@/services/auth';
 import { Property, propertyAvailability } from '@/lib/types';
@@ -115,6 +116,9 @@ interface Agreement {
   landlord2Email?: string; county?: string; securityNote?: string;
   selectedPackageId?: string;
   awaitingSignature?: boolean;
+  secondLandlordStatus?: string;
+  secondLandlord?: Record<string, any>;
+  landlord2Phone?: string;
   status: string;
   createdAt: string | null;
 }
@@ -182,6 +186,13 @@ function StatusBadge({ status }: { status: string }) {
       {status || '-'}
     </span>
   );
+}
+
+// Colours for the at-a-glance joint (second) landlord status chip.
+function jointChip(status: string): { background: string; color: string } {
+  if (status === 'completed') return { background: '#e8f5e9', color: '#2e7d32' };
+  if (status === 'declined') return { background: '#fdecea', color: '#c62828' };
+  return { background: '#fff3e0', color: '#ef6c00' };
 }
 
 function fmtDate(iso: string | null): string {
@@ -923,6 +934,11 @@ function StaffDashboardInner() {
                             <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
                               <strong style={{ fontSize: 15, color: 'var(--navy)' }}>{a.fullName || '-'}</strong>
                               <StatusBadge status={a.status} />
+                              {a.secondLandlordStatus && (
+                                <span style={{ fontSize: 11, fontWeight: 700, padding: '2px 9px', borderRadius: 20, ...jointChip(a.secondLandlordStatus) }}>
+                                  👥 {a.secondLandlordStatus === 'completed' ? 'Joint signed' : a.secondLandlordStatus === 'declined' ? 'Joint declined' : 'Joint pending'}
+                                </span>
+                              )}
                             </div>
                             <div style={{ fontSize: 12.5, color: 'var(--gray-400)', marginTop: 3 }}>
                               {a.selectedPackage || 'Package not set'} · {propLine || 'No property'} · {fmtDate(a.createdAt)}
@@ -985,6 +1001,7 @@ function StaffDashboardInner() {
                                 )}
                               </div>
                             )}
+                            <SecondLandlordDetails a={a as Record<string, any>} />
                           </div>
                         )}
                       </div>

@@ -195,3 +195,71 @@ export async function provisionLandlordForAgreement(
     return null;
   }
 }
+
+// Portal login for the SECOND (joint) landlord, once they've accepted and signed.
+// Same as the primary provisioning EXCEPT it links the agreement via
+// `secondLandlordUid` (never `landlordUid`, which stays the first landlord's).
+// Best-effort — never throws.
+export async function provisionSecondLandlordLogin(
+  db: Firestore,
+  agreementId: string,
+  opts: { email: string; name: string; phone?: string; postcodes: string[] },
+): Promise<void> {
+  try {
+    const email = String(opts.email || '').trim().toLowerCase();
+    if (!email || !email.includes('@')) return;
+    const name = (opts.name || 'Landlord').toString().trim();
+    const phone = (opts.phone || '').toString().trim();
+
+    const auth = getAuth();
+    let uid: string;
+    let created = false;
+    let tempPassword = '';
+    try {
+      uid = (await auth.getUserByEmail(email)).uid;
+    } catch {
+      tempPassword = generatePassword();
+      uid = (await auth.createUser({ email, password: tempPassword, displayName: name, emailVerified: false })).uid;
+      created = true;
+    }
+
+    const userRef = db.collection('users').doc(uid);
+    const snap = await userRef.get();
+    if (!snap.exists) {
+      await userRef.set({
+        name, email, role: 'landlord', phone,
+        landlordAgreementIds: [agreementId],
+        landlordPostcodes: opts.postcodes,
+        mustResetPassword: created,
+        accountProvisionedAt: FieldValue.serverTimestamp(),
+        createdAt: FieldValue.serverTimestamp(),
+      });
+    } else {
+      const existing = snap.data() || {};
+      if (existing.role === 'landlord' || existing.role === undefined) {
+        const updates: Record<string, unknown> = {
+          role: 'landlord',
+          name: existing.name || name,
+          phone: existing.phone || phone,
+          landlordAgreementIds: FieldValue.arrayUnion(agreementId),
+          updatedAt: FieldValue.serverTimestamp(),
+        };
+        if (opts.postcodes.length) updates.landlordPostcodes = FieldValue.arrayUnion(...opts.postcodes);
+        await userRef.set(updates, { merge: true });
+      }
+    }
+
+    await db.collection('landlordAgreements').doc(agreementId).set(
+      { secondLandlordUid: uid, secondLandlordAccountProvisioned: true },
+      { merge: true },
+    );
+
+    await sendEmail({
+      to: email,
+      subject: created ? '🔑 Your House of Lettings Landlord Portal login' : '🏠 Your Landlord Portal access',
+      html: created && tempPassword ? credentialsEmailHtml(name, email, tempPassword) : linkedEmailHtml(name),
+    });
+  } catch (e) {
+    console.error('provisionSecondLandlordLogin failed:', e);
+  }
+}

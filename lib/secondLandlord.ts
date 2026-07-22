@@ -40,17 +40,29 @@ function shell(headline: string, inner: string): string {
   </body></html>`;
 }
 
-// Invite the second landlord to complete their part.
+// Invite the second landlord to review the registration and accept or decline.
 export function secondLandlordInviteHtml(opts: { secondName: string; firstName: string; packageLabel: string; propertyAddress: string; link: string }): string {
   const first = (opts.secondName || 'there').split(' ')[0];
-  return shell('Complete your joint landlord details', `
+  return shell('You’ve been named as a joint landlord', `
     <p style="margin:0 0 16px;">Hi <strong>${first}</strong>,</p>
     <p style="margin:0 0 16px;"><strong>${opts.firstName}</strong> has registered as a landlord with House of Lettings under the <strong>${opts.packageLabel}</strong> package${opts.propertyAddress ? ` for <strong>${opts.propertyAddress}</strong>` : ''}, and named you as a joint landlord on the property.</p>
-    <p style="margin:0 0 16px;">To complete your part, we just need your own details and documents — your ID, proof of billing address and proof of ownership — and your signature. You won't need to choose a package or answer any property certificates; that's already done.</p>
+    <p style="margin:0 0 16px;">Please review the registration and let us know whether you <strong>accept</strong>. If you accept, we'll ask for your ID, billing address proof and proof of ownership, then show you the agreement to sign. If you <strong>decline</strong>, the registration will be voided and ${opts.firstName} will be notified.</p>
     <div style="text-align:center;margin:28px 0;">
-      <a href="${opts.link}" style="display:inline-block;background:#2563eb;color:#fff;text-decoration:none;font-weight:700;padding:15px 42px;border-radius:10px;">Complete my details →</a>
+      <a href="${opts.link}" style="display:inline-block;background:#2563eb;color:#fff;text-decoration:none;font-weight:700;padding:15px 42px;border-radius:10px;">Review &amp; respond →</a>
     </div>
     <p style="margin:0;color:#9aa4b2;font-size:13px;">This secure link expires in 14 days and can be used once. If you weren't expecting this, please ignore this email or let us know.</p>
+  `);
+}
+
+// Sent to the FIRST landlord and the office when the second landlord declines.
+export function secondLandlordDeclinedHtml(opts: { firstName: string; secondName: string; propertyAddress: string; packageLabel: string; toOffice?: boolean }): string {
+  const who = opts.toOffice ? `<strong>${opts.secondName}</strong> (the second/joint landlord)` : `The joint landlord you named, <strong>${opts.secondName}</strong>,`;
+  const greet = opts.toOffice ? '' : `<p style="margin:0 0 16px;">Hi <strong>${(opts.firstName || 'there').split(' ')[0]}</strong>,</p>`;
+  return shell('Joint landlord declined — registration voided', `
+    ${greet}
+    <p style="margin:0 0 16px;">${who} has <strong>declined</strong> to proceed with the ${opts.packageLabel} registration${opts.propertyAddress ? ` for <strong>${opts.propertyAddress}</strong>` : ''}.</p>
+    <p style="margin:0 0 16px;">As both landlords must agree, this registration has been <strong>voided</strong> and no agreement will take effect. ${opts.toOffice ? '' : 'If this is unexpected, please contact us and we can help you re-register or continue on your own.'}</p>
+    <p style="margin:0;color:#9aa4b2;font-size:13px;">If you have any questions, just reply to this email.</p>
   `);
 }
 

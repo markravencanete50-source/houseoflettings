@@ -806,9 +806,29 @@ export default function RegistrationFormClient() {
                     {!isCompany && (
                       <>
                         <div className="hol-field hol-field--full">
-                          <label className="hol-label">Full Name<span className="hol-req">*</span></label>
-                          <input type="text" className={`hol-input${errors.fullName ? ' hol-input--error' : ''}`} placeholder="e.g. Mr Mansour Nosrati" value={form.fullName} onChange={set('fullName')} autoComplete="name" />
-                          {errors.fullName && <p className="hol-err">{errors.fullName}</p>}
+                          <div className="hol-joint-box hol-joint-box--primary">
+                            <div className="hol-joint-box__head">
+                              <span className="hol-joint-box__title">👤 Primary Landlord</span>
+                              <span className="hol-joint-box__note">The main landlord and lead contact for this registration.</span>
+                            </div>
+                            <div className="hol-joint-box__grid">
+                              <div className="hol-field hol-field--full">
+                                <label className="hol-label">Full Name<span className="hol-req">*</span></label>
+                                <input type="text" className={`hol-input${errors.fullName ? ' hol-input--error' : ''}`} placeholder="e.g. Mr Mansour Nosrati" value={form.fullName} onChange={set('fullName')} autoComplete="name" />
+                                {errors.fullName && <p className="hol-err">{errors.fullName}</p>}
+                              </div>
+                              <div className="hol-field">
+                                <label className="hol-label">Email Address<span className="hol-req">*</span></label>
+                                <input type="email" className={`hol-input${errors.email ? ' hol-input--error' : ''}`} placeholder="name@example.co.uk" value={form.email} onChange={set('email')} autoComplete="email" />
+                                {errors.email && <p className="hol-err">{errors.email}</p>}
+                              </div>
+                              <div className="hol-field">
+                                <label className="hol-label">Telephone Number<span className="hol-req">*</span></label>
+                                <input type="tel" className={`hol-input${errors.phone ? ' hol-input--error' : ''}`} placeholder="e.g. 07883 809939" value={form.phone} onChange={set('phone')} autoComplete="tel" />
+                                {errors.phone && <p className="hol-err">{errors.phone}</p>}
+                              </div>
+                            </div>
+                          </div>
                         </div>
                         <div className="hol-field hol-field--full">
                           <label className="hol-joint">
@@ -845,16 +865,20 @@ export default function RegistrationFormClient() {
                         )}
                       </>
                     )}
-                    <div className="hol-field">
-                      <label className="hol-label">Email Address<span className="hol-req">*</span></label>
-                      <input type="email" className={`hol-input${errors.email ? ' hol-input--error' : ''}`} placeholder="name@example.co.uk" value={form.email} onChange={set('email')} autoComplete="email" />
-                      {errors.email && <p className="hol-err">{errors.email}</p>}
-                    </div>
-                    <div className="hol-field">
-                      <label className="hol-label">Telephone Number<span className="hol-req">*</span></label>
-                      <input type="tel" className={`hol-input${errors.phone ? ' hol-input--error' : ''}`} placeholder="e.g. 07883 809939" value={form.phone} onChange={set('phone')} autoComplete="tel" />
-                      {errors.phone && <p className="hol-err">{errors.phone}</p>}
-                    </div>
+                    {isCompany && (
+                      <>
+                        <div className="hol-field">
+                          <label className="hol-label">Email Address<span className="hol-req">*</span></label>
+                          <input type="email" className={`hol-input${errors.email ? ' hol-input--error' : ''}`} placeholder="name@example.co.uk" value={form.email} onChange={set('email')} autoComplete="email" />
+                          {errors.email && <p className="hol-err">{errors.email}</p>}
+                        </div>
+                        <div className="hol-field">
+                          <label className="hol-label">Telephone Number<span className="hol-req">*</span></label>
+                          <input type="tel" className={`hol-input${errors.phone ? ' hol-input--error' : ''}`} placeholder="e.g. 07883 809939" value={form.phone} onChange={set('phone')} autoComplete="tel" />
+                          {errors.phone && <p className="hol-err">{errors.phone}</p>}
+                        </div>
+                      </>
+                    )}
                     <div className="hol-field hol-field--full">
                       <label className="hol-label">Contact Address<span className="hol-req">*</span></label>
                       <input type="text" className={`hol-input${errors.contactAddress ? ' hol-input--error' : ''}`} placeholder="e.g. 45 Coronation Street, Manchester M27 6DE" value={form.contactAddress} onChange={set('contactAddress')} autoComplete="street-address" />
@@ -1740,6 +1764,8 @@ const PAGE_CSS = `
   .hol-joint{display:flex;gap:10px;align-items:flex-start;font-size:14px;color:#374151;line-height:1.5;cursor:pointer;font-family:'Poppins',sans-serif;}
   .hol-joint input{margin-top:3px;width:17px;height:17px;flex-shrink:0;accent-color:#2563a8;}
   .hol-joint-box{border:1.5px solid #dbe6fb;background:#f6f9ff;border-radius:14px;padding:20px 22px;margin-top:4px;}
+  .hol-joint-box--primary{border-color:#e4e8f0;background:#fafbfd;}
+  .hol-joint-box--primary .hol-joint-box__title{color:#0a162f;}
   .hol-joint-box__head{margin-bottom:16px;}
   .hol-joint-box__title{display:block;font-size:15px;font-weight:800;color:#0a162f;font-family:'Poppins',sans-serif;}
   .hol-joint-box__note{display:block;font-size:12.5px;color:#5b6b82;line-height:1.55;margin-top:5px;}

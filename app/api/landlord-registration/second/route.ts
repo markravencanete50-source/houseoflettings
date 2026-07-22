@@ -18,6 +18,7 @@ import { loadAgreementTemplate } from "@/lib/agreementTemplateStore";
 import { agreementPdfBase64, landlordEmailHtml, adminEmailHtml, sendAgreementEmail } from "@/lib/agreementDocuments";
 import { secondLandlordDeclinedHtml, sendEmail } from "@/lib/secondLandlord";
 import { provisionSecondLandlordLogin, postcodesFromAgreement } from "@/lib/landlordProvision";
+import { generateFormsToken, sendPostSignFormsInvite, POST_SIGN_FORMS_TTL_MS } from "@/lib/postSignForms";
 
 function db() {
   if (!getApps().length) {
@@ -174,12 +175,17 @@ export async function POST(request: Request) {
       signatureDate: data.signatureDate || new Date().toLocaleDateString("en-GB"),
     };
 
+    // Mint the second landlord's post-agreement forms token so we can email them
+    // the two form links after they sign.
+    const secondFormsToken = generateFormsToken();
     await ref.set({
       secondLandlord: { ...second, signedAt: FieldValue.serverTimestamp() },
       secondLandlordStatus: "completed",
       secondLandlordCompletedAt: FieldValue.serverTimestamp(),
       secondLandlordToken: FieldValue.delete(),
       secondLandlordExpires: FieldValue.delete(),
+      secondFormsToken,
+      secondFormsExpires: Date.now() + POST_SIGN_FORMS_TTL_MS,
     }, { merge: true });
 
     // Build the SAME agreement document the first landlord received, but signed
@@ -227,6 +233,11 @@ export async function POST(request: Request) {
       // Give the second landlord their own portal login (links via secondLandlordUid).
       provisionSecondLandlordLogin(database, id, {
         email: second.email, name: second.fullName, phone: second.phone, postcodes: postcodesFromAgreement(doc),
+      }),
+      // Email the second landlord the two post-agreement form links.
+      sendPostSignFormsInvite({
+        id, token: secondFormsToken, party: "second",
+        name: second.fullName, email: second.email, propertyAddress: ctx.propertyAddress,
       }),
       backupToDrive({
         formType: "landlord-registration",

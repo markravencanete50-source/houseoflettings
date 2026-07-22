@@ -18,6 +18,7 @@ import { agreementPdfBase64, landlordEmailHtml, feeLine, couponFromData, type At
 import { loadAgreementTemplate } from '@/lib/agreementTemplateStore';
 import { provisionLandlordForAgreement } from '@/lib/landlordProvision';
 import { generateSecondLandlordToken, secondLandlordInviteHtml, sendEmail as sendSecondEmail, SECOND_LANDLORD_TTL_MS } from '@/lib/secondLandlord';
+import { generateFormsToken, sendPostSignFormsInvite, POST_SIGN_FORMS_TTL_MS } from '@/lib/postSignForms';
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.houseoflettings.uk';
 
@@ -386,6 +387,14 @@ export async function POST(request: Request) {
     };
     let issuedSecondInvite = false;
 
+    // Post-agreement forms (Authorised Rep + Bank/AML). On a NEW registration we
+    // mint the first landlord's token so we can email them the two form links.
+    const firstFormsToken = generateFormsToken();
+    const firstFormsFields = {
+      firstFormsToken,
+      firstFormsExpires: Date.now() + POST_SIGN_FORMS_TTL_MS,
+    };
+
     // One transaction covers the re-issue token check, the coupon redemption
     // and the registration write, so a coupon can only ever be redeemed once
     // and never without the registration actually being recorded.
@@ -442,6 +451,7 @@ export async function POST(request: Request) {
           ...toStore,
           ...couponFields,
           ...(jointEmail ? secondFieldsNew : {}),
+          ...firstFormsFields,
           status: "signed",
           source: "website-landlord-registration",
           createdAt: FieldValue.serverTimestamp(),
@@ -529,6 +539,13 @@ export async function POST(request: Request) {
             propertyAddress: primaryAddress(data),
             link: `${SITE_URL}/landlord-registration/joint?id=${docId}&token=${secondToken}`,
           }),
+        }),
+      ] : []),
+      // Email the first landlord the two post-agreement form links (new regs only).
+      ...(!agreementId ? [
+        sendPostSignFormsInvite({
+          id: docId, token: firstFormsToken, party: "first",
+          name: data.fullName || "", email: data.email || "", propertyAddress: primaryAddress(data),
         }),
       ] : []),
     ]);

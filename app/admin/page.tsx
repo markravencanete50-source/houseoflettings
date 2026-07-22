@@ -1652,7 +1652,7 @@ export default function AdminDashboard() {
           )}
 
           {/* ── Landlords ── */}
-          {tab === 'landlords' && <LandlordsPanel />}
+          {tab === 'landlords' && <LandlordsPanel canDelete />}
 
           {/* ── Rent Reviews ── */}
           {tab === 'rent-reviews' && (

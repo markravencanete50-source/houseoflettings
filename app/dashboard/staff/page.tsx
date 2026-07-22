@@ -1141,7 +1141,7 @@ function StaffDashboardInner() {
 
           {/* ── Landlords ── */}
           {tab === 'landlords' && perms.includes('landlords') && (
-            <LandlordsPanel />
+            <LandlordsPanel canDelete={profile?.role === 'admin'} />
           )}
 
           {/* ── Post Property ── */}

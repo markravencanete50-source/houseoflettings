@@ -47,13 +47,13 @@ export async function GET(request: Request) {
 
     type Prop = {
       id: string; agreementId: string; label: string; postcode: string;
-      city?: string; type?: string; bedrooms?: string; rent?: string;
+      city?: string; type?: string; bedrooms?: string; bathrooms?: string; furnishing?: string; rent?: string;
       tenancyStart?: string; availableFrom?: string; occupancy?: string;
+      packageId?: string; packageLabel?: string;
     };
     const properties: Prop[] = [];
     for (const s of agreementDocs) {
       const d = s.data() || {};
-      const pkg = d.selectedPackage || '';
       const list = Array.isArray(d.properties) ? d.properties : [];
       const rows = list.length ? list : [{
         postcode: d.postcode, street: d.street, city: d.city, flatNumber: d.flatNumber,
@@ -66,11 +66,11 @@ export async function GET(request: Request) {
           agreementId: s.id,
           label,
           postcode: normalisePostcode(String(p.postcode || label)) || '',
-          city: p.city, type: p.propertyType, bedrooms: p.bedrooms, rent: p.currentRent,
+          city: p.city, type: p.propertyType, bedrooms: p.bedrooms, bathrooms: p.bathrooms, furnishing: p.furnishing, rent: p.currentRent,
           tenancyStart: p.tenancyStart, availableFrom: p.availableFrom, occupancy: p.occupancy,
+          packageId: d.selectedPackageId || '', packageLabel: d.selectedPackage || '',
         });
       });
-      void pkg;
     }
 
     // ── Live listings (properties collection) that match, or were posted for this landlord ──
@@ -97,6 +97,7 @@ export async function GET(request: Request) {
         id: a.id,
         fullName: a.fullName || '',
         propertyAddress: a.propertyAddress || '',
+        postcode: normalisePostcode(String(a.propertyAddress || '')) || '',
         rent: a.rent || '',
         moveInDate: a.moveInDate || '',
         leaseTerm: a.leaseTerm || '',
@@ -113,6 +114,7 @@ export async function GET(request: Request) {
         id: m.id,
         fullName: m.fullName || '',
         propertyAddress: m.propertyAddress || '',
+        postcode: normalisePostcode(String(m.propertyAddress || '')) || '',
         issueDescription: m.issueDescription || '',
         status: m.status || 'open',
         submittedAt: iso(m.createdAt),

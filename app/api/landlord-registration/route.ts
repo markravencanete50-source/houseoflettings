@@ -17,6 +17,9 @@ import { findBundle } from '@/lib/agreementContent';
 import { agreementPdfBase64, landlordEmailHtml, feeLine, couponFromData, type Attachment } from '@/lib/agreementDocuments';
 import { loadAgreementTemplate } from '@/lib/agreementTemplateStore';
 import { provisionLandlordForAgreement } from '@/lib/landlordProvision';
+import { generateSecondLandlordToken, secondLandlordInviteHtml, sendEmail as sendSecondEmail, SECOND_LANDLORD_TTL_MS } from '@/lib/secondLandlord';
+
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.houseoflettings.uk';
 
 function getFirestoreClient() {
   if (!getApps().length) {
@@ -369,6 +372,20 @@ export async function POST(request: Request) {
       : db.collection("landlordAgreements").doc();
     const docId = registrationRef.id;
 
+    // Joint (second) landlord: when a valid second email is given we mint a
+    // one-time token and (after the write) email them a link to add their own
+    // ID/documents/signature. The token is issued on a new registration, and
+    // re-issued on a re-sign UNLESS the second landlord has already completed.
+    const jointEmail = (data.jointLandlord && data.landlord2Email && String(data.landlord2Email).includes("@"))
+      ? String(data.landlord2Email).trim() : "";
+    const secondToken = jointEmail ? generateSecondLandlordToken() : "";
+    const secondFieldsNew = {
+      secondLandlordToken: secondToken,
+      secondLandlordExpires: Date.now() + SECOND_LANDLORD_TTL_MS,
+      secondLandlordStatus: "pending",
+    };
+    let issuedSecondInvite = false;
+
     // One transaction covers the re-issue token check, the coupon redemption
     // and the registration write, so a coupon can only ever be redeemed once
     // and never without the registration actually being recorded.
@@ -407,18 +424,24 @@ export async function POST(request: Request) {
         });
       }
       if (agreementId) {
+        const existing = aSnap?.data() || {};
+        const reissueSecond = !!jointEmail && existing.secondLandlordStatus !== "completed";
+        if (reissueSecond) issuedSecondInvite = true;
         tx.update(registrationRef, {
           ...toStore,
           ...couponFields,
+          ...(reissueSecond ? secondFieldsNew : {}),
           status: "signed",
           reissueToken: FieldValue.delete(),
           reissueExpires: FieldValue.delete(),
           updatedAt: FieldValue.serverTimestamp(),
         });
       } else {
+        if (jointEmail) issuedSecondInvite = true;
         tx.set(registrationRef, {
           ...toStore,
           ...couponFields,
+          ...(jointEmail ? secondFieldsNew : {}),
           status: "signed",
           source: "website-landlord-registration",
           createdAt: FieldValue.serverTimestamp(),
@@ -494,6 +517,20 @@ export async function POST(request: Request) {
       // Best-effort and self-contained: it swallows its own errors so a failure
       // here can never roll back or block the registration itself.
       provisionLandlordForAgreement(db, docId, data, { isNewRegistration: !agreementId }),
+      // Invite the second (joint) landlord to complete their own details.
+      ...(issuedSecondInvite && jointEmail ? [
+        sendSecondEmail({
+          to: jointEmail,
+          subject: `👥 Complete your joint landlord details | House of Lettings`,
+          html: secondLandlordInviteHtml({
+            secondName: data.landlord2Name || "",
+            firstName: data.fullName || "the primary landlord",
+            packageLabel: bundle.label,
+            propertyAddress: primaryAddress(data),
+            link: `${SITE_URL}/landlord-registration/joint?id=${docId}&token=${secondToken}`,
+          }),
+        }),
+      ] : []),
     ]);
     return Response.json({ success: true, id: docId }, { status: 201 });
   } catch (error) {

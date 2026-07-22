@@ -165,12 +165,14 @@ const EMPTY_FORM = {
   ownerType: '', // 'individual' | 'company'
   companyName: '', companyNumber: '', registeredAddress: '', contactRole: '',
   fullName: '', email: '', phone: '', propertyCount: '', contactAddress: '',
-  jointLandlord: false, landlord2Name: '', landlord2Email: '',
+  jointLandlord: false, landlord2Name: '', landlord2Email: '', landlord2Phone: '',
   residency: '', // 'resident' | 'non-resident'
   selectedPackage: '', selectedPackageId: '', notes: '',
   termsAccepted: false,
   signatureName: '', signatureDate: '',
-  signature2Name: '', // second (joint) landlord, when jointLandlord is on
+  // The second (joint) landlord no longer signs on this device — they complete
+  // their own ID, documents and signature via a secure emailed link after this
+  // registration is submitted (see /landlord-registration/joint).
 };
 type FormState = typeof EMPTY_FORM;
 
@@ -477,7 +479,15 @@ export default function RegistrationFormClient() {
         if (totalShare > 100) e.companyShareTotal = `The shareholding percentages add up to ${totalShare}%. The total cannot be more than 100%`;
       } else {
         if (!form.fullName.trim()) e.fullName = 'Full name is required';
-        if (form.jointLandlord && !form.landlord2Name.trim()) e.landlord2Name = 'Please enter the second landlord’s name, or turn off joint landlord';
+        if (form.jointLandlord) {
+          if (!form.landlord2Name.trim()) e.landlord2Name = 'Please enter the second landlord’s name, or turn off joint landlord';
+          // Email is now required for joint landlords — we email them a secure
+          // link to complete their own ID and documents.
+          if (!form.landlord2Email.trim()) e.landlord2Email = 'The second landlord’s email is required so we can send them their link';
+          else if (!EMAIL_REGEX.test(form.landlord2Email)) e.landlord2Email = 'Enter a valid email address for the second landlord';
+          if (!form.landlord2Phone.trim()) e.landlord2Phone = 'The second landlord’s telephone number is required';
+          else if (!UK_PHONE_REGEX.test(form.landlord2Phone.replace(/\s/g, ''))) e.landlord2Phone = 'Enter a valid UK telephone number';
+        }
       }
       if (!form.email.trim()) e.email = 'Email is required';
       else if (!EMAIL_REGEX.test(form.email)) e.email = 'Enter a valid email address';
@@ -527,10 +537,8 @@ export default function RegistrationFormClient() {
     const e: Record<string, string> = {};
     if (!form.signatureName.trim()) e.signatureName = 'Please type your full name to confirm your signature';
     if (!signatureData) e.signature = 'Please add your signature by drawing it or uploading an image';
-    if (!isCompany && form.jointLandlord) {
-      if (!form.signature2Name.trim()) e.signature2Name = 'Please type the second landlord’s full name to confirm their signature';
-      if (!signature2Data) e.signature2 = 'Please add the second landlord’s signature by drawing it or uploading an image';
-    }
+    // The second (joint) landlord signs their own copy later via their emailed
+    // link — nothing to validate for them on this device.
     if (!bundle) e.selectedPackage = 'Please choose a service';
     if (Object.keys(e).length) { setErrors(e); return; }
 
@@ -544,16 +552,6 @@ export default function RegistrationFormClient() {
         const file = dataUrlToFile(signatureData!, `signature-${Date.now()}.png`);
         signatureUrl = await uploadToCloudinary(file, CLOUDINARY_FOLDERS.agreements);
       } catch { /* non-fatal: the data URL still reaches the PDF/email */ }
-
-      // Second (joint) landlord signature, uploaded the same way.
-      let signature2Url = '';
-      const withSig2 = !isCompany && form.jointLandlord && signature2Data;
-      if (withSig2) {
-        try {
-          const file2 = dataUrlToFile(signature2Data!, `signature2-${Date.now()}.png`);
-          signature2Url = await uploadToCloudinary(file2, CLOUDINARY_FOLDERS.agreements);
-        } catch { /* non-fatal */ }
-      }
 
       const first = properties[0];
       const res = await fetch('/api/landlord-registration', {
@@ -604,7 +602,6 @@ export default function RegistrationFormClient() {
           // Agreement extras
           signatureUrl,
           signatureImage: signatureData, // NOT a *Url field, so it survives sanitising
-          ...(withSig2 ? { signature2Url, signature2Image: signature2Data } : {}),
           ...(coupon ? { couponCode: coupon.code } : {}),
           ...(isResume ? { agreementId: resumeId, reissueToken: resumeToken } : {}),
         }),
@@ -820,17 +817,31 @@ export default function RegistrationFormClient() {
                           </label>
                         </div>
                         {form.jointLandlord && (
-                          <>
-                            <div className="hol-field">
-                              <label className="hol-label">Second Landlord Full Name<span className="hol-req">*</span></label>
-                              <input type="text" className={`hol-input${errors.landlord2Name ? ' hol-input--error' : ''}`} value={form.landlord2Name} onChange={set('landlord2Name')} autoComplete="off" />
-                              {errors.landlord2Name && <p className="hol-err">{errors.landlord2Name}</p>}
+                          <div className="hol-field hol-field--full">
+                            <div className="hol-joint-box">
+                              <div className="hol-joint-box__head">
+                                <span className="hol-joint-box__title">👥 Second (Joint) Landlord</span>
+                                <span className="hol-joint-box__note">We'll email them a secure link to add their own ID &amp; documents — they won't choose a package or answer the certificates.</span>
+                              </div>
+                              <div className="hol-joint-box__grid">
+                                <div className="hol-field">
+                                  <label className="hol-label">Second Landlord Full Name<span className="hol-req">*</span></label>
+                                  <input type="text" className={`hol-input${errors.landlord2Name ? ' hol-input--error' : ''}`} placeholder="e.g. Mark Raven Canete" value={form.landlord2Name} onChange={set('landlord2Name')} autoComplete="off" />
+                                  {errors.landlord2Name && <p className="hol-err">{errors.landlord2Name}</p>}
+                                </div>
+                                <div className="hol-field">
+                                  <label className="hol-label">Second Landlord Email<span className="hol-req">*</span></label>
+                                  <input type="email" className={`hol-input${errors.landlord2Email ? ' hol-input--error' : ''}`} placeholder="name@example.co.uk" value={form.landlord2Email} onChange={set('landlord2Email')} autoComplete="off" />
+                                  {errors.landlord2Email && <p className="hol-err">{errors.landlord2Email}</p>}
+                                </div>
+                                <div className="hol-field">
+                                  <label className="hol-label">Second Landlord Telephone<span className="hol-req">*</span></label>
+                                  <input type="tel" className={`hol-input${errors.landlord2Phone ? ' hol-input--error' : ''}`} placeholder="e.g. 07489 489498" value={form.landlord2Phone} onChange={set('landlord2Phone')} autoComplete="off" />
+                                  {errors.landlord2Phone && <p className="hol-err">{errors.landlord2Phone}</p>}
+                                </div>
+                              </div>
                             </div>
-                            <div className="hol-field">
-                              <label className="hol-label">Second Landlord Email <span style={{ color: '#9ca3af', fontWeight: 400 }}>(optional)</span></label>
-                              <input type="email" className="hol-input" value={form.landlord2Email} onChange={set('landlord2Email')} autoComplete="off" />
-                            </div>
-                          </>
+                          </div>
                         )}
                       </>
                     )}
@@ -1268,39 +1279,19 @@ export default function RegistrationFormClient() {
                         </div>
                       </div>
 
-                      {/* Landlord 2 (joint) */}
+                      {/* The second (joint) landlord signs their own copy via a
+                          secure emailed link after this registration — no second
+                          signature is captured on this device. */}
                       {!isCompany && form.jointLandlord && (
-                        <div className="hol-sig2">
-                          <div className="hol-sig-legend">Landlord 2{form.landlord2Name ? ` — ${form.landlord2Name}` : ' (joint landlord)'}</div>
-                          <SignaturePad onChange={setSignature2Data} penColor="#0a162f" />
-                          <div className="hol-or">or</div>
-                          <div>
-                            <button type="button" className="hol-upload" style={{ width: '100%' }} onClick={() => fileRef2.current?.click()} disabled={uploadingSig2}>
-                              {uploadingSig2 ? 'Reading…' : '⬆ Upload an image of the second landlord’s signature'}
-                            </button>
-                            <input ref={fileRef2} type="file" accept="image/png,image/jpeg,image/webp" hidden
-                              onChange={e => { const f = e.target.files?.[0]; if (f) onUploadSignature(f, 2); e.target.value = ''; }} />
-                          </div>
-                          {signature2Data && (
-                            <div className="hol-sig-preview">
-                              <span className="hol-sig-ok">✓ Second signature captured</span>
-                              <img src={signature2Data} alt="Second landlord signature" />
-                            </div>
-                          )}
-                          {errors.signature2 && <p className="hol-err" style={{ marginTop: 8 }}>{errors.signature2}</p>}
-                          <div className="hol-form-grid" style={{ marginTop: 16 }}>
-                            <div className="hol-field">
-                              <label className="hol-label">Second landlord&rsquo;s full name to confirm<span className="hol-req">*</span></label>
-                              <input type="text" className={`hol-input${errors.signature2Name ? ' hol-input--error' : ''}`} placeholder="Full legal name" value={form.signature2Name} onChange={set('signature2Name')} autoComplete="off" />
-                              {errors.signature2Name && <p className="hol-err">{errors.signature2Name}</p>}
-                            </div>
-                          </div>
+                        <div className="hol-sig2-note">
+                          ✉️ After you submit, <strong>{form.landlord2Name || 'the second landlord'}</strong> will be emailed a secure link
+                          at <strong>{form.landlord2Email || 'their email'}</strong> to add their own ID, documents and signature.
                         </div>
                       )}
 
                       <p style={{ fontSize: 12, color: '#9ca3af', lineHeight: 1.5, marginTop: 14 }}>
                         An electronic signature is legally binding under the Electronic Communications Act 2000. A signed PDF
-                        copy will be emailed to {!isCompany && form.jointLandlord ? 'both landlords' : 'you'} and to House of Lettings.
+                        copy will be emailed to you and to House of Lettings.
                       </p>
                     </div>
 
@@ -1748,6 +1739,14 @@ const PAGE_CSS = `
   /* ── Agreement + signature (merged in from /landlord-agreement) ── */
   .hol-joint{display:flex;gap:10px;align-items:flex-start;font-size:14px;color:#374151;line-height:1.5;cursor:pointer;font-family:'Poppins',sans-serif;}
   .hol-joint input{margin-top:3px;width:17px;height:17px;flex-shrink:0;accent-color:#2563a8;}
+  .hol-joint-box{border:1.5px solid #dbe6fb;background:#f6f9ff;border-radius:14px;padding:20px 22px;margin-top:4px;}
+  .hol-joint-box__head{margin-bottom:16px;}
+  .hol-joint-box__title{display:block;font-size:15px;font-weight:800;color:#0a162f;font-family:'Poppins',sans-serif;}
+  .hol-joint-box__note{display:block;font-size:12.5px;color:#5b6b82;line-height:1.55;margin-top:5px;}
+  .hol-joint-box__grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+  .hol-joint-box__grid .hol-field--full,.hol-joint-box__grid>.hol-field:first-child{grid-column:1/-1;}
+  @media(max-width:640px){.hol-joint-box__grid{grid-template-columns:1fr;}}
+  .hol-sig2-note{margin-top:22px;padding:14px 16px;background:#eef5ff;border:1px solid #d3e3fb;border-radius:10px;font-size:13px;color:#28527a;line-height:1.55;}
   .hol-agreement{border:1px solid #e5e7eb;border-radius:12px;background:#fafbfc;padding:22px;max-height:440px;overflow-y:auto;}
   .hol-ag-head h3{font-size:17px;font-weight:800;margin:0 0 8px;color:#0a162f;}
   .hol-ag-head p{font-size:12.5px;line-height:1.6;color:#4b5563;margin:0 0 14px;}

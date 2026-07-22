@@ -14,6 +14,7 @@ import RentReviewPanel from '@/components/valuation/RentReviewPanel';
 import AgreementEditor from '@/components/dashboard/AgreementEditor';
 import AgreementTemplateEditor from '@/components/dashboard/AgreementTemplateEditor';
 import CouponManager from '@/components/dashboard/CouponManager';
+import LandlordsPanel from '@/components/dashboard/LandlordsPanel';
 import { useAuth } from '@/hooks/useAuth';
 import { signOut } from '@/services/auth';
 import { Property, propertyAvailability } from '@/lib/types';
@@ -541,6 +542,7 @@ function StaffDashboardInner() {
     orders: orders.length,
     valuations: valuations.length,
     reviews: reviews.length,
+    landlords: null,
     post: null,
   };
 
@@ -1118,6 +1120,11 @@ function StaffDashboardInner() {
                 </div>
               )}
             </div>
+          )}
+
+          {/* ── Landlords ── */}
+          {tab === 'landlords' && perms.includes('landlords') && (
+            <LandlordsPanel />
           )}
 
           {/* ── Post Property ── */}

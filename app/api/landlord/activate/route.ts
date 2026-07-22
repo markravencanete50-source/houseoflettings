@@ -8,6 +8,7 @@ import { getAuth } from 'firebase-admin/auth';
 import { FieldValue, type Firestore } from 'firebase-admin/firestore';
 import { getAdminDb } from '@/lib/staffApiAuth';
 import { postcodesFromAgreement } from '@/lib/landlordProvision';
+import { clearLockout } from '@/lib/loginLockout';
 import { rateLimit } from '@/lib/rateLimit';
 import { createHash } from 'node:crypto';
 
@@ -97,8 +98,10 @@ export async function POST(request: Request) {
       createdAt: FieldValue.serverTimestamp(),
     }, { merge: true });
 
-    // Burn the token so the link can't be reused.
+    // Burn the token so the link can't be reused, and clear any login lockout so
+    // a locked-out landlord regains access immediately after resetting.
     await tokenRef.set({ used: true, usedAt: FieldValue.serverTimestamp() }, { merge: true });
+    await clearLockout(db, clean);
 
     // Sign them straight in: password → idToken → session cookie.
     const key = process.env.NEXT_PUBLIC_FIREBASE_API_KEY;

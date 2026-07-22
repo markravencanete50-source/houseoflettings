@@ -7,6 +7,7 @@ import { NextResponse } from 'next/server';
 import { getAuth } from 'firebase-admin/auth';
 import { requireLandlord } from '@/lib/landlordAuth';
 import { getAdminDb } from '@/lib/staffApiAuth';
+import { clearLockout } from '@/lib/loginLockout';
 import { rateLimit } from '@/lib/rateLimit';
 
 export const dynamic = 'force-dynamic';
@@ -46,6 +47,7 @@ export async function POST(request: Request) {
     await getAuth().updateUser(auth.uid, { password: String(newPassword) });
     // First-login gate cleared once they've chosen their own password.
     await getAdminDb().collection('users').doc(auth.uid).set({ mustResetPassword: false }, { merge: true });
+    await clearLockout(getAdminDb(), auth.email);
 
     return NextResponse.json({ ok: true }, { status: 200 });
   } catch (e) {

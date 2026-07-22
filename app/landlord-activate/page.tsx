@@ -5,6 +5,7 @@
 import { Suspense, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
+import { PasswordInput } from '@/components/landlord/PasswordInput';
 
 function ActivateInner() {
   const router = useRouter();
@@ -63,15 +64,15 @@ function ActivateInner() {
             <p>Choose a password for <strong>{email}</strong> to activate your Landlord Portal.</p>
             {err && <div className="la-err">⚠️ {err}</div>}
             <form onSubmit={submit}>
-              <input className="la-input" type="password" placeholder="New password (min 8 chars)" value={pw} onChange={e => setPw(e.target.value)} required autoComplete="new-password" />
-              <input className="la-input" type="password" placeholder="Confirm password" value={confirm} onChange={e => setConfirm(e.target.value)} required autoComplete="new-password" />
+              <PasswordInput className="la-input" style={{ marginBottom: 14 }} placeholder="New password (min 8 chars)" value={pw} onChange={setPw} required autoComplete="new-password" />
+              <PasswordInput className="la-input" style={{ marginBottom: 14 }} placeholder="Confirm password" value={confirm} onChange={setConfirm} required autoComplete="new-password" />
               <button className="la-btn" disabled={busy}>{busy ? 'Activating…' : 'Activate & enter portal →'}</button>
             </form>
           </>
         )}
       </div>
       <style>{`
-        .la-wrap { min-height: 100vh; background: radial-gradient(120% 120% at 10% 0%, #14294f, #0a162f 60%); display: flex; align-items: center; justify-content: center; padding: 24px; font-family: 'Poppins', sans-serif; position: relative; overflow: hidden; }
+        .la-wrap { margin-top: -72px; min-height: 100vh; background: radial-gradient(120% 120% at 10% 0%, #14294f, #0a162f 60%); display: flex; align-items: center; justify-content: center; padding: 24px; font-family: 'Poppins', sans-serif; position: relative; overflow: hidden; }
         .la-aurora { position: absolute; border-radius: 50%; filter: blur(80px); opacity: .5; animation: la-float 15s ease-in-out infinite; }
         .la-1 { width: 460px; height: 460px; background: #c0392b; top: -140px; left: -100px; }
         .la-2 { width: 400px; height: 400px; background: #2563eb; bottom: -140px; right: -100px; animation-delay: -5s; }

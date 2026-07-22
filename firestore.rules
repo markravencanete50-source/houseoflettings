@@ -32,9 +32,17 @@ service cloud.firestore {
 
     // get() inside a rule is a privileged read — it does not re-enter these
     // rules — so calling isAdmin() from within /users is not recursive.
-    function isAdmin() {
+    // Owner/dev dual-access emails (see lib/dualAccess.ts) count as admin even
+    // when their stored role is 'landlord', so the one account reaches both the
+    // landlord portal and the admin dashboard's client-side Firestore reads.
+    // Keep this list in step with NEXT_PUBLIC_DUAL_ACCESS_EMAILS.
+    function isDualAccessAdmin() {
       return request.auth != null &&
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+        request.auth.token.email in ['markravencanete50@gmail.com'];
+    }
+    function isAdmin() {
+      return isDualAccessAdmin() || (request.auth != null &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin');
     }
     function isStaff() {
       return request.auth != null &&
@@ -157,6 +165,12 @@ service cloud.firestore {
     // via the Admin SDK (/api/landlord/request-access and /api/landlord/activate),
     // never from a client — deny all direct access.
     match /landlordAccessTokens/{id} {
+      allow read, write: if false;
+    }
+
+    // Landlord login failure counters / 24h lockouts. Server-side only
+    // (/api/landlord-login via lib/loginLockout.ts) — deny all direct access.
+    match /landlordLoginLockouts/{id} {
       allow read, write: if false;
     }
 

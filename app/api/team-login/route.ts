@@ -8,6 +8,7 @@ import { NextResponse } from 'next/server';
 import { getAuth } from 'firebase-admin/auth';
 import { getAdminDb } from '@/lib/staffApiAuth';
 import { DEFAULT_STAFF_PERMISSIONS, STAFF_FEATURE_IDS } from '@/lib/staffAccess';
+import { isDualAccessEmail } from '@/lib/dualAccess';
 import { rateLimit, rateLimitByKey } from '@/lib/rateLimit';
 
 const SESSION_COOKIE = 'hol_session';
@@ -65,7 +66,12 @@ export async function POST(request: Request) {
       return NextResponse.json({ message: 'User profile not found. Please contact support.' }, { status: 403 });
     }
     const data = snap.data() || {};
-    const role = data.role;
+    let role = data.role;
+    // Owner/dev dual-access emails are treated as admin here even if their stored
+    // role is 'landlord', so one account reaches both the portal and /admin.
+    if (role !== 'staff' && role !== 'admin' && isDualAccessEmail(data.email || String(email))) {
+      role = 'admin';
+    }
     if (role !== 'staff' && role !== 'admin') {
       return NextResponse.json({ message: 'Access denied. This login is for House of Lettings staff and administrators only.' }, { status: 403 });
     }

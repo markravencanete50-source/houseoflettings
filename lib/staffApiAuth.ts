@@ -7,6 +7,7 @@ import { cert, getApps, initializeApp } from 'firebase-admin/app';
 import { getFirestore } from 'firebase-admin/firestore';
 import { getAuth } from 'firebase-admin/auth';
 import { DEFAULT_STAFF_PERMISSIONS, STAFF_FEATURE_IDS, type StaffFeature } from './staffAccess';
+import { isDualAccessEmail } from './dualAccess';
 
 export function getAdminDb() {
   if (!getApps().length) {
@@ -57,7 +58,9 @@ export async function requireStaff(request: Request, feature?: StaffFeature): Pr
 
   const snap = await getAdminDb().collection('users').doc(uid).get();
   const data = snap.data() || {};
-  const role = data.role;
+  let role = data.role;
+  // Owner/dev dual-access emails act as admin here even if stored as 'landlord'.
+  if (role !== 'staff' && role !== 'admin' && isDualAccessEmail(data.email)) role = 'admin';
   if (role !== 'staff' && role !== 'admin') {
     return Response.json({ message: 'Forbidden' }, { status: 403 });
   }

@@ -8,6 +8,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { AnimatedNumber, Reveal, BarPairChart, DonutChart } from '@/components/landlord/PortalUI';
+import { PasswordInput } from '@/components/landlord/PasswordInput';
 
 type Me = { uid: string; name: string; email: string; phone: string; mustResetPassword: boolean; propertyCount: number };
 type Overview = {
@@ -341,9 +342,9 @@ function ChangePassword() {
       <h3 className="lp-panel-h">Change password</h3>
       {msg && <div className={`lp-msg ${msg.ok ? 'ok' : 'err'}`}>{msg.ok ? '✅' : '⚠️'} {msg.text}</div>}
       <form onSubmit={submit}>
-        <input className="lp-input" type="password" placeholder="Current password" value={cur} onChange={e => setCur(e.target.value)} required autoComplete="current-password" />
-        <input className="lp-input" type="password" placeholder="New password (min 8 chars)" value={next} onChange={e => setNext(e.target.value)} required autoComplete="new-password" />
-        <input className="lp-input" type="password" placeholder="Confirm new password" value={confirm} onChange={e => setConfirm(e.target.value)} required autoComplete="new-password" />
+        <PasswordInput className="lp-input" style={{ marginBottom: 12 }} placeholder="Current password" value={cur} onChange={setCur} required autoComplete="current-password" />
+        <PasswordInput className="lp-input" style={{ marginBottom: 12 }} placeholder="New password (min 8 chars)" value={next} onChange={setNext} required autoComplete="new-password" />
+        <PasswordInput className="lp-input" style={{ marginBottom: 12 }} placeholder="Confirm new password" value={confirm} onChange={setConfirm} required autoComplete="new-password" />
         <button className="lp-btn-solid" disabled={busy}>{busy ? 'Updating…' : 'Update password'}</button>
       </form>
     </div>
@@ -380,9 +381,9 @@ function ForcePasswordModal({ onDone }: { onDone: () => void }) {
         <p>Welcome! For your security, please replace the temporary password we emailed you before continuing.</p>
         {err && <div className="lp-msg err">⚠️ {err}</div>}
         <form onSubmit={submit}>
-          <input className="lp-input" type="password" placeholder="Temporary password (from email)" value={cur} onChange={e => setCur(e.target.value)} required autoComplete="current-password" />
-          <input className="lp-input" type="password" placeholder="New password (min 8 chars)" value={next} onChange={e => setNext(e.target.value)} required autoComplete="new-password" />
-          <input className="lp-input" type="password" placeholder="Confirm new password" value={confirm} onChange={e => setConfirm(e.target.value)} required autoComplete="new-password" />
+          <PasswordInput className="lp-input" style={{ marginBottom: 12 }} placeholder="Temporary password (from email)" value={cur} onChange={setCur} required autoComplete="current-password" />
+          <PasswordInput className="lp-input" style={{ marginBottom: 12 }} placeholder="New password (min 8 chars)" value={next} onChange={setNext} required autoComplete="new-password" />
+          <PasswordInput className="lp-input" style={{ marginBottom: 12 }} placeholder="Confirm new password" value={confirm} onChange={setConfirm} required autoComplete="new-password" />
           <button className="lp-btn-solid" disabled={busy}>{busy ? 'Saving…' : 'Save & continue →'}</button>
         </form>
       </div>
@@ -402,7 +403,9 @@ function ForcePasswordModal({ onDone }: { onDone: () => void }) {
 function PortalStyles() {
   return (
     <style>{`
-      .lp { min-height: 100vh; background: #f4f6fb; font-family: 'Poppins', sans-serif; color: #0a162f; }
+      /* Pull up under the global body paddingTop:72px so the portal's own top
+         bar sits flush to the viewport (no white gap above it). */
+      .lp { margin-top: -72px; min-height: 100vh; background: #f4f6fb; font-family: 'Poppins', sans-serif; color: #0a162f; }
       .lp-top { position: sticky; top: 0; z-index: 100; height: 66px; background: rgba(10,22,47,.98); display: flex; align-items: center; gap: 16px; padding: 0 24px; box-shadow: 0 2px 16px rgba(10,22,47,.18); }
       .lp-burger { display: none; background: none; border: none; color: #fff; font-size: 22px; cursor: pointer; }
       .lp-brand { color: #fff; font-weight: 800; font-size: 16px; text-decoration: none; letter-spacing: -.3px; }

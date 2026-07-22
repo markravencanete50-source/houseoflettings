@@ -49,7 +49,7 @@ export default function LandlordAccessPage() {
         )}
       </div>
       <style>{`
-        .la-wrap { min-height: 100vh; background: radial-gradient(120% 120% at 10% 0%, #14294f, #0a162f 60%); display: flex; align-items: center; justify-content: center; padding: 24px; font-family: 'Poppins', sans-serif; position: relative; overflow: hidden; }
+        .la-wrap { margin-top: -72px; min-height: 100vh; background: radial-gradient(120% 120% at 10% 0%, #14294f, #0a162f 60%); display: flex; align-items: center; justify-content: center; padding: 24px; font-family: 'Poppins', sans-serif; position: relative; overflow: hidden; }
         .la-aurora { position: absolute; border-radius: 50%; filter: blur(80px); opacity: .5; animation: la-float 15s ease-in-out infinite; }
         .la-1 { width: 460px; height: 460px; background: #c0392b; top: -140px; left: -100px; }
         .la-2 { width: 400px; height: 400px; background: #2563eb; bottom: -140px; right: -100px; animation-delay: -5s; }

@@ -7,24 +7,31 @@
 import { NextResponse } from 'next/server';
 import { getAuth } from 'firebase-admin/auth';
 import { getAdminDb } from '@/lib/staffApiAuth';
-import { rateLimit, rateLimitByKey } from '@/lib/rateLimit';
+import { rateLimit } from '@/lib/rateLimit';
+import { getLockState, registerFailure, clearLockout } from '@/lib/loginLockout';
 
 const SESSION_COOKIE = 'hol_session';
 const EXPIRES_MS = 5 * 24 * 60 * 60 * 1000; // 5 days
 
 export async function POST(request: Request) {
-  const limited = rateLimit(request, 'landlord-login', 10, 15 * 60 * 1000);
+  const limited = rateLimit(request, 'landlord-login', 12, 15 * 60 * 1000);
   if (limited) return limited;
   try {
     const { email, password } = await request.json();
     if (!email || !password) {
       return NextResponse.json({ message: 'Email and password are required.' }, { status: 400 });
     }
+    const emailKey = String(email).trim().toLowerCase();
+    const db = getAdminDb();
 
-    // Per-account throttle on top of the per-IP limit: 5 attempts per mailbox
-    // per 15 minutes, so rotating IPs doesn't buy unlimited guesses.
-    const emailLimited = rateLimitByKey('landlord-login-email', String(email).trim().toLowerCase(), 5, 15 * 60 * 1000);
-    if (emailLimited) return emailLimited;
+    // Hard gate: an account is locked for 24h after MAX_FAILS consecutive misses.
+    const lock = await getLockState(db, emailKey);
+    if (lock.locked) {
+      return NextResponse.json({
+        message: `Too many incorrect attempts — this account is locked for security. Try again in about ${lock.hoursLeft} hour${lock.hoursLeft === 1 ? '' : 's'}, or reset your password to regain access now.`,
+        locked: true,
+      }, { status: 429 });
+    }
 
     const key = process.env.NEXT_PUBLIC_FIREBASE_API_KEY;
     if (!key) {
@@ -44,13 +51,28 @@ export async function POST(request: Request) {
     const signIn = await signInRes.json().catch(() => ({}));
     if (!signInRes.ok) {
       const code = signIn?.error?.message || '';
-      const msg = /EMAIL_NOT_FOUND|INVALID_PASSWORD|INVALID_LOGIN_CREDENTIALS/.test(code)
-        ? 'Invalid email or password.'
-        : /USER_DISABLED/.test(code) ? 'This account has been disabled. Please contact us.'
+      const isCredentialMiss = /EMAIL_NOT_FOUND|INVALID_PASSWORD|INVALID_LOGIN_CREDENTIALS/.test(code);
+      if (isCredentialMiss) {
+        // Count the strike; lock the account on the third consecutive miss.
+        const { locked, remaining } = await registerFailure(db, emailKey);
+        if (locked) {
+          return NextResponse.json({
+            message: 'That was the third incorrect attempt, so this account is now locked for 24 hours. Reset your password to regain access sooner.',
+            locked: true,
+          }, { status: 429 });
+        }
+        return NextResponse.json({
+          message: `Invalid email or password. ${remaining} attempt${remaining === 1 ? '' : 's'} left before this account is locked for 24 hours.`,
+        }, { status: 401 });
+      }
+      const msg = /USER_DISABLED/.test(code) ? 'This account has been disabled. Please contact us.'
         : /TOO_MANY_ATTEMPTS/.test(code) ? 'Too many attempts. Please try again later.'
         : 'Sign in failed. Please try again.';
       return NextResponse.json({ message: msg }, { status: 401 });
     }
+
+    // Correct password → wipe any accumulated strikes for this account.
+    await clearLockout(db, emailKey);
 
     const uid: string = signIn.localId;
     const idToken: string = signIn.idToken;
@@ -61,7 +83,9 @@ export async function POST(request: Request) {
       return NextResponse.json({ message: 'No landlord account found for these details.' }, { status: 403 });
     }
     const data = snap.data() || {};
-    if (data.role !== 'landlord') {
+    // Landlords use this login; admins are allowed too so a developer/owner can
+    // reach the portal with the same account they use for the admin dashboard.
+    if (data.role !== 'landlord' && data.role !== 'admin') {
       return NextResponse.json({ message: 'This login is for registered landlords. Staff should use the team login.' }, { status: 403 });
     }
 

@@ -7,6 +7,7 @@ import { NextResponse } from 'next/server';
 import { getAuth } from 'firebase-admin/auth';
 import { getAdminDb } from '@/lib/staffApiAuth';
 import { DEFAULT_STAFF_PERMISSIONS, STAFF_FEATURE_IDS } from '@/lib/staffAccess';
+import { isDualAccessEmail } from '@/lib/dualAccess';
 
 // Reads the per-request session cookie — must never be statically cached.
 export const dynamic = 'force-dynamic';
@@ -30,7 +31,8 @@ export async function GET(request: Request) {
     const snap = await getAdminDb().collection('users').doc(uid).get();
     if (!snap.exists) return NextResponse.json({ user: null }, { status: 200 });
     const data = snap.data() || {};
-    const role = data.role;
+    let role = data.role;
+    if (role !== 'staff' && role !== 'admin' && isDualAccessEmail(data.email)) role = 'admin';
     if (role !== 'staff' && role !== 'admin') return NextResponse.json({ user: null }, { status: 200 });
 
     const permissions: string[] = role === 'admin'

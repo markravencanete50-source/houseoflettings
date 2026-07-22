@@ -49,7 +49,9 @@ export async function requireLandlord(request: Request): Promise<LandlordAuth | 
 
   const snap = await getAdminDb().collection('users').doc(uid).get();
   const data = snap.data() || {};
-  if (data.role !== 'landlord') {
+  // Admins can also open the portal (to preview a landlord's view / QA the
+  // feature) — they simply see whatever is scoped to their own postcodes.
+  if (data.role !== 'landlord' && data.role !== 'admin') {
     return Response.json({ message: 'This area is for registered landlords only.' }, { status: 403 });
   }
 

@@ -9,7 +9,14 @@ import RentReviewPanel from '@/components/valuation/RentReviewPanel';
 import AgreementEditor from '@/components/dashboard/AgreementEditor';
 import AgreementTemplateEditor from '@/components/dashboard/AgreementTemplateEditor';
 import CouponManager from '@/components/dashboard/CouponManager';
+import LandlordsPanel from '@/components/dashboard/LandlordsPanel';
 import { useAuth } from '@/hooks/useAuth';
+import { isDualAccessEmail } from '@/lib/dualAccess';
+
+// Owner/dev dual-access emails count as admin here even if their stored role is
+// 'landlord', matching the server gates and firestore.rules.
+const isAdminProfile = (p: { role?: string; email?: string } | null | undefined) =>
+  !!p && (p.role === 'admin' || isDualAccessEmail(p.email));
 import {
   getAllUsers,
   getAllProperties,
@@ -35,7 +42,7 @@ import {
   updateDoc, addDoc, deleteDoc, serverTimestamp, Timestamp,
 } from 'firebase/firestore';
 
-type Tab = 'analytics' | 'users' | 'properties' | 'post' | 'edit' | 'valuations' | 'reviews' | 'applications' | 'orders' | 'maintenance' | 'rent-reviews' | 'agreements';
+type Tab = 'analytics' | 'users' | 'properties' | 'post' | 'edit' | 'valuations' | 'reviews' | 'applications' | 'orders' | 'maintenance' | 'rent-reviews' | 'agreements' | 'landlords';
 
 interface Agreement {
   id: string;
@@ -364,7 +371,7 @@ export default function AdminDashboard() {
 
   // Website visitor analytics (first-party, from /api/track).
   useEffect(() => {
-    if (!profile || profile.role !== 'admin') return;
+    if (!isAdminProfile(profile)) return;
     fetch('/api/track')
       .then(r => (r.ok ? r.json() : null))
       .then(d => { if (d) setWebStats(d); })
@@ -375,7 +382,7 @@ export default function AdminDashboard() {
   // collection has no client Firestore rule), so they load separately from the
   // client-SDK reads above.
   useEffect(() => {
-    if (!profile || profile.role !== 'admin') return;
+    if (!isAdminProfile(profile)) return;
     let cancelled = false;
     authedFetch('/api/staff/agreements')
       .then(r => r.json())
@@ -385,13 +392,13 @@ export default function AdminDashboard() {
   }, [profile]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
-    if (!authLoading && (!profile || profile.role !== 'admin')) {
+    if (!authLoading && !isAdminProfile(profile)) {
       router.push('/admin-login');
     }
   }, [profile, authLoading, router]);
 
   useEffect(() => {
-    if (!profile || profile.role !== 'admin') return;
+    if (!isAdminProfile(profile)) return;
     // Load each collection independently: if one read is denied (e.g. a new
     // collection without a matching Firestore rule) it must not blank the rest.
     const safe = <T,>(p: Promise<T>): Promise<T | null> => p.catch(() => null);
@@ -617,6 +624,7 @@ export default function AdminDashboard() {
     { id: 'reviews',    icon: '⭐', label: `Reviews (${reviews.length})` },
     { id: 'applications', icon: '📝', label: `Applications (${applications.length})` },
     { id: 'agreements', icon: '📄', label: `Landlord Registration (${agreements.length})` },
+    { id: 'landlords',  icon: '👤', label: 'Landlords' },
     { id: 'rent-reviews', icon: '🔁', label: `Rent Reviews (${rentReviews.length})` },
     { id: 'orders',     icon: '🛒', label: `Orders (${orders.length})` },
     { id: 'maintenance', icon: '🔧', label: `Maintenance (${maintenance.length})` },
@@ -1638,6 +1646,9 @@ export default function AdminDashboard() {
               )}
             </div>
           )}
+
+          {/* ── Landlords ── */}
+          {tab === 'landlords' && <LandlordsPanel />}
 
           {/* ── Rent Reviews ── */}
           {tab === 'rent-reviews' && (

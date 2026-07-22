@@ -8,6 +8,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { PasswordInput } from '@/components/landlord/PasswordInput';
 
 export default function LandlordLoginPage() {
   const router = useRouter();
@@ -69,8 +70,8 @@ export default function LandlordLoginPage() {
               onChange={e => setEmail(e.target.value)} placeholder="you@email.com" required />
 
             <label className="ll-label" style={{ marginTop: 16 }}>Password</label>
-            <input className="ll-input" type="password" value={password} autoComplete="current-password"
-              onChange={e => setPassword(e.target.value)} placeholder="••••••••" required />
+            <PasswordInput className="ll-input" value={password} autoComplete="current-password"
+              onChange={setPassword} placeholder="••••••••" required />
 
             <div style={{ textAlign: 'right', margin: '10px 0 4px' }}>
               <Link href="/landlord-access" className="ll-link">Forgot / reset password →</Link>
@@ -92,7 +93,10 @@ export default function LandlordLoginPage() {
       </div>
 
       <style>{`
-        .ll-wrap { min-height: 100vh; display: grid; grid-template-columns: 1.05fr 1fr; font-family: 'Poppins', sans-serif; background: #0a162f; }
+        /* Neutralise the global body paddingTop:72px (site navbar space) — this
+           page is full-bleed with its own layout, so that padding would leave a
+           white strip at the top. */
+        .ll-wrap { margin-top: -72px; min-height: 100vh; display: grid; grid-template-columns: 1.05fr 1fr; font-family: 'Poppins', sans-serif; background: #0a162f; }
         .ll-brand { position: relative; overflow: hidden; background: radial-gradient(120% 120% at 0% 0%, #14294f 0%, #0a162f 55%); display: flex; align-items: center; }
         .ll-aurora { position: absolute; border-radius: 50%; filter: blur(70px); opacity: .55; animation: ll-float 14s ease-in-out infinite; }
         .ll-a1 { width: 460px; height: 460px; background: #c0392b; top: -120px; left: -80px; }

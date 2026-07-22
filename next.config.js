@@ -55,6 +55,14 @@ const nextConfig = {
         destination: '/listings',
         permanent: true,
       },
+      {
+        // The sign-agreement flow was merged into Landlord Registration.
+        // Query strings are preserved, so old emailed re-issue links
+        // (?agreementId=&token=) still land on the merged form.
+        source: '/landlord-agreement',
+        destination: '/landlord-registration/apply',
+        permanent: true,
+      },
     ];
   },
 };

@@ -139,8 +139,9 @@ service cloud.firestore {
       allow read, update, delete: if isAdmin();
     }
 
-    // Signed management agreements. Written and read server-side via the
-    // Admin SDK (/api/landlord-agreement and /api/staff/agreements), and the
+    // Landlord registrations with a signed management agreement. Written and
+    // read server-side via the
+    // Admin SDK (/api/landlord-registration and /api/staff/agreements), and the
     // dashboards fetch them through those API routes, so no client access is
     // required. Listed for the record, admin-read only.
     match /landlordAgreements/{id} {

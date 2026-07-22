@@ -22,7 +22,7 @@ const REGISTRATION_FAQS = [
   },
   {
     q: 'Is registering a commitment or a contract?',
-    a: 'No. Registering simply starts the conversation. There is no obligation and no fee to register. Once we understand your property and the services you need, we will send a clear proposal. You only proceed if you are happy with it.',
+    a: 'Registration now includes reviewing and electronically signing your Residential Lettings & Management Agreement for the service you choose, all in one flow. There is no fee to register or to sign, and you see the full agreement — every clause, the service schedule and the fees — before you put your signature to it. A signed PDF copy is emailed to you straight away.',
   },
   {
     q: 'How many properties can I register?',
@@ -62,8 +62,9 @@ export default function LandlordRegistrationPage() {
             Register your property with House of Lettings
           </h1>
           <p style={{ fontSize: 17, color: 'rgba(255,255,255,0.62)', maxWidth: 560, margin: '0 auto 34px', lineHeight: 1.65, fontWeight: 300 }}>
-            Tell us about your property and the services you need. It&rsquo;s free, takes a couple of minutes,
-            and there&rsquo;s no obligation, just a tailored management proposal from your local Leeds &amp; Manchester team.
+            Tell us about your property, choose your service, then review and e-sign your Residential Lettings &amp;
+            Management Agreement online. It&rsquo;s free, takes a few minutes, and a signed PDF copy is emailed to you
+            by your local Leeds &amp; Manchester team.
           </p>
           <Link href="/landlord-registration/apply" className="hol-hero-cta">
             Landlord Registration
@@ -144,7 +145,7 @@ export default function LandlordRegistrationPage() {
             </div>
             <ol className="hol-terms-list">
               {[
-                ['No obligation to register', 'Registering your details is free and does not create a management agreement. A formal contract is only entered into once you accept a written proposal from us.'],
+                ['Registration & agreement in one', 'Registering is free. As part of the registration you review and electronically sign the Residential Lettings & Management Agreement for the package you choose — the full terms, service schedule and fees are shown on screen before you sign, and a signed PDF is emailed to you.'],
                 ['Legal compliance', 'As the landlord you remain legally responsible for your property. We will arrange and track required documents (EPC rated E or above, annual Gas Safety Certificate, EICR every 5 years, smoke and carbon-monoxide alarms) under any managed package you take.'],
                 ['Deposit protection', 'Where we hold a tenancy deposit, it will be protected in a government-approved scheme (DPS, mydeposits or TDS) within 30 days and the prescribed information served on the tenant.'],
                 ['Fees', 'Any management, tenant-find or certificate fees are set out clearly in your proposal before work begins. We never charge hidden fees.'],

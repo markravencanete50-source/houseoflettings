@@ -1,9 +1,21 @@
+// app/api/landlord-registration/route.ts
+// Receives a completed landlord registration — which now includes the signed
+// Residential Lettings & Management Agreement (merged in from the old
+// /api/landlord-agreement route). Creates a new record (or, when a valid
+// re-issue token is supplied, re-signs an existing one) in the
+// landlordAgreements collection the dashboards read, redeems any one-time
+// discount coupon atomically, builds the signed agreement PDF and a full
+// registration-summary PDF, emails the landlord and the office (both PDFs
+// attached), and backs everything up to Drive.
 import { initializeApp, getApps, cert } from "firebase-admin/app";
 import { getFirestore, FieldValue } from "firebase-admin/firestore";
 import { jsPDF } from "jspdf";
 import { rateLimit } from '@/lib/rateLimit';
 import { htmlEscapeDeep, sanitizeUploadUrlFieldsDeep } from '@/lib/security';
 import { backupToDrive, type BackupFile } from '@/lib/googleDrive';
+import { findBundle } from '@/lib/agreementContent';
+import { agreementPdfBase64, landlordEmailHtml, feeLine, couponFromData, type Attachment } from '@/lib/agreementDocuments';
+import { loadAgreementTemplate } from '@/lib/agreementTemplateStore';
 
 function getFirestoreClient() {
   if (!getApps().length) {
@@ -18,9 +30,7 @@ function getFirestoreClient() {
   return getFirestore();
 }
 
-type Attachment = { filename: string; content: string };
-
-async function sendEmail({ to, subject, html, attachments }: { to: string; subject: string; html: string; attachments?: Attachment[] }) {
+async function sendEmail({ to, subject, html, attachments }: { to: string | string[]; subject: string; html: string; attachments?: Attachment[] }) {
   const res = await fetch("https://api.resend.com/emails", {
     method: "POST",
     headers: {
@@ -138,7 +148,7 @@ function primaryAddress(data: any): string {
 // same extractors the email uses, so a field that reaches the office also
 // reaches the backup. The landlord's own file names are dropped in favour of
 // what the document IS, since "scan001.pdf" tells the office nothing.
-function driveBackupFiles(data: any, pdfBase64?: string): BackupFile[] {
+function driveBackupFiles(data: any, registrationPdf?: string, agreementPdf?: string): BackupFile[] {
   const files: BackupFile[] = [];
   const add = (list: { url: string }[], label: string) =>
     list.forEach((f, i) =>
@@ -163,7 +173,10 @@ function driveBackupFiles(data: any, pdfBase64?: string): BackupFile[] {
     if (d?.status === "yes" && d.url) files.push({ url: d.url, name: label });
   });
 
-  if (pdfBase64) files.push({ base64: pdfBase64, name: "Registration Summary" });
+  if (data.signatureUrl) files.push({ url: data.signatureUrl, name: "Landlord Signature" });
+  if (data.signature2Url) files.push({ url: data.signature2Url, name: "Second Landlord Signature" });
+  if (agreementPdf) files.push({ base64: agreementPdf, name: "Signed Agreement" });
+  if (registrationPdf) files.push({ base64: registrationPdf, name: "Registration Summary" });
   return files;
 }
 
@@ -181,8 +194,9 @@ function idDocFiles(data: any, base: string): { url: string; name: string }[] {
   return [];
 }
 
-// Full registration as a PDF (attached to both emails) so the office has a
-// printable record even if the email formatting is mangled by a client.
+// Full registration as a PDF (attached to both emails alongside the signed
+// agreement) so the office has a printable record even if the email formatting
+// is mangled by a client.
 function registrationPdfBase64(data: any, ref: string): string {
   const doc = new jsPDF();
   const pageW = doc.internal.pageSize.getWidth();
@@ -237,10 +251,12 @@ function registrationPdfBase64(data: any, ref: string): string {
     if (!people.length) line("Contact Person", data.fullName);
   } else {
     line("Full Name", data.fullName);
+    if (data.jointLandlord && data.landlord2Name) line("Joint Landlord", data.landlord2Name);
   }
   line("Email", data.email);
   line("Telephone", data.phone);
   line("Contact Address", data.contactAddress);
+  line("Residency", data.residency === "non-resident" ? "Non-resident landlord (NRL Scheme applies)" : "UK-resident landlord");
   const idFiles = idDocFiles(data, "landlordId");
   line(isCompany ? "Director's ID" : "Landlord ID", idFiles.length ? `${idFiles.length} file(s) uploaded` : "-");
   idFiles.forEach(f => line("", `${f.name}: ${f.url}`));
@@ -269,6 +285,8 @@ function registrationPdfBase64(data: any, ref: string): string {
 
   section("Service");
   line("Package Selected", data.selectedPackage);
+  const coupon = couponFromData(data);
+  if (coupon) line("Coupon Redeemed", `${coupon.code} — £${coupon.discount} off the setup fee`);
 
   section("Compliance Documents");
   const docs = data.documents || {};
@@ -278,19 +296,20 @@ function registrationPdfBase64(data: any, ref: string): string {
     if (d?.status === "yes" && d.url) line("", d.url);
   });
 
-  section("Declaration");
+  section("Declaration & Signature");
   if (data.notes) line("Additional Notes", data.notes);
-  line("Terms & Conditions", "Agreed by submitting this registration");
+  line("Terms & Conditions", "Accepted — the signed management agreement is attached separately");
+  line("Signed By", data.signatureName || data.fullName);
+  if (data.jointLandlord && (data.signature2Name || data.landlord2Name)) {
+    line("Second Signatory", data.signature2Name || data.landlord2Name);
+  }
+  line("Signature Date", data.signatureDate || new Date().toLocaleDateString("en-GB"));
   line("Submitted", new Date().toLocaleString("en-GB"));
 
   return Buffer.from(doc.output("arraybuffer")).toString("base64");
 }
 
-function confirmationEmailHtml(data: any) {
-  return `<!DOCTYPE html><html><head><meta charset="utf-8"/><style>body{font-family:Arial,sans-serif;background:#f4f6f9;margin:0;padding:0;}.wrap{max-width:600px;margin:40px auto;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,.08);}.header{background:linear-gradient(135deg,#1a3c5e,#2563a8);padding:36px 40px;color:#fff;}.header h1{margin:0 0 6px;font-size:24px;font-weight:700;}.body{padding:36px 40px;}.body p{font-size:15px;line-height:1.65;color:#374151;margin:0 0 16px;}.detail-box{background:#f8f9ff;border-radius:12px;padding:20px 24px;margin:24px 0;}.detail-row{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #eef0f5;font-size:14px;gap:16px;}.detail-row:last-child{border-bottom:none;}.detail-label{color:#6b7280;font-weight:500;flex-shrink:0;}.detail-value{color:#111827;font-weight:600;text-align:right;}.footer{background:#f8f9ff;padding:20px 40px;text-align:center;font-size:12px;color:#9ca3af;}</style></head><body><div class="wrap"><div class="header"><h1>🏠 Landlord Registration Received</h1><p>House of Lettings, Property Management</p></div><div class="body"><p>Dear <strong>${data.fullName}</strong>,</p><p>Thank you for registering as a landlord with House of Lettings. Our lettings team will review your details and be in touch within <strong>24-48 hours</strong> to discuss how we can manage your property.</p><div class="detail-box"><div class="detail-row"><span class="detail-label">${Array.isArray(data.properties) && data.properties.length > 1 ? `Properties (${data.properties.length})` : "Property Address"}</span><span class="detail-value">${data.address}</span></div><div class="detail-row"><span class="detail-label">Properties Owned</span><span class="detail-value">${data.propertyCount}</span></div><div class="detail-row"><span class="detail-label">Package Selected</span><span class="detail-value">${data.selectedPackage}</span></div></div><p>A PDF copy of everything you submitted is attached to this email for your records.</p><p>If you need to make any changes, please reply to this email.</p></div><div class="footer">© ${new Date().getFullYear()} House of Lettings Ltd. All rights reserved.</div></div></body></html>`;
-}
-
-function adminNotificationHtml(data: any) {
+function adminNotificationHtml(data: any, bundle: any) {
   const isCompany = data.ownerType === "company";
   const people = isCompany && Array.isArray(data.companyPeople) ? data.companyPeople : [];
   const peopleRows = people
@@ -303,7 +322,9 @@ function adminNotificationHtml(data: any) {
     const files = idDocFiles(data, base);
     return files.length ? files.map((f, i) => `<a href="${f.url}">${f.name || `document ${i + 1}`}</a>`).join("<br/>") : "-";
   };
-  return `<!DOCTYPE html><html><head><meta charset="utf-8"/><style>body{font-family:Arial,sans-serif;background:#f4f6f9;margin:0;padding:0;}.wrap{max-width:600px;margin:32px auto;background:#fff;border-radius:14px;overflow:hidden;}.header{background:#1a3c5e;padding:24px 32px;color:#fff;}.header h2{margin:0;font-size:20px;}.body{padding:28px 32px;}table{width:100%;border-collapse:collapse;font-size:14px;}td{padding:10px 12px;border-bottom:1px solid #eef0f5;vertical-align:top;}td:first-child{font-weight:600;color:#6b7280;width:38%;}td:last-child{color:#111;}</style></head><body><div class="wrap"><div class="header"><h2>🔔 New Landlord Registration</h2><p style="margin:4px 0 0;opacity:.8;font-size:13px;">${new Date().toLocaleString("en-GB")}</p></div><div class="body"><table><tr><td>Owner Type</td><td>${isCompany ? "Company / Ltd" : "Individual owner"}</td></tr>${companyRows}${isCompany && people.length ? "" : `<tr><td>${isCompany ? "Contact Person" : "Full Name"}</td><td>${data.fullName}</td></tr>`}<tr><td>Email</td><td>${data.email}</td></tr><tr><td>Telephone</td><td>${data.phone}</td></tr><tr><td>Contact Address</td><td>${data.contactAddress || "-"}</td></tr><tr><td>${isCompany ? "Director's ID" : "Landlord ID"}</td><td>${docLinks("landlordId")}</td></tr><tr><td>Billing Address Document</td><td>${docLinks("billingProof")}</td></tr><tr><td>Proof of Ownership</td><td>${docLinks("ownershipProof")}</td></tr><tr><td>Properties Owned</td><td>${data.propertyCount}</td></tr>${propertyRows(data)}<tr><td>Package Selected</td><td>${data.selectedPackage}</td></tr>${docRows(data)}<tr><td>Notes</td><td>${data.notes || "-"}</td></tr><tr><td>Terms &amp; Conditions</td><td>Agreed by submitting the registration</td></tr></table><p style="font-size:12px;color:#9ca3af;margin:16px 0 0;">A PDF copy of the full registration is attached.</p></div></div></body></html>`;
+  const coupon = couponFromData(data);
+  const sigLink = data.signatureUrl ? `<a href="${data.signatureUrl}">view signature image</a>` : "embedded in the signed PDF";
+  return `<!DOCTYPE html><html><head><meta charset="utf-8"/><style>body{font-family:Arial,sans-serif;background:#f4f6f9;margin:0;padding:0;}.wrap{max-width:600px;margin:32px auto;background:#fff;border-radius:14px;overflow:hidden;}.header{background:#1a3c5e;padding:24px 32px;color:#fff;}.header h2{margin:0;font-size:20px;}.body{padding:28px 32px;}table{width:100%;border-collapse:collapse;font-size:14px;}td{padding:10px 12px;border-bottom:1px solid #eef0f5;vertical-align:top;}td:first-child{font-weight:600;color:#6b7280;width:38%;}td:last-child{color:#111;}</style></head><body><div class="wrap"><div class="header"><h2>🔔 New Landlord Registration (Agreement Signed)</h2><p style="margin:4px 0 0;opacity:.8;font-size:13px;">${new Date().toLocaleString("en-GB")}</p></div><div class="body"><table><tr><td>Owner Type</td><td>${isCompany ? "Company / Ltd" : "Individual owner"}</td></tr>${companyRows}${isCompany && people.length ? "" : `<tr><td>${isCompany ? "Contact Person" : "Full Name"}</td><td>${data.fullName}</td></tr>`}${!isCompany && data.jointLandlord && data.landlord2Name ? `<tr><td>Joint Landlord</td><td>${data.landlord2Name}</td></tr>` : ""}<tr><td>Email</td><td>${data.email}</td></tr><tr><td>Telephone</td><td>${data.phone}</td></tr><tr><td>Contact Address</td><td>${data.contactAddress || "-"}</td></tr><tr><td>Residency</td><td>${data.residency === "non-resident" ? "Non-resident (NRL)" : "UK-resident"}</td></tr><tr><td>${isCompany ? "Director's ID" : "Landlord ID"}</td><td>${docLinks("landlordId")}</td></tr><tr><td>Billing Address Document</td><td>${docLinks("billingProof")}</td></tr><tr><td>Proof of Ownership</td><td>${docLinks("ownershipProof")}</td></tr><tr><td>Properties Owned</td><td>${data.propertyCount || "-"}</td></tr>${propertyRows(data)}<tr><td>Package Selected</td><td><strong>${bundle.label}</strong> (${feeLine(bundle, coupon)})</td></tr>${coupon ? `<tr><td>Coupon Redeemed</td><td><strong>${coupon.code}</strong> — £${coupon.discount} off the setup fee</td></tr>` : ""}${docRows(data)}<tr><td>Notes</td><td>${data.notes || "-"}</td></tr><tr><td>Signed By</td><td>${data.signatureName || data.fullName}${data.jointLandlord && (data.signature2Name || data.landlord2Name) ? ` &amp; ${data.signature2Name || data.landlord2Name}` : ""} on ${data.signatureDate || new Date().toLocaleDateString("en-GB")}</td></tr><tr><td>Signature</td><td>${sigLink}</td></tr></table><p style="font-size:12px;color:#9ca3af;margin:16px 0 0;">The signed management agreement PDF and the full registration summary PDF are attached.</p></div></div></body></html>`;
 }
 
 export async function POST(request: Request) {
@@ -314,49 +335,150 @@ export async function POST(request: Request) {
     // links are stored, emailed to staff as clickable links, and backed up to
     // Drive, so this is the choke point against link injection.
     const data = sanitizeUploadUrlFieldsDeep(await request.json());
-    const required = ["fullName", "email", "phone", "propertyCount", "address", "selectedPackage"];
+    const required = ["fullName", "email", "phone", "selectedPackage", "signatureName"];
     for (const field of required) {
       if (!data[field]?.toString().trim()) {
         return Response.json({ message: `${field} is required` }, { status: 400 });
       }
     }
-    // No terms checkbox any more — submitting the form is the agreement.
-    const db = getFirestoreClient();
-    const docRef = await db.collection("landlordRegistrations").add({
-      ...data,
-      status: "pending",
-      source: "website-landlord-registration",
-      createdAt: FieldValue.serverTimestamp(),
-      updatedAt: FieldValue.serverTimestamp(),
-    });
-
-    // PDF failure must never block the registration or the emails.
-    let attachments: Attachment[] | undefined;
-    try {
-      attachments = [{
-        filename: `landlord-registration-${docRef.id}.pdf`,
-        content: registrationPdfBase64(data, docRef.id),
-      }];
-    } catch (pdfErr) {
-      console.error("landlord-registration PDF generation failed:", pdfErr);
+    if (!data.termsAccepted) return Response.json({ message: "The terms must be accepted" }, { status: 400 });
+    if (typeof data.signatureImage !== "string" || !data.signatureImage.startsWith("data:image")) {
+      return Response.json({ message: "A signature is required" }, { status: 400 });
     }
 
+    const bundle = findBundle(data.selectedPackageId) || findBundle(data.selectedPackage);
+    if (!bundle) return Response.json({ message: "A valid service package is required" }, { status: 400 });
+
+    const db = getFirestoreClient();
+
+    // Re-sign path: a landlord returning via a re-issue link. Validate the token
+    // against the existing record before updating it in place.
+    const agreementId = (data.agreementId || "").toString().trim();
+    const reissueToken = (data.reissueToken || "").toString().trim();
+
+    // Keep the base64 signature out of Firestore (kept lean); the Cloudinary URL
+    // is the durable record. The raw image is only needed to build the PDF.
+    // Coupon fields are stripped and re-added from the coupon document — the
+    // client-claimed discount is never trusted.
+    const { signatureImage, signature2Image, agreementId: _a, reissueToken: _t, couponCode: _c, couponDiscount: _d, ...toStore } = data;
+
+    const couponCode = (data.couponCode || "").toString().trim().toUpperCase();
+    const registrationRef = agreementId
+      ? db.collection("landlordAgreements").doc(agreementId)
+      : db.collection("landlordAgreements").doc();
+    const docId = registrationRef.id;
+
+    // One transaction covers the re-issue token check, the coupon redemption
+    // and the registration write, so a coupon can only ever be redeemed once
+    // and never without the registration actually being recorded.
+    let clientError: { message: string; status: number } | null = null;
+    let redeemedDiscount = 0;
+    await db.runTransaction(async tx => {
+      // ── All reads first (Firestore transaction rule) ──
+      const couponRef = couponCode ? db.collection("agreementCoupons").doc(couponCode) : null;
+      const cSnap = couponRef ? await tx.get(couponRef) : null;
+      const aSnap = agreementId ? await tx.get(registrationRef) : null;
+
+      let couponFields: Record<string, unknown> = {};
+      if (couponRef && cSnap) {
+        const c = cSnap.data();
+        if (!cSnap.exists || !c) { clientError = { message: "That coupon code was not found.", status: 400 }; return; }
+        if (c.status !== "active") { clientError = { message: "This coupon has already been used or is no longer active.", status: 400 }; return; }
+        if (c.bundleId !== bundle.id) { clientError = { message: `This coupon is for the ${c.bundleLabel} package.`, status: 400 }; return; }
+        couponFields = { couponCode, couponDiscount: c.discount };
+        redeemedDiscount = c.discount;
+      }
+      if (agreementId) {
+        const existing = aSnap?.data();
+        if (!aSnap?.exists || !existing) { clientError = { message: "Registration not found", status: 404 }; return; }
+        const valid = existing.reissueToken && existing.reissueToken === reissueToken
+          && (!existing.reissueExpires || existing.reissueExpires > Date.now());
+        if (!valid) { clientError = { message: "This signing link is invalid or has expired.", status: 403 }; return; }
+      }
+
+      // ── Writes ──
+      if (couponRef) {
+        tx.update(couponRef, {
+          status: "used",
+          usedAt: FieldValue.serverTimestamp(),
+          usedBy: { name: data.fullName, email: data.email },
+          agreementId: docId,
+        });
+      }
+      if (agreementId) {
+        tx.update(registrationRef, {
+          ...toStore,
+          ...couponFields,
+          status: "signed",
+          reissueToken: FieldValue.delete(),
+          reissueExpires: FieldValue.delete(),
+          updatedAt: FieldValue.serverTimestamp(),
+        });
+      } else {
+        tx.set(registrationRef, {
+          ...toStore,
+          ...couponFields,
+          status: "signed",
+          source: "website-landlord-registration",
+          createdAt: FieldValue.serverTimestamp(),
+          updatedAt: FieldValue.serverTimestamp(),
+        });
+      }
+    });
+    if (clientError) {
+      const { message, status } = clientError;
+      return Response.json({ message }, { status });
+    }
+
+    // The documents must show the SERVER-verified discount.
+    if (couponCode && redeemedDiscount > 0) {
+      data.couponCode = couponCode;
+      data.couponDiscount = redeemedDiscount;
+    } else {
+      delete data.couponCode;
+      delete data.couponDiscount;
+    }
+
+    // Two PDFs: the signed management agreement, and the full registration
+    // summary. Either failing must never block the registration or the emails.
+    const template = await loadAgreementTemplate(db);
+    let agreementPdf: string | undefined;
+    try {
+      agreementPdf = agreementPdfBase64(data, bundle, docId, template);
+    } catch (e) {
+      console.error("landlord-registration agreement PDF generation failed:", e);
+    }
+    let registrationPdf: string | undefined;
+    try {
+      registrationPdf = registrationPdfBase64(data, docId);
+    } catch (e) {
+      console.error("landlord-registration summary PDF generation failed:", e);
+    }
+    const attachments: Attachment[] = [
+      ...(agreementPdf ? [{ filename: `management-agreement-${docId}.pdf`, content: agreementPdf }] : []),
+      ...(registrationPdf ? [{ filename: `landlord-registration-${docId}.pdf`, content: registrationPdf }] : []),
+    ];
+
     // User text is interpolated into email HTML below — escape a copy for the
-    // templates while the raw values go to Firestore and the PDF untouched.
+    // templates while the raw values go to Firestore and the PDFs untouched.
     const emailData = htmlEscapeDeep(data);
+
+    // Send the landlord copy to both landlords when it is a joint registration.
+    const landlordTo = [data.email, ...(data.jointLandlord && data.landlord2Email ? [data.landlord2Email] : [])]
+      .filter((e: string) => e && e.includes("@"));
 
     await Promise.allSettled([
       sendEmail({
-        to: data.email,
-        subject: "🏠 Your Landlord Registration | House of Lettings",
-        html: confirmationEmailHtml(emailData),
-        attachments,
+        to: landlordTo.length ? landlordTo : data.email,
+        subject: `🏠 Your Landlord Registration & signed ${bundle.label} agreement | House of Lettings`,
+        html: landlordEmailHtml(emailData, bundle),
+        attachments: attachments.length ? attachments : undefined,
       }),
       sendEmail({
         to: process.env.ADMIN_EMAIL || "admin@houseoflettings.co.uk",
-        subject: `🔔 New Landlord Registration: ${data.fullName}`,
-        html: adminNotificationHtml(emailData),
-        attachments,
+        subject: `🔔 New Landlord Registration: ${data.fullName} (${bundle.label})`,
+        html: adminNotificationHtml(emailData, bundle),
+        attachments: attachments.length ? attachments : undefined,
       }),
       // Backup only, and never throws: a Drive outage must not lose a landlord.
       // A company registration is filed under the company, an individual under
@@ -365,10 +487,10 @@ export async function POST(request: Request) {
         formType: "landlord-registration",
         label: data.companyName || data.fullName,
         address: primaryAddress(data),
-        files: driveBackupFiles(data, attachments?.[0]?.content),
+        files: driveBackupFiles(data, registrationPdf, agreementPdf),
       }),
     ]);
-    return Response.json({ success: true, id: docRef.id }, { status: 201 });
+    return Response.json({ success: true, id: docId }, { status: 201 });
   } catch (error) {
     console.error("landlord-registration error:", error);
     return Response.json({ message: "Internal server error. Please try again." }, { status: 500 });

@@ -135,7 +135,7 @@ export async function PATCH(request: Request) {
           updatedAt: FieldValue.serverTimestamp(),
           lastEditBy: auth.uid,
         });
-        const link = `${SITE_URL}/landlord-agreement?agreementId=${encodeURIComponent(id)}&token=${encodeURIComponent(token)}`;
+        const link = `${SITE_URL}/landlord-registration/apply?agreementId=${encodeURIComponent(id)}&token=${encodeURIComponent(token)}`;
         const emailData = htmlEscapeDeep(merged);
         await sendAgreementEmail({
           to: merged.email,

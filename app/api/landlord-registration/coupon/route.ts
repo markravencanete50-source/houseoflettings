@@ -1,7 +1,7 @@
-// app/api/landlord-agreement/coupon/route.ts
+// app/api/landlord-registration/coupon/route.ts
 // Public, rate-limited check of a discount coupon (?code=&bundleId=) used by
-// the sign form to preview the discount before signing. Read-only — the coupon
-// is only marked used inside the /api/landlord-agreement submit transaction.
+// the registration form to preview the discount before signing. Read-only — the
+// coupon is only marked used inside the /api/landlord-registration transaction.
 import { initializeApp, getApps, cert } from 'firebase-admin/app';
 import { getFirestore } from 'firebase-admin/firestore';
 import { rateLimit } from '@/lib/rateLimit';
@@ -42,7 +42,7 @@ export async function GET(request: Request) {
       coupon: { code, bundleId: c.bundleId, bundleLabel: c.bundleLabel, discount: c.discount, setupFee: c.setupFee, finalFee: c.finalFee },
     }, { status: 200 });
   } catch (e) {
-    console.error('agreement coupon check error:', e);
+    console.error('registration coupon check error:', e);
     return Response.json({ message: 'Could not check the coupon. Please try again.' }, { status: 500 });
   }
 }

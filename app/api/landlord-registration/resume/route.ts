@@ -1,8 +1,8 @@
-// app/api/landlord-agreement/resume/route.ts
-// Public, token-guarded read used by the sign form when a landlord returns via a
-// re-issue link (?id=&token=). Returns just the fields needed to pre-fill the
-// form so they can review the corrected agreement and re-sign. No signature or
-// token is ever returned.
+// app/api/landlord-registration/resume/route.ts
+// Public, token-guarded read used by the registration form when a landlord
+// returns via a re-issue link (?id=&token=). Returns just the fields needed to
+// pre-fill the form so they can review the corrected agreement and re-sign.
+// No signature or token is ever returned.
 import { initializeApp, getApps, cert } from 'firebase-admin/app';
 import { getFirestore } from 'firebase-admin/firestore';
 import { rateLimit } from '@/lib/rateLimit';
@@ -22,16 +22,17 @@ function db() {
 
 // The form fields we hand back for pre-fill (never signature / token / status).
 const RESUME_FIELDS = [
-  'fullName', 'email', 'phone', 'contactAddress',
+  'ownerType', 'companyName', 'companyNumber', 'registeredAddress', 'contactRole', 'companyPeople',
+  'fullName', 'email', 'phone', 'contactAddress', 'propertyCount', 'notes',
   'jointLandlord', 'landlord2Name', 'landlord2Email', 'residency',
   'postcode', 'street', 'city', 'county', 'flatNumber',
   'propertyType', 'bedrooms', 'bathrooms', 'receptions',
   'furnishing', 'parking', 'availableFrom', 'currentRent', 'securityNote',
-  'selectedPackageId', 'selectedPackage',
+  'properties', 'selectedPackageId', 'selectedPackage',
 ] as const;
 
 export async function GET(request: Request) {
-  const limited = rateLimit(request, 'landlord-agreement-resume', 30, 10 * 60 * 1000);
+  const limited = rateLimit(request, 'landlord-registration-resume', 30, 10 * 60 * 1000);
   if (limited) return limited;
   try {
     const url = new URL(request.url);
@@ -41,7 +42,7 @@ export async function GET(request: Request) {
 
     const snap = await db().collection('landlordAgreements').doc(id).get();
     const data = snap.data();
-    if (!snap.exists || !data) return Response.json({ message: 'Agreement not found.' }, { status: 404 });
+    if (!snap.exists || !data) return Response.json({ message: 'Registration not found.' }, { status: 404 });
 
     const valid = data.reissueToken && data.reissueToken === token
       && (!data.reissueExpires || data.reissueExpires > Date.now());
@@ -52,7 +53,7 @@ export async function GET(request: Request) {
 
     return Response.json({ id, fields }, { status: 200 });
   } catch (e) {
-    console.error('landlord-agreement resume error:', e);
+    console.error('landlord-registration resume error:', e);
     return Response.json({ message: 'Internal server error.' }, { status: 500 });
   }
 }

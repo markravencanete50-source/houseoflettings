@@ -12,8 +12,8 @@
 export const STAFF_FEATURES = [
   { id: 'properties',    label: 'Properties',    icon: '🏠' },
   { id: 'applications',  label: 'Applications',  icon: '📝' },
-  { id: 'agreements',    label: 'Agreements',    icon: '📄' },
-  // Separate from 'agreements': viewing/editing signed agreements does NOT
+  { id: 'agreements',    label: 'Landlord Registration', icon: '📄' },
+  // Separate from 'agreements': viewing/editing signed registrations does NOT
   // imply the power to issue discount coupons. Off by default — an admin must
   // explicitly grant it per staff member (e.g. Andrea).
   { id: 'coupons',       label: 'Discount Coupons', icon: '🎟️' },

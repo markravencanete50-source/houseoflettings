@@ -61,7 +61,7 @@ export default function AgreementEditor({
 
   return (
     <div style={{ borderTop: '1px solid var(--gray-100)', padding: '18px 20px', background: '#fff' }}>
-      <div style={{ fontSize: 12, fontWeight: 800, letterSpacing: '.05em', textTransform: 'uppercase', color: '#2563eb', marginBottom: 12 }}>Edit agreement</div>
+      <div style={{ fontSize: 12, fontWeight: 800, letterSpacing: '.05em', textTransform: 'uppercase', color: '#2563eb', marginBottom: 12 }}>Edit registration</div>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(200px,1fr))', gap: 12 }}>
         <Cell t="Full name"><input style={inp} value={f.fullName} onChange={e => set('fullName', e.target.value)} /></Cell>

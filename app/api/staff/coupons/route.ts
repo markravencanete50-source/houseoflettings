@@ -9,7 +9,7 @@
 //           The discount is a fixed £ amount off the package's setup fee
 //           (e.g. £399 − £100 = £299), never a percentage.
 //   PATCH — { code, action: 'deactivate' } -> cancels an unused coupon.
-// Redemption happens in /api/landlord-agreement inside a transaction, so a
+// Redemption happens in /api/landlord-registration inside a transaction, so a
 // code can only ever be used once.
 import { NextResponse } from 'next/server';
 import { FieldValue } from 'firebase-admin/firestore';

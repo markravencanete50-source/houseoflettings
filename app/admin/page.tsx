@@ -616,7 +616,7 @@ export default function AdminDashboard() {
     { id: 'valuations', icon: '📋', label: `Valuations (${valuations.length})` },
     { id: 'reviews',    icon: '⭐', label: `Reviews (${reviews.length})` },
     { id: 'applications', icon: '📝', label: `Applications (${applications.length})` },
-    { id: 'agreements', icon: '📄', label: `Agreements (${agreements.length})` },
+    { id: 'agreements', icon: '📄', label: `Landlord Registration (${agreements.length})` },
     { id: 'rent-reviews', icon: '🔁', label: `Rent Reviews (${rentReviews.length})` },
     { id: 'orders',     icon: '🛒', label: `Orders (${orders.length})` },
     { id: 'maintenance', icon: '🔧', label: `Maintenance (${maintenance.length})` },
@@ -1708,7 +1708,7 @@ export default function AdminDashboard() {
             </div>
           )}
 
-          {/* ── Landlord Agreements ── */}
+          {/* ── Landlord Registration (registrations with a signed agreement) ── */}
           {tab === 'agreements' && showAgreementWording && (
             <AgreementTemplateEditor authedFetch={authedFetch} onClose={() => setShowAgreementWording(false)} />
           )}
@@ -1718,7 +1718,7 @@ export default function AdminDashboard() {
           {tab === 'agreements' && !showAgreementWording && !showCoupons && (
             <div>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12, flexWrap: 'wrap' }}>
-                <h1 className="dash-section-title" style={{ margin: 0 }}>Landlord Agreements</h1>
+                <h1 className="dash-section-title" style={{ margin: 0 }}>Landlord Registration</h1>
                 <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
                   <button onClick={() => setShowCoupons(true)} style={{ background: '#f0fdf4', color: '#15803d', border: '1px solid #bbf7d0', borderRadius: 8, padding: '9px 16px', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
                     🎟️ Coupons
@@ -1729,11 +1729,11 @@ export default function AdminDashboard() {
                 </div>
               </div>
               <p style={{ color: 'var(--gray-600)', margin: '8px 0 24px', fontSize: 15 }}>
-                Signed management agreements from landlords. Set the status as each progresses, or Edit to correct a landlord’s details or change the package, then save, email a corrected copy, or re-issue for signature.
+                Landlord registrations with a signed management agreement. Set the status as each progresses, or Edit to correct a landlord’s details or change the package, then save, email a corrected copy, or re-issue for signature.
               </p>
               {agreements.length === 0 ? (
                 <div className="dash-card" style={{ textAlign: 'center', color: 'var(--gray-400)', fontSize: 15, padding: '56px 24px' }}>
-                  No signed agreements yet. They&rsquo;ll appear here as landlords sign.
+                  No landlord registrations yet. They&rsquo;ll appear here as landlords register and sign.
                 </div>
               ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>

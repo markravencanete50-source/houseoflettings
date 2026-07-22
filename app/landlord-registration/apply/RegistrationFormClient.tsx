@@ -1802,9 +1802,9 @@ const PAGE_CSS = `
   .hol-accept{margin-top:18px;padding:14px 16px;background:#f5f9ff;border:1px solid #dbe6fb;border-radius:10px;}
   .hol-coupon{margin-top:20px;padding:16px 18px;background:#fdfaf3;border:1px dashed #e5d9b8;border-radius:12px;}
   .hol-coupon-title{font-size:13.5px;font-weight:700;color:#0a162f;margin-bottom:10px;}
-  .hol-coupon-row{display:flex;gap:10px;}
-  .hol-coupon-in{max-width:240px;font-family:monospace;letter-spacing:.05em;text-transform:uppercase;}
-  .hol-coupon-apply{padding:11px 22px;min-height:0;margin-left:0;}
+  .hol-coupon-row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;}
+  .hol-coupon-in{flex:1 1 220px;min-width:180px;width:auto;max-width:none;font-family:monospace;letter-spacing:.05em;text-transform:uppercase;}
+  .hol-coupon-apply{flex:0 0 auto;padding:13px 24px;min-height:0;margin-left:0;}
   .hol-coupon-ok{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;background:#f0fdf4;border:1px solid #bbf7d0;color:#15803d;font-size:13.5px;padding:11px 14px;border-radius:9px;}
   .hol-coupon-remove{background:none;border:none;color:#dc2626;font-size:12.5px;font-weight:700;cursor:pointer;padding:0;}
   .hol-coupon-msg{margin-top:9px;font-size:13px;font-weight:600;color:#b45309;}

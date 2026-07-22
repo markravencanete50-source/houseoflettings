@@ -16,6 +16,7 @@ import { backupToDrive, type BackupFile } from '@/lib/googleDrive';
 import { findBundle } from '@/lib/agreementContent';
 import { agreementPdfBase64, landlordEmailHtml, feeLine, couponFromData, type Attachment } from '@/lib/agreementDocuments';
 import { loadAgreementTemplate } from '@/lib/agreementTemplateStore';
+import { provisionLandlordForAgreement } from '@/lib/landlordProvision';
 
 function getFirestoreClient() {
   if (!getApps().length) {
@@ -489,6 +490,10 @@ export async function POST(request: Request) {
         address: primaryAddress(data),
         files: driveBackupFiles(data, registrationPdf, agreementPdf),
       }),
+      // Provision (or link) the landlord's portal login and email the credentials.
+      // Best-effort and self-contained: it swallows its own errors so a failure
+      // here can never roll back or block the registration itself.
+      provisionLandlordForAgreement(db, docId, data, { isNewRegistration: !agreementId }),
     ]);
     return Response.json({ success: true, id: docId }, { status: 201 });
   } catch (error) {

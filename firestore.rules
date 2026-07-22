@@ -14,9 +14,14 @@
 //    staff property posts. Those collections therefore need no client write
 //    rule — granting one only opens a door no legitimate user goes through.
 //
-//  * Only admin and staff can sign in. The public landlord/tenant login was
-//    removed (app/login/page.tsx redirects to /admin-login), so the only
-//    client-side Firestore writer left is an admin on the /admin dashboard.
+//  * Admin, staff and (since the Landlord Portal) landlords can sign in.
+//    Landlords authenticate entirely server-side (/api/landlord-login mints the
+//    hol_session cookie) and every portal read goes through the Admin-SDK
+//    /api/landlord/* routes, which scope the data to the caller. So a landlord
+//    NEVER reads Firestore from the browser — no client rule grants them
+//    application/maintenance access, and the server routes are the gate.
+//    The only client-side Firestore writer left is an admin on the /admin
+//    dashboard.
 //
 // This is the previous rule set with four changes, each marked CHANGED below.
 
@@ -146,6 +151,13 @@ service cloud.firestore {
     // required. Listed for the record, admin-read only.
     match /landlordAgreements/{id} {
       allow read, update, delete: if isAdmin();
+    }
+
+    // One-time landlord portal activation tokens (hashed). Written and read only
+    // via the Admin SDK (/api/landlord/request-access and /api/landlord/activate),
+    // never from a client — deny all direct access.
+    match /landlordAccessTokens/{id} {
+      allow read, write: if false;
     }
 
     // Admin-editable agreement wording overrides (settings/agreementTemplate).

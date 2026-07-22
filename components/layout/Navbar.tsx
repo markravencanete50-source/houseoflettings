@@ -36,6 +36,7 @@ const LANDLORD_ITEMS: NavItem[] = [
   { href: '/book-valuation', label: 'Book Valuation' },
   { href: '/instant-valuation', label: 'Instant Valuation' },
   { href: '/landlord-registration', label: 'Landlord Registration' },
+  { href: '/landlord-login', label: 'Landlord Login' },
 ];
 
 const TENANT_ITEMS: NavItem[] = [
@@ -115,6 +116,7 @@ export default function Navbar() {
               <Link href={dashLink} className="hol-nav__link">Dashboard</Link>
             )}
             <Link href="/terms" className="hol-nav__link">Terms</Link>
+            <Link href="/landlord-login" className="nav-btn-primary">Landlord Login</Link>
             {!loading && profile && (
               <button onClick={handleSignOut} className="nav-btn-outline">Sign Out</button>
             )}

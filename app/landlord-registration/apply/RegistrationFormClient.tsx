@@ -19,6 +19,7 @@ import Footer from '@/components/layout/Footer';
 import PostcodeLookup, { type AddressResult } from '@/components/PostcodeLookup';
 import SignaturePad from '@/components/SignaturePad';
 import { BUNDLES } from '@/lib/bundles';
+import { applyOverridesToBundles, type PricingOverrides } from '@/lib/pricingOverrides';
 import {
   AGENT_DETAILS,
   effectiveIntro,
@@ -230,9 +231,19 @@ export default function RegistrationFormClient() {
   const [uploadingSig2, setUploadingSig2] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
   const fileRef2 = useRef<HTMLInputElement>(null);
+  const [pricingOverrides, setPricingOverrides] = useState<PricingOverrides>({});
 
   const isCompany = form.ownerType === 'company';
-  const bundle = findBundle(form.selectedPackageId) || findBundle(form.selectedPackage);
+  // Apply any admin service-pricing overrides to the bundles shown + chosen.
+  const effectiveBundles = applyOverridesToBundles(BUNDLES, pricingOverrides);
+  const bundle = effectiveBundles.find(b => b.id === form.selectedPackageId) || effectiveBundles.find(b => b.label === form.selectedPackage);
+
+  // Load the admin service-pricing overrides once.
+  useEffect(() => {
+    fetch('/api/service-pricing')
+      .then(r => r.json()).then(j => setPricingOverrides(j.overrides || {}))
+      .catch(() => {});
+  }, []);
 
   // Load the admin-editable agreement wording once.
   useEffect(() => {
@@ -999,7 +1010,7 @@ export default function RegistrationFormClient() {
                   <div>
                     <p style={{ fontSize: 13, color: '#6b7280', margin: '0 0 16px' }}>Choose a management bundle. Our management fees are the percentage of the monthly rent shown in green, with smaller set up fees to get started. Your agreement covers the package you select here.</p>
                     <div className="hol-pkg-list">
-                      {BUNDLES.map(b => {
+                      {effectiveBundles.map(b => {
                         const on = form.selectedPackageId === b.id || (!form.selectedPackageId && form.selectedPackage === b.label);
                         const expanded = expandedBundle === b.id;
                         return (

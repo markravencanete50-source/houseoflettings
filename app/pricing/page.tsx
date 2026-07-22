@@ -5,13 +5,13 @@ import Link from 'next/link';
 import Navbar from '@/components/layout/Navbar';
 import PostcodeLookup, { type AddressResult } from '@/components/PostcodeLookup';
 import { BUNDLES } from '@/lib/bundles';
+import { applyOverridesToBundles, type PricingOverrides } from '@/lib/pricingOverrides';
 import { MATRIX_SECTIONS, TOTAL_SERVICES, PRICING_FAQ } from '@/lib/pricingMatrix';
 import { useCart } from '@/components/services/CartProvider';
 import { newSelection } from '@/lib/serviceCart';
 import CartBar from '@/components/services/CartBar';
 import Footer from '@/components/layout/Footer';
 
-const PACKAGES = BUNDLES;
 const VISIBLE_ROWS = 7;   // rows shown per matrix section before "Show more"
 const HOT = 3;            // Full Management column index (Most Popular)
 
@@ -153,6 +153,10 @@ export default function PricingPage() {
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState('');
+  // Admin service-pricing overrides applied to the packages shown here.
+  const [pricingOverrides, setPricingOverrides] = useState<PricingOverrides>({});
+  useEffect(() => { fetch('/api/service-pricing').then(r => r.json()).then(j => setPricingOverrides(j.overrides || {})).catch(() => {}); }, []);
+  const PACKAGES = applyOverridesToBundles(BUNDLES, pricingOverrides);
 
   const pkg = PACKAGES[active];
 

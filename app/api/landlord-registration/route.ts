@@ -20,6 +20,7 @@ import { provisionLandlordForAgreement } from '@/lib/landlordProvision';
 import { generateSecondLandlordToken, secondLandlordInviteHtml, sendEmail as sendSecondEmail, SECOND_LANDLORD_TTL_MS } from '@/lib/secondLandlord';
 import { generateFormsToken, formsLink, POST_SIGN_FORMS_TTL_MS } from '@/lib/postSignForms';
 import { buildCoSigners, sendCoSignerInvites, CO_SIGNER_TTL_MS } from '@/lib/companyCoSigners';
+import { applyPricingOverride, sanitizePricingOverrides } from '@/lib/pricingOverrides';
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.houseoflettings.uk';
 
@@ -352,10 +353,19 @@ export async function POST(request: Request) {
       return Response.json({ message: "A signature is required" }, { status: 400 });
     }
 
-    const bundle = findBundle(data.selectedPackageId) || findBundle(data.selectedPackage);
-    if (!bundle) return Response.json({ message: "A valid service package is required" }, { status: 400 });
+    const bundle0 = findBundle(data.selectedPackageId) || findBundle(data.selectedPackage);
+    if (!bundle0) return Response.json({ message: "A valid service package is required" }, { status: 400 });
 
     const db = getFirestoreClient();
+
+    // Apply any admin service-pricing override so the agreement PDF/email and
+    // everything downstream reflect the CURRENT price for this package.
+    let bundle = bundle0;
+    try {
+      const psnap = await db.collection("settings").doc("servicePricing").get();
+      const overrides = sanitizePricingOverrides((psnap.data()?.overrides) || {}, [bundle0.id]);
+      bundle = applyPricingOverride(bundle0, overrides[bundle0.id]);
+    } catch (e) { console.error("pricing override load failed:", e); }
 
     // Re-sign path: a landlord returning via a re-issue link. Validate the token
     // against the existing record before updating it in place.

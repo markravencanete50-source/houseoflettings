@@ -42,8 +42,11 @@ export async function GET(request: Request) {
 
     const agreements = snapshot.docs.map(doc => {
       const data = doc.data();
-      // Never leak the re-issue token to the dashboard client.
-      const { reissueToken, ...rest } = data;
+      // Never leak signing tokens to the dashboard client.
+      const { reissueToken, secondLandlordToken, firstFormsToken, secondFormsToken, ...rest } = data;
+      if (Array.isArray(rest.coSigners)) {
+        rest.coSigners = rest.coSigners.map((c: any) => { const { token, ...c2 } = c || {}; return c2; });
+      }
       return {
         id: doc.id,
         ...rest,

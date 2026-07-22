@@ -16,6 +16,7 @@ import { findBundle } from "@/lib/agreementContent";
 import { loadAgreementTemplate } from "@/lib/agreementTemplateStore";
 import { agreementPdfBase64, landlordEmailHtml, adminEmailHtml, sendAgreementEmail } from "@/lib/agreementDocuments";
 import { coSignerDeclinedHtml } from "@/lib/companyCoSigners";
+import { generateFormsToken, formsLink, POST_SIGN_FORMS_TTL_MS } from "@/lib/postSignForms";
 
 function db() {
   if (!getApps().length) {
@@ -168,7 +169,19 @@ export async function POST(request: Request) {
       signatureName: data.signatureName,
       signatureDate: data.signatureDate || new Date().toLocaleDateString("en-GB"),
     };
-    await updateSigner({ ...signed, status: "completed", signedAt: Date.now() });
+    // Mint this director's own post-agreement forms token so they get the SAME
+    // two follow-up forms (Authorised Rep + Bank/AML) as the primary and joint
+    // landlords. Stored on their co-signer entry; the forms route looks it up by
+    // the co-signer id used as the link's `party`.
+    const formsToken = generateFormsToken();
+    await updateSigner({
+      ...signed, status: "completed", signedAt: Date.now(),
+      formsToken, formsExpires: Date.now() + POST_SIGN_FORMS_TTL_MS,
+    });
+    const directorFormLinks = {
+      rep: formsLink(id, formsToken, found.signer.id, "authorised-rep"),
+      bank: formsLink(id, formsToken, found.signer.id, "bank-aml"),
+    };
 
     // Agreement PDF signed by this director (parties list the company + MD).
     const bundle = findBundle(doc.selectedPackageId) || findBundle(doc.selectedPackage);
@@ -196,7 +209,7 @@ export async function POST(request: Request) {
       bundle && emailData ? sendAgreementEmail({
         to: signed.email,
         subject: `🖊️ Your signed ${bundle.label} agreement | House of Lettings`,
-        html: landlordEmailHtml(emailData, bundle),
+        html: landlordEmailHtml(emailData, bundle, { formLinks: directorFormLinks }),
         attachments,
       }) : Promise.resolve(),
       bundle && emailData ? sendAgreementEmail({

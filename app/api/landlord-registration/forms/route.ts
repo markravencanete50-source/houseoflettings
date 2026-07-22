@@ -38,10 +38,27 @@ function propertyAddress(d: any): string {
   return [p?.flatNumber, p?.street, p?.city, p?.postcode].filter(Boolean).join(', ') || (d?.address || '');
 }
 
+// Valid parties: the first landlord, the joint second landlord, or a company
+// director co-signer whose id is "cs0", "cs1", … The regex also guards the
+// Firestore field path used to store `postSignForms.${party}`.
+const PARTY_RE = /^(first|second|cs\d+)$/;
+
+// A company director's co-signer entry (they sign their own copy of the forms).
+function coSignerByParty(d: any, party: string): any | null {
+  if (party === 'first' || party === 'second' || !Array.isArray(d?.coSigners)) return null;
+  return d.coSigners.find((c: any) => c?.id === party) || null;
+}
+
 function partyTokenValid(d: any, party: string, token: string): boolean {
-  const tf = party === 'second' ? 'secondFormsToken' : 'firstFormsToken';
-  const ef = party === 'second' ? 'secondFormsExpires' : 'firstFormsExpires';
-  return !!token && d?.[tf] === token && (!d?.[ef] || d[ef] > Date.now());
+  if (!token) return false;
+  if (party === 'first' || party === 'second') {
+    const tf = party === 'second' ? 'secondFormsToken' : 'firstFormsToken';
+    const ef = party === 'second' ? 'secondFormsExpires' : 'firstFormsExpires';
+    return d?.[tf] === token && (!d?.[ef] || d[ef] > Date.now());
+  }
+  // Company director: the forms token lives on their co-signer entry.
+  const cs = coSignerByParty(d, party);
+  return !!cs && cs.formsToken === token && (!cs.formsExpires || cs.formsExpires > Date.now());
 }
 
 // Resolve the signing landlord's own details + the other landlord's name.
@@ -54,6 +71,18 @@ function partyLandlord(d: any, party: string) {
       landlordPhone: s.phone || d.landlord2Phone || '',
       landlordAddress: s.contactAddress || '',
       landlord2Name: d.fullName || '',
+    };
+  }
+  const cs = coSignerByParty(d, party);
+  if (cs) {
+    // Company director co-signer: their own signed details; the "other" name is
+    // the company (with the managing director as the fallback).
+    return {
+      landlordName: cs.fullName || cs.name || '',
+      landlordEmail: cs.email || '',
+      landlordPhone: cs.phone || '',
+      landlordAddress: cs.contactAddress || '',
+      landlord2Name: d.companyName || d.fullName || '',
     };
   }
   return {
@@ -73,7 +102,7 @@ export async function GET(request: Request) {
     const id = (url.searchParams.get('id') || '').trim();
     const token = (url.searchParams.get('token') || '').trim();
     const party = (url.searchParams.get('party') || '').trim();
-    if (!id || !token || (party !== 'first' && party !== 'second')) return Response.json({ valid: false }, { status: 200 });
+    if (!id || !token || !PARTY_RE.test(party)) return Response.json({ valid: false }, { status: 200 });
 
     const snap = await db().collection('landlordAgreements').doc(id).get();
     const d = snap.data();
@@ -103,7 +132,7 @@ export async function POST(request: Request) {
     const token = (raw.token || '').toString().trim();
     const party = (raw.party || '').toString().trim();
     const doc = (raw.doc || '').toString().trim() as FormDoc;
-    if (!id || !token || (party !== 'first' && party !== 'second')) return Response.json({ message: 'Missing link parameters.' }, { status: 400 });
+    if (!id || !token || !PARTY_RE.test(party)) return Response.json({ message: 'Missing link parameters.' }, { status: 400 });
     if (doc !== 'authorised-rep' && doc !== 'bank-aml') return Response.json({ message: 'Unknown form.' }, { status: 400 });
 
     const { signatureImage, ...restRaw } = raw;

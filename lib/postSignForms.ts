@@ -24,7 +24,9 @@ export function generateFormsToken(): string {
   return randomBytes(24).toString('hex');
 }
 
-export function formsLink(id: string, token: string, party: 'first' | 'second', doc: FormDoc): string {
+// `party` is 'first', 'second', or a company director's co-signer id ("cs0",
+// "cs1", …) so every signatory can be sent their own copy of the two forms.
+export function formsLink(id: string, token: string, party: string, doc: FormDoc): string {
   return `${SITE_URL}/landlord-registration/forms?id=${id}&token=${token}&party=${party}&doc=${doc}`;
 }
 

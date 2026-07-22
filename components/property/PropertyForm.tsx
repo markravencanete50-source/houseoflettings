@@ -5,6 +5,20 @@ import { useDropzone } from 'react-dropzone';
 import { Property } from '@/lib/types';
 import { createProperty, updateProperty } from '@/services/property';
 import { CLOUDINARY_FOLDERS } from '@/lib/cloudinaryFolders';
+import { auth } from '@/lib/firebase';
+
+// Headers for a createVia/updateVia server post. Staff are cookie-authenticated
+// (no Firebase client user), so their write relies on the hol_session cookie;
+// an admin on /admin has a Firebase client session, so we also attach a Bearer
+// ID token — requireStaff accepts either. Without the token the admin's post
+// hit the server with no credentials and was rejected, which is why admin
+// dashboard posts never reached the properties collection.
+async function serverPostHeaders(): Promise<Record<string, string>> {
+  const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+  const u = auth?.currentUser;
+  if (u) { try { headers['Authorization'] = `Bearer ${await u.getIdToken()}`; } catch { /* fall back to cookie */ } }
+  return headers;
+}
 
 interface PropertyFormProps {
   landlordId: string;
@@ -302,7 +316,7 @@ export default function PropertyForm({
           // rejected by the rules (same reason createVia exists for new posts).
           const res = await fetch(updateVia, {
             method: 'PATCH',
-            headers: { 'Content-Type': 'application/json' },
+            headers: await serverPostHeaders(),
             credentials: 'same-origin',
             body: JSON.stringify({ id: existing.id, ...data }),
           });
@@ -314,7 +328,7 @@ export default function PropertyForm({
       } else if (createVia) {
         const res = await fetch(createVia, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: await serverPostHeaders(),
           credentials: 'same-origin',
           body: JSON.stringify(data),
         });

@@ -2035,6 +2035,7 @@ export default function AdminDashboard() {
                   landlordId={profile.uid}
                   landlordName={profile.name}
                   adminOverride={{ featured: true }}
+                  createVia="/api/staff/properties"
                   onSuccess={handlePostSuccess}
                   onCancel={() => setTab('properties')}
                 />
@@ -2078,6 +2079,8 @@ export default function AdminDashboard() {
                   landlordName={editingProperty.landlordName || profile.name}
                   existing={editingProperty}
                   adminOverride={{ featured: editingProperty.featured }}
+                  createVia="/api/staff/properties"
+                  updateVia="/api/staff/properties"
                   onSuccess={handleEditSuccess}
                   onCancel={handleEditCancel}
                 />

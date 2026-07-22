@@ -180,6 +180,13 @@ service cloud.firestore {
       allow read, write: if false;
     }
 
+    // Bespoke per-landlord pricing links (pricingQuotes/{id}). Created by an admin
+    // and read only via the Admin SDK (/api/service-pricing/quote) — the public
+    // form fetches them through that route, never directly. Deny all client access.
+    match /pricingQuotes/{id} {
+      allow read, write: if false;
+    }
+
     // Written server-side only (firebase-admin in /api/rent-review). Same as
     // the other form collections — no client create rule; admin-read only.
     match /rentReviews/{id} {

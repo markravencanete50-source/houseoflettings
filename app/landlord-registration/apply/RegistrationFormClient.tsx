@@ -191,6 +191,9 @@ export default function RegistrationFormClient() {
   const resumeId = searchParams.get('agreementId') || '';
   const resumeToken = searchParams.get('token') || '';
   const isResume = !!(resumeId && resumeToken);
+  // Bespoke per-landlord pricing link (?quote=…). When present, this landlord
+  // sees custom prices without changing the public form for anyone else.
+  const quoteId = searchParams.get('quote') || '';
 
   const [step, setStep] = useState(0);
   const [form, setForm] = useState<FormState>(EMPTY_FORM);
@@ -232,18 +235,22 @@ export default function RegistrationFormClient() {
   const fileRef = useRef<HTMLInputElement>(null);
   const fileRef2 = useRef<HTMLInputElement>(null);
   const [pricingOverrides, setPricingOverrides] = useState<PricingOverrides>({});
+  const [quoteLabel, setQuoteLabel] = useState('');
 
   const isCompany = form.ownerType === 'company';
   // Apply any admin service-pricing overrides to the bundles shown + chosen.
   const effectiveBundles = applyOverridesToBundles(BUNDLES, pricingOverrides);
   const bundle = effectiveBundles.find(b => b.id === form.selectedPackageId) || effectiveBundles.find(b => b.label === form.selectedPackage);
 
-  // Load the admin service-pricing overrides once.
+  // Load pricing overrides once. A bespoke ?quote= link uses that landlord's
+  // private prices; otherwise the public form uses the global admin overrides.
   useEffect(() => {
-    fetch('/api/service-pricing')
-      .then(r => r.json()).then(j => setPricingOverrides(j.overrides || {}))
+    const url = quoteId ? `/api/service-pricing/quote?id=${encodeURIComponent(quoteId)}` : '/api/service-pricing';
+    fetch(url)
+      .then(r => (r.ok ? r.json() : {}) as Promise<{ overrides?: PricingOverrides; label?: string }>)
+      .then(j => { setPricingOverrides(j.overrides || {}); if (quoteId) setQuoteLabel(j.label || ''); })
       .catch(() => {});
-  }, []);
+  }, [quoteId]);
 
   // Load the admin-editable agreement wording once.
   useEffect(() => {
@@ -631,6 +638,7 @@ export default function RegistrationFormClient() {
           signatureUrl,
           signatureImage: signatureData, // NOT a *Url field, so it survives sanitising
           ...(coupon ? { couponCode: coupon.code } : {}),
+          ...(quoteId ? { pricingQuoteId: quoteId } : {}),
           ...(isResume ? { agreementId: resumeId, reissueToken: resumeToken } : {}),
         }),
       });
@@ -1008,6 +1016,15 @@ export default function RegistrationFormClient() {
                 {/* STEP 4, SERVICE / BUNDLE */}
                 {step === 3 && (
                   <div>
+                    {quoteId && (
+                      <div className="hol-quote-banner">
+                        <span className="hol-quote-banner__icon">🎁</span>
+                        <span>
+                          <strong>Bespoke pricing prepared for you{quoteLabel ? ` (${quoteLabel})` : ''}.</strong>{' '}
+                          The set-up fees and management rates below have been set specially for your registration.
+                        </span>
+                      </div>
+                    )}
                     <p style={{ fontSize: 13, color: '#6b7280', margin: '0 0 16px' }}>Choose a management bundle. Our management fees are the percentage of the monthly rent shown in green, with smaller set up fees to get started. Your agreement covers the package you select here.</p>
                     <div className="hol-pkg-list">
                       {effectiveBundles.map(b => {
@@ -1844,6 +1861,9 @@ const PAGE_CSS = `
   .hol-radio-line{display:flex;gap:10px;align-items:center;font-size:14px;color:#374151;padding:9px 0;cursor:pointer;font-family:'Poppins',sans-serif;}
   .hol-radio-line input{width:17px;height:17px;accent-color:#2563a8;}
   .hol-accept{margin-top:18px;padding:14px 16px;background:#f5f9ff;border:1px solid #dbe6fb;border-radius:10px;}
+  .hol-quote-banner{display:flex;gap:11px;align-items:flex-start;margin:0 0 18px;padding:14px 16px;background:linear-gradient(135deg,#ecfdf5 0%,#f0fdfa 100%);border:1px solid #99f6e4;border-radius:12px;font-size:13.5px;line-height:1.5;color:#0f766e;}
+  .hol-quote-banner__icon{font-size:20px;line-height:1;flex-shrink:0;}
+  .hol-quote-banner strong{color:#065f46;}
   .hol-coupon{margin-top:20px;padding:16px 18px;background:#fdfaf3;border:1px dashed #e5d9b8;border-radius:12px;}
   .hol-coupon-title{font-size:13.5px;font-weight:700;color:#0a162f;margin-bottom:10px;}
   /* Bulletproof, block-based coupon entry (no flex: a display:block width:100%

@@ -22,6 +22,12 @@ export default function ServicePricingEditor({ onClose }: { onClose: () => void 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
+  // Per-landlord bespoke link (does NOT touch the global prices).
+  const [linkLabel, setLinkLabel] = useState('');
+  const [linking, setLinking] = useState(false);
+  const [linkUrl, setLinkUrl] = useState('');
+  const [linkMsg, setLinkMsg] = useState<{ ok: boolean; text: string } | null>(null);
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     fetch('/api/service-pricing', { credentials: 'same-origin' })
@@ -33,9 +39,8 @@ export default function ServicePricingEditor({ onClose }: { onClose: () => void 
   const set = (id: string, field: 'setupFee' | 'mgmtFee', value: string) =>
     setOv(o => ({ ...o, [id]: { ...o[id], [field]: value } }));
 
-  const save = async () => {
-    setSaving(true); setMsg(null);
-    // Send only fields the admin actually filled in.
+  // Only the fields the admin actually filled in (blank = keep the default).
+  const collectOverrides = (): Overrides => {
     const clean: Overrides = {};
     for (const b of BUNDLES) {
       const e: any = {};
@@ -45,6 +50,12 @@ export default function ServicePricingEditor({ onClose }: { onClose: () => void 
       if (m) e.mgmtFee = m;
       if (e.setupFee || e.mgmtFee) clean[b.id] = e;
     }
+    return clean;
+  };
+
+  const save = async () => {
+    setSaving(true); setMsg(null);
+    const clean = collectOverrides();
     const res = await authedFetch('/api/service-pricing', {
       method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ overrides: clean }),
     });
@@ -52,6 +63,34 @@ export default function ServicePricingEditor({ onClose }: { onClose: () => void 
     setSaving(false);
     if (res.ok) { setOv(j.overrides || clean); setMsg({ ok: true, text: 'Pricing saved. New registrations use these prices immediately.' }); }
     else setMsg({ ok: false, text: j.message || 'Could not save.' });
+  };
+
+  // Create a private link carrying THESE prices for one landlord. The public
+  // registration form is untouched — only someone who opens this link sees them.
+  const generateLink = async () => {
+    const clean = collectOverrides();
+    if (Object.keys(clean).length === 0) {
+      setLinkMsg({ ok: false, text: 'Fill in at least one custom price above first, then generate the link.' });
+      return;
+    }
+    setLinking(true); setLinkMsg(null); setLinkUrl(''); setCopied(false);
+    const res = await authedFetch('/api/service-pricing/quote', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ overrides: clean, label: linkLabel.trim() }),
+    });
+    const j = await res.json().catch(() => ({}));
+    setLinking(false);
+    if (res.ok && j.url) {
+      setLinkUrl(j.url);
+      setLinkMsg({ ok: true, text: 'Link ready — send it to this landlord only. The public form still shows the default prices.' });
+    } else {
+      setLinkMsg({ ok: false, text: j.message || 'Could not create the link.' });
+    }
+  };
+
+  const copyLink = async () => {
+    try { await navigator.clipboard.writeText(linkUrl); setCopied(true); setTimeout(() => setCopied(false), 2000); }
+    catch { /* clipboard blocked — the field is selectable as a fallback */ }
   };
 
   const inp: React.CSSProperties = { width: '100%', border: '1px solid var(--gray-200)', borderRadius: 6, padding: '8px 10px', fontSize: 14, boxSizing: 'border-box' };
@@ -105,6 +144,43 @@ export default function ServicePricingEditor({ onClose }: { onClose: () => void 
             </button>
           </div>
           <p style={{ fontSize: 12.5, color: 'var(--gray-400)', marginTop: 12 }}>You can type just the number — "199" becomes "£199", "10" becomes "10%".</p>
+
+          {/* ---- Per-landlord private pricing link ---------------------------
+              Uses the SAME prices typed in the table above, but only for the
+              landlord you send the link to. "Save pricing" changes the public
+              form; this does NOT. */}
+          <div className="dash-card" style={{ marginTop: 30, background: 'var(--gray-50, #f8fafc)', border: '1px solid var(--gray-200)' }}>
+            <h2 style={{ margin: '0 0 4px', fontSize: 17, fontWeight: 800, color: 'var(--gray-800, #1f2937)' }}>🔗 Create a private link for one landlord</h2>
+            <p style={{ color: 'var(--gray-600)', margin: '0 0 16px', fontSize: 14, lineHeight: 1.5 }}>
+              Type the special prices in the table above, then generate a link. Only the landlord who opens
+              this link sees these prices — <strong>the public registration form keeps the default prices for everyone else.</strong>
+            </p>
+
+            <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'flex-end' }}>
+              <div style={{ flex: '1 1 240px', minWidth: 0 }}>
+                <div style={lbl}>Landlord name / reference <span style={{ fontWeight: 400 }}>(optional — only you see it)</span></div>
+                <input style={inp} placeholder="e.g. John Smith — 12 Oak Road" value={linkLabel} onChange={e => setLinkLabel(e.target.value)} />
+              </div>
+              <button onClick={generateLink} disabled={linking} style={{ background: '#0f766e', color: '#fff', border: 'none', borderRadius: 8, padding: '11px 22px', fontSize: 14, fontWeight: 700, cursor: 'pointer', opacity: linking ? 0.7 : 1, whiteSpace: 'nowrap' }}>
+                {linking ? 'Creating…' : 'Generate landlord link'}
+              </button>
+            </div>
+
+            {linkMsg && (
+              <div style={{ marginTop: 14, fontSize: 13.5, fontWeight: 600, color: linkMsg.ok ? '#15803d' : '#b3261e' }}>
+                {linkMsg.ok ? '✅' : '⚠️'} {linkMsg.text}
+              </div>
+            )}
+
+            {linkUrl && (
+              <div style={{ marginTop: 12, display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+                <input readOnly value={linkUrl} onFocus={e => e.currentTarget.select()} style={{ ...inp, flex: '1 1 320px', minWidth: 0, fontFamily: 'monospace', fontSize: 13, background: '#fff' }} />
+                <button onClick={copyLink} style={{ background: copied ? '#15803d' : '#1f2937', color: '#fff', border: 'none', borderRadius: 8, padding: '10px 18px', fontSize: 13.5, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }}>
+                  {copied ? '✓ Copied' : 'Copy link'}
+                </button>
+              </div>
+            )}
+          </div>
         </>
       )}
     </div>

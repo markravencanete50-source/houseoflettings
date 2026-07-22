@@ -358,12 +358,22 @@ export async function POST(request: Request) {
 
     const db = getFirestoreClient();
 
-    // Apply any admin service-pricing override so the agreement PDF/email and
-    // everything downstream reflect the CURRENT price for this package.
+    // Apply the correct service-pricing override so the agreement PDF/email and
+    // everything downstream reflect the price this landlord actually saw. A
+    // bespoke ?quote= link carries that landlord's private prices (pricingQuotes/
+    // {id}); otherwise use the GLOBAL admin overrides (settings/servicePricing).
     let bundle = bundle0;
     try {
-      const psnap = await db.collection("settings").doc("servicePricing").get();
-      const overrides = sanitizePricingOverrides((psnap.data()?.overrides) || {}, [bundle0.id]);
+      const quoteId = (data.pricingQuoteId || "").toString().trim();
+      let raw: any = {};
+      if (/^[a-f0-9]{24,48}$/.test(quoteId)) {
+        const qsnap = await db.collection("pricingQuotes").doc(quoteId).get();
+        if (qsnap.exists) raw = qsnap.data()?.overrides || {};
+      } else {
+        const psnap = await db.collection("settings").doc("servicePricing").get();
+        raw = psnap.data()?.overrides || {};
+      }
+      const overrides = sanitizePricingOverrides(raw, [bundle0.id]);
       bundle = applyPricingOverride(bundle0, overrides[bundle0.id]);
     } catch (e) { console.error("pricing override load failed:", e); }
 

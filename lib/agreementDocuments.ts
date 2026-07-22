@@ -16,6 +16,11 @@ import type { Bundle } from '@/lib/bundles';
 
 export type Attachment = { filename: string; content: string };
 
+// The person who signs every agreement on behalf of House of Lettings. The
+// signed PDF is countersigned automatically with this name, so the copy the
+// landlord and office receive already carries the Agent's signature.
+const AGENT_SIGNATORY = 'KASRA BELYANI';
+
 export async function sendAgreementEmail({ to, subject, html, attachments }: { to: string | string[]; subject: string; html: string; attachments?: Attachment[] }) {
   const res = await fetch('https://api.resend.com/emails', {
     method: 'POST',
@@ -166,9 +171,21 @@ export function agreementPdfBase64(data: any, bundle: Bundle, ref: string, templ
   doc.text(`Date: ${data.signatureDate || new Date().toLocaleDateString('en-GB')}`, left, sigTop + 36);
 
   const rx = left + 100;
-  doc.setDrawColor(150, 160, 175); doc.line(rx, sigTop + 26, rx + 70, sigTop + 26);
-  doc.setFont('helvetica', 'bold'); doc.setTextColor(20, 26, 40);
-  doc.text('For the Agent: KASRA BELYANI', rx, sigTop + 31);
+  const agentLineW = 70;
+  // The Agent countersigns automatically: the signatory's name is written above
+  // the line in a script-style (italic) hand, so the signed PDF the landlord and
+  // the office receive already carries the Agent's signature. The size is shrunk
+  // to fit the signature line so a longer name can never run off the page.
+  doc.setFont('times', 'italic');
+  let agentSigSize = 15;
+  doc.setFontSize(agentSigSize);
+  const agentSigW = doc.getTextWidth(AGENT_SIGNATORY);
+  if (agentSigW > agentLineW) { agentSigSize = Math.max(9, agentSigSize * (agentLineW / agentSigW)); doc.setFontSize(agentSigSize); }
+  doc.setTextColor(10, 22, 47);
+  doc.text(AGENT_SIGNATORY, rx, sigTop + 22);
+  doc.setDrawColor(150, 160, 175); doc.line(rx, sigTop + 26, rx + agentLineW, sigTop + 26);
+  doc.setFont('helvetica', 'bold'); doc.setFontSize(9); doc.setTextColor(20, 26, 40);
+  doc.text(`For the Agent: ${AGENT_SIGNATORY}`, rx, sigTop + 31);
   doc.setFont('helvetica', 'normal'); doc.setTextColor(110, 118, 130);
   doc.text('House of Lettings Limited', rx, sigTop + 36);
 

@@ -978,44 +978,46 @@ export default function RegistrationFormClient() {
                                 ))}
                               </div>
                             )}
+
+                            {/* One-time discount coupon — pops up inline under the
+                                service the moment it is selected, so it clearly
+                                belongs to that package (not a generic field at the
+                                bottom of the list). */}
+                            {on && (
+                              <div className="hol-coupon">
+                                <div className="hol-coupon-title">🎟️ Have a discount coupon for {b.label}?</div>
+                                {coupon ? (
+                                  <div className="hol-coupon-ok">
+                                    <div>
+                                      <b>{coupon.code}</b> applied — {coupon.bundleLabel} setup fee £{coupon.setupFee} − £{coupon.discount} = <b>£{coupon.finalFee}</b>
+                                    </div>
+                                    <button type="button" className="hol-coupon-remove" onClick={() => { setCoupon(null); setCouponMsg(''); }}>Remove</button>
+                                  </div>
+                                ) : (
+                                  <div className="hol-coupon-row">
+                                    <input
+                                      className="hol-input hol-coupon-in"
+                                      value={couponInput}
+                                      onChange={e => { setCouponInput(e.target.value.toUpperCase()); setCouponMsg(''); }}
+                                      onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); applyCoupon(); } }}
+                                      placeholder="e.g. HOL-A7K2XM"
+                                      autoCapitalize="characters"
+                                      autoCorrect="off"
+                                      spellCheck={false}
+                                    />
+                                    <button type="button" className="hol-submit hol-coupon-apply" onClick={applyCoupon} disabled={couponChecking}>
+                                      {couponChecking ? 'Checking…' : 'Apply'}
+                                    </button>
+                                  </div>
+                                )}
+                                {couponMsg && <div className="hol-coupon-msg">{couponMsg}</div>}
+                              </div>
+                            )}
                           </div>
                         );
                       })}
                     </div>
                     {errors.selectedPackage && <p className="hol-err" style={{ marginTop: 10 }}>{errors.selectedPackage}</p>}
-
-                    {/* One-time discount coupon — revealed once a service is chosen,
-                        so it reads as "for this package" rather than a generic field. */}
-                    {bundle && (
-                      <div className="hol-coupon" key={bundle.id}>
-                        <div className="hol-coupon-title">🎟️ Have a discount coupon for {bundle.label}?</div>
-                        {coupon ? (
-                          <div className="hol-coupon-ok">
-                            <div>
-                              <b>{coupon.code}</b> applied — {coupon.bundleLabel} setup fee £{coupon.setupFee} − £{coupon.discount} = <b>£{coupon.finalFee}</b>
-                            </div>
-                            <button type="button" className="hol-coupon-remove" onClick={() => { setCoupon(null); setCouponMsg(''); }}>Remove</button>
-                          </div>
-                        ) : (
-                          <div className="hol-coupon-row">
-                            <input
-                              className="hol-input hol-coupon-in"
-                              value={couponInput}
-                              onChange={e => { setCouponInput(e.target.value.toUpperCase()); setCouponMsg(''); }}
-                              onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); applyCoupon(); } }}
-                              placeholder="e.g. HOL-A7K2XM"
-                              autoCapitalize="characters"
-                              autoCorrect="off"
-                              spellCheck={false}
-                            />
-                            <button type="button" className="hol-submit hol-coupon-apply" onClick={applyCoupon} disabled={couponChecking}>
-                              {couponChecking ? 'Checking…' : 'Apply'}
-                            </button>
-                          </div>
-                        )}
-                        {couponMsg && <div className="hol-coupon-msg">{couponMsg}</div>}
-                      </div>
-                    )}
 
                     <p style={{ fontSize: 12, color: '#9ca3af', margin: '14px 0 0' }}>
                       Not sure? See the full breakdown on our <Link href="/pricing" target="_blank" rel="noopener noreferrer" style={{ color: '#dc2626', fontWeight: 700, textDecoration: 'underline' }}>pricing page</Link> <span style={{ color: '#9ca3af' }}>(opens in a new tab, your answers stay saved here)</span>.

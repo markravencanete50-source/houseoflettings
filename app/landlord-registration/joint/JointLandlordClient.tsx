@@ -62,7 +62,7 @@ export default function JointLandlordClient() {
   const [stage, setStage] = useState<Stage>('checking');
   const [ctx, setCtx] = useState<Ctx | null>(null);
 
-  const [form, setForm] = useState({ fullName: '', email: '', phone: '', contactAddress: '', residency: '', signatureName: '' });
+  const [form, setForm] = useState({ fullName: '', email: '', phone: '', contactAddress: '', residency: '', signatureName: '', signatureDate: '' });
   const [docs, setDocs] = useState<Record<DocKey, DocState>>({ landlordId: emptyDoc(), billingProof: emptyDoc(), ownershipProof: emptyDoc() });
   const [signatureData, setSignatureData] = useState<string | null>(null);
   const [termsAccepted, setTermsAccepted] = useState(false);
@@ -92,6 +92,11 @@ export default function JointLandlordClient() {
         setStage('decision');
       })
       .catch(() => setStage('invalid'));
+  }, []);
+
+  // Default the signature date to today (client-only, so no hydration mismatch).
+  useEffect(() => {
+    setForm(f => ({ ...f, signatureDate: new Date().toISOString().slice(0, 10) }));
   }, []);
 
   const bundle = ctx ? findBundle(ctx.packageId) || findBundle(ctx.packageLabel) : undefined;
@@ -144,6 +149,7 @@ export default function JointLandlordClient() {
     });
     if (!termsAccepted) e.terms = 'Please accept the agreement to continue';
     if (!form.signatureName.trim()) e.signatureName = 'Type your full name to confirm';
+    if (!form.signatureDate) e.signatureDate = 'Please confirm the date';
     if (!signatureData) e.signature = 'Please add your signature';
     if (Object.keys(e).length) { setErrors(e); window.scrollTo({ top: 0, behavior: 'smooth' }); return; }
     setErrors({});
@@ -165,7 +171,7 @@ export default function JointLandlordClient() {
           billingProofUrls: docs.billingProof.urls, billingProofFileNames: docs.billingProof.fileNames,
           ownershipProofUrls: docs.ownershipProof.urls, ownershipProofFileNames: docs.ownershipProof.fileNames,
           signatureUrl, signatureImage: signatureData,
-          signatureName: form.signatureName, signatureDate: new Date().toLocaleDateString('en-GB'),
+          signatureName: form.signatureName, signatureDate: form.signatureDate,
           termsAccepted: true,
         }),
       });
@@ -298,7 +304,8 @@ export default function JointLandlordClient() {
               <SignaturePad onChange={setSignatureData} penColor="#0a162f" />
               {errors.signature && <p className="jl-err" style={{ marginTop: 8 }}>{errors.signature}</p>}
               <div className="jl-grid" style={{ marginTop: 16 }}>
-                <Field label="Type your full name to confirm" req err={errors.signatureName} full><input className="jl-input" value={form.signatureName} onChange={setField('signatureName')} placeholder="Full legal name" /></Field>
+                <Field label="Type your full name to confirm" req err={errors.signatureName}><input className="jl-input" value={form.signatureName} onChange={setField('signatureName')} placeholder="Full legal name" /></Field>
+                <Field label="Date of signature" req err={errors.signatureDate}><input className="jl-input" type="date" value={form.signatureDate} onChange={setField('signatureDate')} style={{ colorScheme: 'light' }} /></Field>
               </div>
               <p style={{ fontSize: 12, color: '#9aa4b2', marginTop: 12, lineHeight: 1.5 }}>An electronic signature is legally binding under the Electronic Communications Act 2000. A signed PDF copy will be emailed to you and to House of Lettings.</p>
             </div>

@@ -820,7 +820,21 @@ export default function RegistrationFormClient() {
                                     </select>
                                     {errors[`person_${p.id}_role`] && <p className="hol-err">{errors[`person_${p.id}_role`]}</p>}
                                   </div>
-                                  {i > 0 && (
+                                  {i === 0 ? (
+                                    <>
+                                      <div className="hol-field">
+                                        <label className="hol-label">Email Address<span className="hol-req">*</span></label>
+                                        <input type="email" className={`hol-input${errors.email ? ' hol-input--error' : ''}`} placeholder="name@example.co.uk" value={form.email} onChange={set('email')} autoComplete="email" />
+                                        {errors.email && <p className="hol-err">{errors.email}</p>}
+                                        <p style={{ fontSize: 12, color: '#9ca3af', margin: '2px 0 0' }}>Where we send the agreement and follow-up forms.</p>
+                                      </div>
+                                      <div className="hol-field">
+                                        <label className="hol-label">Telephone Number<span className="hol-req">*</span></label>
+                                        <input type="tel" className={`hol-input${errors.phone ? ' hol-input--error' : ''}`} placeholder="e.g. 07883 809939" value={form.phone} onChange={set('phone')} autoComplete="tel" />
+                                        {errors.phone && <p className="hol-err">{errors.phone}</p>}
+                                      </div>
+                                    </>
+                                  ) : (
                                     <div className="hol-field hol-field--full">
                                       <label className="hol-label">Email Address<span className="hol-req">*</span></label>
                                       <input type="email" className={`hol-input${errors[`person_${p.id}_email`] ? ' hol-input--error' : ''}`} placeholder="name@example.co.uk" value={p.email} onChange={(e) => updatePerson(p.id, { email: e.target.value })} autoComplete="off" />
@@ -923,20 +937,6 @@ export default function RegistrationFormClient() {
                             </div>
                           </div>
                         )}
-                      </>
-                    )}
-                    {isCompany && (
-                      <>
-                        <div className="hol-field">
-                          <label className="hol-label">Email Address<span className="hol-req">*</span></label>
-                          <input type="email" className={`hol-input${errors.email ? ' hol-input--error' : ''}`} placeholder="name@example.co.uk" value={form.email} onChange={set('email')} autoComplete="email" />
-                          {errors.email && <p className="hol-err">{errors.email}</p>}
-                        </div>
-                        <div className="hol-field">
-                          <label className="hol-label">Telephone Number<span className="hol-req">*</span></label>
-                          <input type="tel" className={`hol-input${errors.phone ? ' hol-input--error' : ''}`} placeholder="e.g. 07883 809939" value={form.phone} onChange={set('phone')} autoComplete="tel" />
-                          {errors.phone && <p className="hol-err">{errors.phone}</p>}
-                        </div>
                       </>
                     )}
                     {isCompany && (

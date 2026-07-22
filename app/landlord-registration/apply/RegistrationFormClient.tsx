@@ -1071,26 +1071,24 @@ export default function RegistrationFormClient() {
                                     <button type="button" className="hol-coupon-remove" onClick={() => { setCoupon(null); setCouponMsg(''); }}>Remove</button>
                                   </div>
                                 ) : (
-                                  <>
+                                  <div className="hol-coupon-entry">
                                     <label className="hol-coupon-label" htmlFor={`coupon-${b.id}`}>Enter your coupon code</label>
-                                    <div className="hol-coupon-row">
-                                      <input
-                                        id={`coupon-${b.id}`}
-                                        type="text"
-                                        className="hol-input hol-coupon-in"
-                                        value={couponInput}
-                                        onChange={e => { setCouponInput(e.target.value.toUpperCase()); setCouponMsg(''); }}
-                                        onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); applyCoupon(); } }}
-                                        placeholder="Type your code, e.g. HOL-A7K2XM"
-                                        autoCapitalize="characters"
-                                        autoCorrect="off"
-                                        spellCheck={false}
-                                      />
-                                      <button type="button" className="hol-submit hol-coupon-apply" onClick={applyCoupon} disabled={couponChecking}>
-                                        {couponChecking ? 'Checking…' : 'Apply'}
-                                      </button>
-                                    </div>
-                                  </>
+                                    <input
+                                      id={`coupon-${b.id}`}
+                                      type="text"
+                                      className="hol-coupon-input"
+                                      value={couponInput}
+                                      onChange={e => { setCouponInput(e.target.value.toUpperCase()); setCouponMsg(''); }}
+                                      onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); applyCoupon(); } }}
+                                      placeholder="Type your code, e.g. HOL-A7K2XM"
+                                      autoCapitalize="characters"
+                                      autoCorrect="off"
+                                      spellCheck={false}
+                                    />
+                                    <button type="button" className="hol-coupon-btn" onClick={applyCoupon} disabled={couponChecking}>
+                                      {couponChecking ? 'Checking…' : 'Apply coupon'}
+                                    </button>
+                                  </div>
                                 )}
                                 {couponMsg && <div className="hol-coupon-msg">{couponMsg}</div>}
                               </div>
@@ -1848,11 +1846,23 @@ const PAGE_CSS = `
   .hol-accept{margin-top:18px;padding:14px 16px;background:#f5f9ff;border:1px solid #dbe6fb;border-radius:10px;}
   .hol-coupon{margin-top:20px;padding:16px 18px;background:#fdfaf3;border:1px dashed #e5d9b8;border-radius:12px;}
   .hol-coupon-title{font-size:13.5px;font-weight:700;color:#0a162f;margin-bottom:10px;}
-  .hol-coupon-label{display:block;font-size:12px;font-weight:600;color:#6b7280;margin-bottom:6px;}
-  .hol-coupon-row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;}
-  .hol-coupon-in{flex:1 1 220px;min-width:180px;width:auto;max-width:none;background:#fff;border:1.5px solid #cbd5e1;font-family:monospace;letter-spacing:.05em;text-transform:uppercase;}
-  .hol-coupon-in:focus{border-color:#2563a8;}
-  .hol-coupon-apply{flex:0 0 auto;padding:13px 24px;min-height:0;margin-left:0;}
+  /* Bulletproof, block-based coupon entry (no flex: a display:block width:100%
+     input cannot collapse in any container, on any screen). Stacked: label,
+     full-width input, full-width button. */
+  .hol-coupon-entry{display:block;}
+  .hol-coupon-label{display:block;font-size:12.5px;font-weight:600;color:#6b7280;margin:0 0 6px;}
+  /* Selector is intentionally scoped under .hol-coupon-entry (specificity 0,2,0)
+     so it beats ".hol-pkg input { position:absolute; opacity:0; width:0; height:0 }"
+     (0,1,1) — that rule visually hides the package radio, but the coupon input
+     ALSO lives inside .hol-pkg and was inheriting position:absolute + opacity:0 +
+     width/height:0, i.e. it was rendered invisible and out of flow. THIS is why
+     the coupon field never appeared. We must reset ALL four of those props. */
+  .hol-coupon-entry .hol-coupon-input{position:static;opacity:1;display:block;width:100%;height:auto;box-sizing:border-box;padding:12px 14px;border:1.5px solid #cbd5e1;border-radius:10px;font-size:16px;line-height:1.3;background:#fff;color:#111827;outline:none;font-family:'Courier New',monospace;letter-spacing:.06em;text-transform:uppercase;margin:0 0 10px;}
+  .hol-coupon-entry .hol-coupon-input::placeholder{color:#9ca3af;letter-spacing:normal;text-transform:none;font-family:'Poppins',sans-serif;}
+  .hol-coupon-entry .hol-coupon-input:focus{border-color:#2563a8;box-shadow:0 0 0 3px rgba(37,99,168,.12);}
+  .hol-coupon-btn{display:block;width:100%;box-sizing:border-box;padding:13px 16px;border:none;border-radius:10px;background:linear-gradient(135deg,#1a3c5e 0%,#2563a8 100%);color:#fff;font-family:'Poppins',sans-serif;font-size:14px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;cursor:pointer;transition:opacity .15s,transform .15s;}
+  .hol-coupon-btn:hover:not(:disabled){transform:translateY(-1px);}
+  .hol-coupon-btn:disabled{opacity:.7;cursor:not-allowed;}
   .hol-coupon-ok{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;background:#f0fdf4;border:1px solid #bbf7d0;color:#15803d;font-size:13.5px;padding:11px 14px;border-radius:9px;}
   .hol-coupon-remove{background:none;border:none;color:#dc2626;font-size:12.5px;font-weight:700;cursor:pointer;padding:0;}
   .hol-coupon-msg{margin-top:9px;font-size:13px;font-weight:600;color:#b45309;}
@@ -1871,12 +1881,5 @@ const PAGE_CSS = `
     .hol-input{font-size:16px;}
     .hol-parties{grid-template-columns:1fr;}
     .hol-agreement{max-height:360px;padding:16px 14px;}
-    /* Stack the coupon input above the button. In a column flex, the base
-       flex:1-1-220px would apply 220px as the item HEIGHT and align-items:center
-       would stop it stretching — so reset both: a full-width, normal-height
-       input on top and a full-width button below. */
-    .hol-coupon-row{flex-direction:column;align-items:stretch;}
-    .hol-coupon-in{flex:0 0 auto;width:100%;min-width:0;max-width:none;}
-    .hol-coupon-apply{width:100%;}
   }
 `;

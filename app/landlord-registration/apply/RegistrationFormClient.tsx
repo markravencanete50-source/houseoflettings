@@ -827,6 +827,12 @@ export default function RegistrationFormClient() {
                                 <input type="tel" className={`hol-input${errors.phone ? ' hol-input--error' : ''}`} placeholder="e.g. 07883 809939" value={form.phone} onChange={set('phone')} autoComplete="tel" />
                                 {errors.phone && <p className="hol-err">{errors.phone}</p>}
                               </div>
+                              <div className="hol-field hol-field--full">
+                                <label className="hol-label">Billing Address<span className="hol-req">*</span></label>
+                                <input type="text" className={`hol-input${errors.contactAddress ? ' hol-input--error' : ''}`} placeholder="e.g. 45 Coronation Street, Manchester M27 6DE" value={form.contactAddress} onChange={set('contactAddress')} autoComplete="street-address" />
+                                {errors.contactAddress && <p className="hol-err">{errors.contactAddress}</p>}
+                                <p style={{ fontSize: 12, color: '#8a94a3', margin: '4px 0 0' }}>Your billing / correspondence address (where we send documents). This can differ from the property address.</p>
+                              </div>
                             </div>
                           </div>
                         </div>
@@ -879,12 +885,14 @@ export default function RegistrationFormClient() {
                         </div>
                       </>
                     )}
-                    <div className="hol-field hol-field--full">
-                      <label className="hol-label">Contact Address<span className="hol-req">*</span></label>
-                      <input type="text" className={`hol-input${errors.contactAddress ? ' hol-input--error' : ''}`} placeholder="e.g. 45 Coronation Street, Manchester M27 6DE" value={form.contactAddress} onChange={set('contactAddress')} autoComplete="street-address" />
-                      {errors.contactAddress && <p className="hol-err">{errors.contactAddress}</p>}
-                      <p style={{ fontSize: 12, color: '#9ca3af', margin: '2px 0 0' }}>Your billing / correspondence address (where we send documents). This can differ from the property address.</p>
-                    </div>
+                    {isCompany && (
+                      <div className="hol-field hol-field--full">
+                        <label className="hol-label">Billing Address<span className="hol-req">*</span></label>
+                        <input type="text" className={`hol-input${errors.contactAddress ? ' hol-input--error' : ''}`} placeholder="e.g. 45 Coronation Street, Manchester M27 6DE" value={form.contactAddress} onChange={set('contactAddress')} autoComplete="street-address" />
+                        {errors.contactAddress && <p className="hol-err">{errors.contactAddress}</p>}
+                        <p style={{ fontSize: 12, color: '#9ca3af', margin: '2px 0 0' }}>Your billing / correspondence address (where we send documents). This can differ from the property address.</p>
+                      </div>
+                    )}
                     <div className="hol-field hol-field--full">
                       <label className="hol-label">How many properties do you own?<span className="hol-req">*</span></label>
                       <select className={`hol-input hol-select${errors.propertyCount ? ' hol-input--error' : ''}`} value={form.propertyCount} onChange={set('propertyCount')}>

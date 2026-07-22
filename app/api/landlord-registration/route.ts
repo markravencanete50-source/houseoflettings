@@ -358,24 +358,26 @@ export async function POST(request: Request) {
 
     const db = getFirestoreClient();
 
-    // Apply the correct service-pricing override so the agreement PDF/email and
-    // everything downstream reflect the price this landlord actually saw. A
-    // bespoke ?quote= link carries that landlord's private prices (pricingQuotes/
-    // {id}); otherwise use the GLOBAL admin overrides (settings/servicePricing).
+    // Pricing for the agreement PDF/email. The PUBLIC registration flow ALWAYS
+    // uses the standard prices from lib/bundles — there is deliberately NO read
+    // of any global override, so an admin's custom pricing can never reach the
+    // main form. Custom prices come ONLY from a valid, not-yet-redeemed one-time
+    // ?quote= link (pricingQuotes/{id}). The link is a SINGLE USE: it is consumed
+    // (redeemedAt set) inside the registration transaction below, so it works
+    // exactly once and only when the registration is actually recorded.
     let bundle = bundle0;
-    try {
-      const quoteId = (data.pricingQuoteId || "").toString().trim();
-      let raw: any = {};
-      if (/^[a-f0-9]{24,48}$/.test(quoteId)) {
-        const qsnap = await db.collection("pricingQuotes").doc(quoteId).get();
-        if (qsnap.exists) raw = qsnap.data()?.overrides || {};
-      } else {
-        const psnap = await db.collection("settings").doc("servicePricing").get();
-        raw = psnap.data()?.overrides || {};
-      }
-      const overrides = sanitizePricingOverrides(raw, [bundle0.id]);
-      bundle = applyPricingOverride(bundle0, overrides[bundle0.id]);
-    } catch (e) { console.error("pricing override load failed:", e); }
+    let quoteToRedeem: string | null = null;
+    const pricingQuoteId = (data.pricingQuoteId || "").toString().trim();
+    if (/^[a-f0-9]{24,48}$/.test(pricingQuoteId)) {
+      try {
+        const qsnap = await db.collection("pricingQuotes").doc(pricingQuoteId).get();
+        if (qsnap.exists && !qsnap.data()?.redeemedAt) {
+          const overrides = sanitizePricingOverrides(qsnap.data()?.overrides || {}, [bundle0.id]);
+          bundle = applyPricingOverride(bundle0, overrides[bundle0.id]);
+          quoteToRedeem = pricingQuoteId; // consume it when the registration is written
+        }
+      } catch (e) { console.error("pricing quote load failed:", e); }
+    }
 
     // Re-sign path: a landlord returning via a re-issue link. Validate the token
     // against the existing record before updating it in place.
@@ -484,6 +486,17 @@ export async function POST(request: Request) {
           source: "website-landlord-registration",
           createdAt: FieldValue.serverTimestamp(),
           updatedAt: FieldValue.serverTimestamp(),
+        });
+      }
+      // Consume the one-time pricing link in the SAME transaction, so it is
+      // marked used only if the registration is actually recorded. After this,
+      // GET /api/service-pricing/quote reports `used` and the link can't apply
+      // custom prices again.
+      if (quoteToRedeem) {
+        tx.update(db.collection("pricingQuotes").doc(quoteToRedeem), {
+          redeemedAt: FieldValue.serverTimestamp(),
+          redeemedBy: { name: data.fullName || "", email: data.email || "" },
+          agreementId: docId,
         });
       }
     });

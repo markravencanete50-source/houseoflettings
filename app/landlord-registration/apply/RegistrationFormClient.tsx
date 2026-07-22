@@ -236,19 +236,27 @@ export default function RegistrationFormClient() {
   const fileRef2 = useRef<HTMLInputElement>(null);
   const [pricingOverrides, setPricingOverrides] = useState<PricingOverrides>({});
   const [quoteLabel, setQuoteLabel] = useState('');
+  const [quoteUsed, setQuoteUsed] = useState(false);
 
   const isCompany = form.ownerType === 'company';
   // Apply any admin service-pricing overrides to the bundles shown + chosen.
   const effectiveBundles = applyOverridesToBundles(BUNDLES, pricingOverrides);
   const bundle = effectiveBundles.find(b => b.id === form.selectedPackageId) || effectiveBundles.find(b => b.label === form.selectedPackage);
 
-  // Load pricing overrides once. A bespoke ?quote= link uses that landlord's
-  // private prices; otherwise the public form uses the global admin overrides.
+  // Pricing. The PUBLIC form ALWAYS shows the standard prices from lib/bundles —
+  // it never reads any global override, so an admin's custom pricing can never
+  // leak onto the main form. Custom prices apply ONLY when the landlord arrives
+  // through their private ?quote= link, and that link is one-time: once it has
+  // been redeemed the API reports `used` and we fall back to standard prices.
   useEffect(() => {
-    const url = quoteId ? `/api/service-pricing/quote?id=${encodeURIComponent(quoteId)}` : '/api/service-pricing';
-    fetch(url)
-      .then(r => (r.ok ? r.json() : {}) as Promise<{ overrides?: PricingOverrides; label?: string }>)
-      .then(j => { setPricingOverrides(j.overrides || {}); if (quoteId) setQuoteLabel(j.label || ''); })
+    if (!quoteId) return; // no link → standard prices (pricingOverrides stays {})
+    fetch(`/api/service-pricing/quote?id=${encodeURIComponent(quoteId)}`)
+      .then(r => (r.ok ? r.json() : {}) as Promise<{ overrides?: PricingOverrides; label?: string; used?: boolean }>)
+      .then(j => {
+        if (j.used) { setQuoteUsed(true); setPricingOverrides({}); return; }
+        setPricingOverrides(j.overrides || {});
+        setQuoteLabel(j.label || '');
+      })
       .catch(() => {});
   }, [quoteId]);
 
@@ -1016,12 +1024,21 @@ export default function RegistrationFormClient() {
                 {/* STEP 4, SERVICE / BUNDLE */}
                 {step === 3 && (
                   <div>
-                    {quoteId && (
+                    {quoteId && !quoteUsed && (
                       <div className="hol-quote-banner">
                         <span className="hol-quote-banner__icon">🎁</span>
                         <span>
                           <strong>Bespoke pricing prepared for you{quoteLabel ? ` (${quoteLabel})` : ''}.</strong>{' '}
                           The set-up fees and management rates below have been set specially for your registration.
+                        </span>
+                      </div>
+                    )}
+                    {quoteId && quoteUsed && (
+                      <div className="hol-quote-banner hol-quote-banner--used">
+                        <span className="hol-quote-banner__icon">🔒</span>
+                        <span>
+                          <strong>This custom-pricing link has already been used.</strong>{' '}
+                          It is valid once only, so the standard prices are shown below. If you need it reissued, please contact the office.
                         </span>
                       </div>
                     )}
@@ -1864,6 +1881,8 @@ const PAGE_CSS = `
   .hol-quote-banner{display:flex;gap:11px;align-items:flex-start;margin:0 0 18px;padding:14px 16px;background:linear-gradient(135deg,#ecfdf5 0%,#f0fdfa 100%);border:1px solid #99f6e4;border-radius:12px;font-size:13.5px;line-height:1.5;color:#0f766e;}
   .hol-quote-banner__icon{font-size:20px;line-height:1;flex-shrink:0;}
   .hol-quote-banner strong{color:#065f46;}
+  .hol-quote-banner--used{background:linear-gradient(135deg,#fef3f2 0%,#fef7f0 100%);border-color:#fecaca;color:#9a3412;}
+  .hol-quote-banner--used strong{color:#7c2d12;}
   .hol-coupon{margin-top:20px;padding:16px 18px;background:#fdfaf3;border:1px dashed #e5d9b8;border-radius:12px;}
   .hol-coupon-title{font-size:13.5px;font-weight:700;color:#0a162f;margin-bottom:10px;}
   /* Bulletproof, block-based coupon entry (no flex: a display:block width:100%

@@ -1742,7 +1742,7 @@ export default function AdminDashboard() {
                 <h1 className="dash-section-title" style={{ margin: 0 }}>Landlord Registration</h1>
                 <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
                   <button onClick={() => setShowServicePricing(true)} style={{ background: '#fff7ed', color: '#c2410c', border: '1px solid #fed7aa', borderRadius: 8, padding: '9px 16px', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
-                    💷 Service pricing
+                    🔗 Custom price link
                   </button>
                   <button onClick={() => setShowCoupons(true)} style={{ background: '#f0fdf4', color: '#15803d', border: '1px solid #bbf7d0', borderRadius: 8, padding: '9px 16px', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
                     🎟️ Coupons

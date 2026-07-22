@@ -5,7 +5,6 @@ import Link from 'next/link';
 import Navbar from '@/components/layout/Navbar';
 import PostcodeLookup, { type AddressResult } from '@/components/PostcodeLookup';
 import { BUNDLES } from '@/lib/bundles';
-import { applyOverridesToBundles, type PricingOverrides } from '@/lib/pricingOverrides';
 import { MATRIX_SECTIONS, TOTAL_SERVICES, PRICING_FAQ } from '@/lib/pricingMatrix';
 import { useCart } from '@/components/services/CartProvider';
 import { newSelection } from '@/lib/serviceCart';
@@ -153,10 +152,11 @@ export default function PricingPage() {
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState('');
-  // Admin service-pricing overrides applied to the packages shown here.
-  const [pricingOverrides, setPricingOverrides] = useState<PricingOverrides>({});
-  useEffect(() => { fetch('/api/service-pricing').then(r => r.json()).then(j => setPricingOverrides(j.overrides || {})).catch(() => {}); }, []);
-  const PACKAGES = applyOverridesToBundles(BUNDLES, pricingOverrides);
+  // The public pricing page ALWAYS shows the standard prices. Custom prices are
+  // per-landlord only, delivered through a private one-time registration link
+  // (see ServicePricingEditor + /api/service-pricing/quote) — they must never
+  // leak onto a public, shared surface like this page or the main reg form.
+  const PACKAGES = BUNDLES;
 
   const pkg = PACKAGES[active];
 

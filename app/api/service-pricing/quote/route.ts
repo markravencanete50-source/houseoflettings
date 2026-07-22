@@ -37,8 +37,14 @@ export async function GET(request: Request) {
     const snap = await getAdminDb().collection(COLLECTION).doc(id).get();
     if (!snap.exists) return NextResponse.json({ message: 'Unknown quote.' }, { status: 404 });
     const data = snap.data() || {};
+    const label = (data.label || '').toString().slice(0, 80);
+    // One-time link: once redeemed on a completed registration it no longer
+    // carries custom prices. The form falls back to the standard prices.
+    if (data.redeemedAt) {
+      return NextResponse.json({ used: true, overrides: {}, label }, { status: 200 });
+    }
     const overrides = sanitizePricingOverrides(data.overrides || {}, BUNDLE_IDS);
-    return NextResponse.json({ overrides, label: (data.label || '').toString().slice(0, 80) }, { status: 200 });
+    return NextResponse.json({ overrides, label }, { status: 200 });
   } catch (e) {
     console.error('pricing-quote GET failed:', e);
     return NextResponse.json({ message: 'Unknown quote.' }, { status: 404 });

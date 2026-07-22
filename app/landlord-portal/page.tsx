@@ -9,7 +9,6 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { AnimatedNumber, Reveal, BarPairChart, DonutChart } from '@/components/landlord/PortalUI';
 import { PasswordInput } from '@/components/landlord/PasswordInput';
-import { findBundle } from '@/lib/agreementContent';
 
 type Me = { uid: string; name: string; email: string; phone: string; mustResetPassword: boolean; propertyCount: number };
 type Prop = { id: string; label: string; postcode?: string; city?: string; type?: string; bedrooms?: string; bathrooms?: string; furnishing?: string; rent?: string; occupancy?: string; availableFrom?: string; tenancyStart?: string; packageId?: string; packageLabel?: string };
@@ -50,7 +49,12 @@ export default function LandlordPortal() {
   const [tab, setTab] = useState<Tab>('overview');
   const [loading, setLoading] = useState(true);
   const [mobileNav, setMobileNav] = useState(false);
-  const [selectedProp, setSelectedProp] = useState<Prop | null>(null);
+
+  // Land on the tab named in ?tab= (e.g. returning from a property page).
+  useEffect(() => {
+    const t = new URLSearchParams(window.location.search).get('tab') as Tab | null;
+    if (t && NAV.some(n => n.id === t)) setTab(t);
+  }, []);
 
   useEffect(() => {
     (async () => {
@@ -96,7 +100,6 @@ export default function LandlordPortal() {
   return (
     <div className="lp">
       {me?.mustResetPassword && <ForcePasswordModal onDone={() => setMe({ ...me, mustResetPassword: false })} />}
-      {selectedProp && data && <PropertyDetail prop={selectedProp} data={data} onClose={() => setSelectedProp(null)} />}
 
       {/* Top bar */}
       <header className="lp-top">
@@ -192,7 +195,7 @@ export default function LandlordPortal() {
                   <div className="lp-prop-grid">
                     {data!.properties.map((p, i) => (
                       <Reveal key={p.id} delay={i * 60}>
-                        <button className="lp-prop lp-prop--btn" onClick={() => setSelectedProp(p)}>
+                        <button className="lp-prop lp-prop--btn" onClick={() => router.push(`/landlord-portal/property/${encodeURIComponent(p.id)}`)}>
                           <div className="lp-prop-top">🏠</div>
                           <div className="lp-prop-title">{p.label}</div>
                           <div className="lp-prop-meta">
@@ -300,165 +303,6 @@ export default function LandlordPortal() {
       </div>
 
       <PortalStyles />
-    </div>
-  );
-}
-
-function PropertyDetail({ prop, data, onClose }: { prop: Prop; data: Overview; onClose: () => void }) {
-  const rent = parseFloat(String(prop.rent || '').replace(/[^\d.]/g, '')) || 0;
-  const bundle = findBundle(prop.packageId || prop.packageLabel || '');
-  const mgmtPct = bundle?.mgmtFee ? (parseFloat(String(bundle.mgmtFee).replace(/[^\d.]/g, '')) || 0) : 0;
-  const monthlyMgmt = Math.round(rent * mgmtPct / 100);
-  const netMonthly = Math.max(0, Math.round(rent - monthlyMgmt));
-  const money = (n: number) => `£${n.toLocaleString('en-GB')}`;
-
-  const apps = data.applications.filter(a => a.postcode && prop.postcode && a.postcode === prop.postcode);
-  const maint = data.maintenance.filter(m => m.postcode && prop.postcode && m.postcode === prop.postcode);
-  const openMaint = maint.filter(m => m.status === 'open' || m.status === 'in-progress').length;
-
-  return (
-    <div className="pd-back" onClick={onClose}>
-      <div className="pd" onClick={e => e.stopPropagation()}>
-        <div className="pd-top">
-          <div>
-            <div className="pd-eyebrow">🏠 Property</div>
-            <h2 className="pd-title">{prop.label}</h2>
-            <div className="pd-meta">
-              {prop.type && <span>{prop.type}</span>}
-              {prop.bedrooms && <span>{prop.bedrooms} bed</span>}
-              {prop.bathrooms && <span>{prop.bathrooms} bath</span>}
-              {prop.furnishing && <span>{prop.furnishing}</span>}
-              {prop.occupancy && <span>{prop.occupancy}</span>}
-            </div>
-          </div>
-          <button className="pd-close" onClick={onClose} aria-label="Close">✕</button>
-        </div>
-
-        <div className="pd-body">
-          {/* Money in / out */}
-          <div className="pd-money">
-            <div className="pd-money-card in">
-              <div className="pd-money-label">Money in <span>rent / month</span></div>
-              <div className="pd-money-val">{money(rent)}</div>
-              <div className="pd-money-sub">{money(rent * 12)} / year</div>
-            </div>
-            <div className="pd-money-card out">
-              <div className="pd-money-label">Money out <span>management fee</span></div>
-              <div className="pd-money-val">{money(monthlyMgmt)}</div>
-              <div className="pd-money-sub">{mgmtPct ? `${mgmtPct}% of rent` : 'no management fee'}</div>
-            </div>
-            <div className="pd-money-card net">
-              <div className="pd-money-label">Net to you <span>est. / month</span></div>
-              <div className="pd-money-val">{money(netMonthly)}</div>
-              <div className="pd-money-sub">{money(netMonthly * 12)} / year</div>
-            </div>
-          </div>
-          <p className="pd-note">Figures are estimates based on your expected rent and package — not a statement of account.</p>
-
-          {/* Package + inclusions */}
-          <div className="pd-section">
-            <h3 className="pd-h">Your package</h3>
-            {bundle ? (
-              <div className="pd-pkg">
-                <div className="pd-pkg-head">
-                  <div>
-                    <div className="pd-pkg-name">{bundle.label}{bundle.badge && <span className="pd-pkg-badge">{bundle.badge}</span>}</div>
-                    <div className="pd-pkg-fee">{bundle.mgmtFee ? `${bundle.mgmtFee} management` : 'No management fee'} · {bundle.setupFee} set up</div>
-                  </div>
-                </div>
-                <div className="pd-incl-title">What's included</div>
-                {bundle.groups.map(g => (
-                  <div key={g.heading} className="pd-incl-group">
-                    <div className="pd-incl-h">{g.heading}</div>
-                    <ul className="pd-incl-ul">{g.items.map(it => <li key={it}>{it}</li>)}</ul>
-                  </div>
-                ))}
-              </div>
-            ) : <div className="pd-empty">Package: {prop.packageLabel || '—'}</div>}
-            <a href="/pricing" className="pd-pkg-cta">Compare or change your package →</a>
-          </div>
-
-          {/* Tenant applications */}
-          <div className="pd-section">
-            <h3 className="pd-h">Tenant applications <span className="pd-count">{apps.length}</span></h3>
-            {apps.length === 0 ? <div className="pd-empty">No applications for this property yet.</div> : (
-              <div className="pd-list">
-                {apps.map(a => (
-                  <div key={a.id} className="pd-row">
-                    <div><div className="pd-row-t">{a.fullName || 'Applicant'}</div><div className="pd-row-s">{a.leaseTerm || ''}{a.rent ? ` · ${a.rent}` : ''}</div></div>
-                    <div style={{ textAlign: 'right' }}><span className="lp-badge" data-k="pending">{a.status}</span><div className="pd-row-s">{fmtDate(a.submittedAt)}</div></div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* Maintenance */}
-          <div className="pd-section">
-            <h3 className="pd-h">Maintenance <span className="pd-count">{maint.length}{openMaint ? ` · ${openMaint} open` : ''}</span></h3>
-            {maint.length === 0 ? <div className="pd-empty">No maintenance requests for this property. 🎉</div> : (
-              <div className="pd-list">
-                {maint.map(m => {
-                  const meta = MAINT_META[m.status] || MAINT_META['open'];
-                  return (
-                    <div key={m.id} className="pd-row">
-                      <div style={{ minWidth: 0 }}><div className="pd-row-t" style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{m.issueDescription}</div><div className="pd-row-s">{m.fullName}</div></div>
-                      <div style={{ textAlign: 'right' }}><span className="lp-badge" style={{ background: meta.bg, color: meta.color }}>{meta.label}</span><div className="pd-row-s">{fmtDate(m.submittedAt)}</div></div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-
-          <Link href="/maintenance" className="pd-report">+ Report maintenance for this property</Link>
-        </div>
-      </div>
-      <style>{`
-        .pd-back { position: fixed; inset: 0; z-index: 3000; background: rgba(10,22,47,.55); backdrop-filter: blur(5px); display: flex; align-items: flex-start; justify-content: center; padding: 4vh 16px; overflow-y: auto; animation: pd-fade .25s ease; }
-        @keyframes pd-fade { from { opacity: 0 } to { opacity: 1 } }
-        .pd { width: 100%; max-width: 760px; background: #f4f6fb; border-radius: 20px; overflow: hidden; box-shadow: 0 30px 80px rgba(0,0,0,.4); animation: pd-pop .45s cubic-bezier(.22,1,.36,1); }
-        @keyframes pd-pop { from { opacity: 0; transform: translateY(30px) scale(.98) } to { opacity: 1; transform: translateY(0) scale(1) } }
-        .pd-top { background: linear-gradient(135deg,#0a162f,#14294f 60%,#c0392b 200%); color: #fff; padding: 26px 28px; display: flex; justify-content: space-between; gap: 16px; align-items: flex-start; }
-        .pd-eyebrow { font-size: 11px; letter-spacing: .18em; text-transform: uppercase; opacity: .65; }
-        .pd-title { font-size: 22px; font-weight: 800; margin: 6px 0 10px; letter-spacing: -.4px; }
-        .pd-meta { display: flex; flex-wrap: wrap; gap: 7px; }
-        .pd-meta span { background: rgba(255,255,255,.14); font-size: 11.5px; padding: 3px 10px; border-radius: 20px; text-transform: capitalize; }
-        .pd-close { background: rgba(255,255,255,.14); border: none; color: #fff; width: 34px; height: 34px; border-radius: 50%; font-size: 15px; cursor: pointer; flex-shrink: 0; }
-        .pd-close:hover { background: rgba(255,255,255,.28); }
-        .pd-body { padding: 24px 28px 30px; }
-        .pd-money { display: grid; grid-template-columns: repeat(3,1fr); gap: 14px; }
-        .pd-money-card { background: #fff; border: 1px solid #e9edf5; border-radius: 14px; padding: 18px; }
-        .pd-money-card.in { border-top: 3px solid #2e7d32; }
-        .pd-money-card.out { border-top: 3px solid #ef6c00; }
-        .pd-money-card.net { border-top: 3px solid #2563eb; }
-        .pd-money-label { font-size: 12px; color: #6b7280; font-weight: 600; }
-        .pd-money-label span { display: block; font-size: 10.5px; color: #9aa4b2; font-weight: 500; margin-top: 2px; }
-        .pd-money-val { font-size: 26px; font-weight: 800; color: #0a162f; margin: 8px 0 2px; letter-spacing: -.5px; }
-        .pd-money-sub { font-size: 12px; color: #8a94a3; }
-        .pd-note { font-size: 12px; color: #9aa4b2; margin: 10px 2px 0; }
-        .pd-section { margin-top: 24px; }
-        .pd-h { font-size: 15px; font-weight: 800; color: #0a162f; margin: 0 0 12px; display: flex; align-items: center; gap: 10px; }
-        .pd-count { font-size: 11.5px; font-weight: 700; color: #64748b; background: #eef2f7; padding: 2px 9px; border-radius: 20px; }
-        .pd-pkg { background: #fff; border: 1px solid #e9edf5; border-radius: 14px; padding: 20px; }
-        .pd-pkg-name { font-size: 16px; font-weight: 800; color: #0a162f; }
-        .pd-pkg-badge { font-size: 10px; font-weight: 700; background: #c0392b; color: #fff; padding: 2px 8px; border-radius: 20px; margin-left: 8px; text-transform: uppercase; }
-        .pd-pkg-fee { font-size: 13px; color: #6b7280; margin-top: 3px; }
-        .pd-incl-title { font-size: 12px; font-weight: 700; color: #8a94a3; text-transform: uppercase; letter-spacing: .04em; margin: 16px 0 10px; }
-        .pd-incl-group { margin-bottom: 12px; }
-        .pd-incl-h { font-size: 13px; font-weight: 700; color: #15803d; margin-bottom: 4px; }
-        .pd-incl-ul { margin: 0; padding-left: 18px; }
-        .pd-incl-ul li { font-size: 13px; color: #374151; line-height: 1.6; margin-bottom: 2px; }
-        .pd-pkg-cta { display: inline-block; margin-top: 6px; color: #c0392b; font-weight: 700; font-size: 13px; text-decoration: none; }
-        .pd-list { background: #fff; border: 1px solid #e9edf5; border-radius: 14px; overflow: hidden; }
-        .pd-row { display: flex; justify-content: space-between; gap: 14px; align-items: center; padding: 13px 16px; border-bottom: 1px solid #f2f4f9; }
-        .pd-row:last-child { border-bottom: none; }
-        .pd-row-t { font-weight: 600; font-size: 13.5px; color: #0a162f; }
-        .pd-row-s { font-size: 12px; color: #9aa4b2; margin-top: 2px; }
-        .pd-empty { background: #fff; border: 1px dashed #d9dfec; border-radius: 12px; padding: 20px; text-align: center; color: #8a94a3; font-size: 13.5px; }
-        .pd-report { display: inline-block; margin-top: 22px; color: #2563eb; font-weight: 700; font-size: 13.5px; text-decoration: none; }
-        @media (max-width: 640px) { .pd-money { grid-template-columns: 1fr; } }
-      `}</style>
     </div>
   );
 }

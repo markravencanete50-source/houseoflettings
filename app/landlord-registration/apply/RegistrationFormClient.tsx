@@ -1045,21 +1045,26 @@ export default function RegistrationFormClient() {
                                     <button type="button" className="hol-coupon-remove" onClick={() => { setCoupon(null); setCouponMsg(''); }}>Remove</button>
                                   </div>
                                 ) : (
-                                  <div className="hol-coupon-row">
-                                    <input
-                                      className="hol-input hol-coupon-in"
-                                      value={couponInput}
-                                      onChange={e => { setCouponInput(e.target.value.toUpperCase()); setCouponMsg(''); }}
-                                      onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); applyCoupon(); } }}
-                                      placeholder="e.g. HOL-A7K2XM"
-                                      autoCapitalize="characters"
-                                      autoCorrect="off"
-                                      spellCheck={false}
-                                    />
-                                    <button type="button" className="hol-submit hol-coupon-apply" onClick={applyCoupon} disabled={couponChecking}>
-                                      {couponChecking ? 'Checking…' : 'Apply'}
-                                    </button>
-                                  </div>
+                                  <>
+                                    <label className="hol-coupon-label" htmlFor={`coupon-${b.id}`}>Enter your coupon code</label>
+                                    <div className="hol-coupon-row">
+                                      <input
+                                        id={`coupon-${b.id}`}
+                                        type="text"
+                                        className="hol-input hol-coupon-in"
+                                        value={couponInput}
+                                        onChange={e => { setCouponInput(e.target.value.toUpperCase()); setCouponMsg(''); }}
+                                        onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); applyCoupon(); } }}
+                                        placeholder="Type your code, e.g. HOL-A7K2XM"
+                                        autoCapitalize="characters"
+                                        autoCorrect="off"
+                                        spellCheck={false}
+                                      />
+                                      <button type="button" className="hol-submit hol-coupon-apply" onClick={applyCoupon} disabled={couponChecking}>
+                                        {couponChecking ? 'Checking…' : 'Apply'}
+                                      </button>
+                                    </div>
+                                  </>
                                 )}
                                 {couponMsg && <div className="hol-coupon-msg">{couponMsg}</div>}
                               </div>
@@ -1817,8 +1822,10 @@ const PAGE_CSS = `
   .hol-accept{margin-top:18px;padding:14px 16px;background:#f5f9ff;border:1px solid #dbe6fb;border-radius:10px;}
   .hol-coupon{margin-top:20px;padding:16px 18px;background:#fdfaf3;border:1px dashed #e5d9b8;border-radius:12px;}
   .hol-coupon-title{font-size:13.5px;font-weight:700;color:#0a162f;margin-bottom:10px;}
+  .hol-coupon-label{display:block;font-size:12px;font-weight:600;color:#6b7280;margin-bottom:6px;}
   .hol-coupon-row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;}
-  .hol-coupon-in{flex:1 1 220px;min-width:180px;width:auto;max-width:none;font-family:monospace;letter-spacing:.05em;text-transform:uppercase;}
+  .hol-coupon-in{flex:1 1 220px;min-width:180px;width:auto;max-width:none;background:#fff;border:1.5px solid #cbd5e1;font-family:monospace;letter-spacing:.05em;text-transform:uppercase;}
+  .hol-coupon-in:focus{border-color:#2563a8;}
   .hol-coupon-apply{flex:0 0 auto;padding:13px 24px;min-height:0;margin-left:0;}
   .hol-coupon-ok{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;background:#f0fdf4;border:1px solid #bbf7d0;color:#15803d;font-size:13.5px;padding:11px 14px;border-radius:9px;}
   .hol-coupon-remove{background:none;border:none;color:#dc2626;font-size:12.5px;font-weight:700;cursor:pointer;padding:0;}

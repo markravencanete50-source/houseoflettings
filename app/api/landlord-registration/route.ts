@@ -19,6 +19,7 @@ import { loadAgreementTemplate } from '@/lib/agreementTemplateStore';
 import { provisionLandlordForAgreement } from '@/lib/landlordProvision';
 import { generateSecondLandlordToken, secondLandlordInviteHtml, sendEmail as sendSecondEmail, SECOND_LANDLORD_TTL_MS } from '@/lib/secondLandlord';
 import { generateFormsToken, formsLink, POST_SIGN_FORMS_TTL_MS } from '@/lib/postSignForms';
+import { buildCoSigners, sendCoSignerInvites, CO_SIGNER_TTL_MS } from '@/lib/companyCoSigners';
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.houseoflettings.uk';
 
@@ -395,6 +396,12 @@ export async function POST(request: Request) {
       firstFormsExpires: Date.now() + POST_SIGN_FORMS_TTL_MS,
     };
 
+    // Company registrations: every OTHER director/officer (after the managing
+    // director) with an email is a co-signer who must review and sign remotely.
+    const isCompanyReg = data.ownerType === "company";
+    const coSigners = isCompanyReg && !agreementId ? buildCoSigners(data.companyPeople) : [];
+    const coSignerFields = coSigners.length ? { coSigners, coSignersExpires: Date.now() + CO_SIGNER_TTL_MS } : {};
+
     // One transaction covers the re-issue token check, the coupon redemption
     // and the registration write, so a coupon can only ever be redeemed once
     // and never without the registration actually being recorded.
@@ -452,6 +459,7 @@ export async function POST(request: Request) {
           ...couponFields,
           ...(jointEmail ? secondFieldsNew : {}),
           ...firstFormsFields,
+          ...coSignerFields,
           status: "signed",
           source: "website-landlord-registration",
           createdAt: FieldValue.serverTimestamp(),
@@ -544,6 +552,14 @@ export async function POST(request: Request) {
       // Best-effort and self-contained: it swallows its own errors so a failure
       // here can never roll back or block the registration itself.
       provisionLandlordForAgreement(db, docId, data, { isNewRegistration: !agreementId }),
+      // Company: email each other director/officer their secure signing link.
+      ...(coSigners.length ? [
+        sendCoSignerInvites({
+          id: docId, coSigners,
+          companyName: data.companyName || "", managingDirector: data.fullName || "",
+          packageLabel: bundle.label, propertyAddress: primaryAddress(data),
+        }),
+      ] : []),
       // Invite the second (joint) landlord to complete their own details.
       ...(issuedSecondInvite && jointEmail ? [
         sendSecondEmail({

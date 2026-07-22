@@ -55,8 +55,8 @@ const COMPANY_NUMBER_REGEX = /^([A-Za-z]{2})?\d{6,8}$/;
 
 // A person who owns or runs the company. The first person in the list is the
 // main contact for the registration.
-type CompanyPerson = { id: string; name: string; role: string; share: string };
-const newPerson = (id: string): CompanyPerson => ({ id, name: '', role: '', share: '' });
+type CompanyPerson = { id: string; name: string; role: string; share: string; email: string };
+const newPerson = (id: string): CompanyPerson => ({ id, name: '', role: '', share: '', email: '' });
 const PERSON_ROLES = ['Director', 'Secretary', 'Person with significant control', 'Shareholder', 'Other'];
 
 type DocState = { has: string; url: string; uploading: boolean; fileName: string; error: string };
@@ -466,8 +466,13 @@ export default function RegistrationFormClient() {
         else if (!COMPANY_NUMBER_REGEX.test(form.companyNumber.replace(/\s/g, ''))) e.companyNumber = 'Enter a valid Companies House number (e.g. 13506429)';
         if (!form.registeredAddress.trim()) e.registeredAddress = 'Registered office address is required';
         companyPeople.forEach((p, i) => {
-          if (!p.name.trim()) e[`person_${p.id}_name`] = i === 0 ? 'Main contact name is required' : 'Name is required, or remove this person';
+          if (!p.name.trim()) e[`person_${p.id}_name`] = i === 0 ? 'Managing director name is required' : 'Name is required, or remove this person';
           if (i === 0 && !p.role) e[`person_${p.id}_role`] = 'Please select their role';
+          // Other directors/officers are emailed a link to sign — an email is required.
+          if (i > 0) {
+            if (!p.email.trim()) e[`person_${p.id}_email`] = 'Email is required so we can send them their signing link';
+            else if (!EMAIL_REGEX.test(p.email)) e[`person_${p.id}_email`] = 'Enter a valid email address';
+          }
           if (!p.share.trim()) {
             e[`person_${p.id}_share`] = 'Please enter their shareholding percentage. Enter 0 if they hold no shares';
           } else {
@@ -764,12 +769,14 @@ export default function RegistrationFormClient() {
                         </div>
                         <div className="hol-field hol-field--full">
                           <label className="hol-label">Owners &amp; Officers<span className="hol-req">*</span></label>
-                          <p style={{ fontSize: 12, color: '#9ca3af', margin: '0 0 4px' }}>Add each person who owns or runs the company, with their shareholding. The first person is our main contact.</p>
+                          <p style={{ fontSize: 12.5, color: '#5b6b82', margin: '0 0 10px', lineHeight: 1.55 }}>
+                            <strong>Person 1 is the Managing Director</strong> — your main point of contact with House of Lettings, who signs the agreement now and receives the follow-up forms. Add any other directors/officers below; each is emailed a secure link to review and sign the agreement and provide their own ID &amp; documents.
+                          </p>
                           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                             {companyPeople.map((p, i) => (
                               <div key={p.id} className="hol-prop-card">
                                 <div className="hol-prop-head">
-                                  <span className="hol-prop-badge">{i === 0 ? 'Person 1: Main Contact' : `Person ${i + 1}`}</span>
+                                  <span className="hol-prop-badge">{i === 0 ? '👑 Person 1: Managing Director & Main Contact' : `Person ${i + 1}: Director / Officer`}</span>
                                   {i > 0 && <button type="button" className="hol-prop-remove" onClick={() => removePerson(p.id)}>Remove</button>}
                                 </div>
                                 <div className="hol-form-grid">
@@ -786,6 +793,14 @@ export default function RegistrationFormClient() {
                                     </select>
                                     {errors[`person_${p.id}_role`] && <p className="hol-err">{errors[`person_${p.id}_role`]}</p>}
                                   </div>
+                                  {i > 0 && (
+                                    <div className="hol-field hol-field--full">
+                                      <label className="hol-label">Email Address<span className="hol-req">*</span></label>
+                                      <input type="email" className={`hol-input${errors[`person_${p.id}_email`] ? ' hol-input--error' : ''}`} placeholder="name@example.co.uk" value={p.email} onChange={(e) => updatePerson(p.id, { email: e.target.value })} autoComplete="off" />
+                                      {errors[`person_${p.id}_email`] && <p className="hol-err">{errors[`person_${p.id}_email`]}</p>}
+                                      <p style={{ fontSize: 12, color: '#9ca3af', margin: '2px 0 0' }}>We&rsquo;ll email them a secure link to sign the agreement and add their own ID &amp; documents.</p>
+                                    </div>
+                                  )}
                                   <div className="hol-field hol-field--full">
                                     <label className="hol-label">What percentage of the company does this person own?<span className="hol-req">*</span></label>
                                     <div style={{ position: 'relative' }}>

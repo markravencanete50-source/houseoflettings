@@ -59,6 +59,9 @@ type Stage = 'checking' | 'decision' | 'form' | 'invalid' | 'completed' | 'decli
 export default function JointLandlordClient() {
   const [id, setId] = useState('');
   const [token, setToken] = useState('');
+  // 'landlord' = individual joint landlord (default). 'director' = a company
+  // co-signing director/officer (posts to /cosigner instead of /second).
+  const [kind, setKind] = useState<'landlord' | 'director'>('landlord');
   const [stage, setStage] = useState<Stage>('checking');
   const [ctx, setCtx] = useState<Ctx | null>(null);
 
@@ -78,10 +81,13 @@ export default function JointLandlordClient() {
     const sp = new URLSearchParams(window.location.search);
     const _id = sp.get('id') || '';
     const _token = sp.get('token') || '';
+    const _kind = sp.get('kind') === 'director' ? 'director' : 'landlord';
     setId(_id);
     setToken(_token);
+    setKind(_kind);
     if (!_id || !_token) { setStage('invalid'); return; }
-    fetch(`/api/landlord-registration/second?id=${encodeURIComponent(_id)}&token=${encodeURIComponent(_token)}`)
+    const api = _kind === 'director' ? '/api/landlord-registration/cosigner' : '/api/landlord-registration/second';
+    fetch(`${api}?id=${encodeURIComponent(_id)}&token=${encodeURIComponent(_token)}`)
       .then(r => r.json())
       .then(d => {
         if (d.completed) { setStage('completed'); return; }
@@ -101,13 +107,20 @@ export default function JointLandlordClient() {
 
   const bundle = ctx ? findBundle(ctx.packageId) || findBundle(ctx.packageLabel) : undefined;
 
+  // Wording + endpoint differ for a company director vs an individual joint landlord.
+  const isDirector = kind === 'director';
+  const API = isDirector ? '/api/landlord-registration/cosigner' : '/api/landlord-registration/second';
+  const noun = isDirector ? 'director' : 'joint landlord';
+  const Noun = isDirector ? 'Director' : 'Joint Landlord';
+  const inviter = isDirector ? ((ctx as any)?.companyName || ctx?.firstName || 'The company') : (ctx?.firstName || 'The primary landlord');
+
   const setField = (k: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement>) => setForm(f => ({ ...f, [k]: e.target.value }));
 
   const decline = async () => {
-    if (!confirm('Decline this joint registration? This will void the contract and notify the primary landlord. This cannot be undone.')) return;
+    if (!confirm(`Decline this ${noun} registration? This will void the contract and notify ${isDirector ? 'the managing director' : 'the primary landlord'}. This cannot be undone.`)) return;
     setDeclining(true);
     try {
-      await fetch('/api/landlord-registration/second', {
+      await fetch(API, {
         method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id, token, decline: true }),
       });
       setStage('declined');
@@ -161,7 +174,7 @@ export default function JointLandlordClient() {
         signatureUrl = await uploadToCloudinary(f, CLOUDINARY_FOLDERS.agreements);
       } catch { /* non-fatal */ }
 
-      const res = await fetch('/api/landlord-registration/second', {
+      const res = await fetch(API, {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           id, token,
@@ -192,18 +205,18 @@ export default function JointLandlordClient() {
       <div className="jl">
         {stage === 'checking' && <div className="jl-center"><div className="jl-spin" /><p>Checking your link…</p></div>}
 
-        {stage === 'invalid' && <Msg icon="⚠️" title="This link isn't valid" body="It may have expired or already been used. Please ask the primary landlord to re-send your invitation." />}
-        {stage === 'completed' && <Msg icon="✅" title="Already completed" body="Your joint landlord details have already been submitted. There's nothing more to do." />}
-        {stage === 'declined' && <Msg icon="🚫" title="Registration declined" body="You've declined this joint registration and it has been voided. The primary landlord and our office have been notified." />}
-        {stage === 'done' && <Msg icon="🎉" title={`Thank you, ${form.fullName.split(' ')[0]}`} body="Your details and signature are received. We've emailed you the signed agreement and set up your Landlord Portal login (check your inbox). Our team has been notified — nothing more is needed." />}
+        {stage === 'invalid' && <Msg icon="⚠️" title="This link isn't valid" body={`It may have expired or already been used. Please ask ${isDirector ? 'the managing director' : 'the primary landlord'} to re-send your invitation.`} />}
+        {stage === 'completed' && <Msg icon="✅" title="Already completed" body={`Your ${noun} details have already been submitted. There's nothing more to do.`} />}
+        {stage === 'declined' && <Msg icon="🚫" title="Registration declined" body={`You've declined this ${noun} registration and it has been voided. ${isDirector ? 'The managing director' : 'The primary landlord'} and our office have been notified.`} />}
+        {stage === 'done' && <Msg icon="🎉" title={`Thank you, ${form.fullName.split(' ')[0]}`} body={isDirector ? "Your details and signature are received. We've emailed you the signed agreement, and our team has been notified — nothing more is needed." : "Your details and signature are received. We've emailed you the signed agreement and set up your Landlord Portal login (check your inbox). Our team has been notified — nothing more is needed."} />}
 
         {/* ── Decision ── */}
         {stage === 'decision' && ctx && (
           <div className="jl-shell">
             <div className="jl-head">
-              <div className="jl-badge">Joint Landlord</div>
-              <h1>You've been named as a joint landlord</h1>
-              <p><strong>{ctx.firstName}</strong> registered the property below with House of Lettings and named you as a joint landlord. Please review and choose whether to accept.</p>
+              <div className="jl-badge">{Noun}</div>
+              <h1>{isDirector ? "You're a signatory on this registration" : "You've been named as a joint landlord"}</h1>
+              <p><strong>{inviter}</strong> registered the property below with House of Lettings{isDirector ? ' and named you as a director/officer who must sign' : ' and named you as a joint landlord'}. Please review and choose whether to accept.</p>
             </div>
             <div className="jl-card">
               <h2>What was registered</h2>
@@ -212,13 +225,13 @@ export default function JointLandlordClient() {
               {p0.currentRent && <Recap label="Expected rent" value={`£${p0.currentRent}/month`} />}
               <Recap label="Service package" value={ctx.packageLabel || '—'} />
               {bundle && <Recap label="Fees" value={bundle.mgmtFee ? `${bundle.setupFee} set up, then ${bundle.mgmtFee} management` : `${bundle.setupFee} set up, one-off`} />}
-              <Recap label="Primary landlord" value={ctx.firstName} last />
+              <Recap label={isDirector ? 'Managing director' : 'Primary landlord'} value={ctx.firstName} last />
             </div>
             <div className="jl-decide">
               <button className="jl-submit" onClick={() => setStage('form')}>✓ I accept — continue</button>
               <button className="jl-decline" onClick={decline} disabled={declining}>{declining ? 'Declining…' : '✕ I decline'}</button>
             </div>
-            <p className="jl-fineprint">If you decline, this registration will be voided and {ctx.firstName} will be notified. Both landlords must agree for it to proceed.</p>
+            <p className="jl-fineprint">If you decline, this registration will be voided and {isDirector ? 'the managing director' : ctx.firstName} will be notified. {isDirector ? 'All named directors must sign for it to proceed.' : 'Both landlords must agree for it to proceed.'}</p>
           </div>
         )}
 
@@ -226,13 +239,13 @@ export default function JointLandlordClient() {
         {stage === 'form' && ctx && (
           <div className="jl-shell">
             <div className="jl-head">
-              <div className="jl-badge">Joint Landlord · Step 2</div>
+              <div className="jl-badge">{Noun} · Step 2</div>
               <h1>Your details &amp; signature</h1>
-              <p>The property and service are already set from {ctx.firstName}'s registration — you just add your own details, documents and signature.</p>
+              <p>The property and service are already set from {inviter}'s registration — you just add your own details, documents and signature.</p>
             </div>
 
             <div className="jl-card jl-locked">
-              <h2>Property &amp; service <span className="jl-lock">🔒 set by primary landlord</span></h2>
+              <h2>Property &amp; service <span className="jl-lock">🔒 set by {isDirector ? 'the managing director' : 'primary landlord'}</span></h2>
               <Recap label="Property" value={propAddr || '—'} />
               {propMeta && <Recap label="Details" value={propMeta} />}
               <Recap label="Service package" value={ctx.packageLabel || '—'} last />
@@ -293,7 +306,7 @@ export default function JointLandlordClient() {
                 </div>
                 <label className="jl-terms">
                   <input type="checkbox" checked={termsAccepted} onChange={e => setTermsAccepted(e.target.checked)} />
-                  <span>I have read and accept the terms of this agreement as a joint landlord.</span>
+                  <span>I have read and accept the terms of this agreement as a {noun}.</span>
                 </label>
                 {errors.terms && <p className="jl-err">{errors.terms}</p>}
               </div>

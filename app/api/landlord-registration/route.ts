@@ -18,7 +18,7 @@ import { agreementPdfBase64, landlordEmailHtml, feeLine, couponFromData, type At
 import { loadAgreementTemplate } from '@/lib/agreementTemplateStore';
 import { provisionLandlordForAgreement } from '@/lib/landlordProvision';
 import { generateSecondLandlordToken, secondLandlordInviteHtml, sendEmail as sendSecondEmail, SECOND_LANDLORD_TTL_MS } from '@/lib/secondLandlord';
-import { generateFormsToken, sendPostSignFormsInvite, POST_SIGN_FORMS_TTL_MS } from '@/lib/postSignForms';
+import { generateFormsToken, formsLink, POST_SIGN_FORMS_TTL_MS } from '@/lib/postSignForms';
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.houseoflettings.uk';
 
@@ -497,17 +497,34 @@ export async function POST(request: Request) {
     // templates while the raw values go to Firestore and the PDFs untouched.
     const emailData = htmlEscapeDeep(data);
 
-    // Send the landlord copy to both landlords when it is a joint registration.
-    const landlordTo = [data.email, ...(data.jointLandlord && data.landlord2Email ? [data.landlord2Email] : [])]
-      .filter((e: string) => e && e.includes("@"));
+    // The first landlord's agreement email carries the two post-agreement form
+    // links (new registrations only — re-signs already have them). A joint
+    // registration also sends a courtesy copy to the second landlord, WITHOUT
+    // these links (the second landlord gets their own links after they sign).
+    const firstFormLinks = !agreementId ? {
+      rep: formsLink(docId, firstFormsToken, "first", "authorised-rep"),
+      bank: formsLink(docId, firstFormsToken, "first", "bank-aml"),
+    } : undefined;
+    const agreementSubject = `🏠 Your Landlord Registration & signed ${bundle.label} agreement | House of Lettings`;
+    const secondCopyEmail = data.jointLandlord && data.landlord2Email && String(data.landlord2Email).includes("@")
+      && String(data.landlord2Email).trim().toLowerCase() !== String(data.email || "").trim().toLowerCase()
+      ? String(data.landlord2Email).trim() : "";
 
     await Promise.allSettled([
       sendEmail({
-        to: landlordTo.length ? landlordTo : data.email,
-        subject: `🏠 Your Landlord Registration & signed ${bundle.label} agreement | House of Lettings`,
-        html: landlordEmailHtml(emailData, bundle),
+        to: data.email,
+        subject: agreementSubject,
+        html: landlordEmailHtml(emailData, bundle, firstFormLinks ? { formLinks: firstFormLinks } : {}),
         attachments: attachments.length ? attachments : undefined,
       }),
+      ...(secondCopyEmail ? [
+        sendEmail({
+          to: secondCopyEmail,
+          subject: agreementSubject,
+          html: landlordEmailHtml(emailData, bundle),
+          attachments: attachments.length ? attachments : undefined,
+        }),
+      ] : []),
       sendEmail({
         to: process.env.ADMIN_EMAIL || "admin@houseoflettings.co.uk",
         subject: `🔔 New Landlord Registration: ${data.fullName} (${bundle.label})`,
@@ -539,13 +556,6 @@ export async function POST(request: Request) {
             propertyAddress: primaryAddress(data),
             link: `${SITE_URL}/landlord-registration/joint?id=${docId}&token=${secondToken}`,
           }),
-        }),
-      ] : []),
-      // Email the first landlord the two post-agreement form links (new regs only).
-      ...(!agreementId ? [
-        sendPostSignFormsInvite({
-          id: docId, token: firstFormsToken, party: "first",
-          name: data.fullName || "", email: data.email || "", propertyAddress: primaryAddress(data),
         }),
       ] : []),
     ]);

@@ -18,7 +18,7 @@ import { loadAgreementTemplate } from "@/lib/agreementTemplateStore";
 import { agreementPdfBase64, landlordEmailHtml, adminEmailHtml, sendAgreementEmail } from "@/lib/agreementDocuments";
 import { secondLandlordDeclinedHtml, sendEmail } from "@/lib/secondLandlord";
 import { provisionSecondLandlordLogin, postcodesFromAgreement } from "@/lib/landlordProvision";
-import { generateFormsToken, sendPostSignFormsInvite, POST_SIGN_FORMS_TTL_MS } from "@/lib/postSignForms";
+import { generateFormsToken, formsLink, POST_SIGN_FORMS_TTL_MS } from "@/lib/postSignForms";
 
 function db() {
   if (!getApps().length) {
@@ -217,11 +217,17 @@ export async function POST(request: Request) {
     }
     const attachments = pdf ? [{ filename: `management-agreement-${id}.pdf`, content: pdf }] : undefined;
 
+    // The second landlord's agreement email carries their own two form links.
+    const secondFormLinks = {
+      rep: formsLink(id, secondFormsToken, "second", "authorised-rep"),
+      bank: formsLink(id, secondFormsToken, "second", "bank-aml"),
+    };
+
     await Promise.allSettled([
       bundle && emailData ? sendAgreementEmail({
         to: second.email,
         subject: `🖊️ Your signed ${bundle.label} agreement | House of Lettings`,
-        html: landlordEmailHtml(emailData, bundle),
+        html: landlordEmailHtml(emailData, bundle, { formLinks: secondFormLinks }),
         attachments,
       }) : Promise.resolve(),
       bundle && emailData ? sendAgreementEmail({
@@ -233,11 +239,6 @@ export async function POST(request: Request) {
       // Give the second landlord their own portal login (links via secondLandlordUid).
       provisionSecondLandlordLogin(database, id, {
         email: second.email, name: second.fullName, phone: second.phone, postcodes: postcodesFromAgreement(doc),
-      }),
-      // Email the second landlord the two post-agreement form links.
-      sendPostSignFormsInvite({
-        id, token: secondFormsToken, party: "second",
-        name: second.fullName, email: second.email, propertyAddress: ctx.propertyAddress,
       }),
       backupToDrive({
         formType: "landlord-registration",

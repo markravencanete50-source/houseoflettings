@@ -218,7 +218,7 @@ function serviceBundleHtml(bundle: Bundle): string {
 // The landlord email carries BOTH parts: (1) the bundle of services acquired,
 // and (2) the tenancy/management agreement summary, with the signed PDF
 // attached. `corrected` switches the wording to an updated-copy notice.
-export function landlordEmailHtml(data: any, bundle: Bundle, opts: { corrected?: boolean } = {}): string {
+export function landlordEmailHtml(data: any, bundle: Bundle, opts: { corrected?: boolean; formLinks?: { rep: string; bank: string } } = {}): string {
   const title = opts.corrected ? '📄 Your updated agreement' : '🖊️ Your agreement is signed';
   const intro = opts.corrected
     ? `We have updated your <strong>${bundle.label}</strong> agreement. The corrected copy is attached, and no action is needed from you. Below is a summary of what you are getting and the key terms.`
@@ -247,6 +247,12 @@ export function landlordEmailHtml(data: any, bundle: Bundle, opts: { corrected?:
       ${data.jointLandlord && data.landlord2Name && !data.signature2Name ? `<div style="font-size:13px;color:#6b7280;padding:6px 0 0;">Joint landlord <strong>${data.landlord2Name}</strong> has been emailed a link to add their own details and signature.</div>` : ''}
     </div>
     <p style="font-size:13px;line-height:1.6;color:#6b7280;margin:16px 0 0;">The full agreement, including all terms and conditions and your signature, is in the attached PDF.${opts.corrected ? '' : ' Our team has been notified and will be in touch shortly to begin.'}</p>
+    ${opts.formLinks && !opts.corrected ? `
+    <h2 style="font-size:16px;color:#0a162f;margin:28px 0 8px;border-bottom:2px solid #eef2f7;padding-bottom:6px;">3. Two quick forms to finish</h2>
+    <p style="font-size:13px;color:#6b7280;margin:0 0 12px;">Please complete and sign these two short forms to finish setting up your account — your property and details are already filled in:</p>
+    <a href="${opts.formLinks.rep}" style="display:block;text-align:center;background:#2563eb;color:#fff;text-decoration:none;font-weight:700;font-size:14px;padding:13px 20px;border-radius:9px;margin:8px 0;">1 · Authorised Representative Form →</a>
+    <a href="${opts.formLinks.bank}" style="display:block;text-align:center;background:#0a162f;color:#fff;text-decoration:none;font-weight:700;font-size:14px;padding:13px 20px;border-radius:9px;margin:8px 0;">2 · Bank Details &amp; AML Verification →</a>
+    <p style="font-size:12px;color:#9ca3af;margin:6px 0 0;">These secure links expire in 30 days. Signed copies are emailed to you and to our office.</p>` : ''}
     <p style="font-size:13px;line-height:1.6;color:#6b7280;margin:12px 0 0;">If anything above is not right, simply reply to this email.</p>
   </div>
   <div style="background:#f8f9ff;padding:18px 40px;text-align:center;font-size:12px;color:#9ca3af;">© ${new Date().getFullYear()} House of Lettings Ltd. ${AGENT_DETAILS.address}</div>

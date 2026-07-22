@@ -116,6 +116,7 @@ export async function POST(request: Request) {
     if (!snap.exists || !dref) return Response.json({ message: 'Registration not found.' }, { status: 404 });
     if (!partyTokenValid(dref, party, token)) return Response.json({ message: 'This link is invalid or has expired.' }, { status: 403 });
 
+    if (!data.termsAccepted) return Response.json({ message: 'The terms and conditions must be accepted.' }, { status: 400 });
     if (!data.signatureName?.toString().trim()) return Response.json({ message: 'A signature name is required.' }, { status: 400 });
     if (typeof signatureImage !== 'string' || !signatureImage.startsWith('data:image')) {
       return Response.json({ message: 'A signature is required.' }, { status: 400 });

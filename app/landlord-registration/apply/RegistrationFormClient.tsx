@@ -508,9 +508,21 @@ export default function RegistrationFormClient() {
       properties.forEach(p => {
         if (!p.postcode.trim()) e[`prop_${p.id}_postcode`] = 'Postcode is required';
         if (!p.street.trim()) e[`prop_${p.id}_street`] = '1st line of address is required';
+        if (!p.city.trim()) e[`prop_${p.id}_city`] = 'City is required';
+        if (!p.county.trim()) e[`prop_${p.id}_county`] = 'County is required';
         if (!p.propertyType) e[`prop_${p.id}_propertyType`] = 'Please select a property type';
         if (!p.bedrooms) e[`prop_${p.id}_bedrooms`] = 'Please select the number of bedrooms';
+        if (!p.bathrooms) e[`prop_${p.id}_bathrooms`] = 'Please select the number of bathrooms';
+        if (!p.receptions) e[`prop_${p.id}_receptions`] = 'Please select the number of receptions';
+        if (!p.furnishing) e[`prop_${p.id}_furnishing`] = 'Please select the furnishing status';
+        if (!p.parking) e[`prop_${p.id}_parking`] = 'Please select the parking';
+        if (!p.condition) e[`prop_${p.id}_condition`] = 'Please select the property condition';
         if (!p.occupancy) e[`prop_${p.id}_occupancy`] = 'Please tell us if the property is occupied or vacant';
+        if (!p.availableFrom) e[`prop_${p.id}_availableFrom`] = 'Please choose an available-from date';
+        if (p.occupancy === 'Occupied') {
+          if (!p.currentRent.trim()) e[`prop_${p.id}_currentRent`] = 'Current monthly rent is required';
+          if (!p.tenancyStart) e[`prop_${p.id}_tenancyStart`] = 'Tenancy start date is required';
+        }
       });
     } else if (s === 3) {
       if (!form.selectedPackageId && !form.selectedPackage) e.selectedPackage = 'Please choose a service';
@@ -956,11 +968,7 @@ export default function RegistrationFormClient() {
                           total={properties.length}
                           onUpdate={updateProperty}
                           onRemove={removeProperty}
-                          postcodeError={errors[`prop_${p.id}_postcode`]}
-                          streetError={errors[`prop_${p.id}_street`]}
-                          propertyTypeError={errors[`prop_${p.id}_propertyType`]}
-                          bedroomsError={errors[`prop_${p.id}_bedrooms`]}
-                          occupancyError={errors[`prop_${p.id}_occupancy`]}
+                          errors={errors}
                         />
                       ))}
                     </div>
@@ -1451,19 +1459,16 @@ function PropertyFileField({
 }
 
 function PropertyRow({
-  property, index, total, onUpdate, onRemove, postcodeError, streetError, propertyTypeError, bedroomsError, occupancyError,
+  property, index, total, onUpdate, onRemove, errors,
 }: {
   property: Property;
   index: number;
   total: number;
   onUpdate: (id: string, patch: Partial<Property>) => void;
   onRemove: (id: string) => void;
-  postcodeError?: string;
-  streetError?: string;
-  propertyTypeError?: string;
-  bedroomsError?: string;
-  occupancyError?: string;
+  errors: Record<string, string>;
 }) {
+  const err = (field: string): string | undefined => errors[`prop_${property.id}_${field}`];
   const upd = (field: keyof Property) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => onUpdate(property.id, { [field]: e.target.value });
   const handleSelect = useCallback((addr: AddressResult) => {
     const patch: Partial<Property> = {};
@@ -1515,88 +1520,95 @@ function PropertyRow({
             postcode={property.postcode}
             onPostcodeChange={handlePostcode}
             onSelect={handleSelect}
-            inputClassName={`hol-input${postcodeError ? ' hol-input--error' : ''}`}
+            inputClassName={`hol-input${err('postcode') ? ' hol-input--error' : ''}`}
             placeholder="e.g. M1 1AE"
           />
-          {postcodeError && <p className="hol-err">{postcodeError}</p>}
+          {err('postcode') && <p className="hol-err">{err('postcode')}</p>}
           <p style={{ fontSize: 12, color: '#9ca3af', margin: '2px 0 0' }}>Search your postcode, then select your address to auto-fill the fields below.</p>
         </div>
         <div className="hol-field hol-field--full">
           <label className="hol-label">1st Line of Address<span className="hol-req">*</span></label>
-          <input type="text" className={`hol-input${streetError ? ' hol-input--error' : ''}`} placeholder="e.g. 12 Whitfield Street" value={property.street} onChange={(e) => onUpdate(property.id, { street: e.target.value })} autoComplete="off" />
-          {streetError && <p className="hol-err">{streetError}</p>}
+          <input type="text" className={`hol-input${err('street') ? ' hol-input--error' : ''}`} placeholder="e.g. 12 Whitfield Street" value={property.street} onChange={(e) => onUpdate(property.id, { street: e.target.value })} autoComplete="off" />
+          {err('street') && <p className="hol-err">{err('street')}</p>}
         </div>
         <div className="hol-field">
-          <label className="hol-label">City <span style={{ color: '#9ca3af', fontWeight: 400 }}>(optional)</span></label>
-          <input type="text" className="hol-input" placeholder="e.g. Manchester" value={property.city} onChange={(e) => onUpdate(property.id, { city: e.target.value })} autoComplete="off" />
+          <label className="hol-label">City<span className="hol-req">*</span></label>
+          <input type="text" className={`hol-input${err('city') ? ' hol-input--error' : ''}`} placeholder="e.g. Manchester" value={property.city} onChange={(e) => onUpdate(property.id, { city: e.target.value })} autoComplete="off" />
+          {err('city') && <p className="hol-err">{err('city')}</p>}
         </div>
         <div className="hol-field">
-          <label className="hol-label">County <span style={{ color: '#9ca3af', fontWeight: 400 }}>(optional)</span></label>
-          <input type="text" className="hol-input" placeholder="e.g. Greater Manchester" value={property.county} onChange={upd('county')} autoComplete="off" />
+          <label className="hol-label">County<span className="hol-req">*</span></label>
+          <input type="text" className={`hol-input${err('county') ? ' hol-input--error' : ''}`} placeholder="e.g. Greater Manchester" value={property.county} onChange={upd('county')} autoComplete="off" />
+          {err('county') && <p className="hol-err">{err('county')}</p>}
         </div>
         <div className="hol-field">
-          <label className="hol-label">Flat / Unit No. <span style={{ color: '#9ca3af', fontWeight: 400 }}>(optional)</span></label>
+          <label className="hol-label">Flat / Unit No. <span style={{ color: '#9ca3af', fontWeight: 400 }}>(if applicable)</span></label>
           <input type="text" className="hol-input" placeholder="e.g. Flat 2" value={property.flatNumber} onChange={upd('flatNumber')} autoComplete="off" />
         </div>
 
         <div className="hol-field">
           <label className="hol-label">Property Type<span className="hol-req">*</span></label>
-          <select className={`hol-input hol-select${propertyTypeError ? ' hol-input--error' : ''}`} value={property.propertyType} onChange={upd('propertyType')}>
+          <select className={`hol-input hol-select${err('propertyType') ? ' hol-input--error' : ''}`} value={property.propertyType} onChange={upd('propertyType')}>
             <option value="">Select...</option>
             {PROPERTY_TYPES.map(t => <option key={t}>{t}</option>)}
           </select>
-          {propertyTypeError && <p className="hol-err">{propertyTypeError}</p>}
+          {err('propertyType') && <p className="hol-err">{err('propertyType')}</p>}
         </div>
         <div className="hol-field">
           <label className="hol-label">Bedrooms<span className="hol-req">*</span></label>
-          <select className={`hol-input hol-select${bedroomsError ? ' hol-input--error' : ''}`} value={property.bedrooms} onChange={upd('bedrooms')}>
+          <select className={`hol-input hol-select${err('bedrooms') ? ' hol-input--error' : ''}`} value={property.bedrooms} onChange={upd('bedrooms')}>
             <option value="">Select...</option>
             {['1', '2', '3', '4', '5', '6+'].map(n => <option key={n}>{n}</option>)}
           </select>
-          {bedroomsError && <p className="hol-err">{bedroomsError}</p>}
+          {err('bedrooms') && <p className="hol-err">{err('bedrooms')}</p>}
         </div>
         <div className="hol-field">
-          <label className="hol-label">Bathrooms <span style={{ color: '#9ca3af', fontWeight: 400 }}>(optional)</span></label>
-          <select className="hol-input hol-select" value={property.bathrooms} onChange={upd('bathrooms')}>
+          <label className="hol-label">Bathrooms<span className="hol-req">*</span></label>
+          <select className={`hol-input hol-select${err('bathrooms') ? ' hol-input--error' : ''}`} value={property.bathrooms} onChange={upd('bathrooms')}>
             <option value="">Select...</option>
             {['1', '2', '3', '4', '5+'].map(n => <option key={n}>{n}</option>)}
           </select>
+          {err('bathrooms') && <p className="hol-err">{err('bathrooms')}</p>}
         </div>
         <div className="hol-field">
-          <label className="hol-label">Receptions <span style={{ color: '#9ca3af', fontWeight: 400 }}>(optional)</span></label>
-          <select className="hol-input hol-select" value={property.receptions} onChange={upd('receptions')}>
+          <label className="hol-label">Receptions<span className="hol-req">*</span></label>
+          <select className={`hol-input hol-select${err('receptions') ? ' hol-input--error' : ''}`} value={property.receptions} onChange={upd('receptions')}>
             <option value="">Select...</option>
             {['0', '1', '2', '3', '4', '5+'].map(n => <option key={n}>{n}</option>)}
           </select>
+          {err('receptions') && <p className="hol-err">{err('receptions')}</p>}
         </div>
         <div className="hol-field">
-          <label className="hol-label">Furnishing Status <span style={{ color: '#9ca3af', fontWeight: 400 }}>(optional)</span></label>
-          <select className="hol-input hol-select" value={property.furnishing} onChange={upd('furnishing')}>
+          <label className="hol-label">Furnishing Status<span className="hol-req">*</span></label>
+          <select className={`hol-input hol-select${err('furnishing') ? ' hol-input--error' : ''}`} value={property.furnishing} onChange={upd('furnishing')}>
             <option value="">Select...</option>
             {FURNISHING.map(f => <option key={f}>{f}</option>)}
           </select>
+          {err('furnishing') && <p className="hol-err">{err('furnishing')}</p>}
         </div>
         <div className="hol-field">
-          <label className="hol-label">Parking <span style={{ color: '#9ca3af', fontWeight: 400 }}>(optional)</span></label>
-          <select className="hol-input hol-select" value={property.parking} onChange={upd('parking')}>
+          <label className="hol-label">Parking<span className="hol-req">*</span></label>
+          <select className={`hol-input hol-select${err('parking') ? ' hol-input--error' : ''}`} value={property.parking} onChange={upd('parking')}>
             <option value="">Select...</option>
             {PARKING.map(p => <option key={p}>{p}</option>)}
           </select>
+          {err('parking') && <p className="hol-err">{err('parking')}</p>}
         </div>
         <div className="hol-field">
-          <label className="hol-label">Property Condition <span style={{ color: '#9ca3af', fontWeight: 400 }}>(optional)</span></label>
-          <select className="hol-input hol-select" value={property.condition} onChange={upd('condition')}>
+          <label className="hol-label">Property Condition<span className="hol-req">*</span></label>
+          <select className={`hol-input hol-select${err('condition') ? ' hol-input--error' : ''}`} value={property.condition} onChange={upd('condition')}>
             <option value="">Select...</option>
             {CONDITIONS.map(c => <option key={c}>{c}</option>)}
           </select>
+          {err('condition') && <p className="hol-err">{err('condition')}</p>}
         </div>
         <div className="hol-field">
           <label className="hol-label">Occupancy<span className="hol-req">*</span></label>
-          <select className={`hol-input hol-select${occupancyError ? ' hol-input--error' : ''}`} value={property.occupancy} onChange={upd('occupancy')}>
+          <select className={`hol-input hol-select${err('occupancy') ? ' hol-input--error' : ''}`} value={property.occupancy} onChange={upd('occupancy')}>
             <option value="">Select...</option>
             {OCCUPANCY.map(o => <option key={o}>{o}</option>)}
           </select>
-          {occupancyError && <p className="hol-err">{occupancyError}</p>}
+          {err('occupancy') && <p className="hol-err">{err('occupancy')}</p>}
         </div>
 
         {property.occupancy === 'Occupied' && (
@@ -1604,29 +1616,32 @@ function PropertyRow({
             <div className="hol-occupied-head">Current tenancy details</div>
             <div className="hol-form-grid">
               <div className="hol-field">
-                <label className="hol-label">Current Monthly Rent (£) <span style={{ color: '#9ca3af', fontWeight: 400 }}>(optional)</span></label>
-                <input type="text" inputMode="numeric" className="hol-input" placeholder="e.g. 950" value={property.currentRent} onChange={upd('currentRent')} autoComplete="off" />
+                <label className="hol-label">Current Monthly Rent (£)<span className="hol-req">*</span></label>
+                <input type="text" inputMode="numeric" className={`hol-input${err('currentRent') ? ' hol-input--error' : ''}`} placeholder="e.g. 950" value={property.currentRent} onChange={upd('currentRent')} autoComplete="off" />
+                {err('currentRent') && <p className="hol-err">{err('currentRent')}</p>}
               </div>
               <div className="hol-field" />
               <div className="hol-field">
-                <label className="hol-label">Tenancy Start Date <span style={{ color: '#9ca3af', fontWeight: 400 }}>(optional)</span></label>
-                <input type="date" className="hol-input" style={{ colorScheme: 'light' }} value={property.tenancyStart} onChange={upd('tenancyStart')} />
+                <label className="hol-label">Tenancy Start Date<span className="hol-req">*</span></label>
+                <input type="date" className={`hol-input${err('tenancyStart') ? ' hol-input--error' : ''}`} style={{ colorScheme: 'light' }} value={property.tenancyStart} onChange={upd('tenancyStart')} />
+                {err('tenancyStart') && <p className="hol-err">{err('tenancyStart')}</p>}
               </div>
               <div className="hol-field">
-                <label className="hol-label">Tenancy End Date <span style={{ color: '#9ca3af', fontWeight: 400 }}>(optional)</span></label>
+                <label className="hol-label">Tenancy End Date <span style={{ color: '#9ca3af', fontWeight: 400 }}>(if fixed-term)</span></label>
                 <input type="date" className="hol-input" style={{ colorScheme: 'light' }} value={property.tenancyEnd} onChange={upd('tenancyEnd')} />
               </div>
             </div>
           </div>
         )}
 
-        {/* Force the date into the left column regardless of how many optional fields precede it. */}
+        {/* Force the date into the left column regardless of how many fields precede it. */}
         <div className="hol-field" style={{ gridColumn: '1 / 2' }}>
-          <label className="hol-label">Available From <span style={{ color: '#9ca3af', fontWeight: 400 }}>(optional)</span></label>
-          <input type="date" className="hol-input" style={{ colorScheme: 'light' }} value={property.availableFrom} onChange={upd('availableFrom')} />
+          <label className="hol-label">Available From<span className="hol-req">*</span></label>
+          <input type="date" className={`hol-input${err('availableFrom') ? ' hol-input--error' : ''}`} style={{ colorScheme: 'light' }} value={property.availableFrom} onChange={upd('availableFrom')} />
+          {err('availableFrom') && <p className="hol-err">{err('availableFrom')}</p>}
         </div>
         <div className="hol-field hol-field--full">
-          <label className="hol-label">Security Code / Access Note <span style={{ color: '#9ca3af', fontWeight: 400 }}>(optional)</span></label>
+          <label className="hol-label">Security Code / Access Note <span style={{ color: '#9ca3af', fontWeight: 400 }}>(if applicable)</span></label>
           <input type="text" className="hol-input" placeholder="e.g. key-safe code, alarm code or access instructions" value={property.securityNote} onChange={upd('securityNote')} autoComplete="off" />
         </div>
 

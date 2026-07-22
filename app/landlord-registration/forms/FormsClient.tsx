@@ -48,6 +48,7 @@ export default function FormsClient() {
   // bank-aml fields
   const [bank, setBank] = useState({ accountHolder: '', bankName: '', sortCode: '', accountNumber: '' });
   const [jointDecl, setJointDecl] = useState(false);
+  const [termsAccepted, setTermsAccepted] = useState(false);
   // signature
   const [signatureData, setSignatureData] = useState<string | null>(null);
   const [sigName, setSigName] = useState('');
@@ -96,6 +97,7 @@ export default function FormsClient() {
       if (!/^\d{6}$/.test(bank.sortCode.replace(/\D/g, ''))) e.sortCode = 'Enter a 6-digit sort code';
       if (!/^\d{8}$/.test(bank.accountNumber.replace(/\D/g, ''))) e.accountNumber = 'Enter an 8-digit account number';
     }
+    if (!termsAccepted) e.terms = 'Please accept the terms and conditions to continue';
     if (!sigName.trim()) e.sigName = 'Type your full name to confirm';
     if (!sigDate) e.sigDate = 'Please confirm the date';
     if (!signatureData) e.signature = 'Please add your signature';
@@ -105,7 +107,7 @@ export default function FormsClient() {
     try {
       let signatureUrl = '';
       try { signatureUrl = await uploadToCloudinary(dataUrlToFile(signatureData!, `form-sig-${Date.now()}.png`), CLOUDINARY_FOLDERS.agreements); } catch { /* non-fatal */ }
-      const body: any = { ...params, signatureName: sigName, signatureDate: sigDate, signatureUrl, signatureImage: signatureData };
+      const body: any = { ...params, signatureName: sigName, signatureDate: sigDate, signatureUrl, signatureImage: signatureData, termsAccepted: true };
       if (!isBank) { body.hasRepresentative = !!hasRep; if (hasRep) Object.assign(body, rep); }
       else { Object.assign(body, bank, { jointDeclaration: jointDecl }); }
       const res = await fetch('/api/landlord-registration/forms', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
@@ -160,9 +162,6 @@ export default function FormsClient() {
                   <Field label="Representative Telephone" err={errors.repPhone} full><input className="lf-input" type="tel" value={rep.repPhone} onChange={e => setRep(s => ({ ...s, repPhone: e.target.value }))} /></Field>
                 </div>
               )}
-              <details className="lf-terms-box"><summary>Read the full authority &amp; limitations</summary>
-                <p>The Authorised Representative may instruct us on tenancy management &amp; renewals, maintenance &amp; contractors, inspections, rent negotiations, compliance, deposits, marketing &amp; viewings, notices, and approval of invoices/expenses. They may NOT sign tenancy agreements, legal/statutory notices, contracts or court documents, nor transfer ownership. The authority stays valid until withdrawn in writing. Governed by the laws of England &amp; Wales; data handled per UK GDPR and the Data Protection Act 2018.</p>
-              </details>
             </div>
           ) : (
             <div className="lf-card">
@@ -179,12 +178,47 @@ export default function FormsClient() {
                   <span>Joint ownership: I confirm all landlords are jointly entitled to the rental income, to be paid to the account above (unless otherwise agreed in writing).</span>
                 </label>
               )}
-              <details className="lf-terms-box"><summary>Read the declaration, AML &amp; data terms</summary>
-                <p>You confirm the account belongs to you or is under your lawful control, that you have authority to receive the rental income, and that the details are true and accurate. For AML compliance we may request proof of identity, address, ownership, bank-account ownership and source of funds, and carry out electronic checks. We are not liable for loss from incorrect/outdated details; changes must be in writing and may be verified. Data is handled per UK GDPR and the Data Protection Act 2018.</p>
-              </details>
               <p className="lf-hint" style={{ marginTop: 10 }}>🔒 For your security, only a masked record is stored — your full account details appear only in the signed PDF sent to our office.</p>
             </div>
           )}
+
+          {/* Terms & conditions — shown in full and accepted, like the agency agreement */}
+          <div className="lf-card">
+            <h2>Terms &amp; conditions</h2>
+            <p className="lf-hint" style={{ marginBottom: 12 }}>Please read the terms below in full before signing.</p>
+            <div className="lf-terms-scroll">
+              {!isBank ? (
+                <>
+                  <div className="lf-terms-h">1. Authority granted</div>
+                  <p>By signing this form the Landlord(s) authorise the Authorised Representative (if named) to communicate with House of Lettings and give instructions regarding: tenancy management and renewals; maintenance, repairs and contractor instructions; property inspections and visits; rent negotiations and tenancy matters; compliance-related matters; deposit matters and disputes; marketing, advertising and viewings; notices and tenancy-related correspondence; approval of invoices and property expenses; and general day-to-day management of the Property. The Agent may reasonably rely on the Representative's instructions unless notified otherwise in writing.</p>
+                  <div className="lf-terms-h">2. Limitation of authority</div>
+                  <p>The Authorised Representative is authorised for day-to-day property management only and may NOT sign or execute tenancy agreements, legal notices, statutory notices, contracts, court documents or other legally binding documents on behalf of the Landlord(s), nor transfer ownership of the Property. Where legally binding approval is required, House of Lettings may request direct confirmation from the Landlord(s).</p>
+                  <div className="lf-terms-h">3. Revocation of authority</div>
+                  <p>This authority remains valid unless and until withdrawn in writing by the Landlord(s). House of Lettings may continue to rely upon the Representative's instructions until written notice of cancellation has been received and reasonably processed.</p>
+                  <div className="lf-terms-h">4. Data protection &amp; governing law</div>
+                  <p>All personal information is handled in accordance with the UK GDPR and the Data Protection Act 2018. This Agreement is governed by the laws of England and Wales. The Agent is House of Lettings Limited (Co. No. 11676443), Peter House, Oxford Street, Manchester, M1 5AN; Property Ombudsman T02474.</p>
+                  <div className="lf-terms-h">5. Declaration</div>
+                  <p>By signing, the Landlord(s) confirm they have read and understood this Agreement, authorise any named individual above to act as their representative for day-to-day management matters, and authorise the Agent to act in accordance with this Agreement immediately.</p>
+                </>
+              ) : (
+                <>
+                  <div className="lf-terms-h">1. Authority declaration</div>
+                  <p>The Landlord(s) confirm and declare that the bank account provided belongs to them or is under their lawful control; that they have full legal authority to receive rental income relating to the Property; and that the information provided in this form is true, complete and accurate to the best of their knowledge and belief. The Agent shall be entitled to rely upon the bank details provided unless and until revised written instructions are received and verified by the Agent.</p>
+                  <div className="lf-terms-h">2. Anti-Money Laundering (AML) compliance</div>
+                  <p>To comply with applicable legislation, regulatory obligations and internal compliance procedures, the Agent may request proof of identity, proof of address, proof of ownership of the Property, proof of bank-account ownership, and source of funds or related compliance documentation where reasonably required. The Agent may also carry out electronic verification and compliance checks using third-party providers. Failure to provide requested documentation may delay payments, onboarding or property-related services.</p>
+                  <div className="lf-terms-h">3. Payment disclaimer</div>
+                  <p>The Agent shall not be responsible or liable for any loss, delay, mispayment or financial issue arising from incorrect, incomplete, fraudulent or outdated bank details provided by the Landlord(s). Any changes to bank account details must be submitted in writing and may be subject to verification and compliance checks before implementation.</p>
+                  <div className="lf-terms-h">4. Data protection</div>
+                  <p>All personal data and financial information provided is processed in accordance with the UK GDPR and the Data Protection Act 2018, and used only for property management, financial administration, compliance, legal obligations and related professional purposes.</p>
+                </>
+              )}
+            </div>
+            <label className="lf-terms-accept">
+              <input type="checkbox" checked={termsAccepted} onChange={e => setTermsAccepted(e.target.checked)} />
+              <span>I have read and accept the terms and conditions of this {label}.</span>
+            </label>
+            {errors.terms && <p className="lf-err">{errors.terms}</p>}
+          </div>
 
           <div className="lf-card">
             <h2>Your signature</h2>
@@ -232,9 +266,11 @@ export default function FormsClient() {
         .lf-opt input { width: 17px; height: 17px; accent-color: #c0392b; }
         .lf-check { display: flex; gap: 10px; align-items: flex-start; font-size: 13.5px; color: #374151; cursor: pointer; line-height: 1.5; }
         .lf-check input { margin-top: 3px; width: 17px; height: 17px; accent-color: #c0392b; flex-shrink: 0; }
-        .lf-terms-box { margin-top: 16px; border: 1px solid #eef1f6; border-radius: 10px; background: #fafbfc; padding: 4px 14px; }
-        .lf-terms-box summary { cursor: pointer; font-size: 13px; font-weight: 600; color: #2563eb; padding: 10px 0; }
-        .lf-terms-box p { font-size: 12.5px; color: #5b6b82; line-height: 1.65; margin: 0 0 12px; }
+        .lf-terms-scroll { max-height: 300px; overflow-y: auto; border: 1px solid #eef1f6; border-radius: 10px; background: #fafbfc; padding: 18px; font-size: 12.5px; color: #4b5563; line-height: 1.65; }
+        .lf-terms-scroll p { margin: 0 0 10px; }
+        .lf-terms-h { font-weight: 800; color: #0a162f; font-size: 13px; margin: 0 0 4px; }
+        .lf-terms-accept { display: flex; gap: 10px; align-items: flex-start; margin-top: 16px; font-size: 13.5px; color: #374151; cursor: pointer; line-height: 1.5; }
+        .lf-terms-accept input { margin-top: 3px; width: 17px; height: 17px; accent-color: #c0392b; flex-shrink: 0; }
         .lf-err { color: #b3261e; font-size: 12.5px; margin: 6px 0 0; }
         .lf-banner { background: #fdecea; border: 1px solid #f5c6c0; color: #b3261e; padding: 13px 16px; border-radius: 10px; font-size: 14px; margin-bottom: 16px; }
         .lf-submit { width: 100%; padding: 16px; border: none; border-radius: 12px; background: linear-gradient(135deg,#c0392b,#a12f22); color: #fff; font-size: 15px; font-weight: 700; cursor: pointer; font-family: inherit; box-shadow: 0 12px 26px rgba(192,57,43,.26); transition: transform .15s; }

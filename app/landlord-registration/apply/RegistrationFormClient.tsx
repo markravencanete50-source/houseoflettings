@@ -1845,8 +1845,12 @@ const PAGE_CSS = `
     .hol-input{font-size:16px;}
     .hol-parties{grid-template-columns:1fr;}
     .hol-agreement{max-height:360px;padding:16px 14px;}
-    .hol-coupon-row{flex-direction:column;}
-    .hol-coupon-in{max-width:none;}
+    /* Stack the coupon input above the button. In a column flex, the base
+       flex:1-1-220px would apply 220px as the item HEIGHT and align-items:center
+       would stop it stretching — so reset both: a full-width, normal-height
+       input on top and a full-width button below. */
+    .hol-coupon-row{flex-direction:column;align-items:stretch;}
+    .hol-coupon-in{flex:0 0 auto;width:100%;min-width:0;max-width:none;}
     .hol-coupon-apply{width:100%;}
   }
 `;

@@ -17,6 +17,7 @@ import CouponManager from '@/components/dashboard/CouponManager';
 import LandlordsPanel from '@/components/dashboard/LandlordsPanel';
 import SecondLandlordDetails from '@/components/dashboard/SecondLandlordDetails';
 import CoSignersDetails from '@/components/dashboard/CoSignersDetails';
+import AgreementExtraDetails from '@/components/dashboard/AgreementExtraDetails';
 import { useAuth } from '@/hooks/useAuth';
 import { signOut } from '@/services/auth';
 import { Property, propertyAvailability } from '@/lib/types';
@@ -1054,6 +1055,7 @@ function StaffDashboardInner() {
                             )}
                             <SecondLandlordDetails a={a as Record<string, any>} />
                             <CoSignersDetails a={a as Record<string, any>} />
+                            <AgreementExtraDetails a={a as Record<string, any>} />
                           </div>
                         )}
                       </div>

@@ -12,6 +12,7 @@ import CouponManager from '@/components/dashboard/CouponManager';
 import LandlordsPanel from '@/components/dashboard/LandlordsPanel';
 import SecondLandlordDetails from '@/components/dashboard/SecondLandlordDetails';
 import CoSignersDetails from '@/components/dashboard/CoSignersDetails';
+import AgreementExtraDetails from '@/components/dashboard/AgreementExtraDetails';
 import ServicePricingEditor from '@/components/dashboard/ServicePricingEditor';
 import { useAuth } from '@/hooks/useAuth';
 import { isDualAccessEmail } from '@/lib/dualAccess';
@@ -231,13 +232,20 @@ interface TenantApplication {
   moveInDate: string;
   pets: string;
   guarantor: string;
+  guarantorName?: string;
+  guarantorPhone?: string;
+  guarantorEmail?: string;
+  holdingDepositReceiptUrls?: string[];
   consentContact: boolean;
   consentDeclare: boolean;
   submissionDate: string;
   propertyAddress: string;
+  propertyId?: string;
   rent: string;
   deposit: string;
   holdingDeposit: string;
+  paymentReference?: string;
+  carPark?: string;
   status: 'pending' | 'reviewing' | 'approved' | 'rejected';
   createdAt: any;
 }
@@ -253,6 +261,9 @@ interface MaintenanceRequest {
   availability?: string;
   experiencedBefore?: string;
   cause?: string;
+  causeDetail?: string;
+  postcode?: string;
+  addressLine1?: string;
   photoUrls?: string[];
   videoUrls?: string[];
   status: 'open' | 'in-progress' | 'resolved' | 'cancelled';
@@ -648,6 +659,40 @@ export default function AdminDashboard() {
   const handleOrderStatus = async (id: string, status: ServiceOrder['status']) => {
     await updateDoc(doc(db, 'serviceOrders', id), { status, updatedAt: serverTimestamp() });
     setOrders(prev => prev.map(o => o.id === id ? { ...o, status } : o));
+  };
+
+  // ── Admin-only deletes (soft-delete into the 24h recycle bin) ────────────────
+  // These live on the admin dashboard ONLY, so staff never see a delete control.
+  // Each routes through its /api/staff/* DELETE, which is guarded to admins and
+  // soft-deletes, so a mistaken delete is restorable from the Deleted tab.
+  const RESTORE_NOTE = 'You can restore it from the Deleted tab within 24 hours.';
+
+  const handleDeleteValuation = async (id: string) => {
+    if (!confirm(`Delete this valuation request? ${RESTORE_NOTE}`)) return;
+    const res = await authedFetch(`/api/staff/valuations?id=${encodeURIComponent(id)}`, { method: 'DELETE' });
+    if (!res.ok) { alert('Could not delete the valuation. Please try again.'); return; }
+    setValuations(prev => prev.filter(v => v.id !== id));
+  };
+
+  const handleDeleteApplication = async (id: string) => {
+    if (!confirm(`Delete this tenant application? ${RESTORE_NOTE}`)) return;
+    const res = await authedFetch(`/api/staff/applications?id=${encodeURIComponent(id)}`, { method: 'DELETE' });
+    if (!res.ok) { alert('Could not delete the application. Please try again.'); return; }
+    setApplications(prev => prev.filter(a => a.id !== id));
+  };
+
+  const handleDeleteMaintenance = async (id: string) => {
+    if (!confirm(`Delete this maintenance request? ${RESTORE_NOTE}`)) return;
+    const res = await authedFetch(`/api/staff/maintenance?id=${encodeURIComponent(id)}`, { method: 'DELETE' });
+    if (!res.ok) { alert('Could not delete the maintenance request. Please try again.'); return; }
+    setMaintenance(prev => prev.filter(m => m.id !== id));
+  };
+
+  const handleDeleteAgreement = async (id: string) => {
+    if (!confirm(`Delete this landlord registration? ${RESTORE_NOTE}`)) return;
+    const res = await authedFetch(`/api/staff/agreements?id=${encodeURIComponent(id)}`, { method: 'DELETE' });
+    if (!res.ok) { alert('Could not delete the registration. Please try again.'); return; }
+    setAgreements(prev => prev.filter(a => a.id !== id));
   };
 
   const handleMaintenanceStatus = async (id: string, status: MaintenanceRequest['status']) => {
@@ -1260,7 +1305,10 @@ export default function AdminDashboard() {
                             <div style={{ fontSize: 12, color: 'var(--gray-400)' }}>{v.email}</div>
                             <div style={{ fontSize: 12, color: 'var(--gray-400)' }}>{v.phone}</div>
                           </td>
-                          <td style={{ fontSize: 13, color: 'var(--gray-600)', maxWidth: 200 }}>{v.address}</td>
+                          <td style={{ fontSize: 13, color: 'var(--gray-600)', maxWidth: 220 }}>
+                            {v.address}
+                            {v.notes ? <div style={{ marginTop: 4, fontSize: 12, color: 'var(--gray-400)', fontStyle: 'italic' }}>“{v.notes}”</div> : null}
+                          </td>
                           <td style={{ fontSize: 13 }}>
                             <div>{v.propertyType}</div>
                             <div style={{ color: 'var(--gray-400)' }}>{v.bedrooms}</div>
@@ -1294,6 +1342,13 @@ export default function AdminDashboard() {
                               <option value="completed">Completed</option>
                               <option value="cancelled">Cancelled</option>
                             </select>
+                            <button
+                              onClick={() => handleDeleteValuation(v.id)}
+                              title="Delete (restorable for 24h)"
+                              style={{ marginLeft: 8, padding: '5px 10px', background: 'transparent', border: '1px solid #c62828', color: '#c62828', borderRadius: 4, fontSize: 12, cursor: 'pointer' }}
+                            >
+                              Delete
+                            </button>
                           </td>
                         </tr>
                       ))}
@@ -1619,6 +1674,14 @@ export default function AdminDashboard() {
                               <option value="rejected">Rejected</option>
                             </select>
 
+                            <button
+                              onClick={e => { e.stopPropagation(); handleDeleteApplication(a.id); }}
+                              title="Delete (restorable for 24h)"
+                              style={{ padding: '6px 12px', background: 'transparent', border: '1px solid #c62828', color: '#c62828', borderRadius: 6, fontSize: 12, fontWeight: 600, cursor: 'pointer', flexShrink: 0 }}
+                            >
+                              Delete
+                            </button>
+
                             <span style={{ fontSize: 18, color: 'var(--gray-400)', flexShrink: 0 }}>
                               {isExpanded ? '▲' : '▼'}
                             </span>
@@ -1686,6 +1749,9 @@ export default function AdminDashboard() {
                                     ['Move-In Date', a.moveInDate ? new Date(a.moveInDate).toLocaleDateString('en-GB') : '-'],
                                     ['Pets', a.pets],
                                     ['Guarantor', a.guarantor],
+                                    ...(a.guarantorName ? [["Guarantor's Name", a.guarantorName]] : []),
+                                    ...(a.guarantorPhone ? [["Guarantor's Phone", a.guarantorPhone]] : []),
+                                    ...(a.guarantorEmail ? [["Guarantor's Email", a.guarantorEmail]] : []),
                                   ].map(([label, value]) => (
                                     <div key={label} style={{ display: 'flex', justifyContent: 'space-between', padding: '5px 0', borderBottom: '1px solid #f1f5f9', fontSize: 13 }}>
                                       <span style={{ color: '#6b7280', fontWeight: 500 }}>{label}</span>
@@ -1707,6 +1773,7 @@ export default function AdminDashboard() {
                                     { label: 'Right to Rent Doc', urls: a.rightToRentDocUrls },
                                     { label: 'Payslips', urls: a.payslipUrls },
                                     { label: 'Bank Statements', urls: a.bankStatementUrls },
+                                    { label: 'Holding Deposit Receipt', urls: a.holdingDepositReceiptUrls },
                                   ].map(({ label, urls }) => (
                                     <div key={label} style={{ marginBottom: 12 }}>
                                       <p style={{ fontSize: 12, fontWeight: 600, color: '#6b7280', marginBottom: 4 }}>{label}</p>
@@ -1732,6 +1799,26 @@ export default function AdminDashboard() {
                                       ) : (
                                         <span style={{ fontSize: 12, color: '#9ca3af' }}>No files</span>
                                       )}
+                                    </div>
+                                  ))}
+                                </div>
+
+                                {/* Property & Payment */}
+                                <div>
+                                  <h4 style={{ fontSize: 12, fontWeight: 800, color: '#2563eb', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 12 }}>Property &amp; Payment</h4>
+                                  {[
+                                    ['Property', a.propertyAddress],
+                                    ['Monthly Rent', a.rent ? `£${a.rent}` : ''],
+                                    ['Deposit', a.deposit ? `£${a.deposit}` : ''],
+                                    ['Holding Deposit', a.holdingDeposit ? `£${a.holdingDeposit}` : ''],
+                                    ['Parking', a.carPark],
+                                    ['Payment Reference', a.paymentReference],
+                                    ['Consent to contact', a.consentContact === true ? 'Yes' : a.consentContact === false ? 'No' : a.consentContact],
+                                    ['Declaration agreed', a.consentDeclare === true ? 'Yes' : a.consentDeclare === false ? 'No' : a.consentDeclare],
+                                  ].filter(([, value]) => value !== undefined && value !== null && value !== '').map(([label, value]) => (
+                                    <div key={label} style={{ display: 'flex', justifyContent: 'space-between', padding: '5px 0', borderBottom: '1px solid #f1f5f9', fontSize: 13 }}>
+                                      <span style={{ color: '#6b7280', fontWeight: 500 }}>{label}</span>
+                                      <span style={{ color: '#111827', fontWeight: 600, textAlign: 'right', maxWidth: '55%' }}>{value}</span>
                                     </div>
                                   ))}
                                 </div>
@@ -1895,6 +1982,9 @@ export default function AdminDashboard() {
                           <button onClick={() => { setExpandedAgreement(isOpen ? null : a.id); setEditingAgreement(null); }} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--gray-600)', fontSize: 13, fontWeight: 600 }}>
                             {isOpen ? 'Hide ▲' : 'Details ▼'}
                           </button>
+                          <button onClick={() => handleDeleteAgreement(a.id)} title="Delete (restorable for 24h)" style={{ background: 'none', border: '1px solid #c62828', borderRadius: 6, padding: '5px 12px', cursor: 'pointer', color: '#c62828', fontSize: 13, fontWeight: 600 }}>
+                            Delete
+                          </button>
                         </div>
                         {editingAgreement === a.id && (
                           <AgreementEditor
@@ -1909,7 +1999,7 @@ export default function AdminDashboard() {
                               <div><strong style={{ color: 'var(--navy)' }}>Email:</strong> {a.email || '-'}</div>
                               <div><strong style={{ color: 'var(--navy)' }}>Phone:</strong> {a.phone || '-'}</div>
                               <div><strong style={{ color: 'var(--navy)' }}>Billing address:</strong> {a.contactAddress || '-'}</div>
-                              {a.jointLandlord && a.landlord2Name && <div><strong style={{ color: 'var(--navy)' }}>Joint landlord:</strong> {a.landlord2Name}</div>}
+                              {a.jointLandlord && a.landlord2Name && <div><strong style={{ color: 'var(--navy)' }}>Joint landlord:</strong> {[a.landlord2Name, a.landlord2Email, a.landlord2Phone].filter(Boolean).join(' · ')}</div>}
                               <div><strong style={{ color: 'var(--navy)' }}>Residency:</strong> {a.residency === 'non-resident' ? 'Non-resident (NRL)' : 'UK-resident'}</div>
                               <div><strong style={{ color: 'var(--navy)' }}>Property:</strong> {propLine || '-'}</div>
                               <div><strong style={{ color: 'var(--navy)' }}>Type / beds:</strong> {[a.propertyType, a.bedrooms && `${a.bedrooms} bed`, a.furnishing].filter(Boolean).join(' · ') || '-'}</div>
@@ -1940,6 +2030,7 @@ export default function AdminDashboard() {
                             )}
                             <SecondLandlordDetails a={a as Record<string, any>} />
                             <CoSignersDetails a={a as Record<string, any>} />
+                            <AgreementExtraDetails a={a as Record<string, any>} />
                           </div>
                         )}
                       </div>
@@ -2070,6 +2161,9 @@ export default function AdminDashboard() {
                           <button onClick={() => setExpandedMaint(isOpen ? null : m.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--gray-600)', fontSize: 13, fontWeight: 600 }}>
                             {isOpen ? 'Hide ▲' : 'Details ▼'}
                           </button>
+                          <button onClick={() => handleDeleteMaintenance(m.id)} title="Delete (restorable for 24h)" style={{ background: 'none', border: '1px solid #c62828', borderRadius: 6, padding: '5px 12px', cursor: 'pointer', color: '#c62828', fontSize: 13, fontWeight: 600 }}>
+                            Delete
+                          </button>
                         </div>
                         {isOpen && (
                           <div style={{ borderTop: '1px solid var(--gray-100)', padding: '16px 20px', background: '#fafbfc' }}>
@@ -2079,6 +2173,7 @@ export default function AdminDashboard() {
                               ['Access / availability', m.availability],
                               ['Happened before', m.experiencedBefore],
                               ['Likely cause', m.cause],
+                              ...(m.causeDetail ? [['Cause details', m.causeDetail]] : []),
                             ].map(([label, value]) => (
                               <div key={label as string} style={{ padding: '6px 0', borderBottom: '1px solid var(--gray-100)' }}>
                                 <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--gray-600)' }}>{label}</div>

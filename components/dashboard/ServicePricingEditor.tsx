@@ -7,11 +7,23 @@
 // after the landlord completes their registration it is consumed and can't be
 // used again (enforced server-side in /api/service-pricing/quote + the
 // landlord-registration route).
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { auth } from '@/lib/firebase';
 import { BUNDLES } from '@/lib/bundles';
 
 type Overrides = Record<string, { setupFee?: string; mgmtFee?: string }>;
+
+// A previously generated link, as returned by GET /api/service-pricing/quote.
+type QuoteRow = {
+  id: string;
+  label: string;
+  url: string;
+  createdAt: number | null;
+  used: boolean;
+  redeemedAt: number | null;
+  services: string[]; // [] = every service
+  overrides: Overrides; // {} = standard prices
+};
 
 async function authedFetch(path: string, init?: RequestInit) {
   const headers: Record<string, string> = { ...(init?.headers as Record<string, string> || {}) };
@@ -35,6 +47,25 @@ export default function ServicePricingEditor({ onClose }: { onClose: () => void 
   const [linkUrl, setLinkUrl] = useState('');
   const [linkMsg, setLinkMsg] = useState<{ ok: boolean; text: string } | null>(null);
   const [copied, setCopied] = useState(false);
+
+  // History of every link generated so far, so the office can see at a glance
+  // which have already been used.
+  const [history, setHistory] = useState<QuoteRow[]>([]);
+  const [historyLoading, setHistoryLoading] = useState(true);
+  const [historyErr, setHistoryErr] = useState('');
+  const [copiedId, setCopiedId] = useState('');
+
+  const loadHistory = async () => {
+    setHistoryLoading(true); setHistoryErr('');
+    try {
+      const res = await authedFetch('/api/service-pricing/quote');
+      const j = await res.json().catch(() => ({}));
+      if (res.ok && Array.isArray(j.quotes)) setHistory(j.quotes as QuoteRow[]);
+      else setHistoryErr(j.message || 'Could not load the link history.');
+    } catch { setHistoryErr('Could not load the link history.'); }
+    setHistoryLoading(false);
+  };
+  useEffect(() => { loadHistory(); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, []);
 
   const set = (id: string, field: 'setupFee' | 'mgmtFee', value: string) =>
     setOv(o => ({ ...o, [id]: { ...o[id], [field]: value } }));
@@ -85,6 +116,7 @@ export default function ServicePricingEditor({ onClose }: { onClose: () => void 
       setLinkUrl(j.url);
       const only = allIncluded ? '' : ` They will only see: ${includedIds.map(id => BUNDLES.find(b => b.id === id)?.label).filter(Boolean).join(', ')}.`;
       setLinkMsg({ ok: true, text: `Link ready. Send it to this one landlord.${only} The public form keeps the standard prices and every service, and the link stops working once they complete their registration.` });
+      loadHistory(); // show the new link in the history table below
     } else {
       setLinkMsg({ ok: false, text: j.message || 'Could not create the link.' });
     }
@@ -94,6 +126,21 @@ export default function ServicePricingEditor({ onClose }: { onClose: () => void 
     try { await navigator.clipboard.writeText(linkUrl); setCopied(true); setTimeout(() => setCopied(false), 2000); }
     catch { /* clipboard blocked — the field is selectable as a fallback */ }
   };
+  const copyRow = async (row: QuoteRow) => {
+    try { await navigator.clipboard.writeText(row.url); setCopiedId(row.id); setTimeout(() => setCopiedId(''), 2000); }
+    catch { /* clipboard blocked */ }
+  };
+
+  // ---- History display helpers ----
+  const shortName = (id: string) => BUNDLES.find(b => b.id === id)?.short || id;
+  const servicesText = (svc: string[]) => (svc.length === 0 ? 'All services' : svc.map(shortName).join(', '));
+  const pricesText = (o: Overrides) => {
+    const ids = Object.keys(o);
+    if (!ids.length) return 'Standard';
+    return ids.map(id => `${shortName(id)} ${[o[id]?.setupFee, o[id]?.mgmtFee].filter(Boolean).join(' / ')}`).join('; ');
+  };
+  const fmtDate = (ms: number | null) =>
+    ms ? new Date(ms).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : '—';
 
   const inp: React.CSSProperties = { width: '100%', border: '1px solid var(--gray-200)', borderRadius: 6, padding: '8px 10px', fontSize: 14, boxSizing: 'border-box' };
   const lbl: React.CSSProperties = { fontSize: 11.5, fontWeight: 600, color: 'var(--gray-500)', marginBottom: 4 };
@@ -193,6 +240,61 @@ export default function ServicePricingEditor({ onClose }: { onClose: () => void 
             <button onClick={copyLink} style={{ background: copied ? '#15803d' : '#1f2937', color: '#fff', border: 'none', borderRadius: 8, padding: '10px 18px', fontSize: 13.5, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }}>
               {copied ? '✓ Copied' : 'Copy link'}
             </button>
+          </div>
+        )}
+      </div>
+
+      {/* ---- History of generated links ---- */}
+      <div className="dash-card" style={{ marginTop: 24, padding: 0, overflow: 'hidden' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10, padding: '14px 16px', borderBottom: '1px solid var(--gray-100)' }}>
+          <h2 style={{ margin: 0, fontSize: 15, fontWeight: 700, color: 'var(--gray-700)' }}>
+            Generated links {history.length > 0 && <span style={{ color: 'var(--gray-400)', fontWeight: 500 }}>({history.length})</span>}
+          </h2>
+          <button onClick={loadHistory} disabled={historyLoading} style={{ background: 'none', border: '1px solid var(--gray-200)', borderRadius: 8, padding: '7px 14px', fontSize: 12.5, fontWeight: 700, cursor: 'pointer', color: 'var(--gray-600)', opacity: historyLoading ? 0.6 : 1 }}>
+            {historyLoading ? 'Loading…' : '↻ Refresh'}
+          </button>
+        </div>
+        {historyLoading && history.length === 0 ? (
+          <div style={{ padding: 20, fontSize: 14, color: 'var(--gray-500)' }}>Loading link history…</div>
+        ) : historyErr ? (
+          <div style={{ padding: 20, fontSize: 14, color: '#b3261e' }}>⚠️ {historyErr}</div>
+        ) : history.length === 0 ? (
+          <div style={{ padding: 20, fontSize: 14, color: 'var(--gray-500)' }}>No links generated yet. Create one above and it will appear here.</div>
+        ) : (
+          <div style={{ overflowX: 'auto' }}>
+            <table className="data-table">
+              <thead><tr>
+                <th>Reference</th><th>Created</th><th>Services</th><th>Custom prices</th><th style={{ width: 130 }}>Status</th><th style={{ width: 96 }} />
+              </tr></thead>
+              <tbody>
+                {history.map(row => (
+                  <tr key={row.id} style={row.used ? { opacity: 0.72 } : undefined}>
+                    <td style={{ fontWeight: 600 }}>{row.label || <span style={{ color: 'var(--gray-400)', fontWeight: 400 }}>—</span>}</td>
+                    <td style={{ whiteSpace: 'nowrap', color: 'var(--gray-500)', fontSize: 13 }}>{fmtDate(row.createdAt)}</td>
+                    <td style={{ fontSize: 13, color: 'var(--gray-600)' }}>{servicesText(row.services)}</td>
+                    <td style={{ fontSize: 13, color: 'var(--gray-600)' }}>{pricesText(row.overrides)}</td>
+                    <td>
+                      {row.used ? (
+                        <span style={{ display: 'inline-block', background: '#f3f4f6', color: '#6b7280', fontSize: 11.5, fontWeight: 700, padding: '3px 10px', borderRadius: 20 }}>
+                          ✓ Used{row.redeemedAt ? ` · ${fmtDate(row.redeemedAt)}` : ''}
+                        </span>
+                      ) : (
+                        <span style={{ display: 'inline-block', background: '#dcfce7', color: '#15803d', fontSize: 11.5, fontWeight: 700, padding: '3px 10px', borderRadius: 20 }}>
+                          ● Active
+                        </span>
+                      )}
+                    </td>
+                    <td style={{ textAlign: 'right' }}>
+                      {!row.used && (
+                        <button onClick={() => copyRow(row)} style={{ background: copiedId === row.id ? '#15803d' : 'none', color: copiedId === row.id ? '#fff' : 'var(--logo-blue)', border: `1px solid ${copiedId === row.id ? '#15803d' : 'var(--gray-200)'}`, borderRadius: 7, padding: '6px 12px', fontSize: 12.5, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }}>
+                          {copiedId === row.id ? '✓ Copied' : 'Copy link'}
+                        </button>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         )}
       </div>

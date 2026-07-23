@@ -37,10 +37,51 @@ function sanitizeServices(raw: any, validIds: string[]): string[] {
   return picked.length >= validIds.length ? [] : picked; // all selected = no restriction
 }
 
+// Firestore admin Timestamp → epoch millis (or null). Safe across the shapes a
+// serverTimestamp can take (Timestamp instance or a plain {_seconds} object).
+function tsToMillis(ts: any): number | null {
+  if (!ts) return null;
+  if (typeof ts.toMillis === 'function') return ts.toMillis();
+  if (typeof ts._seconds === 'number') return ts._seconds * 1000;
+  return null;
+}
+
 export async function GET(request: Request) {
+  const url = new URL(request.url);
+
+  // No ?id= → ADMIN history list of every generated link (label, prices,
+  // services, created date and whether it has been used yet). Admin only.
+  if (!url.searchParams.has('id')) {
+    const auth = await requireStaff(request, 'agreements');
+    if (auth instanceof Response) return auth;
+    if (auth.role !== 'admin') {
+      return NextResponse.json({ message: 'Only an administrator can view pricing links.' }, { status: 403 });
+    }
+    try {
+      const snap = await getAdminDb().collection(COLLECTION).orderBy('createdAt', 'desc').limit(100).get();
+      const quotes = snap.docs.map(doc => {
+        const data = doc.data() || {};
+        return {
+          id: doc.id,
+          label: (data.label || '').toString().slice(0, 80),
+          url: quoteUrl(doc.id),
+          createdAt: tsToMillis(data.createdAt),
+          used: Boolean(data.redeemedAt),
+          redeemedAt: tsToMillis(data.redeemedAt),
+          services: sanitizeServices(data.services, BUNDLE_IDS), // [] = all services
+          overrides: sanitizePricingOverrides(data.overrides || {}, BUNDLE_IDS), // {} = standard prices
+        };
+      });
+      return NextResponse.json({ quotes }, { status: 200 });
+    } catch (e) {
+      console.error('pricing-quote list failed:', e);
+      return NextResponse.json({ message: 'Could not load the link history.' }, { status: 500 });
+    }
+  }
+
   const limited = rateLimit(request, 'pricing-quote-get', 120, 10 * 60 * 1000);
   if (limited) return limited;
-  const id = new URL(request.url).searchParams.get('id') || '';
+  const id = url.searchParams.get('id') || '';
   if (!/^[a-f0-9]{24,48}$/.test(id)) {
     return NextResponse.json({ message: 'Unknown quote.' }, { status: 404 });
   }

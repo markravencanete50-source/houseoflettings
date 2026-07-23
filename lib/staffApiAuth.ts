@@ -22,7 +22,7 @@ export function getAdminDb() {
   return getFirestore();
 }
 
-export type StaffAuth = { uid: string; role: 'staff' | 'admin'; permissions: string[] };
+export type StaffAuth = { uid: string; role: 'staff' | 'admin'; permissions: string[]; name: string; email: string };
 
 function sessionCookie(request: Request): string | null {
   const cookie = request.headers.get('cookie') || '';
@@ -93,5 +93,5 @@ export async function requireStaff(request: Request, feature?: StaffFeature): Pr
     return Response.json({ message: 'This feature is not enabled for your account. Ask an admin to grant it.' }, { status: 403 });
   }
 
-  return { uid, role, permissions };
+  return { uid, role, permissions, name: data.name || '', email: email || '' };
 }

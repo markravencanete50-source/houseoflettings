@@ -45,7 +45,25 @@ import {
   updateDoc, addDoc, deleteDoc, serverTimestamp, Timestamp,
 } from 'firebase/firestore';
 
-type Tab = 'analytics' | 'users' | 'properties' | 'post' | 'edit' | 'valuations' | 'reviews' | 'applications' | 'orders' | 'maintenance' | 'rent-reviews' | 'agreements' | 'landlords';
+type Tab = 'analytics' | 'users' | 'properties' | 'post' | 'edit' | 'valuations' | 'reviews' | 'applications' | 'orders' | 'maintenance' | 'rent-reviews' | 'agreements' | 'landlords' | 'activity';
+
+interface ActivityLog {
+  id: string;
+  actorUid: string;
+  actorName: string;
+  actorEmail: string;
+  actorRole: string;
+  type: string;
+  method: string | null;
+  feature: string;
+  section: string | null;
+  action: string;
+  summary: string;
+  targetId: string | null;
+  httpStatus: number | null;
+  ok: boolean | null;
+  createdAt: string | null;
+}
 
 interface Agreement {
   id: string;
@@ -375,6 +393,20 @@ export default function AdminDashboard() {
   const [accessUser, setAccessUser] = useState<AppUser | null>(null);
   const [accessPerms, setAccessPerms] = useState<string[]>([]);
   const [accessSaving, setAccessSaving] = useState(false);
+  // Staff activity trail (Activity Logs tab) — admin-only.
+  const [activityLogs, setActivityLogs] = useState<ActivityLog[]>([]);
+  const [activityLoaded, setActivityLoaded] = useState(false);
+  const [activityStaff, setActivityStaff] = useState('all');
+
+  const loadActivityLogs = async () => {
+    setActivityLoaded(false);
+    try {
+      const res = await authedFetch('/api/admin/activity-logs?limit=400');
+      const j = await res.json().catch(() => ({}));
+      setActivityLogs(Array.isArray(j.logs) ? j.logs : []);
+    } catch { setActivityLogs([]); }
+    finally { setActivityLoaded(true); }
+  };
 
   // Website visitor analytics (first-party, from /api/track).
   useEffect(() => {
@@ -397,6 +429,12 @@ export default function AdminDashboard() {
       .catch(() => { /* ignore */ });
     return () => { cancelled = true; };
   }, [profile]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Load the staff activity trail the first time the Activity Logs tab is opened.
+  useEffect(() => {
+    if (tab !== 'activity' || !isAdminProfile(profile) || activityLoaded) return;
+    loadActivityLogs();
+  }, [tab, profile]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (!authLoading && !isAdminProfile(profile)) {
@@ -635,6 +673,7 @@ export default function AdminDashboard() {
     { id: 'rent-reviews', icon: '🔁', label: `Rent Reviews (${rentReviews.length})` },
     { id: 'orders',     icon: '🛒', label: `Orders (${orders.length})` },
     { id: 'maintenance', icon: '🔧', label: `Maintenance (${maintenance.length})` },
+    { id: 'activity',   icon: '🕵️', label: 'Activity Logs' },
     { id: 'post',       icon: '➕', label: 'Post Property' },
     ...(editingProperty ? [{ id: 'edit' as Tab, icon: '✏️', label: 'Edit Property' }] : []),
   ];
@@ -1679,7 +1718,7 @@ export default function AdminDashboard() {
                   <RentReviewPanel properties={properties} />
                 </div>
               )}
-              {showRRProps && <RentReviewPropertyManager authedFetch={authedFetch} portfolio={properties} />}
+              {showRRProps && <RentReviewPropertyManager authedFetch={authedFetch} portfolio={properties} canDelete />}
               {rentReviews.length === 0 ? (
                 <div className="dash-card" style={{ textAlign: 'center', padding: 60 }}>
                   <div style={{ fontSize: 52, marginBottom: 16 }}>🔁</div>
@@ -2007,6 +2046,92 @@ export default function AdminDashboard() {
                   })}
                 </div>
               )}
+            </div>
+          )}
+
+          {/* ── Activity Logs (admin-only staff audit trail) ── */}
+          {tab === 'activity' && (
+            <div>
+              <h1 className="dash-section-title">Activity Logs</h1>
+              <p style={{ color: 'var(--gray-600)', marginBottom: 20, fontSize: 15 }}>
+                What each staff member clicks and updates in the dashboard. Only writes
+                (posts, edits, status changes, deletions) and section clicks are recorded — not page views.
+              </p>
+
+              <div style={{ display: 'flex', gap: 12, alignItems: 'center', marginBottom: 18, flexWrap: 'wrap' }}>
+                <label style={{ fontSize: 13, fontWeight: 600, color: 'var(--gray-600)' }}>Staff member</label>
+                <select
+                  value={activityStaff}
+                  onChange={e => setActivityStaff(e.target.value)}
+                  style={{ padding: '8px 12px', borderRadius: 6, fontSize: 13, border: '1px solid #d1d5db', minWidth: 200 }}
+                >
+                  <option value="all">All staff</option>
+                  {Array.from(new Map(activityLogs.map(l => [l.actorUid, l])).values())
+                    .sort((a, b) => (a.actorName || a.actorEmail).localeCompare(b.actorName || b.actorEmail))
+                    .map(l => (
+                      <option key={l.actorUid} value={l.actorUid}>
+                        {l.actorName || l.actorEmail || l.actorUid}{l.actorRole === 'admin' ? ' (admin)' : ''}
+                      </option>
+                    ))}
+                </select>
+                <button
+                  onClick={loadActivityLogs}
+                  style={{ padding: '8px 14px', background: '#1565c0', color: '#fff', border: 'none', borderRadius: 6, fontSize: 13, fontWeight: 600, cursor: 'pointer' }}
+                >
+                  ↻ Refresh
+                </button>
+              </div>
+
+              {!activityLoaded ? (
+                <div className="dash-card" style={{ textAlign: 'center', padding: 60, color: 'var(--gray-400)' }}>Loading activity…</div>
+              ) : (() => {
+                const rows = activityLogs.filter(l => activityStaff === 'all' || l.actorUid === activityStaff);
+                if (rows.length === 0) {
+                  return (
+                    <div className="dash-card" style={{ textAlign: 'center', padding: 60 }}>
+                      <div style={{ fontSize: 52, marginBottom: 16 }}>🕵️</div>
+                      <h3 style={{ fontFamily: 'var(--font-serif)', fontSize: 24, marginBottom: 12 }}>No activity yet</h3>
+                      <p style={{ color: 'var(--gray-400)', fontSize: 15 }}>Staff actions will appear here as they post, edit and change statuses.</p>
+                    </div>
+                  );
+                }
+                return (
+                  <div className="dash-card" style={{ padding: 0, overflowX: 'auto' }}>
+                    <table className="data-table" style={{ width: '100%' }}>
+                      <thead>
+                        <tr><th>When</th><th>Staff</th><th>Action</th><th>Detail</th><th>Area</th><th>Result</th></tr>
+                      </thead>
+                      <tbody>
+                        {rows.map(l => (
+                          <tr key={l.id}>
+                            <td style={{ fontSize: 12, whiteSpace: 'nowrap', color: 'var(--gray-600)' }}>
+                              {l.createdAt ? new Date(l.createdAt).toLocaleString('en-GB') : '—'}
+                            </td>
+                            <td style={{ fontSize: 13 }}>
+                              <div style={{ fontWeight: 600 }}>{l.actorName || '—'}{l.actorRole === 'admin' ? ' 🔒' : ''}</div>
+                              <div style={{ fontSize: 11, color: 'var(--gray-400)' }}>{l.actorEmail}</div>
+                            </td>
+                            <td style={{ fontSize: 12, whiteSpace: 'nowrap' }}>
+                              <span style={{
+                                padding: '2px 8px', borderRadius: 20, fontWeight: 700, fontSize: 11,
+                                background: l.type === 'login' ? '#eef2ff' : l.type === 'view' ? '#f1f5f9' : l.method === 'DELETE' ? '#fdecea' : l.method === 'POST' ? '#e8f5e9' : '#fff3e0',
+                                color: l.type === 'login' ? '#4338ca' : l.type === 'view' ? '#475569' : l.method === 'DELETE' ? '#c62828' : l.method === 'POST' ? '#2e7d32' : '#ef6c00',
+                              }}>{l.action}</span>
+                            </td>
+                            <td style={{ fontSize: 13 }}>{l.summary}</td>
+                            <td style={{ fontSize: 12, color: 'var(--gray-600)', textTransform: 'capitalize' }}>{l.feature.replace('-', ' ')}</td>
+                            <td style={{ fontSize: 12 }}>
+                              {l.type === 'action' && l.httpStatus != null
+                                ? <span style={{ color: l.ok ? '#2e7d32' : '#c62828', fontWeight: 700 }}>{l.ok ? '✓' : '✕'} {l.httpStatus}</span>
+                                : <span style={{ color: 'var(--gray-400)' }}>—</span>}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                );
+              })()}
             </div>
           )}
 

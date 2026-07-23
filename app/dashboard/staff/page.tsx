@@ -5,7 +5,7 @@
 // (lib/staffAccess.ts): admins grant/revoke features per staff member from the
 // admin Users tab, no code change needed. All data goes through the Admin-SDK
 // /api/staff/* routes, which enforce the role AND the feature server-side.
-import { useState, useEffect, Suspense, Fragment } from 'react';
+import { useState, useEffect, useRef, Suspense, Fragment } from 'react';
 import { useRouter } from 'next/navigation';
 import Navbar from '@/components/layout/Navbar';
 import PropertyForm from '@/components/property/PropertyForm';
@@ -351,13 +351,59 @@ function StaffDashboardInner() {
 
   // Use the Firebase ID token when signed in via the client SDK; otherwise the
   // same-origin session cookie authenticates the request on the server.
-  const authedFetch = async (path: string, init?: RequestInit) => {
-    const headers: Record<string, string> = { ...(init?.headers as Record<string, string> || {}), 'Content-Type': 'application/json' };
+  const authHeaders = async (extra?: Record<string, string>): Promise<Record<string, string>> => {
+    const headers: Record<string, string> = { ...(extra || {}), 'Content-Type': 'application/json' };
     if (user) {
       try { headers['Authorization'] = `Bearer ${await user.getIdToken()}`; } catch { /* fall back to cookie */ }
     }
-    return fetch(path, { ...init, headers, credentials: 'same-origin' });
+    return headers;
   };
+
+  // Fire-and-forget activity logging. The server records WHO from the verified
+  // session; we only describe WHAT. Logging must never break the action, so any
+  // failure is swallowed. We never send GET reads or the log call itself.
+  const logActivity = async (payload: Record<string, unknown>) => {
+    try {
+      const headers = await authHeaders();
+      // keepalive lets the log survive a navigation that unmounts the page.
+      void fetch('/api/staff/activity-log', { method: 'POST', headers, credentials: 'same-origin', keepalive: true, body: JSON.stringify(payload) });
+    } catch { /* logging is best-effort */ }
+  };
+
+  // Pull only the meaningful, non-sensitive fields out of a write body so the log
+  // can say exactly what changed (the server also whitelists these).
+  const metaFromBody = (body: unknown): Record<string, unknown> => {
+    if (typeof body !== 'string') return {};
+    try {
+      const b = JSON.parse(body);
+      const out: Record<string, unknown> = {};
+      for (const k of ['id', 'status', 'availability', 'letAgreed', 'action', 'mode', 'title', 'location', 'address', 'author_name', 'rating', 'active']) {
+        if (b && k in b) out[k] = b[k];
+      }
+      return out;
+    } catch { return {}; }
+  };
+
+  const authedFetch = async (path: string, init?: RequestInit) => {
+    const headers = await authHeaders(init?.headers as Record<string, string> | undefined);
+    const res = await fetch(path, { ...init, headers, credentials: 'same-origin' });
+    // Log writes only — GETs are reads, and never log the logging endpoint.
+    const method = (init?.method || 'GET').toUpperCase();
+    if (method !== 'GET' && !path.startsWith('/api/staff/activity-log')) {
+      void logActivity({ type: 'action', method, path, status: res.status, meta: metaFromBody(init?.body) });
+    }
+    return res;
+  };
+
+  // Record one "signed in" entry per dashboard load, so admins can see when each
+  // staff member started a session (not just what they changed).
+  const loggedSession = useRef(false);
+  useEffect(() => {
+    if (!ready || !profile || loggedSession.current) return;
+    if (profile.role !== 'staff' && profile.role !== 'admin') return;
+    loggedSession.current = true;
+    void logActivity({ type: 'login' });
+  }, [ready, profile]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (!profile || tab === 'edit' || !perms.includes(tab)) return;
@@ -603,7 +649,7 @@ function StaffDashboardInner() {
             <button
               key={item.id}
               className={`dash-nav-item ${tab === item.id ? 'active' : ''}`}
-              onClick={() => setTab(item.id)}
+              onClick={() => { setTab(item.id); void logActivity({ type: 'view', section: item.label }); }}
             >
               <span>{item.icon}</span>
               {item.label}

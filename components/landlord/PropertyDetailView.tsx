@@ -59,6 +59,11 @@ export default function PropertyDetailView({ prop, applications, maintenance }: 
   const openMaint = maint.filter(m => m.status === 'open' || m.status === 'in-progress').length;
   const managed = bundle?.kind === 'Management';
 
+  // In-portal destinations (keep landlords inside the login, not the public site).
+  const line1 = ((prop.postcode ? prop.label.split(prop.postcode)[0] : prop.label) || prop.label).replace(/,\s*$/, '').trim();
+  const maintHref = `/landlord-portal/maintenance?propertyId=${encodeURIComponent(prop.id)}&address=${encodeURIComponent(line1)}&postcode=${encodeURIComponent(prop.postcode || '')}`;
+  const pkgHref = `/landlord-portal/packages?propertyId=${encodeURIComponent(prop.id)}&current=${encodeURIComponent(prop.packageId || bundle?.id || '')}`;
+
   // Property "at a glance" recap, built only from fields we actually have.
   const details: [string, string][] = ([
     ['Type', prop.type],
@@ -110,9 +115,9 @@ export default function PropertyDetailView({ prop, applications, maintenance }: 
           ))}
           <div className="pd-nav-foot">
             <div className="pd-nav-foot-h">Quick actions</div>
-            <Link href="/maintenance" className="pd-quick">🔧 Report maintenance</Link>
+            <Link href={maintHref} className="pd-quick">🔧 Report maintenance</Link>
             <button type="button" className="pd-quick" onClick={() => setTab('contact')}>💬 Contact your agent</button>
-            <Link href="/pricing" className="pd-quick">📄 Compare packages</Link>
+            <Link href={pkgHref} className="pd-quick">📄 Compare packages</Link>
           </div>
         </aside>
 
@@ -189,7 +194,7 @@ export default function PropertyDetailView({ prop, applications, maintenance }: 
                   ))}
                 </div>
               ) : <div className="pd-empty">Package: {prop.packageLabel || '—'}</div>}
-              <a href="/pricing" className="pd-pkg-cta">Compare or change your package →</a>
+              <Link href={pkgHref} className="pd-pkg-cta">Compare or change your package →</Link>
             </div>
           )}
 
@@ -225,7 +230,7 @@ export default function PropertyDetailView({ prop, applications, maintenance }: 
                   })}
                 </div>
               )}
-              <Link href="/maintenance" className="pd-report">+ Report maintenance for this property</Link>
+              <Link href={maintHref} className="pd-report">+ Report maintenance for this property</Link>
             </div>
           )}
 
@@ -263,9 +268,9 @@ export default function PropertyDetailView({ prop, applications, maintenance }: 
                   ))}
                 </div>
                 <div className="pd-contact-links">
-                  <Link href="/maintenance">Report maintenance →</Link>
+                  <Link href={maintHref}>Report maintenance →</Link>
                   <Link href="/book-valuation">Book a valuation →</Link>
-                  <a href="/pricing">Compare packages →</a>
+                  <Link href={pkgHref}>Compare packages →</Link>
                 </div>
               </div>
             </div>

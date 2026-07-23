@@ -12,7 +12,7 @@ export type PDProp = { id: string; label: string; postcode?: string; city?: stri
 export type PDApplication = { id: string; fullName: string; propertyAddress: string; postcode?: string; rent: string; leaseTerm: string; status: string; submittedAt: string | null };
 export type PDMaintenance = { id: string; fullName: string; propertyAddress: string; postcode?: string; issueDescription: string; status: string; submittedAt: string | null };
 
-type Tab = 'overview' | 'package' | 'applications' | 'maintenance';
+type Tab = 'overview' | 'package' | 'applications' | 'maintenance' | 'compliance' | 'contact';
 
 const fmtDate = (s: string | null) => s ? new Date(s).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : '—';
 const MAINT_META: Record<string, { label: string; bg: string; color: string }> = {
@@ -20,6 +20,28 @@ const MAINT_META: Record<string, { label: string; bg: string; color: string }> =
   'in-progress': { label: 'In progress', bg: '#e3f2fd', color: '#1565c0' },
   'resolved': { label: 'Resolved', bg: '#e8f5e9', color: '#2e7d32' },
   'cancelled': { label: 'Cancelled', bg: '#f3f4f6', color: '#6b7280' },
+};
+
+// The standard UK legal requirements for a let property, shown as an
+// informational checklist. We do NOT fabricate per-property certificate dates —
+// managed packages track these (contact the agent for current dates).
+const COMPLIANCE = [
+  { k: 'Energy Performance Certificate', d: 'Must be rated E or above. Valid for 10 years.' },
+  { k: 'Gas Safety Certificate', d: 'Annual check of gas appliances and flues, where gas is present.' },
+  { k: 'Electrical (EICR)', d: 'Electrical Installation Condition Report, renewed at least every 5 years.' },
+  { k: 'Deposit protection', d: 'Any deposit protected in a government scheme within 30 days, with prescribed information served.' },
+  { k: 'Smoke & CO alarms', d: 'Working smoke alarms on every floor and a CO alarm near any fuel-burning appliance.' },
+  { k: 'Right to Rent', d: 'Immigration status checked for every adult occupier before the tenancy begins.' },
+];
+
+// Real House of Lettings contact facts (mirrors the site footer).
+const CONTACT = {
+  phone: '0161 768 1758',
+  email: 'info@houseoflettings.co.uk',
+  offices: [
+    { city: 'Manchester', addr: 'Peter House, Oxford Street, Manchester' },
+    { city: 'Leeds', addr: '199 Roundhay Rd, Harehills, Leeds LS8 5PL' },
+  ],
 };
 
 export default function PropertyDetailView({ prop, applications, maintenance }: { prop: PDProp; applications: PDApplication[]; maintenance: PDMaintenance[] }) {
@@ -35,12 +57,27 @@ export default function PropertyDetailView({ prop, applications, maintenance }: 
   const apps = applications.filter(a => a.postcode && prop.postcode && a.postcode === prop.postcode);
   const maint = maintenance.filter(m => m.postcode && prop.postcode && m.postcode === prop.postcode);
   const openMaint = maint.filter(m => m.status === 'open' || m.status === 'in-progress').length;
+  const managed = bundle?.kind === 'Management';
+
+  // Property "at a glance" recap, built only from fields we actually have.
+  const details: [string, string][] = ([
+    ['Type', prop.type],
+    ['Bedrooms', prop.bedrooms ? `${prop.bedrooms} bed` : ''],
+    ['Bathrooms', prop.bathrooms ? `${prop.bathrooms} bath` : ''],
+    ['Furnishing', prop.furnishing],
+    ['Status', prop.occupancy],
+    ['Expected rent', rent ? `${money(rent)} / month` : ''],
+    ['Tenancy start', prop.tenancyStart],
+    ['Available from', prop.availableFrom],
+  ] as [string, string | undefined][]).filter((r): r is [string, string] => Boolean(r[1]));
 
   const NAV: { id: Tab; icon: string; label: string; count?: number; dot?: boolean }[] = [
     { id: 'overview', icon: '📊', label: 'Overview' },
     { id: 'package', icon: '📦', label: 'Your package' },
     { id: 'applications', icon: '👥', label: 'Applications', count: apps.length },
     { id: 'maintenance', icon: '🔧', label: 'Maintenance', count: maint.length, dot: openMaint > 0 },
+    { id: 'compliance', icon: '🛡️', label: 'Compliance' },
+    { id: 'contact', icon: '💬', label: 'Help & contact' },
   ];
 
   return (
@@ -71,6 +108,12 @@ export default function PropertyDetailView({ prop, applications, maintenance }: 
               {item.dot && <span className="pd-nav-dot" title={`${openMaint} open`} aria-label={`${openMaint} open`} />}
             </button>
           ))}
+          <div className="pd-nav-foot">
+            <div className="pd-nav-foot-h">Quick actions</div>
+            <Link href="/maintenance" className="pd-quick">🔧 Report maintenance</Link>
+            <button type="button" className="pd-quick" onClick={() => setTab('contact')}>💬 Contact your agent</button>
+            <Link href="/pricing" className="pd-quick">📄 Compare packages</Link>
+          </div>
         </aside>
 
         {/* CONTENT */}
@@ -114,6 +157,19 @@ export default function PropertyDetailView({ prop, applications, maintenance }: 
                   <div className="pd-glance-go">{openMaint > 0 ? `${openMaint} open →` : 'View requests →'}</div>
                 </button>
               </div>
+
+              {details.length > 0 && (
+                <div className="pd-section" style={{ marginTop: 26 }}>
+                  <h3 className="pd-h">Property details</h3>
+                  <div className="pd-recap-card">
+                    {details.map(([k, v], i) => (
+                      <div key={k} className="pd-recap" style={i === details.length - 1 ? { borderBottom: 'none' } : undefined}>
+                        <span>{k}</span><span>{v}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </>
           )}
 
@@ -170,6 +226,48 @@ export default function PropertyDetailView({ prop, applications, maintenance }: 
                 </div>
               )}
               <Link href="/maintenance" className="pd-report">+ Report maintenance for this property</Link>
+            </div>
+          )}
+
+          {tab === 'compliance' && (
+            <div className="pd-section">
+              <h3 className="pd-h">Compliance</h3>
+              <div className={`pd-comp-note ${managed ? 'ok' : 'warn'}`}>
+                {managed
+                  ? '✅ Your managed package includes ongoing compliance tracking. We arrange and renew the certificates below and keep the records. Contact your agent for current certificate dates.'
+                  : 'ℹ️ On a tenant-find service the ongoing compliance below is your responsibility. Ask us about a managed package to have it handled and tracked for you.'}
+              </div>
+              <div className="pd-comp-grid">
+                {COMPLIANCE.map(c => (
+                  <div key={c.k} className="pd-comp-item">
+                    <div className="pd-comp-k">{c.k}</div>
+                    <div className="pd-comp-d">{c.d}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {tab === 'contact' && (
+            <div className="pd-section">
+              <h3 className="pd-h">Help &amp; contact</h3>
+              <div className="pd-contact">
+                <p className="pd-contact-lead">Your local Leeds &amp; Manchester team is here to help with anything about this property.</p>
+                <div className="pd-contact-actions">
+                  <a href={`tel:${CONTACT.phone.replace(/\s/g, '')}`} className="pd-contact-btn">📞 {CONTACT.phone}</a>
+                  <a href={`mailto:${CONTACT.email}`} className="pd-contact-btn ghost">✉️ {CONTACT.email}</a>
+                </div>
+                <div className="pd-office-grid">
+                  {CONTACT.offices.map(o => (
+                    <div key={o.city} className="pd-office"><div className="pd-office-c">{o.city}</div><div className="pd-office-a">{o.addr}</div></div>
+                  ))}
+                </div>
+                <div className="pd-contact-links">
+                  <Link href="/maintenance">Report maintenance →</Link>
+                  <Link href="/book-valuation">Book a valuation →</Link>
+                  <a href="/pricing">Compare packages →</a>
+                </div>
+              </div>
             </div>
           )}
         </div>
@@ -241,14 +339,51 @@ export default function PropertyDetailView({ prop, applications, maintenance }: 
         .pd-empty { background: #fff; border: 1px dashed #d9dfec; border-radius: 14px; padding: 22px; text-align: center; color: #8a94a3; font-size: 14px; }
         .pd-report { display: inline-block; margin-top: 26px; color: #2563eb; font-weight: 700; font-size: 14px; text-decoration: none; }
 
+        /* left-panel quick actions (fills the panel, adds shortcuts) */
+        .pd-nav-foot { margin-top: 8px; padding-top: 10px; border-top: 1px solid #eef2f7; display: flex; flex-direction: column; gap: 2px; }
+        .pd-nav-foot-h { font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: #9aa4b2; padding: 4px 13px 6px; }
+        .pd-quick { display: block; text-align: left; background: none; border: none; cursor: pointer; padding: 9px 13px; border-radius: 9px; font-family: 'Poppins', sans-serif; font-size: 13px; font-weight: 600; color: #475569; text-decoration: none; transition: background .15s, color .15s; }
+        .pd-quick:hover { background: #f4f6fb; color: #0a162f; }
+
+        /* property details recap */
+        .pd-recap-card { background: #fff; border: 1px solid #e9edf5; border-radius: 16px; padding: 4px 20px; }
+        .pd-recap { display: flex; justify-content: space-between; gap: 16px; padding: 12px 0; border-bottom: 1px solid #f0f2f7; font-size: 14px; }
+        .pd-recap span:first-child { color: #8a94a3; }
+        .pd-recap span:last-child { color: #0a162f; font-weight: 600; text-align: right; text-transform: capitalize; }
+
+        /* compliance */
+        .pd-comp-note { font-size: 13px; line-height: 1.6; border-radius: 12px; padding: 14px 16px; margin-bottom: 16px; }
+        .pd-comp-note.ok { background: #e8f5e9; color: #256a3a; border: 1px solid #bfe3c6; }
+        .pd-comp-note.warn { background: #eef4ff; color: #1e40af; border: 1px solid #cdddfb; }
+        .pd-comp-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .pd-comp-item { background: #fff; border: 1px solid #e9edf5; border-left: 3px solid #2563eb; border-radius: 12px; padding: 14px 16px; }
+        .pd-comp-k { font-size: 13.5px; font-weight: 700; color: #0a162f; }
+        .pd-comp-d { font-size: 12.5px; color: #6b7280; line-height: 1.55; margin-top: 4px; }
+
+        /* help & contact */
+        .pd-contact { background: #fff; border: 1px solid #e9edf5; border-radius: 16px; padding: 22px; }
+        .pd-contact-lead { font-size: 14px; color: #4b5563; line-height: 1.6; margin: 0 0 16px; }
+        .pd-contact-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 18px; }
+        .pd-contact-btn { display: inline-flex; align-items: center; gap: 7px; background: #0a162f; color: #fff; text-decoration: none; font-size: 13.5px; font-weight: 700; padding: 11px 18px; border-radius: 10px; }
+        .pd-contact-btn.ghost { background: #fff; color: #0a162f; border: 1px solid #d9dfec; }
+        .pd-office-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px; }
+        .pd-office { background: #f7f9fc; border: 1px solid #eef2f7; border-radius: 12px; padding: 12px 14px; }
+        .pd-office-c { font-size: 12px; font-weight: 700; color: #2563eb; text-transform: uppercase; letter-spacing: .04em; }
+        .pd-office-a { font-size: 12.5px; color: #4b5563; margin-top: 3px; line-height: 1.5; }
+        .pd-contact-links { display: flex; flex-wrap: wrap; gap: 14px; }
+        .pd-contact-links a { font-size: 13px; font-weight: 700; color: #2563eb; text-decoration: none; }
+
         @media (max-width: 820px) {
           .pd-shell { grid-template-columns: 1fr; padding: 16px 18px 48px; gap: 16px; }
           .pd-nav { position: static; flex-direction: row; overflow-x: auto; padding: 8px; gap: 6px; -webkit-overflow-scrolling: touch; }
           .pd-nav-item { white-space: nowrap; padding: 9px 13px; }
           .pd-nav-lbl { flex: 0 0 auto; }
+          /* On mobile the tabs are a horizontal bar; the vertical quick-actions
+             footer would look odd appended to it (its links live in the tabs). */
+          .pd-nav-foot { display: none; }
           .pd-hero-inner { padding-left: 18px; padding-right: 18px; }
         }
-        @media (max-width: 640px) { .pd-money, .pd-glance { grid-template-columns: 1fr; } }
+        @media (max-width: 640px) { .pd-money, .pd-glance, .pd-comp-grid, .pd-office-grid { grid-template-columns: 1fr; } }
       `}</style>
     </div>
   );

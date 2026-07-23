@@ -1,237 +1,866 @@
 'use client';
 // app/landlord-registration/page.tsx
 // Overview / landing page. The actual form lives at /landlord-registration/apply.
-import { useState } from 'react';
+// Redesigned "trust-first" structure (why-register + comparison + package modals + FAQ).
+// Prices are sourced from lib/bundles.ts (never hard-coded); shared Navbar/Footer are used;
+// every registration CTA routes to /landlord-registration/apply.
+import React, { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
+import {
+  Check,
+  X,
+  ChevronDown,
+  ShieldCheck,
+  Clock3,
+  UserCheck,
+  FileCheck2,
+  TrendingUp,
+  Home as HomeIcon,
+} from 'lucide-react';
 import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
 import { BUNDLES } from '@/lib/bundles';
 
-const REGISTRATION_FAQS = [
+const theme = {
+  navyDeep: '#0B2033',
+  navy: '#123350',
+  navySoft: '#1F4B6E',
+  sand: '#F4F5F1',
+  card: '#FFFFFF',
+  gold: '#BD8A46',
+  goldSoft: '#E7D2A6',
+  ink: '#1D2A35',
+  inkSoft: '#54626F',
+  success: '#2E6B52',
+  border: '#E3E4DE',
+};
+
+/* ---------- scroll reveal ---------- */
+function useInView(options?: IntersectionObserverInit): [React.RefObject<HTMLDivElement>, boolean] {
+  const ref = useRef<HTMLDivElement>(null);
+  const [inView, setInView] = useState(false);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const obs = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setInView(true);
+          obs.unobserve(el);
+        }
+      },
+      options || { threshold: 0.2 }
+    );
+    obs.observe(el);
+    return () => obs.disconnect();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  return [ref, inView];
+}
+
+function Reveal({
+  children,
+  delay = 0,
+  style,
+}: {
+  children: React.ReactNode;
+  delay?: number;
+  style?: React.CSSProperties;
+}) {
+  const [ref, inView] = useInView();
+  return (
+    <div
+      ref={ref}
+      style={{
+        opacity: inView ? 1 : 0,
+        transform: inView ? 'translateY(0px)' : 'translateY(22px)',
+        transition: `opacity 0.6s ease ${delay}s, transform 0.6s ease ${delay}s`,
+        ...style,
+      }}
+    >
+      {children}
+    </div>
+  );
+}
+
+/* ---------- content ---------- */
+const whyPoints = [
   {
-    q: 'Why register my property with House of Lettings?',
-    a: 'Registering gives our lettings team the details we need to build a tailored management proposal for your property. We handle tenant finding, referencing, rent collection, maintenance and full legal compliance across Leeds and Manchester, so you get a hands-off, fully compliant let and a dedicated local agent for your portfolio.',
+    icon: HomeIcon,
+    title: 'A Fully Managed Service',
+    body: 'We handle tenant sourcing, referencing, property inspections, maintenance requests and rent collection, so these tasks do not fall to you.',
   },
   {
-    q: 'What documents will I need to let my property legally in the UK?',
-    a: 'You will need a valid Energy Performance Certificate (EPC) rated E or above, a Gas Safety Certificate (renewed annually where there are gas appliances) and an Electrical Installation Condition Report (EICR, renewed every 5 years). Working smoke alarms on every floor and a carbon monoxide alarm in any room with a fuel-burning appliance are also legally required. During registration you can tell us which of these you already hold (and upload them), or ask us to arrange them for you.',
+    icon: ShieldCheck,
+    title: 'Complete UK Compliance Tracking',
+    body: 'We arrange and monitor your Energy Performance Certificate, Gas Safety Certificate, Electrical Installation Condition Report and deposit protection, so your property remains legally lettable.',
   },
   {
-    q: 'Do I have to protect my tenant’s deposit?',
-    a: 'Yes. Any deposit taken must be placed in a government-approved tenancy deposit scheme (DPS, mydeposits or TDS) within 30 days, and the tenant must be given the prescribed information. We handle deposit protection as part of our managed packages.',
+    icon: TrendingUp,
+    title: 'Clear, Published Pricing',
+    body: 'Every fee is published on our website before you register. No charge is disclosed only after you have signed an agreement.',
   },
   {
-    q: 'Is registering a commitment or a contract?',
-    a: 'Registration now includes reviewing and electronically signing your Residential Lettings & Management Agreement for the service you choose, all in one flow. There is no fee to register or to sign, and you see the full agreement — every clause, the service schedule and the fees — before you put your signature to it. A signed PDF copy is emailed to you straight away.',
+    icon: UserCheck,
+    title: 'One Named Local Agent',
+    body: 'Your property is managed by one agent based in Leeds or Manchester, rather than a shared or rotating team.',
   },
   {
-    q: 'How many properties can I register?',
-    a: 'As many as you like. Whether you own a single flat or a large portfolio, let us know the number of properties you hold and we will scope a package that works for you.',
+    icon: Clock3,
+    title: 'A Response Within 24 To 48 Hours',
+    body: 'Every registration is reviewed and answered with a tailored proposal within two working days.',
+  },
+  {
+    icon: FileCheck2,
+    title: 'No Obligation To Proceed',
+    body: 'Registering is free and does not create a contract. You review the proposal and decide whether to continue.',
   },
 ];
 
+const comparison = [
+  {
+    label: 'Published pricing',
+    hol: 'Shown in full on our website before you register',
+    other: 'Often disclosed only after a phone call',
+  },
+  {
+    label: 'Point of contact',
+    hol: 'One named local agent for your property',
+    other: 'Frequently a shared or rotating team',
+  },
+  {
+    label: 'Compliance tracking',
+    hol: 'EPC, Gas Safety, EICR and deposit protection tracked for you',
+    other: 'Varies by branch and package',
+  },
+  {
+    label: 'Response time',
+    hol: 'A tailored proposal within 24 to 48 hours',
+    other: 'Varies, and can extend during busy periods',
+  },
+  {
+    label: 'Commitment to register',
+    hol: 'Free, with no obligation to proceed',
+    other: 'Varies by agency',
+  },
+];
+
+// Editorial copy per package, keyed by bundle id. Prices/fees are NOT stored here:
+// they are read live from lib/bundles.ts so this page can never drift from /pricing.
+const PKG_COPY: Record<string, { summary: string; details: string[] }> = {
+  'virtual-tenant-find': {
+    summary:
+      'For landlords who intend to manage the tenancy directly and need a fully referenced tenant found quickly.',
+    details: [
+      'Marketing across major listing portals',
+      'Applicant screening and full reference checks',
+      'Right to Rent verification',
+      'Tenancy agreement prepared and signed',
+      'A remote service, with no property visit included',
+    ],
+  },
+  'expert-tenant-find': {
+    summary:
+      'Includes everything in Virtual Tenant Find, with professional photography and an in-person handover to attract stronger applicants.',
+    details: [
+      'Everything included in Virtual Tenant Find',
+      'Professional photography of the property',
+      'Accompanied viewings with prospective tenants',
+      'An in-person key handover and move-in check',
+      'You continue to manage the tenancy directly',
+    ],
+  },
+  'essential-management': {
+    summary:
+      'For landlords who want rent collection handled for them while remaining in control of repairs and contractor choice.',
+    details: [
+      'Rent collection and payment monitoring',
+      'Arrears follow up on your behalf',
+      'Monthly financial statements',
+      'You approve and arrange repairs directly',
+    ],
+  },
+  'full-management': {
+    summary:
+      'Our most requested package. Rent, maintenance, contractor coordination and compliance are managed by your local team.',
+    details: [
+      'Everything included in Essential Management',
+      'Maintenance requests handled and coordinated',
+      'Access to an approved contractor network',
+      'Ongoing compliance tracking and renewal reminders',
+    ],
+  },
+  'comprehensive-management': {
+    summary:
+      'Everything in Full Management, with additional protection for your rental income and legal position.',
+    details: [
+      'Everything included in Full Management',
+      'Emergency maintenance support',
+      'Property inspections with a written report',
+      'Rent guarantee cover',
+      'Legal and eviction expense protection',
+      'A priority contractor response time',
+    ],
+  },
+};
+
+type PkgView = {
+  id: string;
+  name: string;
+  setup: string;
+  fee: string;
+  summary: string;
+  details: string[];
+  highlight: boolean;
+};
+
+// Build the package cards from the single source of truth. Setup fee + management
+// percentage come straight from BUNDLES; only the descriptive copy is editorial.
+const packages: PkgView[] = BUNDLES.map((b) => ({
+  id: b.id,
+  name: b.label,
+  setup: `${b.setupFee} set up fees`,
+  fee: b.mgmtFee ? `${b.mgmtFee} management fees` : 'No management fees',
+  summary: PKG_COPY[b.id]?.summary ?? b.blurb,
+  details: PKG_COPY[b.id]?.details ?? [],
+  highlight: Boolean(b.badge),
+}));
+
+const faqs = [
+  {
+    q: 'Why register my property with House of Lettings?',
+    a: 'Registering gives our lettings team the information required to prepare a tailored management proposal for your property. We handle tenant finding, referencing, rent collection, maintenance and full legal compliance across Leeds and Manchester, supported by one named local agent for your portfolio.',
+  },
+  {
+    q: 'What documents will I need to let my property legally in the UK?',
+    a: 'You will need a valid Energy Performance Certificate rated E or above, a current Gas Safety Certificate renewed annually where the property has gas appliances, an Electrical Installation Condition Report renewed every 5 years, and working smoke and carbon monoxide alarms. If you choose a managed package, we arrange and track each of these on your behalf.',
+  },
+  {
+    q: "Do I have to protect my tenant's deposit?",
+    a: 'Yes. Where House of Lettings holds a tenancy deposit, it is protected in a government approved scheme, either the Deposit Protection Service, mydeposits or the Tenancy Deposit Scheme, within 30 days of receipt, and the required information is provided to your tenant.',
+  },
+  {
+    q: 'Is registering a commitment or a contract?',
+    a: 'No. Registering your property is free and does not create a contract. As part of registration you review and electronically sign a Residential Lettings and Management Agreement, and the full terms are shown on screen before you sign. Either party may decide not to proceed after registration.',
+  },
+  {
+    q: 'How many properties can I register?',
+    a: 'You may register as many properties as you own. If you manage a portfolio, mention this when you register, and your local agent will prepare a proposal that covers each property.',
+  },
+];
+
+const complianceCards = [{ label: 'EPC' }, { label: 'Gas Safety' }, { label: 'EICR' }, { label: 'Deposit' }];
+
+const eyebrowStyle: React.CSSProperties = {
+  fontSize: 12,
+  fontWeight: 600,
+  textTransform: 'uppercase',
+  letterSpacing: '0.16em',
+  color: theme.gold,
+  margin: 0,
+};
+
+/* ---------- small components ---------- */
+function TrustPill({ children }: { children: React.ReactNode }) {
+  return (
+    <div
+      style={{
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: 8,
+        borderRadius: 999,
+        padding: '8px 16px',
+        fontSize: 14,
+        background: 'rgba(255,255,255,0.08)',
+        color: theme.sand,
+      }}
+    >
+      <Check size={15} style={{ color: theme.gold }} />
+      <span>{children}</span>
+    </div>
+  );
+}
+
+function ComplianceFan() {
+  const [fanned, setFanned] = useState(false);
+  useEffect(() => {
+    const t = setTimeout(() => setFanned(true), 350);
+    return () => clearTimeout(t);
+  }, []);
+  const rotations = [-14, -4, 6, 16];
+  const shifts = [-54, -18, 18, 54];
+  return (
+    <div style={{ position: 'relative', height: 288, width: '100%', maxWidth: 384, margin: '0 auto' }} aria-hidden="true">
+      {complianceCards.map((c, i) => (
+        <div
+          key={c.label}
+          style={{
+            position: 'absolute',
+            left: '50%',
+            top: '50%',
+            display: 'flex',
+            height: 160,
+            width: 112,
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            borderRadius: 12,
+            textAlign: 'center',
+            boxShadow: '0 12px 28px rgba(11,32,51,0.25)',
+            background: theme.card,
+            border: `1px solid ${theme.border}`,
+            transform: fanned
+              ? `translate(-50%, -50%) translateX(${shifts[i]}px) rotate(${rotations[i]}deg)`
+              : 'translate(-50%, -50%) translateX(0px) rotate(0deg)',
+            transition: `transform 0.8s cubic-bezier(.2,.8,.2,1) ${i * 0.09}s`,
+            zIndex: i,
+          }}
+        >
+          <FileCheck2 size={22} style={{ color: theme.success }} />
+          <span style={{ marginTop: 8, padding: '0 8px', fontSize: 12, fontWeight: 600, color: theme.ink }}>
+            {c.label}
+          </span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function PackageModal({ pkg, onClose }: { pkg: PkgView | null; onClose: () => void }) {
+  const [entered, setEntered] = useState(false);
+  useEffect(() => {
+    const t = setTimeout(() => setEntered(true), 10);
+    return () => clearTimeout(t);
+  }, []);
+  if (!pkg) return null;
+  return (
+    <div
+      style={{
+        position: 'fixed',
+        inset: 0,
+        zIndex: 60,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: 16,
+        background: 'rgba(11,32,51,0.55)',
+        backdropFilter: 'blur(3px)',
+        opacity: entered ? 1 : 0,
+        transition: 'opacity 0.25s ease',
+      }}
+      onClick={onClose}
+      role="dialog"
+      aria-modal="true"
+      aria-label={pkg.name}
+    >
+      <div
+        style={{
+          position: 'relative',
+          width: '100%',
+          maxWidth: 512,
+          borderRadius: 16,
+          padding: 32,
+          boxShadow: '0 24px 60px rgba(11,32,51,0.35)',
+          background: theme.card,
+          transform: entered ? 'scale(1) translateY(0px)' : 'scale(0.94) translateY(10px)',
+          opacity: entered ? 1 : 0,
+          transition: 'transform 0.3s cubic-bezier(.2,.8,.2,1), opacity 0.3s ease',
+        }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <button
+          onClick={onClose}
+          aria-label="Close package details"
+          style={{
+            position: 'absolute',
+            right: 20,
+            top: 20,
+            display: 'inline-flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            borderRadius: 999,
+            border: 'none',
+            padding: 6,
+            cursor: 'pointer',
+            background: theme.sand,
+            color: theme.ink,
+          }}
+        >
+          <X size={16} />
+        </button>
+        <p style={{ ...eyebrowStyle, letterSpacing: '0.08em' }}>
+          {pkg.setup} &middot; {pkg.fee}
+        </p>
+        <h3 style={{ marginTop: 8, fontSize: 24, color: theme.ink, fontFamily: "'Fraunces', serif", fontWeight: 600 }}>
+          {pkg.name}
+        </h3>
+        <p style={{ marginTop: 12, fontSize: 14, lineHeight: 1.6, color: theme.inkSoft }}>{pkg.summary}</p>
+        <ul style={{ marginTop: 20, listStyle: 'none', padding: 0, display: 'flex', flexDirection: 'column', gap: 10 }}>
+          {pkg.details.map((d) => (
+            <li key={d} style={{ display: 'flex', alignItems: 'flex-start', gap: 10, fontSize: 14, color: theme.ink }}>
+              <Check size={16} style={{ marginTop: 2, flexShrink: 0, color: theme.success }} />
+              <span>{d}</span>
+            </li>
+          ))}
+        </ul>
+        <Link
+          href="/landlord-registration/apply"
+          className="lr-btn"
+          style={{
+            marginTop: 28,
+            display: 'block',
+            borderRadius: 8,
+            padding: '14px 20px',
+            textAlign: 'center',
+            fontSize: 14,
+            fontWeight: 600,
+            textDecoration: 'none',
+            background: theme.navy,
+            color: '#fff',
+          }}
+        >
+          Select {pkg.name} And Register
+        </Link>
+      </div>
+    </div>
+  );
+}
+
+function FaqItem({ item, isOpen, onToggle }: { item: { q: string; a: string }; isOpen: boolean; onToggle: () => void }) {
+  return (
+    <div style={{ borderBottom: `1px solid ${theme.border}` }}>
+      <button
+        onClick={onToggle}
+        style={{
+          display: 'flex',
+          width: '100%',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: 16,
+          padding: '20px 0',
+          textAlign: 'left',
+          background: 'none',
+          border: 'none',
+          cursor: 'pointer',
+          fontFamily: "'IBM Plex Sans', sans-serif",
+        }}
+      >
+        <span style={{ fontSize: 16, fontWeight: 500, color: theme.ink }}>{item.q}</span>
+        <ChevronDown
+          size={18}
+          style={{
+            color: theme.gold,
+            transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)',
+            transition: 'transform 0.3s ease',
+            flexShrink: 0,
+          }}
+        />
+      </button>
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateRows: isOpen ? '1fr' : '0fr',
+          transition: 'grid-template-rows 0.35s ease',
+        }}
+      >
+        <div style={{ overflow: 'hidden' }}>
+          <p style={{ padding: '0 32px 20px 0', fontSize: 14, lineHeight: 1.6, color: theme.inkSoft, margin: 0 }}>
+            {item.a}
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ---------- page ---------- */
 export default function LandlordRegistrationPage() {
-  const [openFaq, setOpenFaq] = useState<number | null>(0);
+  const [activePkg, setActivePkg] = useState<PkgView | null>(null);
+  const [openFaq, setOpenFaq] = useState<number>(0);
 
   return (
     <>
       <style>{PAGE_CSS}</style>
       <Navbar />
 
-      <div style={{ fontFamily: "'Poppins', sans-serif" }}>
-
-        {/* ── HERO (simple background, no image) ── */}
-        <div style={{
-          background: '#0f1f3d',
-          backgroundImage: 'radial-gradient(ellipse at 75% 15%, rgba(37,99,235,0.20) 0%, transparent 55%), radial-gradient(ellipse at 15% 90%, rgba(37,99,235,0.12) 0%, transparent 50%)',
-          paddingTop: 'calc(68px + clamp(56px, 8vw, 96px))',
-          paddingBottom: 'clamp(56px, 8vw, 96px)',
-          paddingLeft: 'clamp(20px, 5%, 5%)',
-          paddingRight: 'clamp(20px, 5%, 5%)',
-          textAlign: 'center',
-        }}>
-          <div style={{
-            display: 'inline-block', background: 'rgba(74,144,217,0.28)', color: '#93c5fd',
-            fontSize: 11, fontWeight: 700, letterSpacing: 3, textTransform: 'uppercase',
-            padding: '5px 14px', borderRadius: 20, marginBottom: 18,
-            border: '1px solid rgba(147,197,253,0.35)',
-          }}>
-            Landlord Registration
-          </div>
-          <h1 style={{ fontSize: 'clamp(32px, 4.5vw, 54px)', fontWeight: 800, color: '#fff', lineHeight: 1.12, marginBottom: 16 }}>
-            Register your property with House of Lettings
-          </h1>
-          <p style={{ fontSize: 17, color: 'rgba(255,255,255,0.62)', maxWidth: 560, margin: '0 auto 34px', lineHeight: 1.65, fontWeight: 300 }}>
-            Tell us about your property, choose your service, then review and e-sign your Residential Lettings &amp;
-            Management Agreement online. It&rsquo;s free, takes a few minutes, and a signed PDF copy is emailed to you
-            by your local Leeds &amp; Manchester team.
-          </p>
-          <Link href="/landlord-registration/apply" className="hol-hero-cta">
-            Landlord Registration
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 12h14M12 5l7 7-7 7" /></svg>
-          </Link>
-          <p style={{ fontSize: 12.5, color: 'rgba(255,255,255,0.45)', marginTop: 16 }}>Free · No obligation · Response within 24-48 hours</p>
-        </div>
-
-        {/* ── WHY REGISTER ── */}
-        <section style={{ background: '#f7f8fa', padding: 'clamp(56px, 8vw, 96px) clamp(20px, 6%, 80px)' }}>
-          <div style={{ maxWidth: 1080, margin: '0 auto' }}>
-            <div style={{ textAlign: 'center', marginBottom: 48 }}>
-              <div className="hol-eyebrow">Why Register</div>
-              <h2 className="hol-h2">Why register a landlord account with us</h2>
-              <p style={{ fontSize: 15, color: '#6b7280', maxWidth: 560, margin: '14px auto 0', lineHeight: 1.7 }}>
-                One short form connects you with a dedicated local agent who handles everything from compliance to rent collection.
-              </p>
-            </div>
-            <div className="hol-why-grid">
-              {[
-                { icon: '🏠', title: 'Hands-off management', desc: 'Tenant finding, referencing, inspections, maintenance and rent collection, all handled for you.' },
-                { icon: '📋', title: 'Full UK compliance', desc: 'We arrange and track your EPC, Gas Safety, EICR and deposit protection so your let stays legal.' },
-                { icon: '💷', title: 'Maximise your returns', desc: 'Accurate rental valuations and transparent pricing with no hidden fees, ever.' },
-                { icon: '👤', title: 'A dedicated local agent', desc: 'A real person who knows the Leeds & Manchester market and manages your portfolio.' },
-                { icon: '⚡', title: 'Fast turnaround', desc: 'We respond to every registration within 24-48 hours with a tailored proposal.' },
-                { icon: '🔒', title: 'No obligation', desc: 'Registering is free and commitment-free. You only proceed if the proposal suits you.' },
-              ].map(item => (
-                <div key={item.title} className="hol-why-card">
-                  <div style={{ fontSize: 28, marginBottom: 14 }}>{item.icon}</div>
-                  <h3 style={{ fontSize: 16, fontWeight: 700, color: '#0f1f3d', marginBottom: 8 }}>{item.title}</h3>
-                  <p style={{ fontSize: 14, color: '#6b7280', lineHeight: 1.7, margin: 0 }}>{item.desc}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* ── SERVICES (pricing packages) ── */}
-        <section style={{ background: '#fff', padding: 'clamp(56px, 8vw, 96px) clamp(20px, 6%, 80px)', position: 'relative', overflow: 'hidden' }}>
-          <div style={{ position: 'relative', zIndex: 1, maxWidth: 1080, margin: '0 auto' }}>
-            <div style={{ textAlign: 'center', marginBottom: 48 }}>
-              <div className="hol-eyebrow">Our Bundles</div>
-              <h2 className="hol-h2">Services you can request</h2>
-              <p style={{ fontSize: 15, color: '#6b7280', maxWidth: 580, margin: '14px auto 0', lineHeight: 1.7 }}>
-                Each management bundle is charged as a percentage of the monthly rent, with smaller set up fees to get started. Pick the one that fits your portfolio when you register.
-              </p>
-            </div>
-            <div className="hol-pkg-grid hol-pkg-grid--2">
-              {BUNDLES.map(b => (
-                <div key={b.id} className="hol-pkg-card">
-                  {b.badge && <div style={{ display: 'inline-block', fontSize: 10, fontWeight: 800, letterSpacing: 1, textTransform: 'uppercase', color: '#0f1f3d', background: '#4a90d9', padding: '3px 10px', borderRadius: 20, marginBottom: 12 }}>{b.badge}</div>}
-                  {/* The ongoing percentage leads: it is our main management fee. */}
-                  <div style={{ fontSize: 'clamp(24px,3vw,32px)', fontWeight: 800, color: 'var(--price-green)', lineHeight: 1, marginBottom: 6 }}>
-                    {b.mgmtFee || b.setupFee} <span style={{ fontSize: 15, fontWeight: 600, color: 'rgba(255,255,255,0.55)' }}>{b.mgmtFee ? `management fees + ${b.setupFee} set up fees` : 'set up fees'}</span>
-                  </div>
-                  <div style={{ fontSize: 15, fontWeight: 700, color: '#fff', marginBottom: 8 }}>{b.label}</div>
-                  <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.55)', lineHeight: 1.65, margin: 0 }}>{b.blurb}</p>
-                </div>
-              ))}
-            </div>
-            <div style={{ textAlign: 'center', marginTop: 40 }}>
-              <Link href="/pricing" className="hol-hero-cta hol-hero-cta--outline">
-                Compare All Bundles
-              </Link>
-            </div>
-          </div>
-        </section>
-
-        {/* ── TERMS & CONDITIONS ── */}
-        <section style={{ background: '#fff', padding: 'clamp(56px, 8vw, 96px) clamp(20px, 6%, 80px)' }}>
-          <div style={{ maxWidth: 820, margin: '0 auto' }}>
-            <div style={{ textAlign: 'center', marginBottom: 40 }}>
-              <div className="hol-eyebrow">The Terms</div>
-              <h2 className="hol-h2">Property management terms &amp; conditions (UK)</h2>
-              <p style={{ fontSize: 15, color: '#6b7280', maxWidth: 560, margin: '14px auto 0', lineHeight: 1.7 }}>
-                A plain-English summary of how we work together. You confirm you&rsquo;ve read these when you register.
-              </p>
-            </div>
-            <ol className="hol-terms-list">
-              {[
-                ['Registration & agreement in one', 'Registering is free. As part of the registration you review and electronically sign the Residential Lettings & Management Agreement for the package you choose — the full terms, service schedule and fees are shown on screen before you sign, and a signed PDF is emailed to you.'],
-                ['Legal compliance', 'As the landlord you remain legally responsible for your property. We will arrange and track required documents (EPC rated E or above, annual Gas Safety Certificate, EICR every 5 years, smoke and carbon-monoxide alarms) under any managed package you take.'],
-                ['Deposit protection', 'Where we hold a tenancy deposit, it will be protected in a government-approved scheme (DPS, mydeposits or TDS) within 30 days and the prescribed information served on the tenant.'],
-                ['Fees', 'Any management, tenant-find or certificate fees are set out clearly in your proposal before work begins. We never charge hidden fees.'],
-                ['Your data & documents', 'The information and documents you provide are used solely to prepare your proposal and manage your property. They are stored securely and never sold. See our Terms and Cookie Policy for full details.'],
-                ['Right to decline', 'Both parties may decline to proceed after registration. Registering does not guarantee that House of Lettings will take on your property.'],
-              ].map(([title, body], i) => (
-                <li key={i}><strong>{title}.</strong> {body}</li>
-              ))}
-            </ol>
-            <p style={{ fontSize: 13, color: '#9ca3af', textAlign: 'center', marginTop: 24 }}>
-              Full terms are available on our <Link href="/terms" style={{ color: 'var(--logo-blue)', fontWeight: 600 }}>Terms &amp; Conditions</Link> page.
-            </p>
-          </div>
-        </section>
-
-        {/* ── FAQ ── */}
-        <section style={{ background: '#f7f8fa', padding: 'clamp(56px, 8vw, 96px) clamp(20px, 6%, 80px)' }}>
-          <div style={{ maxWidth: 760, margin: '0 auto' }}>
-            <div style={{ textAlign: 'center', marginBottom: 40 }}>
-              <div className="hol-eyebrow">Common Questions</div>
-              <h2 className="hol-h2">Frequently asked questions</h2>
-            </div>
+      <div style={{ fontFamily: "'IBM Plex Sans', sans-serif", background: theme.sand }}>
+        {/* hero */}
+        <section
+          style={{
+            position: 'relative',
+            overflow: 'hidden',
+            padding: 'clamp(56px, 8vw, 96px) clamp(20px, 5%, 48px)',
+            background: `linear-gradient(180deg, ${theme.navyDeep}, ${theme.navy})`,
+          }}
+        >
+          <div className="lr-hero" style={{ maxWidth: 1152, margin: '0 auto' }}>
             <div>
-              {REGISTRATION_FAQS.map((faq, i) => (
-                <div key={i} style={{ borderTop: '1px solid rgba(15,31,61,0.12)', borderBottom: i === REGISTRATION_FAQS.length - 1 ? '1px solid rgba(15,31,61,0.12)' : 'none' }}>
-                  <button onClick={() => setOpenFaq(openFaq === i ? null : i)} style={{ width: '100%', background: 'none', border: 'none', color: '#0f1f3d', textAlign: 'left', padding: '22px 0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer', fontFamily: "'Poppins', sans-serif", fontSize: 16, fontWeight: 700, gap: 16 }}>
-                    {faq.q}
-                    <span style={{ color: 'var(--logo-blue)', fontSize: 22, flexShrink: 0, lineHeight: 1, transform: openFaq === i ? 'rotate(45deg)' : 'none', transition: 'transform 0.2s' }}>+</span>
+              <p style={{ ...eyebrowStyle, letterSpacing: '0.18em' }}>Landlord Registration &middot; Leeds &amp; Manchester</p>
+              <h1
+                style={{
+                  marginTop: 16,
+                  fontSize: 'clamp(34px, 4.5vw, 52px)',
+                  lineHeight: 1.12,
+                  color: '#fff',
+                  fontFamily: "'Fraunces', serif",
+                  fontWeight: 600,
+                }}
+              >
+                Register Your Property With A Local Letting Agent You Can Trust
+              </h1>
+              <p style={{ marginTop: 20, maxWidth: 460, fontSize: 16, lineHeight: 1.65, color: '#C7D0D8' }}>
+                Complete one short form to receive a tailored management proposal within 24 to 48 hours. Registration is
+                free, and you decide whether to proceed after you receive it.
+              </p>
+              <div style={{ marginTop: 32, display: 'flex', flexWrap: 'wrap', gap: 12 }}>
+                <Link
+                  href="/landlord-registration/apply"
+                  className="lr-btn"
+                  style={{
+                    borderRadius: 8,
+                    padding: '14px 24px',
+                    fontSize: 14,
+                    fontWeight: 600,
+                    textDecoration: 'none',
+                    background: theme.gold,
+                    color: theme.navyDeep,
+                  }}
+                >
+                  Start Your Registration
+                </Link>
+                <a
+                  href="#packages"
+                  className="lr-btn"
+                  style={{
+                    borderRadius: 8,
+                    padding: '14px 24px',
+                    fontSize: 14,
+                    fontWeight: 600,
+                    textDecoration: 'none',
+                    background: 'rgba(255,255,255,0.08)',
+                    color: '#fff',
+                  }}
+                >
+                  Compare Our Packages
+                </a>
+              </div>
+              <div style={{ marginTop: 32, display: 'flex', flexWrap: 'wrap', gap: 10 }}>
+                <TrustPill>Free to register</TrustPill>
+                <TrustPill>No obligation to proceed</TrustPill>
+                <TrustPill>Response within 24 to 48 hours</TrustPill>
+              </div>
+            </div>
+            <div style={{ animation: 'lrfloat 5s ease-in-out infinite' }}>
+              <ComplianceFan />
+            </div>
+          </div>
+        </section>
+
+        {/* why register */}
+        <section style={{ padding: 'clamp(56px, 8vw, 80px) clamp(20px, 5%, 48px)' }}>
+          <div style={{ maxWidth: 1152, margin: '0 auto' }}>
+            <Reveal>
+              <p style={eyebrowStyle}>Why Register</p>
+              <h2
+                style={{
+                  marginTop: 12,
+                  maxWidth: 640,
+                  fontSize: 'clamp(28px, 3.6vw, 38px)',
+                  color: theme.ink,
+                  fontFamily: "'Fraunces', serif",
+                  fontWeight: 600,
+                }}
+              >
+                Why Landlords Choose House Of Lettings
+              </h2>
+              <p style={{ marginTop: 16, maxWidth: 640, fontSize: 16, lineHeight: 1.6, color: theme.inkSoft }}>
+                Many letting agents promise good service. Our registration process is built to show you the difference in
+                pricing, communication and compliance before you commit to anything.
+              </p>
+            </Reveal>
+
+            {/* comparison table */}
+            <Reveal delay={0.1} style={{ marginTop: 40 }}>
+              <div className="lr-tablewrap">
+                <table className="lr-table">
+                  <thead>
+                    <tr style={{ background: theme.navy, color: '#fff' }}>
+                      <th style={{ fontWeight: 500 }}>What matters to landlords</th>
+                      <th style={{ fontWeight: 600, color: theme.goldSoft }}>House of Lettings</th>
+                      <th style={{ fontWeight: 500 }}>Typical letting agents</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {comparison.map((row, i) => (
+                      <tr key={row.label} style={{ background: i % 2 === 0 ? theme.card : theme.sand }}>
+                        <td style={{ fontWeight: 500, color: theme.ink }}>{row.label}</td>
+                        <td style={{ color: theme.ink }}>
+                          <span style={{ display: 'flex', alignItems: 'flex-start', gap: 8 }}>
+                            <Check size={15} style={{ marginTop: 2, flexShrink: 0, color: theme.success }} />
+                            {row.hol}
+                          </span>
+                        </td>
+                        <td style={{ color: theme.inkSoft }}>{row.other}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </Reveal>
+
+            {/* benefit cards */}
+            <div className="lr-grid3" style={{ marginTop: 40 }}>
+              {whyPoints.map((p, i) => {
+                const Icon = p.icon;
+                return (
+                  <Reveal key={p.title} delay={0.05 * i} style={{ height: '100%' }}>
+                    <div
+                      className="lr-lift"
+                      style={{
+                        height: '100%',
+                        borderRadius: 16,
+                        padding: 24,
+                        boxShadow: '0 1px 3px rgba(11,32,51,0.06)',
+                        background: theme.card,
+                        border: `1px solid ${theme.border}`,
+                      }}
+                    >
+                      <div
+                        style={{
+                          display: 'flex',
+                          height: 40,
+                          width: 40,
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          borderRadius: 8,
+                          background: theme.sand,
+                        }}
+                      >
+                        <Icon size={19} style={{ color: theme.gold }} />
+                      </div>
+                      <h3 style={{ marginTop: 16, fontSize: 16, fontWeight: 600, color: theme.ink }}>{p.title}</h3>
+                      <p style={{ marginTop: 8, fontSize: 14, lineHeight: 1.6, color: theme.inkSoft }}>{p.body}</p>
+                    </div>
+                  </Reveal>
+                );
+              })}
+            </div>
+          </div>
+        </section>
+
+        {/* packages */}
+        <section id="packages" style={{ padding: 'clamp(56px, 8vw, 80px) clamp(20px, 5%, 48px)', background: theme.card }}>
+          <div style={{ maxWidth: 1152, margin: '0 auto' }}>
+            <Reveal>
+              <p style={eyebrowStyle}>Our Bundles</p>
+              <h2
+                style={{
+                  marginTop: 12,
+                  maxWidth: 640,
+                  fontSize: 'clamp(28px, 3.6vw, 38px)',
+                  color: theme.ink,
+                  fontFamily: "'Fraunces', serif",
+                  fontWeight: 600,
+                }}
+              >
+                Services You Can Request
+              </h2>
+              <p style={{ marginTop: 16, maxWidth: 640, fontSize: 16, lineHeight: 1.6, color: theme.inkSoft }}>
+                Select a package to see the full list of what is included. You choose your package during registration,
+                and can change your mind before you sign.
+              </p>
+            </Reveal>
+
+            <div className="lr-grid3" style={{ marginTop: 40 }}>
+              {packages.map((pkg, i) => (
+                <Reveal key={pkg.id} delay={0.05 * i} style={{ height: '100%' }}>
+                  <button
+                    onClick={() => setActivePkg(pkg)}
+                    className="lr-lift"
+                    style={{
+                      display: 'flex',
+                      height: '100%',
+                      width: '100%',
+                      flexDirection: 'column',
+                      borderRadius: 16,
+                      padding: 24,
+                      textAlign: 'left',
+                      cursor: 'pointer',
+                      boxShadow: '0 1px 3px rgba(11,32,51,0.06)',
+                      background: pkg.highlight ? theme.navy : theme.sand,
+                      border: pkg.highlight ? `1px solid ${theme.navy}` : `1px solid ${theme.border}`,
+                    }}
+                  >
+                    {pkg.highlight && (
+                      <span
+                        style={{
+                          marginBottom: 12,
+                          display: 'inline-block',
+                          width: 'fit-content',
+                          borderRadius: 999,
+                          padding: '4px 12px',
+                          fontSize: 12,
+                          fontWeight: 600,
+                          background: theme.gold,
+                          color: theme.navyDeep,
+                        }}
+                      >
+                        Most Popular
+                      </span>
+                    )}
+                    <p style={{ fontSize: 12, fontWeight: 500, color: pkg.highlight ? theme.goldSoft : theme.inkSoft }}>
+                      {pkg.setup} &middot; {pkg.fee}
+                    </p>
+                    <h3
+                      style={{
+                        marginTop: 8,
+                        fontSize: 18,
+                        fontWeight: 600,
+                        color: pkg.highlight ? '#fff' : theme.ink,
+                        fontFamily: "'Fraunces', serif",
+                      }}
+                    >
+                      {pkg.name}
+                    </h3>
+                    <p
+                      style={{
+                        marginTop: 8,
+                        flex: 1,
+                        fontSize: 14,
+                        lineHeight: 1.6,
+                        color: pkg.highlight ? '#C7D0D8' : theme.inkSoft,
+                      }}
+                    >
+                      {pkg.summary}
+                    </p>
+                    <span
+                      style={{
+                        marginTop: 16,
+                        fontSize: 14,
+                        fontWeight: 600,
+                        color: pkg.highlight ? theme.goldSoft : theme.gold,
+                      }}
+                    >
+                      View full details &rarr;
+                    </span>
                   </button>
-                  {openFaq === i && (<p style={{ color: '#4b5563', fontSize: 14, lineHeight: 1.8, paddingBottom: 24, margin: 0 }}>{faq.a}</p>)}
-                </div>
+                </Reveal>
               ))}
             </div>
           </div>
         </section>
 
-        {/* ── CTA BANNER ── */}
-        <section style={{ background: '#0f1f3d', padding: 'clamp(56px, 8vw, 88px) clamp(24px, 7%, 100px)', position: 'relative', overflow: 'hidden', textAlign: 'center' }}>
-          <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(ellipse at 50% 50%, rgba(37,99,235,0.15) 0%, transparent 70%)', pointerEvents: 'none' }} />
-          <div style={{ position: 'relative', zIndex: 1 }}>
-            <h2 style={{ fontSize: 'clamp(26px,3.6vw,46px)', fontWeight: 700, color: '#fff', marginBottom: 16 }}>Ready to register your property?</h2>
-            <p style={{ fontSize: 16, color: 'rgba(255,255,255,0.55)', maxWidth: 520, margin: '0 auto 36px', lineHeight: 1.7, fontWeight: 300 }}>
-              Complete the step-by-step registration and we&rsquo;ll be in touch within 24-48 hours.
-            </p>
-            <Link href="/landlord-registration/apply" className="hol-hero-cta">
-              Start Registration
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 12h14M12 5l7 7-7 7" /></svg>
-            </Link>
+        {activePkg && <PackageModal pkg={activePkg} onClose={() => setActivePkg(null)} />}
+
+        {/* faq */}
+        <section style={{ padding: 'clamp(56px, 8vw, 80px) clamp(20px, 5%, 48px)' }}>
+          <div style={{ maxWidth: 768, margin: '0 auto' }}>
+            <Reveal>
+              <p style={eyebrowStyle}>Common Questions</p>
+              <h2
+                style={{
+                  marginTop: 12,
+                  fontSize: 'clamp(28px, 3.6vw, 34px)',
+                  color: theme.ink,
+                  fontFamily: "'Fraunces', serif",
+                  fontWeight: 600,
+                }}
+              >
+                Frequently Asked Questions
+              </h2>
+            </Reveal>
+            <Reveal delay={0.1} style={{ marginTop: 32 }}>
+              <div>
+                {faqs.map((item, i) => (
+                  <FaqItem
+                    key={item.q}
+                    item={item}
+                    isOpen={openFaq === i}
+                    onToggle={() => setOpenFaq(openFaq === i ? -1 : i)}
+                  />
+                ))}
+              </div>
+            </Reveal>
           </div>
         </section>
 
-        {/* ── FOOTER ── */}
-        <Footer />
+        {/* final cta */}
+        <section
+          id="apply"
+          style={{
+            padding: 'clamp(56px, 8vw, 80px) clamp(24px, 6%, 100px)',
+            textAlign: 'center',
+            background: `linear-gradient(135deg, ${theme.navyDeep}, ${theme.navy})`,
+          }}
+        >
+          <Reveal>
+            <h2
+              style={{
+                margin: '0 auto',
+                maxWidth: 672,
+                fontSize: 'clamp(28px, 3.6vw, 38px)',
+                color: '#fff',
+                fontFamily: "'Fraunces', serif",
+                fontWeight: 600,
+              }}
+            >
+              Ready To Register Your Property?
+            </h2>
+            <p style={{ margin: '16px auto 0', maxWidth: 576, fontSize: 16, lineHeight: 1.6, color: '#C7D0D8' }}>
+              Complete the step by step registration and your local Leeds or Manchester agent will respond within 24 to 48
+              hours.
+            </p>
+            <Link
+              href="/landlord-registration/apply"
+              className="lr-btn"
+              style={{
+                marginTop: 32,
+                display: 'inline-block',
+                borderRadius: 8,
+                padding: '16px 32px',
+                fontSize: 14,
+                fontWeight: 600,
+                textDecoration: 'none',
+                background: theme.gold,
+                color: theme.navyDeep,
+              }}
+            >
+              Start Registration
+            </Link>
+          </Reveal>
+        </section>
 
+        <Footer />
       </div>
     </>
   );
 }
 
 const PAGE_CSS = `
-  @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap');
 
-  .hol-eyebrow { font-size:11px; font-weight:700; letter-spacing:3px; text-transform:uppercase; color:var(--logo-blue); margin-bottom:14px; font-family:'Poppins',sans-serif; }
-  .hol-h2 { font-family:'Poppins',sans-serif; font-size:clamp(26px,3.6vw,42px); font-weight:700; color:#0f1f3d; line-height:1.2; margin:0; }
+  .lr-hero { display:grid; gap:48px; align-items:center; }
+  @media(min-width:768px){ .lr-hero{ grid-template-columns:1fr 1fr; } }
 
-  .hol-hero-cta { display:inline-flex; align-items:center; justify-content:center; gap:9px; box-sizing:border-box; min-height:48px; line-height:1.2; background:#2563eb; color:#fff; text-decoration:none; font-family:'Poppins',sans-serif; font-size:13.5px; font-weight:700; letter-spacing:.02em; text-transform:uppercase; padding:14px 28px; border:1.5px solid transparent; border-radius:9px; transition:background .2s,transform .2s; }
-  .hol-hero-cta:hover { background:#1d4ed8; transform:translateY(-2px); }
-  .hol-hero-cta--outline { background:transparent; color:var(--logo-blue); border-color:#2563eb; }
-  .hol-hero-cta--outline:hover { background:#2563eb; color:#fff; }
+  .lr-grid3 { display:grid; grid-template-columns:repeat(3,1fr); gap:20px; }
+  @media(max-width:1024px){ .lr-grid3{ grid-template-columns:repeat(2,1fr); } }
+  @media(max-width:640px){ .lr-grid3{ grid-template-columns:1fr; } }
 
-  .hol-why-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:22px; }
-  @media(max-width:860px){ .hol-why-grid{grid-template-columns:1fr 1fr;} }
-  @media(max-width:560px){ .hol-why-grid{grid-template-columns:1fr;} }
-  .hol-why-card { background:#fff; border:1px solid #eef0f5; border-radius:14px; padding:26px 24px; transition:transform .2s,box-shadow .2s; }
-  .hol-why-card:hover { transform:translateY(-4px); box-shadow:0 12px 28px rgba(15,31,61,.08); }
+  .lr-lift { transition:transform 0.2s ease, box-shadow 0.2s ease; }
+  .lr-lift:hover { transform:translateY(-4px); box-shadow:0 14px 30px rgba(11,32,51,0.10); }
 
-  .hol-pkg-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:20px; }
-  .hol-pkg-grid--2 { grid-template-columns:repeat(2,1fr); max-width:760px; margin:0 auto; }
-  @media(max-width:860px){ .hol-pkg-grid{grid-template-columns:1fr 1fr;} }
-  @media(max-width:560px){ .hol-pkg-grid, .hol-pkg-grid--2{grid-template-columns:1fr;} }
-  .hol-pkg-card { background:#162849; border:1px solid rgba(74,144,217,.28); border-radius:12px; padding:24px 22px; transition:transform .2s,border-color .2s; }
-  .hol-pkg-card:hover { transform:translateY(-4px); border-color:rgba(74,144,217,.6); }
+  .lr-btn { transition:transform 0.2s ease, background 0.2s ease, filter 0.2s ease; }
+  .lr-btn:hover { transform:translateY(-2px); filter:brightness(0.97); }
 
-  .hol-terms-list { max-width:760px; margin:0 auto; padding-left:22px; display:flex; flex-direction:column; gap:16px; }
-  .hol-terms-list li { font-family:'Poppins',sans-serif; font-size:14px; color:#4b5563; line-height:1.75; }
-  .hol-terms-list li strong { color:#0f1f3d; }
+  .lr-tablewrap { overflow-x:auto; border-radius:16px; box-shadow:0 1px 3px rgba(11,32,51,0.08); }
+  .lr-table { width:100%; min-width:640px; border-collapse:collapse; text-align:left; font-size:14px; }
+  .lr-table th, .lr-table td { padding:16px 20px; vertical-align:top; }
 
-  @media(max-width:600px){ .hol-footer{flex-direction:column;align-items:flex-start;gap:20px;} }
+  @media (prefers-reduced-motion: reduce) {
+    .lr-lift, .lr-btn { transition:none !important; }
+  }
+  @keyframes lrfloat {
+    0%, 100% { transform:translateY(0px); }
+    50% { transform:translateY(-6px); }
+  }
 `;

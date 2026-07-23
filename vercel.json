@@ -21,5 +21,11 @@
     "app/api/rent-review/route.ts": {
       "maxDuration": 60
     }
-  }
+  },
+  "crons": [
+    {
+      "path": "/api/cron/purge-deleted",
+      "schedule": "0 3 * * *"
+    }
+  ]
 }

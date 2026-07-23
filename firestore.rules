@@ -222,5 +222,13 @@ service cloud.firestore {
     match /staffActivityLogs/{id} {
       allow read, write: if false;
     }
+
+    // Recycle bin: snapshots of deleted documents, kept for 24h so an admin can
+    // restore them. Written/read/purged only via the Admin SDK (the delete routes
+    // and /api/admin/deleted). Restoring must NOT be possible from a browser, so
+    // deny all direct client access — the API routes are the gate.
+    match /deletedItems/{id} {
+      allow read, write: if false;
+    }
   }
 }

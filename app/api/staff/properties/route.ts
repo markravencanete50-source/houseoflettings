@@ -10,6 +10,7 @@
 // firebase-admin authenticates off the same cookie every other staff route uses.
 import { FieldValue } from 'firebase-admin/firestore';
 import { requireStaff, getAdminDb } from '@/lib/staffApiAuth';
+import { softDeleteDoc } from '@/lib/softDelete';
 
 export async function POST(request: Request) {
   try {
@@ -102,7 +103,10 @@ export async function DELETE(request: Request) {
     const id = new URL(request.url).searchParams.get('id');
     if (!id) return Response.json({ message: 'A property id is required' }, { status: 400 });
 
-    await getAdminDb().collection('properties').doc(id).delete();
+    // Soft-delete into the 24h recycle bin instead of hard-deleting, so an admin
+    // can restore it from the Deleted tab.
+    const result = await softDeleteDoc({ collection: 'properties', docId: id, actor: auth, typeLabel: 'Property' });
+    if (!result.ok) return Response.json({ message: 'Property not found' }, { status: 404 });
     return Response.json({ ok: true }, { status: 200 });
   } catch (e) {
     console.error('staff/properties DELETE error:', e);

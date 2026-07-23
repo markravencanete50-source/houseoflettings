@@ -24,7 +24,6 @@ import {
   getAllUsers,
   getAllProperties,
   deleteUserRecord,
-  adminDeleteProperty,
   adminSetPropertyStatus,
   adminSetPropertyAvailability,
   getAnalytics,
@@ -42,10 +41,23 @@ import { format } from 'date-fns';
 import { db } from '@/lib/firebase';
 import {
   collection, getDocs, orderBy, query, doc,
-  updateDoc, addDoc, deleteDoc, serverTimestamp, Timestamp,
+  updateDoc, addDoc, serverTimestamp, Timestamp,
 } from 'firebase/firestore';
 
-type Tab = 'analytics' | 'users' | 'properties' | 'post' | 'edit' | 'valuations' | 'reviews' | 'applications' | 'orders' | 'maintenance' | 'rent-reviews' | 'agreements' | 'landlords' | 'activity';
+type Tab = 'analytics' | 'users' | 'properties' | 'post' | 'edit' | 'valuations' | 'reviews' | 'applications' | 'orders' | 'maintenance' | 'rent-reviews' | 'agreements' | 'landlords' | 'activity' | 'deleted';
+
+interface DeletedItem {
+  id: string;
+  sourceCollection: string;
+  originalId: string;
+  typeLabel: string;
+  label: string;
+  deletedByUid: string;
+  deletedByName: string;
+  deletedByRole: string;
+  deletedAt: string | null;
+  expiresAt: string | null;
+}
 
 interface ActivityLog {
   id: string;
@@ -408,6 +420,42 @@ export default function AdminDashboard() {
     finally { setActivityLoaded(true); }
   };
 
+  // Recycle bin (Deleted tab) — admin-only 24h restore window.
+  const [deletedItems, setDeletedItems] = useState<DeletedItem[]>([]);
+  const [deletedLoaded, setDeletedLoaded] = useState(false);
+  const [deletedBusy, setDeletedBusy] = useState<string | null>(null);
+
+  const loadDeleted = async () => {
+    setDeletedLoaded(false);
+    try {
+      const res = await authedFetch('/api/admin/deleted');
+      const j = await res.json().catch(() => ({}));
+      setDeletedItems(Array.isArray(j.items) ? j.items : []);
+    } catch { setDeletedItems([]); }
+    finally { setDeletedLoaded(true); }
+  };
+
+  const restoreDeleted = async (item: DeletedItem) => {
+    setDeletedBusy(item.id);
+    try {
+      const res = await authedFetch('/api/admin/deleted', { method: 'POST', body: JSON.stringify({ id: item.id, action: 'restore' }) });
+      const j = await res.json().catch(() => ({}));
+      if (!res.ok) { alert(j.message || 'Could not restore this item.'); return; }
+      setDeletedItems(prev => prev.filter(i => i.id !== item.id));
+      alert(`Restored: ${item.typeLabel} "${item.label}". Refresh the relevant tab to see it.`);
+    } finally { setDeletedBusy(null); }
+  };
+
+  const purgeDeleted = async (item: DeletedItem) => {
+    if (!confirm(`Permanently delete "${item.label}" now? This cannot be undone.`)) return;
+    setDeletedBusy(item.id);
+    try {
+      const res = await authedFetch('/api/admin/deleted', { method: 'POST', body: JSON.stringify({ id: item.id, action: 'purge' }) });
+      if (!res.ok) { alert('Could not delete this item.'); return; }
+      setDeletedItems(prev => prev.filter(i => i.id !== item.id));
+    } finally { setDeletedBusy(null); }
+  };
+
   // Website visitor analytics (first-party, from /api/track).
   useEffect(() => {
     if (!isAdminProfile(profile)) return;
@@ -434,6 +482,12 @@ export default function AdminDashboard() {
   useEffect(() => {
     if (tab !== 'activity' || !isAdminProfile(profile) || activityLoaded) return;
     loadActivityLogs();
+  }, [tab, profile]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Load the recycle bin the first time the Deleted tab is opened.
+  useEffect(() => {
+    if (tab !== 'deleted' || !isAdminProfile(profile) || deletedLoaded) return;
+    loadDeleted();
   }, [tab, profile]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
@@ -500,8 +554,10 @@ export default function AdminDashboard() {
   };
 
   const handleDeleteReview = async (id: string) => {
-    if (!confirm('Delete this review?')) return;
-    await deleteDoc(doc(db, 'google_reviews', id));
+    if (!confirm('Delete this review? You can restore it from the Deleted tab within 24 hours.')) return;
+    // Route through the server so it lands in the 24h recycle bin (not a hard delete).
+    const res = await authedFetch(`/api/staff/reviews?id=${encodeURIComponent(id)}`, { method: 'DELETE' });
+    if (!res.ok) { alert('Could not delete the review. Please try again.'); return; }
     setReviews(prev => prev.filter(r => r.id !== id));
   };
 
@@ -536,8 +592,10 @@ export default function AdminDashboard() {
   };
 
   const handleDeleteProperty = async (id: string) => {
-    if (!confirm('Delete this property listing?')) return;
-    await adminDeleteProperty(id);
+    if (!confirm('Delete this property listing? You can restore it from the Deleted tab within 24 hours.')) return;
+    // Route through the server so it lands in the 24h recycle bin (not a hard delete).
+    const res = await authedFetch(`/api/staff/properties?id=${encodeURIComponent(id)}`, { method: 'DELETE' });
+    if (!res.ok) { alert('Could not delete the property. Please try again.'); return; }
     setProperties(prev => prev.filter(p => p.id !== id));
   };
 
@@ -674,6 +732,7 @@ export default function AdminDashboard() {
     { id: 'orders',     icon: '🛒', label: `Orders (${orders.length})` },
     { id: 'maintenance', icon: '🔧', label: `Maintenance (${maintenance.length})` },
     { id: 'activity',   icon: '🕵️', label: 'Activity Logs' },
+    { id: 'deleted',    icon: '🗑️', label: `Deleted${deletedItems.length ? ` (${deletedItems.length})` : ''}` },
     { id: 'post',       icon: '➕', label: 'Post Property' },
     ...(editingProperty ? [{ id: 'edit' as Tab, icon: '✏️', label: 'Edit Property' }] : []),
   ];
@@ -2044,6 +2103,86 @@ export default function AdminDashboard() {
                       </div>
                     );
                   })}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* ── Deleted (24h recycle bin, admin-only) ── */}
+          {tab === 'deleted' && (
+            <div>
+              <h1 className="dash-section-title">Deleted</h1>
+              <p style={{ color: 'var(--gray-600)', marginBottom: 20, fontSize: 15 }}>
+                Anything deleted from the dashboard lands here for <strong>24 hours</strong>. Restore it any
+                time inside that window; after 24 hours it is permanently removed. This is the safety net if a
+                deletion ever slips through.
+              </p>
+
+              <div style={{ marginBottom: 18 }}>
+                <button
+                  onClick={loadDeleted}
+                  style={{ padding: '8px 14px', background: '#1565c0', color: '#fff', border: 'none', borderRadius: 6, fontSize: 13, fontWeight: 600, cursor: 'pointer' }}
+                >
+                  ↻ Refresh
+                </button>
+              </div>
+
+              {!deletedLoaded ? (
+                <div className="dash-card" style={{ textAlign: 'center', padding: 60, color: 'var(--gray-400)' }}>Loading…</div>
+              ) : deletedItems.length === 0 ? (
+                <div className="dash-card" style={{ textAlign: 'center', padding: 60 }}>
+                  <div style={{ fontSize: 52, marginBottom: 16 }}>🗑️</div>
+                  <h3 style={{ fontFamily: 'var(--font-serif)', fontSize: 24, marginBottom: 12 }}>Nothing deleted</h3>
+                  <p style={{ color: 'var(--gray-400)', fontSize: 15 }}>Deleted items appear here for 24 hours so you can restore them.</p>
+                </div>
+              ) : (
+                <div className="dash-card" style={{ padding: 0, overflowX: 'auto' }}>
+                  <table className="data-table" style={{ width: '100%' }}>
+                    <thead>
+                      <tr><th>Item</th><th>Type</th><th>Deleted by</th><th>Deleted</th><th>Time left</th><th>Actions</th></tr>
+                    </thead>
+                    <tbody>
+                      {deletedItems.map(item => {
+                        const expMs = item.expiresAt ? new Date(item.expiresAt).getTime() : 0;
+                        const leftMs = expMs - Date.now();
+                        const expired = leftMs <= 0;
+                        const hrs = Math.floor(leftMs / 3600000);
+                        const mins = Math.floor((leftMs % 3600000) / 60000);
+                        return (
+                          <tr key={item.id}>
+                            <td style={{ fontSize: 13, fontWeight: 600, maxWidth: 260, overflow: 'hidden', textOverflow: 'ellipsis' }}>{item.label || item.originalId}</td>
+                            <td style={{ fontSize: 12, color: 'var(--gray-600)' }}>{item.typeLabel}</td>
+                            <td style={{ fontSize: 12 }}>
+                              <div style={{ fontWeight: 600 }}>{item.deletedByName || '—'}{item.deletedByRole === 'admin' ? ' 🔒' : ''}</div>
+                              {item.deletedByRole && <div style={{ fontSize: 11, color: 'var(--gray-400)', textTransform: 'capitalize' }}>{item.deletedByRole}</div>}
+                            </td>
+                            <td style={{ fontSize: 12, whiteSpace: 'nowrap', color: 'var(--gray-600)' }}>{item.deletedAt ? new Date(item.deletedAt).toLocaleString('en-GB') : '—'}</td>
+                            <td style={{ fontSize: 12, whiteSpace: 'nowrap', fontWeight: 700, color: expired ? '#c62828' : hrs < 2 ? '#ef6c00' : '#2e7d32' }}>
+                              {expired ? 'Expired' : `${hrs}h ${mins}m`}
+                            </td>
+                            <td>
+                              <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                                <button
+                                  onClick={() => restoreDeleted(item)}
+                                  disabled={expired || deletedBusy === item.id}
+                                  style={{ padding: '5px 12px', background: expired ? '#e5e7eb' : '#16a34a', color: expired ? '#9ca3af' : '#fff', border: 'none', borderRadius: 4, fontSize: 12, fontWeight: 600, cursor: expired ? 'not-allowed' : 'pointer' }}
+                                >
+                                  {deletedBusy === item.id ? '…' : '↩ Restore'}
+                                </button>
+                                <button
+                                  onClick={() => purgeDeleted(item)}
+                                  disabled={deletedBusy === item.id}
+                                  style={{ padding: '5px 12px', background: 'transparent', border: '1px solid #c62828', color: '#c62828', borderRadius: 4, fontSize: 12, cursor: 'pointer' }}
+                                >
+                                  Delete forever
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
                 </div>
               )}
             </div>

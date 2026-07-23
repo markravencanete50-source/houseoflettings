@@ -5,6 +5,7 @@
 import { NextResponse } from 'next/server';
 import { FieldValue } from 'firebase-admin/firestore';
 import { requireStaff, getAdminDb } from '@/lib/staffApiAuth';
+import { softDeleteDoc } from '@/lib/softDelete';
 import { extractPostcode } from '@/lib/rentReviewProperties';
 
 export async function GET(request: Request) {
@@ -87,7 +88,9 @@ export async function DELETE(request: Request) {
     const id = new URL(request.url).searchParams.get('id');
     if (!id) return NextResponse.json({ message: 'A property id is required' }, { status: 400 });
 
-    await getAdminDb().collection('rentReviewProperties').doc(id).delete();
+    // Soft-delete into the 24h recycle bin so an admin can restore it.
+    const result = await softDeleteDoc({ collection: 'rentReviewProperties', docId: id, actor: auth, typeLabel: 'Rent-review property' });
+    if (!result.ok) return NextResponse.json({ message: 'Property not found' }, { status: 404 });
     return NextResponse.json({ ok: true }, { status: 200 });
   } catch (e) {
     console.error('staff/rent-review-properties DELETE error:', e);

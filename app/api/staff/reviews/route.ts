@@ -5,6 +5,7 @@
 // writes to admins.
 import { FieldValue } from 'firebase-admin/firestore';
 import { requireStaff, getAdminDb } from '@/lib/staffApiAuth';
+import { softDeleteDoc } from '@/lib/softDelete';
 
 export async function GET(request: Request) {
   try {
@@ -78,7 +79,9 @@ export async function DELETE(request: Request) {
     const id = (searchParams.get('id') || '').trim();
     if (!id) return Response.json({ message: 'Review id is required.' }, { status: 400 });
 
-    await getAdminDb().collection('google_reviews').doc(id).delete();
+    // Soft-delete into the 24h recycle bin so an admin can restore it.
+    const result = await softDeleteDoc({ collection: 'google_reviews', docId: id, actor: auth, typeLabel: 'Review' });
+    if (!result.ok) return Response.json({ message: 'Review not found.' }, { status: 404 });
     return Response.json({ ok: true }, { status: 200 });
   } catch (e) {
     console.error('staff/reviews DELETE error:', e);

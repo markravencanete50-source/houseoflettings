@@ -1117,8 +1117,10 @@ export default function RegistrationFormClient() {
                             {/* One-time discount coupon — pops up inline under the
                                 service the moment it is selected, so it clearly
                                 belongs to that package (not a generic field at the
-                                bottom of the list). */}
-                            {on && (
+                                bottom of the list). Hidden on a bespoke ?quote=
+                                link (which already carries custom pricing) — the
+                                coupon only applies to the standard/general form. */}
+                            {on && !quoteId && (
                               <div className="hol-coupon">
                                 <div className="hol-coupon-title">🎟️ Have a discount coupon for {b.label}?</div>
                                 {coupon ? (

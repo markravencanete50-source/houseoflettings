@@ -1,63 +1,56 @@
 'use client';
 // app/landlord-registration/page.tsx
 // Overview / landing page. The actual form lives at /landlord-registration/apply.
-// Redesigned "trust-first" structure (why-register + comparison + package modals + FAQ).
-// Prices are sourced from lib/bundles.ts (never hard-coded); shared Navbar/Footer are used;
-// every registration CTA routes to /landlord-registration/apply.
-import React, { useState, useRef, useEffect } from 'react';
+// Conversion-focused redesign re-skinned to the House of Lettings system:
+// Poppins, navy #0f1f3d, blue #2563eb, green price figures. Shared Navbar/Footer.
+// Prices are read live from lib/bundles.ts (never hard-coded). SEO metadata lives
+// in ./layout.tsx; the FAQ + RealEstateAgent JSON-LD is rendered here so it stays
+// scoped to this page (not the nested /apply, /forms, /joint routes).
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import Link from 'next/link';
-import {
-  Check,
-  X,
-  ChevronDown,
-  ShieldCheck,
-  Clock3,
-  UserCheck,
-  FileCheck2,
-  TrendingUp,
-  Home as HomeIcon,
-} from 'lucide-react';
+import { Home, ShieldCheck, TrendingUp, UserCheck, Zap, Lock, Check, X, Plus, ArrowRight, type LucideIcon } from 'lucide-react';
 import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
-import { BUNDLES } from '@/lib/bundles';
+import { BUNDLES, type Bundle } from '@/lib/bundles';
+import {
+  WHY_POINTS,
+  PROCESS_STEPS,
+  TERMS_SHORT,
+  TERMS_FULL,
+  BUNDLE_COPY,
+  REGISTRATION_FAQS,
+  type IconKey,
+} from './content';
 
-const theme = {
-  navyDeep: '#0B2033',
-  navy: '#123350',
-  navySoft: '#1F4B6E',
-  sand: '#F4F5F1',
-  card: '#FFFFFF',
-  gold: '#BD8A46',
-  goldSoft: '#E7D2A6',
-  ink: '#1D2A35',
-  inkSoft: '#54626F',
-  success: '#2E6B52',
-  border: '#E3E4DE',
+const APPLY = '/landlord-registration/apply';
+
+const ICONS: Record<IconKey, LucideIcon> = {
+  home: Home,
+  shield: ShieldCheck,
+  trending: TrendingUp,
+  user: UserCheck,
+  zap: Zap,
+  lock: Lock,
 };
 
-/* ---------- scroll reveal ---------- */
-function useInView(options?: IntersectionObserverInit): [React.RefObject<HTMLDivElement>, boolean] {
-  const ref = useRef<HTMLDivElement>(null);
-  const [inView, setInView] = useState(false);
-  useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    const obs = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          setInView(true);
-          obs.unobserve(el);
-        }
-      },
-      options || { threshold: 0.2 }
-    );
-    obs.observe(el);
-    return () => obs.disconnect();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-  return [ref, inView];
-}
+/* ---- page-scoped structured data (crawlable, matches the visible FAQ) ----
+   The site-wide RealEstateAgent schema is already injected by app/layout.tsx,
+   so only the page-specific FAQPage is added here. */
+const faqSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: REGISTRATION_FAQS.map((f) => ({
+    '@type': 'Question',
+    name: f.q,
+    acceptedAnswer: { '@type': 'Answer', text: f.a },
+  })),
+};
 
+/* ---------- scroll reveal ----------
+   Visibility is driven by INLINE styles (authoritative — no stylesheet, media
+   query or duplicated <style> block can override them). A scroll + rect check
+   reveals each element as it enters the viewport, with a timer safety net and a
+   reduced-motion short-circuit so the content is never left hidden. */
 function Reveal({
   children,
   delay = 0,
@@ -67,14 +60,56 @@ function Reveal({
   delay?: number;
   style?: React.CSSProperties;
 }) {
-  const [ref, inView] = useInView();
+  const ref = useRef<HTMLDivElement>(null);
+  const [inView, setInView] = useState(false);
+  const [reduce, setReduce] = useState(false);
+  useEffect(() => {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      setReduce(true);
+      setInView(true);
+      return;
+    }
+    const el = ref.current;
+    if (!el) return;
+    let done = false;
+    let raf = 0;
+    const reveal = () => {
+      if (done) return;
+      done = true;
+      setInView(true);
+      cleanup();
+    };
+    const check = () => {
+      if (done) return;
+      const r = el.getBoundingClientRect();
+      const vh = window.innerHeight || document.documentElement.clientHeight;
+      if (r.top < vh * 0.9 && r.bottom > 0) reveal();
+    };
+    const onScroll = () => {
+      cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(check);
+    };
+    const cleanup = () => {
+      cancelAnimationFrame(raf);
+      clearTimeout(safety);
+      window.removeEventListener('scroll', onScroll);
+      window.removeEventListener('resize', onScroll);
+    };
+    raf = requestAnimationFrame(check);
+    window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('resize', onScroll);
+    // Last-resort backstop: guarantee visibility even if scroll never fires,
+    // but late enough that it does not pre-empt the scroll reveal for readers.
+    const safety = setTimeout(reveal, 3500);
+    return cleanup;
+  }, []);
   return (
     <div
       ref={ref}
       style={{
         opacity: inView ? 1 : 0,
-        transform: inView ? 'translateY(0px)' : 'translateY(22px)',
-        transition: `opacity 0.6s ease ${delay}s, transform 0.6s ease ${delay}s`,
+        transform: inView ? 'none' : 'translateY(26px)',
+        transition: reduce ? 'none' : `opacity .6s ease ${delay}s, transform .6s ease ${delay}s`,
         ...style,
       }}
     >
@@ -83,390 +118,80 @@ function Reveal({
   );
 }
 
-/* ---------- content ---------- */
-const whyPoints = [
-  {
-    icon: HomeIcon,
-    title: 'A Fully Managed Service',
-    body: 'We handle tenant sourcing, referencing, property inspections, maintenance requests and rent collection, so these tasks do not fall to you.',
-  },
-  {
-    icon: ShieldCheck,
-    title: 'Complete UK Compliance Tracking',
-    body: 'We arrange and monitor your Energy Performance Certificate, Gas Safety Certificate, Electrical Installation Condition Report and deposit protection, so your property remains legally lettable.',
-  },
-  {
-    icon: TrendingUp,
-    title: 'Clear, Published Pricing',
-    body: 'Every fee is published on our website before you register. No charge is disclosed only after you have signed an agreement.',
-  },
-  {
-    icon: UserCheck,
-    title: 'One Named Local Agent',
-    body: 'Your property is managed by one agent based in Leeds or Manchester, rather than a shared or rotating team.',
-  },
-  {
-    icon: Clock3,
-    title: 'A Response Within 24 To 48 Hours',
-    body: 'Every registration is reviewed and answered with a tailored proposal within two working days.',
-  },
-  {
-    icon: FileCheck2,
-    title: 'No Obligation To Proceed',
-    body: 'Registering is free and does not create a contract. You review the proposal and decide whether to continue.',
-  },
-];
-
-const comparison = [
-  {
-    label: 'Published pricing',
-    hol: 'Shown in full on our website before you register',
-    other: 'Often disclosed only after a phone call',
-  },
-  {
-    label: 'Point of contact',
-    hol: 'One named local agent for your property',
-    other: 'Frequently a shared or rotating team',
-  },
-  {
-    label: 'Compliance tracking',
-    hol: 'EPC, Gas Safety, EICR and deposit protection tracked for you',
-    other: 'Varies by branch and package',
-  },
-  {
-    label: 'Response time',
-    hol: 'A tailored proposal within 24 to 48 hours',
-    other: 'Varies, and can extend during busy periods',
-  },
-  {
-    label: 'Commitment to register',
-    hol: 'Free, with no obligation to proceed',
-    other: 'Varies by agency',
-  },
-];
-
-// Editorial copy per package, keyed by bundle id. Prices/fees are NOT stored here:
-// they are read live from lib/bundles.ts so this page can never drift from /pricing.
-const PKG_COPY: Record<string, { summary: string; details: string[] }> = {
-  'virtual-tenant-find': {
-    summary:
-      'For landlords who intend to manage the tenancy directly and need a fully referenced tenant found quickly.',
-    details: [
-      'Marketing across major listing portals',
-      'Applicant screening and full reference checks',
-      'Right to Rent verification',
-      'Tenancy agreement prepared and signed',
-      'A remote service, with no property visit included',
-    ],
-  },
-  'expert-tenant-find': {
-    summary:
-      'Includes everything in Virtual Tenant Find, with professional photography and an in-person handover to attract stronger applicants.',
-    details: [
-      'Everything included in Virtual Tenant Find',
-      'Professional photography of the property',
-      'Accompanied viewings with prospective tenants',
-      'An in-person key handover and move-in check',
-      'You continue to manage the tenancy directly',
-    ],
-  },
-  'essential-management': {
-    summary:
-      'For landlords who want rent collection handled for them while remaining in control of repairs and contractor choice.',
-    details: [
-      'Rent collection and payment monitoring',
-      'Arrears follow up on your behalf',
-      'Monthly financial statements',
-      'You approve and arrange repairs directly',
-    ],
-  },
-  'full-management': {
-    summary:
-      'Our most requested package. Rent, maintenance, contractor coordination and compliance are managed by your local team.',
-    details: [
-      'Everything included in Essential Management',
-      'Maintenance requests handled and coordinated',
-      'Access to an approved contractor network',
-      'Ongoing compliance tracking and renewal reminders',
-    ],
-  },
-  'comprehensive-management': {
-    summary:
-      'Everything in Full Management, with additional protection for your rental income and legal position.',
-    details: [
-      'Everything included in Full Management',
-      'Emergency maintenance support',
-      'Property inspections with a written report',
-      'Rent guarantee cover',
-      'Legal and eviction expense protection',
-      'A priority contractor response time',
-    ],
-  },
-};
-
-type PkgView = {
-  id: string;
-  name: string;
-  setup: string;
-  fee: string;
-  summary: string;
-  details: string[];
-  highlight: boolean;
-};
-
-// Build the package cards from the single source of truth. Setup fee + management
-// percentage come straight from BUNDLES; only the descriptive copy is editorial.
-const packages: PkgView[] = BUNDLES.map((b) => ({
-  id: b.id,
-  name: b.label,
-  setup: `${b.setupFee} set up fees`,
-  fee: b.mgmtFee ? `${b.mgmtFee} management fees` : 'No management fees',
-  summary: PKG_COPY[b.id]?.summary ?? b.blurb,
-  details: PKG_COPY[b.id]?.details ?? [],
-  highlight: Boolean(b.badge),
-}));
-
-const faqs = [
-  {
-    q: 'Why register my property with House of Lettings?',
-    a: 'Registering gives our lettings team the information required to prepare a tailored management proposal for your property. We handle tenant finding, referencing, rent collection, maintenance and full legal compliance across Leeds and Manchester, supported by one named local agent for your portfolio.',
-  },
-  {
-    q: 'What documents will I need to let my property legally in the UK?',
-    a: 'You will need a valid Energy Performance Certificate rated E or above, a current Gas Safety Certificate renewed annually where the property has gas appliances, an Electrical Installation Condition Report renewed every 5 years, and working smoke and carbon monoxide alarms. If you choose a managed package, we arrange and track each of these on your behalf.',
-  },
-  {
-    q: "Do I have to protect my tenant's deposit?",
-    a: 'Yes. Where House of Lettings holds a tenancy deposit, it is protected in a government approved scheme, either the Deposit Protection Service, mydeposits or the Tenancy Deposit Scheme, within 30 days of receipt, and the required information is provided to your tenant.',
-  },
-  {
-    q: 'Is registering a commitment or a contract?',
-    a: 'No. Registering your property is free and does not create a contract. As part of registration you review and electronically sign a Residential Lettings and Management Agreement, and the full terms are shown on screen before you sign. Either party may decide not to proceed after registration.',
-  },
-  {
-    q: 'How many properties can I register?',
-    a: 'You may register as many properties as you own. If you manage a portfolio, mention this when you register, and your local agent will prepare a proposal that covers each property.',
-  },
-];
-
-const complianceCards = [{ label: 'EPC' }, { label: 'Gas Safety' }, { label: 'EICR' }, { label: 'Deposit' }];
-
-const eyebrowStyle: React.CSSProperties = {
-  fontSize: 12,
-  fontWeight: 600,
-  textTransform: 'uppercase',
-  letterSpacing: '0.16em',
-  color: theme.gold,
-  margin: 0,
-};
-
-/* ---------- small components ---------- */
-function TrustPill({ children }: { children: React.ReactNode }) {
+/* ---------- price line (figures greened, values from BUNDLES) ---------- */
+function PriceLine({ b, muted }: { b: Bundle; muted?: string }) {
+  const fig = (t: string) => (
+    <b style={{ color: 'var(--price-green-ink)', fontWeight: 700 }}>{t}</b>
+  );
+  if (b.mgmtFee) {
+    return (
+      <>
+        {fig(b.mgmtFee)} management fees <span style={{ color: muted || '#9ca3af' }}>+</span> {fig(b.setupFee)} set up fees
+      </>
+    );
+  }
   return (
-    <div
-      style={{
-        display: 'inline-flex',
-        alignItems: 'center',
-        gap: 8,
-        borderRadius: 999,
-        padding: '8px 16px',
-        fontSize: 14,
-        background: 'rgba(255,255,255,0.08)',
-        color: theme.sand,
-      }}
-    >
-      <Check size={15} style={{ color: theme.gold }} />
-      <span>{children}</span>
-    </div>
+    <>
+      {fig(b.setupFee)} set up fees <span style={{ color: muted || '#9ca3af' }}>· no management fees</span>
+    </>
   );
 }
 
-function ComplianceFan() {
-  const [fanned, setFanned] = useState(false);
-  useEffect(() => {
-    const t = setTimeout(() => setFanned(true), 350);
-    return () => clearTimeout(t);
-  }, []);
-  const rotations = [-14, -4, 6, 16];
-  const shifts = [-54, -18, 18, 54];
-  return (
-    <div style={{ position: 'relative', height: 288, width: '100%', maxWidth: 384, margin: '0 auto' }} aria-hidden="true">
-      {complianceCards.map((c, i) => (
-        <div
-          key={c.label}
-          style={{
-            position: 'absolute',
-            left: '50%',
-            top: '50%',
-            display: 'flex',
-            height: 160,
-            width: 112,
-            flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'center',
-            borderRadius: 12,
-            textAlign: 'center',
-            boxShadow: '0 12px 28px rgba(11,32,51,0.25)',
-            background: theme.card,
-            border: `1px solid ${theme.border}`,
-            transform: fanned
-              ? `translate(-50%, -50%) translateX(${shifts[i]}px) rotate(${rotations[i]}deg)`
-              : 'translate(-50%, -50%) translateX(0px) rotate(0deg)',
-            transition: `transform 0.8s cubic-bezier(.2,.8,.2,1) ${i * 0.09}s`,
-            zIndex: i,
-          }}
-        >
-          <FileCheck2 size={22} style={{ color: theme.success }} />
-          <span style={{ marginTop: 8, padding: '0 8px', fontSize: 12, fontWeight: 600, color: theme.ink }}>
-            {c.label}
-          </span>
-        </div>
-      ))}
-    </div>
-  );
-}
-
-function PackageModal({ pkg, onClose }: { pkg: PkgView | null; onClose: () => void }) {
+/* ---------- animated modal shell ---------- */
+function Modal({
+  label,
+  onClose,
+  children,
+  maxWidth = 560,
+}: {
+  label: string;
+  onClose: () => void;
+  children: React.ReactNode;
+  maxWidth?: number;
+}) {
   const [entered, setEntered] = useState(false);
   useEffect(() => {
     const t = setTimeout(() => setEntered(true), 10);
     return () => clearTimeout(t);
   }, []);
-  if (!pkg) return null;
   return (
     <div
-      style={{
-        position: 'fixed',
-        inset: 0,
-        zIndex: 60,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: 16,
-        background: 'rgba(11,32,51,0.55)',
-        backdropFilter: 'blur(3px)',
-        opacity: entered ? 1 : 0,
-        transition: 'opacity 0.25s ease',
-      }}
+      className="lr-backdrop"
+      style={{ opacity: entered ? 1 : 0 }}
       onClick={onClose}
       role="dialog"
       aria-modal="true"
-      aria-label={pkg.name}
+      aria-label={label}
     >
       <div
+        className="lr-dialog"
         style={{
-          position: 'relative',
-          width: '100%',
-          maxWidth: 512,
-          borderRadius: 16,
-          padding: 32,
-          boxShadow: '0 24px 60px rgba(11,32,51,0.35)',
-          background: theme.card,
-          transform: entered ? 'scale(1) translateY(0px)' : 'scale(0.94) translateY(10px)',
+          maxWidth,
           opacity: entered ? 1 : 0,
-          transition: 'transform 0.3s cubic-bezier(.2,.8,.2,1), opacity 0.3s ease',
+          transform: entered ? 'scale(1) translateY(0)' : 'scale(0.92) translateY(8px)',
         }}
         onClick={(e) => e.stopPropagation()}
       >
-        <button
-          onClick={onClose}
-          aria-label="Close package details"
-          style={{
-            position: 'absolute',
-            right: 20,
-            top: 20,
-            display: 'inline-flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            borderRadius: 999,
-            border: 'none',
-            padding: 6,
-            cursor: 'pointer',
-            background: theme.sand,
-            color: theme.ink,
-          }}
-        >
+        <button className="lr-dialog-x" onClick={onClose} aria-label="Close">
           <X size={16} />
         </button>
-        <p style={{ ...eyebrowStyle, letterSpacing: '0.08em' }}>
-          {pkg.setup} &middot; {pkg.fee}
-        </p>
-        <h3 style={{ marginTop: 8, fontSize: 24, color: theme.ink, fontFamily: "'Fraunces', serif", fontWeight: 600 }}>
-          {pkg.name}
-        </h3>
-        <p style={{ marginTop: 12, fontSize: 14, lineHeight: 1.6, color: theme.inkSoft }}>{pkg.summary}</p>
-        <ul style={{ marginTop: 20, listStyle: 'none', padding: 0, display: 'flex', flexDirection: 'column', gap: 10 }}>
-          {pkg.details.map((d) => (
-            <li key={d} style={{ display: 'flex', alignItems: 'flex-start', gap: 10, fontSize: 14, color: theme.ink }}>
-              <Check size={16} style={{ marginTop: 2, flexShrink: 0, color: theme.success }} />
-              <span>{d}</span>
-            </li>
-          ))}
-        </ul>
-        <Link
-          href="/landlord-registration/apply"
-          className="lr-btn"
-          style={{
-            marginTop: 28,
-            display: 'block',
-            borderRadius: 8,
-            padding: '14px 20px',
-            textAlign: 'center',
-            fontSize: 14,
-            fontWeight: 600,
-            textDecoration: 'none',
-            background: theme.navy,
-            color: '#fff',
-          }}
-        >
-          Select {pkg.name} And Register
-        </Link>
+        {children}
       </div>
     </div>
   );
 }
 
-function FaqItem({ item, isOpen, onToggle }: { item: { q: string; a: string }; isOpen: boolean; onToggle: () => void }) {
+/* ---------- FAQ accordion item ---------- */
+function FaqItem({ item, open, onToggle }: { item: { q: string; a: string }; open: boolean; onToggle: () => void }) {
   return (
-    <div style={{ borderBottom: `1px solid ${theme.border}` }}>
-      <button
-        onClick={onToggle}
-        style={{
-          display: 'flex',
-          width: '100%',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          gap: 16,
-          padding: '20px 0',
-          textAlign: 'left',
-          background: 'none',
-          border: 'none',
-          cursor: 'pointer',
-          fontFamily: "'IBM Plex Sans', sans-serif",
-        }}
-      >
-        <span style={{ fontSize: 16, fontWeight: 500, color: theme.ink }}>{item.q}</span>
-        <ChevronDown
-          size={18}
-          style={{
-            color: theme.gold,
-            transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)',
-            transition: 'transform 0.3s ease',
-            flexShrink: 0,
-          }}
-        />
+    <div className="lr-faq">
+      <button className="lr-faq-q" onClick={onToggle} aria-expanded={open}>
+        <span>{item.q}</span>
+        <Plus size={20} className="lr-faq-icon" style={{ transform: open ? 'rotate(45deg)' : 'none' }} />
       </button>
-      <div
-        style={{
-          display: 'grid',
-          gridTemplateRows: isOpen ? '1fr' : '0fr',
-          transition: 'grid-template-rows 0.35s ease',
-        }}
-      >
+      <div className="lr-faq-a" style={{ gridTemplateRows: open ? '1fr' : '0fr' }}>
         <div style={{ overflow: 'hidden' }}>
-          <p style={{ padding: '0 32px 20px 0', fontSize: 14, lineHeight: 1.6, color: theme.inkSoft, margin: 0 }}>
-            {item.a}
-          </p>
+          <p>{item.a}</p>
         </div>
       </div>
     </div>
@@ -475,171 +200,105 @@ function FaqItem({ item, isOpen, onToggle }: { item: { q: string; a: string }; i
 
 /* ---------- page ---------- */
 export default function LandlordRegistrationPage() {
-  const [activePkg, setActivePkg] = useState<PkgView | null>(null);
+  const [modal, setModal] = useState<string | null>(null);
   const [openFaq, setOpenFaq] = useState<number>(0);
+  const close = useCallback(() => setModal(null), []);
+
+  // Escape to close, body scroll lock, and focus return to the trigger.
+  useEffect(() => {
+    if (!modal) return;
+    const prevFocus = document.activeElement as HTMLElement | null;
+    document.body.style.overflow = 'hidden';
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setModal(null);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => {
+      window.removeEventListener('keydown', onKey);
+      document.body.style.overflow = '';
+      prevFocus?.focus?.();
+    };
+  }, [modal]);
+
+  const modalBundle = modal ? BUNDLES.find((b) => b.id === modal) : undefined;
 
   return (
     <>
       <style>{PAGE_CSS}</style>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }} />
       <Navbar />
 
-      <div style={{ fontFamily: "'IBM Plex Sans', sans-serif", background: theme.sand }}>
-        {/* hero */}
-        <section
-          style={{
-            position: 'relative',
-            overflow: 'hidden',
-            padding: 'clamp(56px, 8vw, 96px) clamp(20px, 5%, 48px)',
-            background: `linear-gradient(180deg, ${theme.navyDeep}, ${theme.navy})`,
-          }}
-        >
-          <div className="lr-hero" style={{ maxWidth: 1152, margin: '0 auto' }}>
-            <div>
-              <p style={{ ...eyebrowStyle, letterSpacing: '0.18em' }}>Landlord Registration &middot; Leeds &amp; Manchester</p>
-              <h1
-                style={{
-                  marginTop: 16,
-                  fontSize: 'clamp(34px, 4.5vw, 52px)',
-                  lineHeight: 1.12,
-                  color: '#fff',
-                  fontFamily: "'Fraunces', serif",
-                  fontWeight: 600,
-                }}
-              >
-                Register Your Property With A Local Letting Agent You Can Trust
-              </h1>
-              <p style={{ marginTop: 20, maxWidth: 460, fontSize: 16, lineHeight: 1.65, color: '#C7D0D8' }}>
-                Complete one short form to receive a tailored management proposal within 24 to 48 hours. Registration is
-                free, and you decide whether to proceed after you receive it.
+      <main className="lr">
+        {/* ── HERO ── */}
+        <section className="lr-hero">
+          <span className="lr-blob lr-blob-a" aria-hidden />
+          <span className="lr-blob lr-blob-b" aria-hidden />
+          <div className="wrap lr-hero-grid">
+            <div className="lr-hero-copy">
+              <span className="lr-eyebrow-pill">Landlord Registration &middot; Leeds &amp; Manchester</span>
+              <h1>Register your property and let it the compliant way</h1>
+              <p className="lr-lead">
+                One short form connects you with a dedicated local agent. Choose your service, e-sign your agreement
+                online and receive a signed PDF copy by email.
               </p>
-              <div style={{ marginTop: 32, display: 'flex', flexWrap: 'wrap', gap: 12 }}>
-                <Link
-                  href="/landlord-registration/apply"
-                  className="lr-btn"
-                  style={{
-                    borderRadius: 8,
-                    padding: '14px 24px',
-                    fontSize: 14,
-                    fontWeight: 600,
-                    textDecoration: 'none',
-                    background: theme.gold,
-                    color: theme.navyDeep,
-                  }}
-                >
-                  Start Your Registration
+              <div className="lr-hero-cta">
+                <Link href={APPLY} className="lr-btn lr-btn-primary">
+                  Start Registration <ArrowRight size={17} />
                 </Link>
-                <a
-                  href="#packages"
-                  className="lr-btn"
-                  style={{
-                    borderRadius: 8,
-                    padding: '14px 24px',
-                    fontSize: 14,
-                    fontWeight: 600,
-                    textDecoration: 'none',
-                    background: 'rgba(255,255,255,0.08)',
-                    color: '#fff',
-                  }}
-                >
-                  Compare Our Packages
-                </a>
+                <button className="lr-btn lr-btn-ghost" onClick={() => setModal('process')}>
+                  Preview the process
+                </button>
               </div>
-              <div style={{ marginTop: 32, display: 'flex', flexWrap: 'wrap', gap: 10 }}>
-                <TrustPill>Free to register</TrustPill>
-                <TrustPill>No obligation to proceed</TrustPill>
-                <TrustPill>Response within 24 to 48 hours</TrustPill>
+              <ul className="lr-chips">
+                <li><Check size={14} /> Free</li>
+                <li><Check size={14} /> No obligation</li>
+                <li><Check size={14} /> Response within 24 to 48 hours</li>
+              </ul>
+            </div>
+
+            {/* 3-step card */}
+            <Reveal delay={0.15} style={{ width: '100%' }}>
+              <div className="lr-steps-card">
+                <p className="lr-steps-title">Three steps, a few minutes</p>
+                {PROCESS_STEPS.map((s) => (
+                  <div key={s.n} className="lr-step">
+                    <span className="lr-step-num">{s.n}</span>
+                    <div>
+                      <strong>{s.title}</strong>
+                      <span>{s.desc}</span>
+                    </div>
+                  </div>
+                ))}
+                <Link href={APPLY} className="lr-btn lr-btn-primary lr-btn-block">
+                  Begin step 1 <ArrowRight size={17} />
+                </Link>
               </div>
-            </div>
-            <div style={{ animation: 'lrfloat 5s ease-in-out infinite' }}>
-              <ComplianceFan />
-            </div>
+            </Reveal>
           </div>
         </section>
 
-        {/* why register */}
-        <section style={{ padding: 'clamp(56px, 8vw, 80px) clamp(20px, 5%, 48px)' }}>
-          <div style={{ maxWidth: 1152, margin: '0 auto' }}>
+        {/* ── WHY REGISTER ── */}
+        <section className="lr-section">
+          <div className="wrap">
             <Reveal>
-              <p style={eyebrowStyle}>Why Register</p>
-              <h2
-                style={{
-                  marginTop: 12,
-                  maxWidth: 640,
-                  fontSize: 'clamp(28px, 3.6vw, 38px)',
-                  color: theme.ink,
-                  fontFamily: "'Fraunces', serif",
-                  fontWeight: 600,
-                }}
-              >
-                Why Landlords Choose House Of Lettings
-              </h2>
-              <p style={{ marginTop: 16, maxWidth: 640, fontSize: 16, lineHeight: 1.6, color: theme.inkSoft }}>
-                Many letting agents promise good service. Our registration process is built to show you the difference in
-                pricing, communication and compliance before you commit to anything.
+              <p className="lr-kicker">Why Register</p>
+              <h2 className="lr-h2">Everything a landlord needs, handled by one local team</h2>
+              <p className="lr-sub">
+                From compliance to rent collection, registration is the single step that puts your property in expert
+                hands.
               </p>
             </Reveal>
-
-            {/* comparison table */}
-            <Reveal delay={0.1} style={{ marginTop: 40 }}>
-              <div className="lr-tablewrap">
-                <table className="lr-table">
-                  <thead>
-                    <tr style={{ background: theme.navy, color: '#fff' }}>
-                      <th style={{ fontWeight: 500 }}>What matters to landlords</th>
-                      <th style={{ fontWeight: 600, color: theme.goldSoft }}>House of Lettings</th>
-                      <th style={{ fontWeight: 500 }}>Typical letting agents</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {comparison.map((row, i) => (
-                      <tr key={row.label} style={{ background: i % 2 === 0 ? theme.card : theme.sand }}>
-                        <td style={{ fontWeight: 500, color: theme.ink }}>{row.label}</td>
-                        <td style={{ color: theme.ink }}>
-                          <span style={{ display: 'flex', alignItems: 'flex-start', gap: 8 }}>
-                            <Check size={15} style={{ marginTop: 2, flexShrink: 0, color: theme.success }} />
-                            {row.hol}
-                          </span>
-                        </td>
-                        <td style={{ color: theme.inkSoft }}>{row.other}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </Reveal>
-
-            {/* benefit cards */}
-            <div className="lr-grid3" style={{ marginTop: 40 }}>
-              {whyPoints.map((p, i) => {
-                const Icon = p.icon;
+            <div className="lr-grid3" style={{ marginTop: 44 }}>
+              {WHY_POINTS.map((p, i) => {
+                const Icon = ICONS[p.icon];
                 return (
-                  <Reveal key={p.title} delay={0.05 * i} style={{ height: '100%' }}>
-                    <div
-                      className="lr-lift"
-                      style={{
-                        height: '100%',
-                        borderRadius: 16,
-                        padding: 24,
-                        boxShadow: '0 1px 3px rgba(11,32,51,0.06)',
-                        background: theme.card,
-                        border: `1px solid ${theme.border}`,
-                      }}
-                    >
-                      <div
-                        style={{
-                          display: 'flex',
-                          height: 40,
-                          width: 40,
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          borderRadius: 8,
-                          background: theme.sand,
-                        }}
-                      >
-                        <Icon size={19} style={{ color: theme.gold }} />
-                      </div>
-                      <h3 style={{ marginTop: 16, fontSize: 16, fontWeight: 600, color: theme.ink }}>{p.title}</h3>
-                      <p style={{ marginTop: 8, fontSize: 14, lineHeight: 1.6, color: theme.inkSoft }}>{p.body}</p>
+                  <Reveal key={p.title} delay={0.06 * i} style={{ height: '100%' }}>
+                    <div className="lr-card lr-lift">
+                      <span className="lr-card-icon">
+                        <Icon size={20} />
+                      </span>
+                      <h3>{p.title}</h3>
+                      <p>{p.body}</p>
                     </div>
                   </Reveal>
                 );
@@ -648,219 +307,341 @@ export default function LandlordRegistrationPage() {
           </div>
         </section>
 
-        {/* packages */}
-        <section id="packages" style={{ padding: 'clamp(56px, 8vw, 80px) clamp(20px, 5%, 48px)', background: theme.card }}>
-          <div style={{ maxWidth: 1152, margin: '0 auto' }}>
+        {/* ── BUNDLES ── */}
+        <section className="lr-section lr-band">
+          <div className="wrap">
             <Reveal>
-              <p style={eyebrowStyle}>Our Bundles</p>
-              <h2
-                style={{
-                  marginTop: 12,
-                  maxWidth: 640,
-                  fontSize: 'clamp(28px, 3.6vw, 38px)',
-                  color: theme.ink,
-                  fontFamily: "'Fraunces', serif",
-                  fontWeight: 600,
-                }}
-              >
-                Services You Can Request
-              </h2>
-              <p style={{ marginTop: 16, maxWidth: 640, fontSize: 16, lineHeight: 1.6, color: theme.inkSoft }}>
-                Select a package to see the full list of what is included. You choose your package during registration,
-                and can change your mind before you sign.
+              <p className="lr-kicker">Our Bundles</p>
+              <h2 className="lr-h2">Choose the service that fits your portfolio</h2>
+              <p className="lr-sub">
+                Management bundles are charged as a percentage of the monthly rent, with a smaller set up fee to get
+                started. All prices include VAT.
               </p>
             </Reveal>
-
-            <div className="lr-grid3" style={{ marginTop: 40 }}>
-              {packages.map((pkg, i) => (
-                <Reveal key={pkg.id} delay={0.05 * i} style={{ height: '100%' }}>
-                  <button
-                    onClick={() => setActivePkg(pkg)}
-                    className="lr-lift"
-                    style={{
-                      display: 'flex',
-                      height: '100%',
-                      width: '100%',
-                      flexDirection: 'column',
-                      borderRadius: 16,
-                      padding: 24,
-                      textAlign: 'left',
-                      cursor: 'pointer',
-                      boxShadow: '0 1px 3px rgba(11,32,51,0.06)',
-                      background: pkg.highlight ? theme.navy : theme.sand,
-                      border: pkg.highlight ? `1px solid ${theme.navy}` : `1px solid ${theme.border}`,
-                    }}
-                  >
-                    {pkg.highlight && (
-                      <span
-                        style={{
-                          marginBottom: 12,
-                          display: 'inline-block',
-                          width: 'fit-content',
-                          borderRadius: 999,
-                          padding: '4px 12px',
-                          fontSize: 12,
-                          fontWeight: 600,
-                          background: theme.gold,
-                          color: theme.navyDeep,
-                        }}
-                      >
-                        Most Popular
+            <div className="lr-grid3" style={{ marginTop: 44 }}>
+              {BUNDLES.map((b, i) => {
+                const copy = BUNDLE_COPY[b.id];
+                const hot = Boolean(b.badge);
+                return (
+                  <Reveal key={b.id} delay={0.05 * i} style={{ height: '100%' }}>
+                    <button
+                      className={`lr-bundle lr-lift${hot ? ' hot' : ''}`}
+                      onClick={() => setModal(b.id)}
+                      aria-label={`View details for ${b.label}`}
+                    >
+                      {hot && <span className="lr-hot-badge">Most Popular</span>}
+                      <span className="lr-bundle-kind">{b.kind}</span>
+                      <h3>{b.label}</h3>
+                      <p className="lr-bundle-price">
+                        <PriceLine b={b} />
+                      </p>
+                      <p className="lr-bundle-copy">{copy?.card ?? b.blurb}</p>
+                      <span className="lr-bundle-link">
+                        View details <ArrowRight size={15} />
                       </span>
-                    )}
-                    <p style={{ fontSize: 12, fontWeight: 500, color: pkg.highlight ? theme.goldSoft : theme.inkSoft }}>
-                      {pkg.setup} &middot; {pkg.fee}
-                    </p>
-                    <h3
-                      style={{
-                        marginTop: 8,
-                        fontSize: 18,
-                        fontWeight: 600,
-                        color: pkg.highlight ? '#fff' : theme.ink,
-                        fontFamily: "'Fraunces', serif",
-                      }}
-                    >
-                      {pkg.name}
-                    </h3>
-                    <p
-                      style={{
-                        marginTop: 8,
-                        flex: 1,
-                        fontSize: 14,
-                        lineHeight: 1.6,
-                        color: pkg.highlight ? '#C7D0D8' : theme.inkSoft,
-                      }}
-                    >
-                      {pkg.summary}
-                    </p>
-                    <span
-                      style={{
-                        marginTop: 16,
-                        fontSize: 14,
-                        fontWeight: 600,
-                        color: pkg.highlight ? theme.goldSoft : theme.gold,
-                      }}
-                    >
-                      View full details &rarr;
-                    </span>
-                  </button>
-                </Reveal>
-              ))}
+                    </button>
+                  </Reveal>
+                );
+              })}
             </div>
+            <Reveal style={{ textAlign: 'center', marginTop: 36 }}>
+              <Link href="/pricing" className="lr-btn lr-btn-outline">
+                Compare all bundles
+              </Link>
+            </Reveal>
           </div>
         </section>
 
-        {activePkg && <PackageModal pkg={activePkg} onClose={() => setActivePkg(null)} />}
-
-        {/* faq */}
-        <section style={{ padding: 'clamp(56px, 8vw, 80px) clamp(20px, 5%, 48px)' }}>
-          <div style={{ maxWidth: 768, margin: '0 auto' }}>
+        {/* ── TERMS ── */}
+        <section className="lr-section">
+          <div className="wrap lr-narrow">
             <Reveal>
-              <p style={eyebrowStyle}>Common Questions</p>
-              <h2
-                style={{
-                  marginTop: 12,
-                  fontSize: 'clamp(28px, 3.6vw, 34px)',
-                  color: theme.ink,
-                  fontFamily: "'Fraunces', serif",
-                  fontWeight: 600,
-                }}
-              >
-                Frequently Asked Questions
-              </h2>
+              <p className="lr-kicker">The Terms</p>
+              <h2 className="lr-h2">How we work together, in plain English</h2>
+              <p className="lr-sub">
+                You confirm you have read these when you register. Here are the three points landlords ask about most.
+              </p>
             </Reveal>
-            <Reveal delay={0.1} style={{ marginTop: 32 }}>
-              <div>
-                {faqs.map((item, i) => (
-                  <FaqItem
-                    key={item.q}
-                    item={item}
-                    isOpen={openFaq === i}
-                    onToggle={() => setOpenFaq(openFaq === i ? -1 : i)}
-                  />
+            <div className="lr-terms" style={{ marginTop: 36 }}>
+              {TERMS_SHORT.map((t, i) => (
+                <Reveal key={t.title} delay={0.06 * i}>
+                  <div className="lr-term lr-lift">
+                    <Check size={18} className="lr-term-tick" />
+                    <div>
+                      <strong>{t.title}.</strong> {t.body}
+                    </div>
+                  </div>
+                </Reveal>
+              ))}
+            </div>
+            <Reveal style={{ textAlign: 'center', marginTop: 30 }}>
+              <button className="lr-btn lr-btn-outline" onClick={() => setModal('terms')}>
+                Read the full summary
+              </button>
+              <p className="lr-terms-link">
+                Or read the <Link href="/terms">full terms and conditions</Link>.
+              </p>
+            </Reveal>
+          </div>
+        </section>
+
+        {/* ── FAQ ── */}
+        <section className="lr-section lr-band">
+          <div className="wrap lr-narrow">
+            <Reveal>
+              <p className="lr-kicker">Common Questions</p>
+              <h2 className="lr-h2">Frequently asked questions</h2>
+            </Reveal>
+            <Reveal delay={0.1} style={{ marginTop: 30 }}>
+              <div className="lr-faqs">
+                {REGISTRATION_FAQS.map((item, i) => (
+                  <FaqItem key={item.q} item={item} open={openFaq === i} onToggle={() => setOpenFaq(openFaq === i ? -1 : i)} />
                 ))}
               </div>
             </Reveal>
           </div>
         </section>
 
-        {/* final cta */}
-        <section
-          id="apply"
-          style={{
-            padding: 'clamp(56px, 8vw, 80px) clamp(24px, 6%, 100px)',
-            textAlign: 'center',
-            background: `linear-gradient(135deg, ${theme.navyDeep}, ${theme.navy})`,
-          }}
-        >
+        {/* ── CTA BAND ── */}
+        <section className="lr-cta">
+          <span className="lr-blob lr-blob-c" aria-hidden />
           <Reveal>
-            <h2
-              style={{
-                margin: '0 auto',
-                maxWidth: 672,
-                fontSize: 'clamp(28px, 3.6vw, 38px)',
-                color: '#fff',
-                fontFamily: "'Fraunces', serif",
-                fontWeight: 600,
-              }}
-            >
-              Ready To Register Your Property?
-            </h2>
-            <p style={{ margin: '16px auto 0', maxWidth: 576, fontSize: 16, lineHeight: 1.6, color: '#C7D0D8' }}>
-              Complete the step by step registration and your local Leeds or Manchester agent will respond within 24 to 48
-              hours.
-            </p>
-            <Link
-              href="/landlord-registration/apply"
-              className="lr-btn"
-              style={{
-                marginTop: 32,
-                display: 'inline-block',
-                borderRadius: 8,
-                padding: '16px 32px',
-                fontSize: 14,
-                fontWeight: 600,
-                textDecoration: 'none',
-                background: theme.gold,
-                color: theme.navyDeep,
-              }}
-            >
-              Start Registration
-            </Link>
+            <div className="wrap" style={{ position: 'relative' }}>
+              <h2>Ready to register your property?</h2>
+              <p>
+                Complete the step-by-step registration and we will be in touch within 24 to 48 hours with a tailored
+                proposal.
+              </p>
+              <Link href={APPLY} className="lr-btn lr-btn-light">
+                Start Registration <ArrowRight size={17} />
+              </Link>
+              <ul className="lr-chips lr-chips-center">
+                <li><Check size={14} /> Free</li>
+                <li><Check size={14} /> No obligation</li>
+                <li><Check size={14} /> Signed PDF by email</li>
+              </ul>
+            </div>
           </Reveal>
         </section>
+      </main>
 
-        <Footer />
-      </div>
+      <Footer />
+
+      {/* ── MODALS ── */}
+      {modal === 'process' && (
+        <Modal label="How registration works" onClose={close}>
+          <p className="lr-dialog-kicker">The process</p>
+          <h3 className="lr-dialog-title">Three steps, a few minutes</h3>
+          <div className="lr-dialog-steps">
+            {PROCESS_STEPS.map((s) => (
+              <div key={s.n} className="lr-step">
+                <span className="lr-step-num">{s.n}</span>
+                <div>
+                  <strong>{s.title}</strong>
+                  <span>{s.desc}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+          <Link href={APPLY} className="lr-btn lr-btn-primary lr-btn-block" style={{ marginTop: 22 }}>
+            Begin step 1 <ArrowRight size={17} />
+          </Link>
+        </Modal>
+      )}
+
+      {modal === 'terms' && (
+        <Modal label="Property management terms" onClose={close} maxWidth={640}>
+          <p className="lr-dialog-kicker">The Terms</p>
+          <h3 className="lr-dialog-title">Property management terms, in plain English</h3>
+          <ol className="lr-dialog-terms">
+            {TERMS_FULL.map((t) => (
+              <li key={t.title}>
+                <strong>{t.title}.</strong> {t.body}
+              </li>
+            ))}
+          </ol>
+          <p className="lr-terms-link" style={{ textAlign: 'center', marginTop: 6 }}>
+            Read the <Link href="/terms">full terms and conditions</Link>.
+          </p>
+        </Modal>
+      )}
+
+      {modalBundle && (
+        <Modal label={modalBundle.label} onClose={close}>
+          <p className="lr-dialog-kicker">{modalBundle.kind}</p>
+          <h3 className="lr-dialog-title">{modalBundle.label}</h3>
+          <p className="lr-dialog-price">
+            <PriceLine b={modalBundle} /> <span className="lr-vat">· inclusive of VAT</span>
+          </p>
+          <p className="lr-dialog-summary">{BUNDLE_COPY[modalBundle.id]?.summary ?? modalBundle.blurb}</p>
+          <ul className="lr-dialog-list">
+            {(BUNDLE_COPY[modalBundle.id]?.details ?? []).map((d) => (
+              <li key={d}>
+                <Check size={16} /> <span>{d}</span>
+              </li>
+            ))}
+          </ul>
+          <Link href={APPLY} className="lr-btn lr-btn-primary lr-btn-block" style={{ marginTop: 22 }}>
+            Register with this bundle <ArrowRight size={17} />
+          </Link>
+        </Modal>
+      )}
     </>
   );
 }
 
 const PAGE_CSS = `
-  @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap');
 
-  .lr-hero { display:grid; gap:48px; align-items:center; }
-  @media(min-width:768px){ .lr-hero{ grid-template-columns:1fr 1fr; } }
+  .lr { font-family:'Poppins',sans-serif; color:#4b5563; background:#fff; overflow-x:hidden; }
+  .lr .wrap { max-width:1140px; margin:0 auto; padding:0 24px; }
+  .lr .lr-narrow { max-width:820px; }
+  .lr h1, .lr h2, .lr h3 { color:#0f1f3d; line-height:1.15; }
 
+  /* buttons (site CTA convention) */
+  .lr-btn { display:inline-flex; align-items:center; justify-content:center; gap:8px; box-sizing:border-box;
+    min-height:48px; line-height:1.2; font-family:'Poppins',sans-serif; font-size:13.5px; font-weight:600;
+    padding:14px 28px; border-radius:9px; border:1.5px solid transparent; cursor:pointer; text-decoration:none;
+    transition:transform .2s ease, background .2s ease, box-shadow .2s ease, color .2s ease; }
+  .lr-btn:hover { transform:translateY(-2px); }
+  .lr-btn-primary { background:#2563eb; color:#fff; box-shadow:0 6px 18px rgba(37,99,235,.28); }
+  .lr-btn-primary:hover { background:#1d4ed8; }
+  .lr-btn-ghost { background:rgba(255,255,255,.08); color:#fff; border-color:rgba(255,255,255,.28); }
+  .lr-btn-ghost:hover { background:rgba(255,255,255,.16); }
+  .lr-btn-outline { background:#fff; color:#2563eb; border-color:#2563eb; }
+  .lr-btn-outline:hover { background:#2563eb; color:#fff; }
+  .lr-btn-light { background:#fff; color:#0f1f3d; }
+  .lr-btn-light:hover { background:#eef2ff; }
+  .lr-btn-block { width:100%; }
+
+  /* section rhythm */
+  .lr-section { padding:clamp(56px,7vw,80px) 0; }
+  .lr-band { background:#f7f8fa; }
+  .lr-kicker { font-size:11px; font-weight:700; letter-spacing:3px; text-transform:uppercase; color:var(--logo-blue,#2563eb); margin-bottom:12px; }
+  .lr-h2 { font-size:clamp(26px,3.4vw,38px); font-weight:700; max-width:660px; }
+  .lr-sub { font-size:15.5px; line-height:1.7; color:#6b7280; max-width:640px; margin-top:14px; }
+
+  /* hero */
+  .lr-hero { position:relative; overflow:hidden; padding:clamp(52px,7vw,86px) 0 clamp(56px,7vw,90px);
+    background:#0f1f3d; background-image:radial-gradient(ellipse at 78% 12%, rgba(37,99,235,.28) 0%, transparent 55%),
+    radial-gradient(ellipse at 10% 92%, rgba(37,99,235,.14) 0%, transparent 52%); }
+  .lr-hero-grid { display:grid; grid-template-columns:1.15fr .85fr; gap:48px; align-items:center; position:relative; z-index:1; }
+  .lr-hero-copy h1 { color:#fff; font-size:clamp(32px,4.4vw,52px); font-weight:800; margin:16px 0 0; text-wrap:balance; }
+  .lr-lead { color:rgba(255,255,255,.66); font-size:17px; line-height:1.65; max-width:520px; margin-top:18px; font-weight:300; }
+  .lr-eyebrow-pill { display:inline-block; background:rgba(37,99,235,.22); color:#93c5fd; font-size:11px; font-weight:700;
+    letter-spacing:2.5px; text-transform:uppercase; padding:6px 14px; border-radius:20px; border:1px solid rgba(147,197,253,.35); }
+  .lr-hero-cta { display:flex; flex-wrap:wrap; gap:12px; margin-top:30px; }
+  .lr-chips { list-style:none; display:flex; flex-wrap:wrap; gap:10px 18px; margin-top:26px; padding:0; }
+  .lr-chips li { display:inline-flex; align-items:center; gap:7px; color:rgba(255,255,255,.82); font-size:13px; font-weight:500; }
+  .lr-chips li svg { color:#4ade80; }
+  .lr-chips-center { justify-content:center; }
+
+  /* hero float blobs */
+  .lr-blob { position:absolute; border-radius:50%; filter:blur(8px); pointer-events:none; }
+  .lr-blob-a { width:150px; height:150px; top:14%; right:8%; background:rgba(37,99,235,.20); animation:lrfloat 7s ease-in-out infinite; }
+  .lr-blob-b { width:90px; height:90px; bottom:12%; left:6%; background:rgba(74,222,128,.12); animation:lrfloat 9s ease-in-out infinite reverse; }
+  .lr-blob-c { width:220px; height:220px; top:-40px; right:-30px; background:rgba(37,99,235,.18); }
+
+  /* 3-step card */
+  .lr-steps-card { background:#fff; border-radius:18px; padding:26px 24px; box-shadow:0 24px 60px rgba(5,10,25,.28); }
+  .lr-steps-title { font-size:12px; font-weight:700; letter-spacing:1.5px; text-transform:uppercase; color:#2563eb; margin-bottom:16px; }
+  .lr-step { display:flex; gap:14px; align-items:flex-start; padding:12px 0; border-top:1px solid #eef0f5; }
+  .lr-step:first-of-type { border-top:none; padding-top:0; }
+  .lr-step-num { flex:0 0 auto; width:28px; height:28px; border-radius:50%; background:#eff5ff; color:#2563eb;
+    font-size:13px; font-weight:700; display:flex; align-items:center; justify-content:center; }
+  .lr-step strong { display:block; color:#0f1f3d; font-size:14.5px; font-weight:600; }
+  .lr-step span { display:block; color:#6b7280; font-size:13px; line-height:1.55; margin-top:2px; }
+  .lr-steps-card .lr-btn { margin-top:18px; }
+
+  /* cards */
   .lr-grid3 { display:grid; grid-template-columns:repeat(3,1fr); gap:20px; }
-  @media(max-width:1024px){ .lr-grid3{ grid-template-columns:repeat(2,1fr); } }
-  @media(max-width:640px){ .lr-grid3{ grid-template-columns:1fr; } }
+  .lr-lift { transition:transform .22s ease, box-shadow .22s ease, border-color .22s ease; }
+  .lr-lift:hover { transform:translateY(-5px); box-shadow:0 18px 40px rgba(15,31,61,.12); }
+  .lr-card { height:100%; background:#fff; border:1px solid #eef0f5; border-radius:14px; padding:26px 24px; }
+  .lr-card-icon { display:inline-flex; align-items:center; justify-content:center; width:44px; height:44px; border-radius:11px;
+    background:#eff5ff; color:#2563eb; margin-bottom:16px; }
+  .lr-card h3 { font-size:16.5px; font-weight:600; margin-bottom:8px; }
+  .lr-card p { font-size:14px; line-height:1.7; color:#6b7280; }
 
-  .lr-lift { transition:transform 0.2s ease, box-shadow 0.2s ease; }
-  .lr-lift:hover { transform:translateY(-4px); box-shadow:0 14px 30px rgba(11,32,51,0.10); }
+  /* bundle cards */
+  .lr-bundle { position:relative; display:flex; flex-direction:column; height:100%; width:100%; text-align:left;
+    background:#fff; border:1px solid #e5e7eb; border-radius:14px; padding:24px 22px; cursor:pointer; font-family:'Poppins',sans-serif; }
+  .lr-bundle.hot { border-color:#2563eb; box-shadow:0 0 0 3px rgba(37,99,235,.12); }
+  .lr-hot-badge { position:absolute; top:-11px; left:22px; background:#2563eb; color:#fff; font-size:10.5px; font-weight:700;
+    letter-spacing:.5px; text-transform:uppercase; padding:4px 12px; border-radius:20px; }
+  .lr-bundle-kind { font-size:10.5px; font-weight:700; letter-spacing:1.2px; text-transform:uppercase; color:#94a3b8; }
+  .lr-bundle h3 { font-size:19px; font-weight:700; margin:8px 0 6px; }
+  .lr-bundle-price { font-size:14px; color:#48546e; margin-bottom:10px; }
+  .lr-bundle-copy { flex:1; font-size:13.5px; line-height:1.65; color:#6b7280; }
+  .lr-bundle-link { display:inline-flex; align-items:center; gap:6px; margin-top:16px; color:#2563eb; font-size:13.5px; font-weight:600; }
+  .lr-bundle:hover .lr-bundle-link svg { transform:translateX(3px); }
+  .lr-bundle-link svg { transition:transform .2s ease; }
 
-  .lr-btn { transition:transform 0.2s ease, background 0.2s ease, filter 0.2s ease; }
-  .lr-btn:hover { transform:translateY(-2px); filter:brightness(0.97); }
+  /* terms */
+  .lr-terms { display:flex; flex-direction:column; gap:14px; }
+  .lr-term { display:flex; gap:12px; background:#fff; border:1px solid #eef0f5; border-radius:12px; padding:18px 20px;
+    font-size:14.5px; line-height:1.7; color:#4b5563; }
+  .lr-term strong { color:#0f1f3d; }
+  .lr-term-tick { flex:0 0 auto; margin-top:3px; color:#16a34a; }
+  .lr-terms-link { font-size:13px; color:#9ca3af; text-align:center; margin-top:14px; }
+  .lr-terms-link a { color:var(--logo-blue,#2563eb); font-weight:600; }
 
-  .lr-tablewrap { overflow-x:auto; border-radius:16px; box-shadow:0 1px 3px rgba(11,32,51,0.08); }
-  .lr-table { width:100%; min-width:640px; border-collapse:collapse; text-align:left; font-size:14px; }
-  .lr-table th, .lr-table td { padding:16px 20px; vertical-align:top; }
+  /* faq */
+  .lr-faqs { border-top:1px solid #e6e9f0; }
+  .lr-faq { border-bottom:1px solid #e6e9f0; }
+  .lr-faq-q { width:100%; display:flex; align-items:center; justify-content:space-between; gap:16px; padding:20px 0;
+    background:none; border:none; cursor:pointer; text-align:left; font-family:'Poppins',sans-serif; font-size:16px;
+    font-weight:600; color:#0f1f3d; }
+  .lr-faq-icon { flex:0 0 auto; color:#2563eb; transition:transform .3s ease; }
+  .lr-faq-a { display:grid; grid-template-rows:0fr; transition:grid-template-rows .35s ease; }
+  .lr-faq-a p { padding:0 26px 20px 0; font-size:14.5px; line-height:1.75; color:#4b5563; }
 
-  @media (prefers-reduced-motion: reduce) {
-    .lr-lift, .lr-btn { transition:none !important; }
+  /* cta band */
+  .lr-cta { position:relative; overflow:hidden; text-align:center; padding:clamp(56px,7vw,88px) 24px;
+    background:linear-gradient(135deg,#0a162f,#0f1f3d); color:#fff; }
+  .lr-cta h2 { color:#fff; font-size:clamp(26px,3.4vw,42px); font-weight:700; }
+  .lr-cta p { max-width:540px; margin:16px auto 30px; color:rgba(255,255,255,.66); font-size:16px; line-height:1.7; font-weight:300; }
+  .lr-cta .lr-chips { margin-top:24px; }
+
+  /* modal */
+  .lr-backdrop { position:fixed; inset:0; z-index:60; display:flex; align-items:center; justify-content:center; padding:16px;
+    background:rgba(9,17,33,.6); backdrop-filter:blur(3px); transition:opacity .25s ease; }
+  .lr-dialog { position:relative; width:100%; background:#fff; border-radius:18px; padding:30px 28px;
+    box-shadow:0 30px 70px rgba(5,10,25,.4); max-height:90vh; overflow-y:auto;
+    transition:opacity .25s ease, transform .3s cubic-bezier(.34,1.4,.64,1); }
+  .lr-dialog-x { position:absolute; top:16px; right:16px; width:34px; height:34px; border-radius:50%; border:none;
+    background:#f2f4f8; color:#0f1f3d; display:inline-flex; align-items:center; justify-content:center; cursor:pointer; transition:background .2s ease; }
+  .lr-dialog-x:hover { background:#e5e9f2; }
+  .lr-dialog-kicker { font-size:11px; font-weight:700; letter-spacing:2px; text-transform:uppercase; color:#2563eb; }
+  .lr-dialog-title { font-size:22px; font-weight:700; margin:6px 0 0; padding-right:30px; }
+  .lr-dialog-price { margin-top:10px; font-size:14.5px; color:#48546e; font-weight:500; }
+  .lr-vat { color:#9ca3af; font-weight:400; }
+  .lr-dialog-summary { margin-top:12px; font-size:14.5px; line-height:1.7; color:#4b5563; }
+  .lr-dialog-list { list-style:none; padding:0; margin:18px 0 0; display:flex; flex-direction:column; gap:11px; }
+  .lr-dialog-list li { display:flex; align-items:flex-start; gap:10px; font-size:14px; color:#0f1f3d; }
+  .lr-dialog-list li svg { flex:0 0 auto; margin-top:2px; color:#16a34a; }
+  .lr-dialog-steps { margin-top:18px; }
+  .lr-dialog-terms { margin:18px 0 0; padding-left:20px; display:flex; flex-direction:column; gap:13px; }
+  .lr-dialog-terms li { font-size:13.5px; line-height:1.7; color:#4b5563; }
+  .lr-dialog-terms li strong { color:#0f1f3d; }
+
+  @keyframes lrfloat { 0%,100%{ transform:translateY(0); } 50%{ transform:translateY(-14px); } }
+
+  /* responsive */
+  @media(max-width:900px){
+    .lr-hero-grid { grid-template-columns:1fr; gap:34px; }
+    .lr-grid3 { grid-template-columns:1fr 1fr; }
   }
-  @keyframes lrfloat {
-    0%, 100% { transform:translateY(0px); }
-    50% { transform:translateY(-6px); }
+  @media(max-width:600px){
+    .lr .wrap { padding:0 18px; }
+    .lr-grid3 { grid-template-columns:1fr; }
+    .lr-hero-cta { flex-direction:column; align-items:stretch; }
+    .lr-hero-cta .lr-btn { width:100%; }
+    .lr-dialog { padding:26px 20px; }
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    .lr-btn, .lr-lift, .lr-faq-icon, .lr-dialog, .lr-backdrop, .lr-bundle-link svg { transition:none !important; }
+    .lr-blob { animation:none !important; }
   }
 `;

@@ -279,9 +279,9 @@ export default function PropertyDetailView({ prop, applications, maintenance }: 
       </div>
 
       <style>{`
-        .pd-page { margin-top: -72px; min-height: 100vh; background: #f4f6fb; font-family: 'Poppins', sans-serif; color: #0a162f; transition: background .25s ease; }
+        .pd-page { margin-top: -72px; min-height: 100vh; display: flex; flex-direction: column; background: #f4f6fb; font-family: 'Poppins', sans-serif; color: #0a162f; transition: background .25s ease; }
         .pd-hero { background: linear-gradient(135deg,#0a162f,#14294f 60%,#c0392b 200%); color: #fff; }
-        .pd-hero-inner { position: relative; max-width: 1040px; margin: 0 auto; padding: 26px 28px 30px; }
+        .pd-hero-inner { position: relative; max-width: none; margin: 0; padding: 26px 40px 30px; }
         .pd-back { color: rgba(255,255,255,.75); font-size: 13px; font-weight: 600; text-decoration: none; }
         .pd-back:hover { color: #fff; }
         .pd-eyebrow { font-size: 11px; letter-spacing: .18em; text-transform: uppercase; opacity: .65; margin-top: 16px; }
@@ -290,17 +290,19 @@ export default function PropertyDetailView({ prop, applications, maintenance }: 
         .pd-meta span { background: rgba(255,255,255,.14); font-size: 12px; padding: 4px 11px; border-radius: 20px; text-transform: capitalize; }
 
         /* Two-column shell: left nav panel + content */
-        .pd-shell { max-width: 1040px; margin: 0 auto; padding: 26px 28px 60px; display: grid; grid-template-columns: 232px 1fr; gap: 26px; align-items: start; }
-        .pd-nav { position: sticky; top: 20px; display: flex; flex-direction: column; gap: 4px; background: #fff; border: 1px solid #e9edf5; border-radius: 16px; padding: 10px; }
-        .pd-nav-item { display: flex; align-items: center; gap: 11px; width: 100%; text-align: left; background: none; border: none; cursor: pointer; padding: 11px 13px; border-radius: 10px; font-family: 'Poppins', sans-serif; font-size: 13.5px; font-weight: 600; color: #5b6470; transition: background .15s, color .15s; }
-        .pd-nav-item:hover { background: #f4f6fb; color: #0a162f; }
-        .pd-nav-item.on { background: #0a162f; color: #fff; }
+        /* Full-height dark sidebar flush to the left, matching the main portal
+           dashboard (no floating card, no empty gap below the nav). */
+        .pd-shell { flex: 1; display: grid; grid-template-columns: 236px 1fr; align-items: stretch; }
+        .pd-nav { background: #0a162f; padding: 22px 14px 18px; display: flex; flex-direction: column; gap: 4px; }
+        .pd-nav-item { display: flex; align-items: center; gap: 11px; width: 100%; text-align: left; background: none; border: none; cursor: pointer; padding: 12px 14px; border-radius: 11px; font-family: 'Poppins', sans-serif; font-size: 13.5px; font-weight: 600; color: rgba(255,255,255,.62); transition: background .15s, color .15s; }
+        .pd-nav-item:hover { background: rgba(255,255,255,.07); color: #fff; }
+        .pd-nav-item.on { background: #2563eb; color: #fff; box-shadow: 0 8px 20px rgba(37,99,235,.32); }
         .pd-nav-ico { font-size: 15px; line-height: 1; }
         .pd-nav-lbl { flex: 1; }
-        .pd-nav-count { font-size: 11px; font-weight: 700; background: #eef2f7; color: #64748b; padding: 2px 8px; border-radius: 20px; }
-        .pd-nav-item.on .pd-nav-count { background: rgba(255,255,255,.2); color: #fff; }
+        .pd-nav-count { font-size: 11px; font-weight: 700; background: rgba(255,255,255,.14); color: rgba(255,255,255,.82); padding: 2px 8px; border-radius: 20px; }
+        .pd-nav-item.on .pd-nav-count { background: rgba(255,255,255,.24); color: #fff; }
         .pd-nav-dot { width: 8px; height: 8px; border-radius: 50%; background: #ef6c00; flex: 0 0 auto; }
-        .pd-content { min-width: 0; }
+        .pd-content { min-width: 0; padding: 26px 40px 60px; max-width: 1120px; }
 
         .pd-money { display: grid; grid-template-columns: repeat(3,1fr); gap: 16px; }
         .pd-money-card { background: #fff; border: 1px solid #e9edf5; border-radius: 16px; padding: 20px; }
@@ -348,10 +350,10 @@ export default function PropertyDetailView({ prop, applications, maintenance }: 
         .pd-report { display: inline-block; margin-top: 26px; color: #2563eb; font-weight: 700; font-size: 14px; text-decoration: none; }
 
         /* left-panel quick actions (fills the panel, adds shortcuts) */
-        .pd-nav-foot { margin-top: 8px; padding-top: 10px; border-top: 1px solid #eef2f7; display: flex; flex-direction: column; gap: 2px; }
-        .pd-nav-foot-h { font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: #9aa4b2; padding: 4px 13px 6px; }
-        .pd-quick { display: block; text-align: left; background: none; border: none; cursor: pointer; padding: 9px 13px; border-radius: 9px; font-family: 'Poppins', sans-serif; font-size: 13px; font-weight: 600; color: #475569; text-decoration: none; transition: background .15s, color .15s; }
-        .pd-quick:hover { background: #f4f6fb; color: #0a162f; }
+        .pd-nav-foot { margin-top: auto; padding-top: 14px; border-top: 1px solid rgba(255,255,255,.1); display: flex; flex-direction: column; gap: 2px; }
+        .pd-nav-foot-h { font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: rgba(255,255,255,.4); padding: 4px 14px 6px; }
+        .pd-quick { display: block; text-align: left; background: none; border: none; cursor: pointer; padding: 10px 14px; border-radius: 10px; font-family: 'Poppins', sans-serif; font-size: 13px; font-weight: 600; color: rgba(255,255,255,.7); text-decoration: none; transition: background .15s, color .15s; }
+        .pd-quick:hover { background: rgba(255,255,255,.07); color: #fff; }
 
         /* property details recap */
         .pd-recap-card { background: #fff; border: 1px solid #e9edf5; border-radius: 16px; padding: 4px 20px; }
@@ -383,16 +385,9 @@ export default function PropertyDetailView({ prop, applications, maintenance }: 
 
         /* ── DARK MODE (driven by the portal layout's data-portal-theme) ── */
         :root[data-portal-theme="dark"] .pd-page { background: #0a1120; color: #e6ebf3; }
-        :root[data-portal-theme="dark"] .pd-nav { background: #101c30; border-color: #22314c; }
-        :root[data-portal-theme="dark"] .pd-nav-item { color: #9fb0c6; }
-        :root[data-portal-theme="dark"] .pd-nav-item:hover { background: #17253c; color: #fff; }
-        :root[data-portal-theme="dark"] .pd-nav-item.on { background: linear-gradient(135deg,#2563eb,#1d4ed8); color: #fff; }
-        :root[data-portal-theme="dark"] .pd-nav-count { background: #22314c; color: #c7d6ea; }
-        :root[data-portal-theme="dark"] .pd-nav-item.on .pd-nav-count { background: rgba(255,255,255,.22); color: #fff; }
-        :root[data-portal-theme="dark"] .pd-nav-foot { border-color: #22314c; }
-        :root[data-portal-theme="dark"] .pd-nav-foot-h { color: #6f7f95; }
-        :root[data-portal-theme="dark"] .pd-quick { color: #aebcd0; }
-        :root[data-portal-theme="dark"] .pd-quick:hover { background: #17253c; color: #fff; }
+        /* The sidebar is always dark navy (light-on-navy items); in dark mode
+           just deepen it a touch to match the dashboard. */
+        :root[data-portal-theme="dark"] .pd-nav { background: #0a1120; }
         :root[data-portal-theme="dark"] .pd-money-card,
         :root[data-portal-theme="dark"] .pd-glance-card,
         :root[data-portal-theme="dark"] .pd-recap-card,
@@ -422,7 +417,7 @@ export default function PropertyDetailView({ prop, applications, maintenance }: 
         :root[data-portal-theme="dark"] .pd-recap { border-color: #22314c; }
         :root[data-portal-theme="dark"] .pd-row { border-color: #1e2c45; }
         :root[data-portal-theme="dark"] .pd-count { background: #22314c; color: #c7d6ea; }
-        :root[data-portal-theme="dark"] .pd-glance-go, .pd-dark .pd-report, .pd-dark .pd-contact-links a { color: #6ea8fe; }
+        :root[data-portal-theme="dark"] .pd-glance-go, :root[data-portal-theme="dark"] .pd-report, :root[data-portal-theme="dark"] .pd-contact-links a { color: #6ea8fe; }
         :root[data-portal-theme="dark"] .pd-empty { background: #13203a; border-color: #2b3c58; color: #93a3b8; }
         :root[data-portal-theme="dark"] .pd-comp-note.ok { background: #10281b; color: #7fdba0; border-color: #204a31; }
         :root[data-portal-theme="dark"] .pd-comp-note.warn { background: #101f38; color: #93b4f5; border-color: #24406c; }
@@ -431,13 +426,14 @@ export default function PropertyDetailView({ prop, applications, maintenance }: 
         :root[data-portal-theme="dark"] .pd-contact-btn.ghost { background: #13203a; border-color: #2b3c58; }
 
         @media (max-width: 820px) {
-          .pd-shell { grid-template-columns: 1fr; padding: 16px 18px 48px; gap: 16px; }
-          .pd-nav { position: static; flex-direction: row; overflow-x: auto; padding: 8px; gap: 6px; -webkit-overflow-scrolling: touch; }
+          .pd-shell { grid-template-columns: 1fr; }
+          .pd-nav { flex-direction: row; overflow-x: auto; padding: 8px 12px; gap: 6px; -webkit-overflow-scrolling: touch; }
           .pd-nav-item { white-space: nowrap; padding: 9px 13px; }
           .pd-nav-lbl { flex: 0 0 auto; }
           /* On mobile the tabs are a horizontal bar; the vertical quick-actions
              footer would look odd appended to it (its links live in the tabs). */
           .pd-nav-foot { display: none; }
+          .pd-content { padding: 18px 18px 48px; }
           .pd-hero-inner { padding-left: 18px; padding-right: 18px; }
         }
         @media (max-width: 640px) { .pd-money, .pd-glance, .pd-comp-grid, .pd-office-grid { grid-template-columns: 1fr; } }

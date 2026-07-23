@@ -7,6 +7,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { findBundle } from '@/lib/agreementContent';
+import CompliancePanel from '@/components/landlord/CompliancePanel';
 
 export type PDProp = { id: string; label: string; postcode?: string; city?: string; type?: string; bedrooms?: string; bathrooms?: string; furnishing?: string; rent?: string; occupancy?: string; availableFrom?: string; tenancyStart?: string; packageId?: string; packageLabel?: string };
 export type PDApplication = { id: string; fullName: string; propertyAddress: string; postcode?: string; rent: string; leaseTerm: string; status: string; submittedAt: string | null };
@@ -21,18 +22,6 @@ const MAINT_META: Record<string, { label: string; bg: string; color: string }> =
   'resolved': { label: 'Resolved', bg: '#e8f5e9', color: '#2e7d32' },
   'cancelled': { label: 'Cancelled', bg: '#f3f4f6', color: '#6b7280' },
 };
-
-// The standard UK legal requirements for a let property, shown as an
-// informational checklist. We do NOT fabricate per-property certificate dates —
-// managed packages track these (contact the agent for current dates).
-const COMPLIANCE = [
-  { k: 'Energy Performance Certificate', d: 'Must be rated E or above. Valid for 10 years.' },
-  { k: 'Gas Safety Certificate', d: 'Annual check of gas appliances and flues, where gas is present.' },
-  { k: 'Electrical (EICR)', d: 'Electrical Installation Condition Report, renewed at least every 5 years.' },
-  { k: 'Deposit protection', d: 'Any deposit protected in a government scheme within 30 days, with prescribed information served.' },
-  { k: 'Smoke & CO alarms', d: 'Working smoke alarms on every floor and a CO alarm near any fuel-burning appliance.' },
-  { k: 'Right to Rent', d: 'Immigration status checked for every adult occupier before the tenancy begins.' },
-];
 
 // Real House of Lettings contact facts (mirrors the site footer).
 const CONTACT = {
@@ -236,20 +225,8 @@ export default function PropertyDetailView({ prop, applications, maintenance }: 
 
           {tab === 'compliance' && (
             <div className="pd-section">
-              <h3 className="pd-h">Compliance</h3>
-              <div className={`pd-comp-note ${managed ? 'ok' : 'warn'}`}>
-                {managed
-                  ? '✅ Your managed package includes ongoing compliance tracking. We arrange and renew the certificates below and keep the records. Contact your agent for current certificate dates.'
-                  : 'ℹ️ On a tenant-find service the ongoing compliance below is your responsibility. Ask us about a managed package to have it handled and tracked for you.'}
-              </div>
-              <div className="pd-comp-grid">
-                {COMPLIANCE.map(c => (
-                  <div key={c.k} className="pd-comp-item">
-                    <div className="pd-comp-k">{c.k}</div>
-                    <div className="pd-comp-d">{c.d}</div>
-                  </div>
-                ))}
-              </div>
+              <h3 className="pd-h">Compliance documents</h3>
+              <CompliancePanel propertyId={prop.id} propertyLabel={prop.label} postcode={prop.postcode || ''} managed={managed} />
             </div>
           )}
 

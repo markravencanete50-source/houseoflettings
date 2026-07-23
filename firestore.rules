@@ -88,6 +88,13 @@ service cloud.firestore {
         (resource.data.landlordId == request.auth.uid || isAdmin());
     }
 
+    // Landlord compliance documents (Gas/EPC/EICR/Insurance + dates). Read and
+    // written ONLY server-side via the Admin SDK (/api/landlord/compliance,
+    // the reminder cron and the renewal endpoint), each scoped to the caller.
+    match /complianceDocs/{docId} {
+      allow read, write: if false;
+    }
+
     match /chats/{chatId} {
       allow read, write: if request.auth != null && (
         resource == null ||

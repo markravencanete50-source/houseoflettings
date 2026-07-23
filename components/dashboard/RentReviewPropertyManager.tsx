@@ -31,9 +31,14 @@ const EMPTY = { address: '', currentRent: '', proposedRent: '', effectiveDate: '
 export default function RentReviewPropertyManager({
   authedFetch,
   portfolio = [],
+  canDelete = false,
 }: {
   authedFetch: Fetcher;
   portfolio?: PortfolioProperty[];
+  // Removing a property is destructive, so the Remove button only shows for
+  // admins. Staff can still add, edit and (de)activate entries. The API
+  // enforces the same rule server-side.
+  canDelete?: boolean;
 }) {
   const [list, setList] = useState<ManagedProperty[]>([]);
   const [loaded, setLoaded] = useState(false);
@@ -175,7 +180,7 @@ export default function RentReviewPropertyManager({
                 <td>
                   <div style={{ display: 'flex', gap: 6 }}>
                     <button onClick={() => startEdit(p)} style={{ padding: '4px 10px', background: 'transparent', border: '1px solid #1565c0', color: '#1565c0', borderRadius: 4, fontSize: 11, cursor: 'pointer' }}>Edit</button>
-                    <button onClick={() => remove(p)} style={{ padding: '4px 10px', background: 'transparent', border: '1px solid #c62828', color: '#c62828', borderRadius: 4, fontSize: 11, cursor: 'pointer' }}>Remove</button>
+                    {canDelete && <button onClick={() => remove(p)} style={{ padding: '4px 10px', background: 'transparent', border: '1px solid #c62828', color: '#c62828', borderRadius: 4, fontSize: 11, cursor: 'pointer' }}>Remove</button>}
                   </div>
                 </td>
               </tr>

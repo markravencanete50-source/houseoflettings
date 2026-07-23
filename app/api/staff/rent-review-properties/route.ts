@@ -74,10 +74,15 @@ export async function PATCH(request: Request) {
   }
 }
 
+// Removing a rent-review property is destructive, so it is ADMIN-ONLY. Staff can
+// add, edit and (de)activate entries but only an administrator may delete one.
 export async function DELETE(request: Request) {
   try {
     const auth = await requireStaff(request, 'rent-reviews');
     if (auth instanceof Response) return auth;
+    if (auth.role !== 'admin') {
+      return NextResponse.json({ message: 'Only an administrator can delete a property.' }, { status: 403 });
+    }
 
     const id = new URL(request.url).searchParams.get('id');
     if (!id) return NextResponse.json({ message: 'A property id is required' }, { status: 400 });

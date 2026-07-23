@@ -64,10 +64,15 @@ export async function POST(request: Request) {
   }
 }
 
+// Removing a review is destructive, so it is ADMIN-ONLY. Staff can add reviews
+// (4★/5★) but only an administrator may delete one.
 export async function DELETE(request: Request) {
   try {
     const auth = await requireStaff(request, 'reviews');
     if (auth instanceof Response) return auth;
+    if (auth.role !== 'admin') {
+      return Response.json({ message: 'Only an administrator can delete a review.' }, { status: 403 });
+    }
 
     const { searchParams } = new URL(request.url);
     const id = (searchParams.get('id') || '').trim();

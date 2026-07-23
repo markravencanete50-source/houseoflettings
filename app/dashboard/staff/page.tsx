@@ -284,6 +284,10 @@ function StaffDashboardInner() {
   const profile = clientProfile || sessionProfile;
   const ready = !authLoading && (clientProfile ? true : sessionChecked);
   const perms = staffPermissions(profile);
+  // Deletion is destructive and irreversible: staff can create/edit/change
+  // status across every feature, but only an administrator may delete. The API
+  // enforces this too — this just hides controls staff aren't allowed to use.
+  const isAdmin = profile?.role === 'admin';
 
   const [tab, setTab] = useState<Tab>('properties');
   const [properties, setProperties] = useState<Property[]>([]);
@@ -684,7 +688,7 @@ function StaffDashboardInner() {
                               <option value="pending">Pending</option>
                               <option value="let-agreed">Let Agreed</option>
                             </select>
-                            <button onClick={() => handleDeleteProperty(p)} style={{ padding: '5px 10px', background: 'transparent', border: '1px solid #c62828', color: '#c62828', borderRadius: 4, fontSize: 11, cursor: 'pointer' }}>Delete</button>
+                            {isAdmin && <button onClick={() => handleDeleteProperty(p)} style={{ padding: '5px 10px', background: 'transparent', border: '1px solid #c62828', color: '#c62828', borderRadius: 4, fontSize: 11, cursor: 'pointer' }}>Delete</button>}
                           </div>
                         </td>
                       </tr>
@@ -1133,7 +1137,7 @@ function StaffDashboardInner() {
                         </div>
                         <p style={{ fontSize: 13, color: 'var(--gray-600)', lineHeight: 1.6, margin: 0 }}>{r.text}</p>
                       </div>
-                      <button className="btn-danger" onClick={() => deleteReview(r.id)} style={{ flexShrink: 0 }}>Delete</button>
+                      {isAdmin && <button className="btn-danger" onClick={() => deleteReview(r.id)} style={{ flexShrink: 0 }}>Delete</button>}
                     </div>
                   ))}
                 </div>
@@ -1210,7 +1214,7 @@ function StaffDashboardInner() {
                   />
                 </div>
               )}
-              {showRRProps && <RentReviewPropertyManager authedFetch={authedFetch} portfolio={properties} />}
+              {showRRProps && <RentReviewPropertyManager authedFetch={authedFetch} portfolio={properties} canDelete={isAdmin} />}
               <div className="dash-card" style={{ padding: 0, overflow: 'hidden' }}>
                 <table className="data-table">
                   <thead>

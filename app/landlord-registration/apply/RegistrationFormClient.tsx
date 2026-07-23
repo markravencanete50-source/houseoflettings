@@ -237,10 +237,17 @@ export default function RegistrationFormClient() {
   const [pricingOverrides, setPricingOverrides] = useState<PricingOverrides>({});
   const [quoteLabel, setQuoteLabel] = useState('');
   const [quoteUsed, setQuoteUsed] = useState(false);
+  // Per-link service allow-list. Empty = no restriction (show every service).
+  // Only a private ?quote= link can set this; the public form never does.
+  const [quoteServices, setQuoteServices] = useState<string[]>([]);
 
   const isCompany = form.ownerType === 'company';
   // Apply any admin service-pricing overrides to the bundles shown + chosen.
   const effectiveBundles = applyOverridesToBundles(BUNDLES, pricingOverrides);
+  // When the link limits which services appear, show only those; otherwise all.
+  const visibleBundles = quoteServices.length
+    ? effectiveBundles.filter(b => quoteServices.includes(b.id))
+    : effectiveBundles;
   const bundle = effectiveBundles.find(b => b.id === form.selectedPackageId) || effectiveBundles.find(b => b.label === form.selectedPackage);
 
   // Pricing. The PUBLIC form ALWAYS shows the standard prices from lib/bundles —
@@ -251,14 +258,31 @@ export default function RegistrationFormClient() {
   useEffect(() => {
     if (!quoteId) return; // no link → standard prices (pricingOverrides stays {})
     fetch(`/api/service-pricing/quote?id=${encodeURIComponent(quoteId)}`)
-      .then(r => (r.ok ? r.json() : {}) as Promise<{ overrides?: PricingOverrides; label?: string; used?: boolean }>)
+      .then(r => (r.ok ? r.json() : {}) as Promise<{ overrides?: PricingOverrides; label?: string; used?: boolean; services?: string[] }>)
       .then(j => {
-        if (j.used) { setQuoteUsed(true); setPricingOverrides({}); return; }
+        if (j.used) { setQuoteUsed(true); setPricingOverrides({}); setQuoteServices([]); return; }
         setPricingOverrides(j.overrides || {});
         setQuoteLabel(j.label || '');
+        setQuoteServices(Array.isArray(j.services) ? j.services : []);
       })
       .catch(() => {});
   }, [quoteId]);
+
+  // When the link limits the services: if only one is offered, pre-select it;
+  // if a restored/earlier choice is no longer offered, clear it so the landlord
+  // must pick from what the link actually shows.
+  useEffect(() => {
+    if (!quoteServices.length) return; // no restriction
+    if (quoteServices.length === 1) {
+      const only = BUNDLES.find(b => b.id === quoteServices[0]);
+      if (only) {
+        setForm(f => (f.selectedPackageId === only.id ? f : { ...f, selectedPackage: only.label, selectedPackageId: only.id }));
+        setErrors(er => ({ ...er, selectedPackage: '' }));
+      }
+      return;
+    }
+    setForm(f => (f.selectedPackageId && !quoteServices.includes(f.selectedPackageId) ? { ...f, selectedPackage: '', selectedPackageId: '' } : f));
+  }, [quoteServices]);
 
   // Load the admin-editable agreement wording once.
   useEffect(() => {
@@ -1028,8 +1052,8 @@ export default function RegistrationFormClient() {
                       <div className="hol-quote-banner">
                         <span className="hol-quote-banner__icon">🎁</span>
                         <span>
-                          <strong>Bespoke pricing prepared for you{quoteLabel ? ` (${quoteLabel})` : ''}.</strong>{' '}
-                          The set-up fees and management rates below have been set specially for your registration.
+                          <strong>Prepared for you{quoteLabel ? ` (${quoteLabel})` : ''}.</strong>{' '}
+                          The {quoteServices.length ? 'service and pricing' : 'set-up fees and management rates'} below have been set up specially for your registration.
                         </span>
                       </div>
                     )}
@@ -1044,7 +1068,7 @@ export default function RegistrationFormClient() {
                     )}
                     <p style={{ fontSize: 13, color: '#6b7280', margin: '0 0 16px' }}>Choose a management bundle. Our management fees are the percentage of the monthly rent shown in green, with smaller set up fees to get started. Your agreement covers the package you select here.</p>
                     <div className="hol-pkg-list">
-                      {effectiveBundles.map(b => {
+                      {visibleBundles.map(b => {
                         const on = form.selectedPackageId === b.id || (!form.selectedPackageId && form.selectedPackage === b.label);
                         const expanded = expandedBundle === b.id;
                         return (

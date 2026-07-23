@@ -26,6 +26,17 @@ function quoteUrl(id: string): string {
   return `${SITE_URL}/landlord-registration/apply?quote=${id}`;
 }
 
+// Optional per-link service allow-list: which packages appear on the form for
+// this one link. Returns a stable, de-duplicated list of valid bundle ids.
+// A list covering every bundle is treated as "no restriction" (empty), so the
+// stored quote only carries a `services` field when it genuinely limits the set.
+function sanitizeServices(raw: any, validIds: string[]): string[] {
+  if (!Array.isArray(raw)) return [];
+  const wanted = new Set(raw.filter((v): v is string => typeof v === 'string'));
+  const picked = validIds.filter(id => wanted.has(id));
+  return picked.length >= validIds.length ? [] : picked; // all selected = no restriction
+}
+
 export async function GET(request: Request) {
   const limited = rateLimit(request, 'pricing-quote-get', 120, 10 * 60 * 1000);
   if (limited) return limited;
@@ -39,12 +50,16 @@ export async function GET(request: Request) {
     const data = snap.data() || {};
     const label = (data.label || '').toString().slice(0, 80);
     // One-time link: once redeemed on a completed registration it no longer
-    // carries custom prices. The form falls back to the standard prices.
+    // carries custom prices or a limited service set. The form falls back to the
+    // standard prices and shows every service.
     if (data.redeemedAt) {
       return NextResponse.json({ used: true, overrides: {}, label }, { status: 200 });
     }
     const overrides = sanitizePricingOverrides(data.overrides || {}, BUNDLE_IDS);
-    return NextResponse.json({ overrides, label }, { status: 200 });
+    const services = sanitizeServices(data.services, BUNDLE_IDS);
+    const payload: { overrides: typeof overrides; label: string; services?: string[] } = { overrides, label };
+    if (services.length > 0) payload.services = services; // only when the link limits the set
+    return NextResponse.json(payload, { status: 200 });
   } catch (e) {
     console.error('pricing-quote GET failed:', e);
     return NextResponse.json({ message: 'Unknown quote.' }, { status: 404 });
@@ -60,18 +75,26 @@ export async function POST(request: Request) {
   try {
     const body = await request.json().catch(() => ({}));
     const overrides = sanitizePricingOverrides(body.overrides || {}, BUNDLE_IDS);
-    if (Object.keys(overrides).length === 0) {
-      return NextResponse.json({ message: 'Set at least one custom price before creating a link.' }, { status: 400 });
+    const services = sanitizeServices(body.services, BUNDLE_IDS);
+    // A link is "bespoke" if it carries custom prices, limits which services
+    // appear, or both. Guard against a link that does neither.
+    if (Object.keys(overrides).length === 0 && services.length === 0) {
+      return NextResponse.json(
+        { message: 'Set at least one custom price, or limit which services appear, before creating a link.' },
+        { status: 400 },
+      );
     }
     const label = (body.label || '').toString().trim().slice(0, 80);
     const id = randomBytes(16).toString('hex'); // 32 hex chars — unguessable slug
-    await getAdminDb().collection(COLLECTION).doc(id).set({
+    const doc: Record<string, unknown> = {
       overrides,
       label,
       createdBy: auth.uid,
       createdAt: FieldValue.serverTimestamp(),
-    });
-    return NextResponse.json({ id, url: quoteUrl(id), overrides, label }, { status: 200 });
+    };
+    if (services.length > 0) doc.services = services; // only store a real restriction
+    await getAdminDb().collection(COLLECTION).doc(id).set(doc);
+    return NextResponse.json({ id, url: quoteUrl(id), overrides, label, services }, { status: 200 });
   } catch (e) {
     console.error('pricing-quote POST error:', e);
     return NextResponse.json({ message: 'Could not create the link. Please try again.' }, { status: 500 });

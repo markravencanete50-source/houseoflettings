@@ -236,10 +236,10 @@ export default function LandlordRegistrationPage() {
           <div className="wrap lr-hero-grid">
             <div className="lr-hero-copy">
               <span className="lr-eyebrow-pill">Landlord Registration &middot; Leeds &amp; Manchester</span>
-              <h1>Register your property and let it the compliant way</h1>
+              <h1>Register your property in just a few steps</h1>
               <p className="lr-lead">
-                One short form connects you with a dedicated local agent. Choose your service, e-sign your agreement
-                online and receive a signed PDF copy by email.
+                Fill out a short form, select your service, sign your agreement online, and receive a signed PDF copy by
+                email from your dedicated local agent.
               </p>
               <div className="lr-hero-cta">
                 <Link href={APPLY} className="lr-btn lr-btn-primary">
@@ -282,10 +282,10 @@ export default function LandlordRegistrationPage() {
           <div className="wrap">
             <Reveal>
               <p className="lr-kicker">Why Register</p>
-              <h2 className="lr-h2">Everything a landlord needs, handled by one local team</h2>
+              <h2 className="lr-h2">Everything you need to let your property, managed by one local team</h2>
               <p className="lr-sub">
-                From compliance to rent collection, registration is the single step that puts your property in expert
-                hands.
+                Register once to access expert support for compliance, tenant management, rent collection, and every step
+                of the letting process.
               </p>
             </Reveal>
             <div className="lr-grid3" style={{ marginTop: 44 }}>
@@ -312,10 +312,10 @@ export default function LandlordRegistrationPage() {
           <div className="wrap">
             <Reveal>
               <p className="lr-kicker">Our Bundles</p>
-              <h2 className="lr-h2">Choose the service that fits your portfolio</h2>
+              <h2 className="lr-h2">Choose the service that best suits your property</h2>
               <p className="lr-sub">
-                Management bundles are charged as a percentage of the monthly rent, with a smaller set up fee to get
-                started. All prices include VAT.
+                Our management bundles are priced as a percentage of your monthly rental income, with a one-time setup
+                fee to get started. All prices are inclusive of VAT.
               </p>
             </Reveal>
             <div className="lr-grid3" style={{ marginTop: 44 }}>
@@ -357,9 +357,10 @@ export default function LandlordRegistrationPage() {
           <div className="wrap lr-narrow">
             <Reveal>
               <p className="lr-kicker">The Terms</p>
-              <h2 className="lr-h2">How we work together, in plain English</h2>
+              <h2 className="lr-h2">Clear terms, explained simply</h2>
               <p className="lr-sub">
-                You confirm you have read these when you register. Here are the three points landlords ask about most.
+                By registering your property, you confirm that you have read and accepted our terms and conditions. Below
+                are the three topics landlords ask about most often.
               </p>
             </Reveal>
             <div className="lr-terms" style={{ marginTop: 36 }}>
@@ -624,22 +625,35 @@ const PAGE_CSS = `
   .lr-backdrop { position:fixed; inset:0; z-index:60; display:flex; align-items:center; justify-content:center; padding:16px;
     background:rgba(9,17,33,.6); backdrop-filter:blur(3px); transition:opacity .25s ease; }
   .lr-dialog { position:relative; width:100%; background:#fff; border-radius:18px; padding:30px 28px;
-    box-shadow:0 30px 70px rgba(5,10,25,.4); max-height:90vh; overflow-y:auto;
+    box-shadow:0 0 0 1px rgba(37,99,235,.06), 0 40px 90px rgba(5,10,25,.5), 0 14px 34px rgba(37,99,235,.14);
+    max-height:90vh; overflow-y:auto;
     transition:opacity .25s ease, transform .3s cubic-bezier(.34,1.4,.64,1); }
   .lr-dialog-x { position:absolute; top:16px; right:16px; width:34px; height:34px; border-radius:50%; border:none;
     background:#f2f4f8; color:#0f1f3d; display:inline-flex; align-items:center; justify-content:center; cursor:pointer; transition:background .2s ease; }
   .lr-dialog-x:hover { background:#e5e9f2; }
   .lr-dialog-kicker { font-size:11px; font-weight:700; letter-spacing:2px; text-transform:uppercase; color:#2563eb; }
   .lr-dialog-title { font-size:22px; font-weight:700; margin:6px 0 0; padding-right:30px; }
-  .lr-dialog-price { margin-top:10px; font-size:14.5px; color:#48546e; font-weight:500; }
-  .lr-vat { color:#9ca3af; font-weight:400; }
-  .lr-dialog-summary { margin-top:12px; font-size:14.5px; line-height:1.7; color:#4b5563; }
-  .lr-dialog-list { list-style:none; padding:0; margin:18px 0 0; display:flex; flex-direction:column; gap:11px; }
+  /* price = green highlight pill */
+  .lr-dialog-price { display:inline-flex; align-items:center; gap:6px; margin-top:12px; font-size:14px; font-weight:600;
+    color:#065f46; background:linear-gradient(135deg,#ecfdf5,#e5f8ee); border:1px solid #b7f0cd; border-radius:10px;
+    padding:8px 14px; box-shadow:0 4px 14px rgba(22,163,74,.16); }
+  .lr-vat { color:#5b8f74; font-weight:400; }
+  .lr-dialog-summary { margin-top:14px; font-size:14.5px; line-height:1.7; color:#4b5563; }
+  /* "what's included" = soft blue info card with green ticks */
+  .lr-dialog-list { list-style:none; margin:18px 0 0; padding:16px 18px; display:flex; flex-direction:column; gap:12px;
+    background:linear-gradient(180deg,#f6faff,#eef5ff); border:1px solid #dde9fd; border-radius:14px;
+    box-shadow:0 8px 22px rgba(37,99,235,.10), inset 0 1px 0 #fff; }
   .lr-dialog-list li { display:flex; align-items:flex-start; gap:10px; font-size:14px; color:#0f1f3d; }
   .lr-dialog-list li svg { flex:0 0 auto; margin-top:2px; color:#16a34a; }
-  .lr-dialog-steps { margin-top:18px; }
-  .lr-dialog-terms { margin:18px 0 0; padding-left:20px; display:flex; flex-direction:column; gap:13px; }
+  /* process steps = soft blue info card */
+  .lr-dialog-steps { margin-top:18px; padding:8px 18px; background:linear-gradient(180deg,#f6faff,#eef5ff);
+    border:1px solid #dde9fd; border-radius:14px; box-shadow:0 8px 22px rgba(37,99,235,.10); }
+  /* terms = tinted info card, blue numbers */
+  .lr-dialog-terms { margin:18px 0 0; padding:18px 20px 18px 38px; display:flex; flex-direction:column; gap:13px;
+    background:linear-gradient(180deg,#f8fafc,#f2f6fb); border:1px solid #e4eaf2; border-radius:14px;
+    box-shadow:0 8px 22px rgba(15,31,61,.08); }
   .lr-dialog-terms li { font-size:13.5px; line-height:1.7; color:#4b5563; }
+  .lr-dialog-terms li::marker { color:#2563eb; font-weight:700; }
   .lr-dialog-terms li strong { color:#0f1f3d; }
 
   @keyframes lrfloat { 0%,100%{ transform:translateY(0); } 50%{ transform:translateY(-14px); } }

@@ -214,5 +214,13 @@ service cloud.firestore {
     match /analytics/{id} {
       allow read, write: if false;
     }
+
+    // Staff activity audit trail (who did what in the dashboard). Written via the
+    // Admin SDK (/api/staff/activity-log, actor derived from the verified session)
+    // and read only by admins via /api/admin/activity-logs. Never touched from a
+    // browser, so deny all direct client access — the API routes are the gate.
+    match /staffActivityLogs/{id} {
+      allow read, write: if false;
+    }
   }
 }

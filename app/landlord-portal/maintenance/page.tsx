@@ -35,7 +35,7 @@ export default function PortalMaintenancePage() {
 
   if (loading) {
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0a162f', flexDirection: 'column', gap: 16 }}>
+      <div style={{ marginTop: -72, minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0a162f', flexDirection: 'column', gap: 16 }}>
         <div className="lpm-spin" />
         <div style={{ color: 'rgba(255,255,255,.6)', fontFamily: 'Poppins, sans-serif', fontSize: 14 }}>Loading…</div>
         <style>{`.lpm-spin{width:40px;height:40px;border:3px solid rgba(255,255,255,.15);border-top-color:#c0392b;border-radius:50%;animation:lpm .8s linear infinite}@keyframes lpm{to{transform:rotate(360deg)}}`}</style>
@@ -44,7 +44,7 @@ export default function PortalMaintenancePage() {
   }
 
   return (
-    <main style={{ background: '#f4f6fb', minHeight: '100vh', fontFamily: "'Poppins', sans-serif" }}>
+    <main style={{ marginTop: -72, background: '#f4f6fb', minHeight: '100vh', fontFamily: "'Poppins', sans-serif" }}>
       {!submitted && (
         <section style={{ background: 'linear-gradient(135deg,#0a162f,#14294f 60%,#c0392b 200%)', color: '#fff' }}>
           <div style={{ maxWidth: 720, margin: '0 auto', padding: '26px 20px 30px' }}>

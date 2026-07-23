@@ -35,7 +35,7 @@ export default function LandlordPropertyPage() {
 
   if (loading) {
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0a162f', flexDirection: 'column', gap: 16 }}>
+      <div style={{ marginTop: -72, minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0a162f', flexDirection: 'column', gap: 16 }}>
         <div className="lpp-spin" />
         <div style={{ color: 'rgba(255,255,255,.6)', fontFamily: 'Poppins, sans-serif', fontSize: 14 }}>Loading property…</div>
         <style>{`.lpp-spin{width:40px;height:40px;border:3px solid rgba(255,255,255,.15);border-top-color:#c0392b;border-radius:50%;animation:lpp .8s linear infinite}@keyframes lpp{to{transform:rotate(360deg)}}`}</style>
@@ -45,7 +45,7 @@ export default function LandlordPropertyPage() {
 
   if (!prop) {
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f4f6fb', fontFamily: 'Poppins, sans-serif', padding: 20 }}>
+      <div style={{ marginTop: -72, minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f4f6fb', fontFamily: 'Poppins, sans-serif', padding: 20 }}>
         <div style={{ textAlign: 'center', maxWidth: 420 }}>
           <div style={{ fontSize: 46, marginBottom: 12 }}>🏠</div>
           <h1 style={{ fontSize: 22, fontWeight: 800, color: '#0a162f', margin: '0 0 10px' }}>Property not found</h1>

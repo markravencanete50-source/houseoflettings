@@ -4,9 +4,11 @@
 // the dashboard sidebar) lets the landlord switch between Overview (money in/
 // out), their package, tenant applications and maintenance for THIS property.
 // Rendered as a page (not a modal) at /landlord-portal/property/[id].
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { findBundle } from '@/lib/agreementContent';
+
+const THEME_KEY = 'hol-portal-theme';
 
 export type PDProp = { id: string; label: string; postcode?: string; city?: string; type?: string; bedrooms?: string; bathrooms?: string; furnishing?: string; rent?: string; occupancy?: string; availableFrom?: string; tenancyStart?: string; packageId?: string; packageLabel?: string };
 export type PDApplication = { id: string; fullName: string; propertyAddress: string; postcode?: string; rent: string; leaseTerm: string; status: string; submittedAt: string | null };
@@ -46,6 +48,13 @@ const CONTACT = {
 
 export default function PropertyDetailView({ prop, applications, maintenance }: { prop: PDProp; applications: PDApplication[]; maintenance: PDMaintenance[] }) {
   const [tab, setTab] = useState<Tab>('overview');
+  const [dark, setDark] = useState(false);
+  useEffect(() => { try { setDark(localStorage.getItem(THEME_KEY) === 'dark'); } catch { /* ignore */ } }, []);
+  const toggleTheme = () => setDark(d => {
+    const next = !d;
+    try { localStorage.setItem(THEME_KEY, next ? 'dark' : 'light'); } catch { /* ignore */ }
+    return next;
+  });
 
   const rent = parseFloat(String(prop.rent || '').replace(/[^\d.]/g, '')) || 0;
   const bundle = findBundle(prop.packageId || prop.packageLabel || '');
@@ -86,9 +95,12 @@ export default function PropertyDetailView({ prop, applications, maintenance }: 
   ];
 
   return (
-    <div className="pd-page">
+    <div className={`pd-page${dark ? ' pd-dark' : ''}`}>
       <div className="pd-hero">
         <div className="pd-hero-inner">
+          <button className="pd-theme" onClick={toggleTheme} aria-label="Toggle dark mode" title="Toggle dark mode">
+            {dark ? '☀️ Light' : '🌙 Dark'}
+          </button>
           <Link href="/landlord-portal?tab=properties" className="pd-back">← Back to my properties</Link>
           <div className="pd-eyebrow">🏠 Property</div>
           <h1 className="pd-title">{prop.label}</h1>
@@ -279,9 +291,11 @@ export default function PropertyDetailView({ prop, applications, maintenance }: 
       </div>
 
       <style>{`
-        .pd-page { min-height: 100vh; background: #f4f6fb; font-family: 'Poppins', sans-serif; color: #0a162f; }
+        .pd-page { margin-top: -72px; min-height: 100vh; background: #f4f6fb; font-family: 'Poppins', sans-serif; color: #0a162f; transition: background .25s ease; }
         .pd-hero { background: linear-gradient(135deg,#0a162f,#14294f 60%,#c0392b 200%); color: #fff; }
-        .pd-hero-inner { max-width: 1040px; margin: 0 auto; padding: 26px 28px 30px; }
+        .pd-hero-inner { position: relative; max-width: 1040px; margin: 0 auto; padding: 26px 28px 30px; }
+        .pd-theme { position: absolute; top: 22px; right: 28px; display: inline-flex; align-items: center; gap: 5px; background: rgba(255,255,255,.12); border: 1px solid rgba(255,255,255,.22); color: #fff; font-family: 'Poppins', sans-serif; font-size: 12px; font-weight: 700; padding: 7px 13px; border-radius: 20px; cursor: pointer; transition: background .2s; }
+        .pd-theme:hover { background: rgba(255,255,255,.22); }
         .pd-back { color: rgba(255,255,255,.75); font-size: 13px; font-weight: 600; text-decoration: none; }
         .pd-back:hover { color: #fff; }
         .pd-eyebrow { font-size: 11px; letter-spacing: .18em; text-transform: uppercase; opacity: .65; margin-top: 16px; }
@@ -315,8 +329,11 @@ export default function PropertyDetailView({ prop, applications, maintenance }: 
 
         /* Overview "at a glance" quick-jump cards */
         .pd-glance { display: grid; grid-template-columns: repeat(3,1fr); gap: 16px; margin-top: 22px; }
-        .pd-glance-card { text-align: left; background: #fff; border: 1px solid #e9edf5; border-radius: 16px; padding: 18px; cursor: pointer; font-family: 'Poppins', sans-serif; transition: border-color .15s, box-shadow .15s, transform .15s; }
-        .pd-glance-card:hover { border-color: #c7d2e6; box-shadow: 0 10px 24px rgba(10,22,47,.08); transform: translateY(-2px); }
+        .pd-glance-card { text-align: left; background: #fff; border: 1px solid #e9edf5; border-left-width: 3px; border-radius: 16px; padding: 18px; cursor: pointer; font-family: 'Poppins', sans-serif; transition: border-color .15s, box-shadow .15s, transform .15s; }
+        .pd-glance-card:nth-child(1) { border-left-color: #2563eb; }
+        .pd-glance-card:nth-child(2) { border-left-color: #2e7d32; }
+        .pd-glance-card:nth-child(3) { border-left-color: #ef6c00; }
+        .pd-glance-card:hover { box-shadow: 0 10px 24px rgba(10,22,47,.10); transform: translateY(-2px); }
         .pd-glance-lbl { font-size: 12px; font-weight: 600; color: #6b7280; display: flex; align-items: center; gap: 6px; }
         .pd-glance-dot { width: 7px; height: 7px; border-radius: 50%; background: #ef6c00; display: inline-block; }
         .pd-glance-val { font-size: 20px; font-weight: 800; color: #0a162f; margin: 6px 0 8px; letter-spacing: -.3px; }
@@ -377,6 +394,55 @@ export default function PropertyDetailView({ prop, applications, maintenance }: 
         .pd-office-a { font-size: 12.5px; color: #4b5563; margin-top: 3px; line-height: 1.5; }
         .pd-contact-links { display: flex; flex-wrap: wrap; gap: 14px; }
         .pd-contact-links a { font-size: 13px; font-weight: 700; color: #2563eb; text-decoration: none; }
+
+        /* ── DARK MODE ── */
+        .pd-dark.pd-page { background: #0a1120; color: #e6ebf3; }
+        .pd-dark .pd-nav { background: #101c30; border-color: #22314c; }
+        .pd-dark .pd-nav-item { color: #9fb0c6; }
+        .pd-dark .pd-nav-item:hover { background: #17253c; color: #fff; }
+        .pd-dark .pd-nav-item.on { background: linear-gradient(135deg,#2563eb,#1d4ed8); color: #fff; }
+        .pd-dark .pd-nav-count { background: #22314c; color: #c7d6ea; }
+        .pd-dark .pd-nav-item.on .pd-nav-count { background: rgba(255,255,255,.22); color: #fff; }
+        .pd-dark .pd-nav-foot { border-color: #22314c; }
+        .pd-dark .pd-nav-foot-h { color: #6f7f95; }
+        .pd-dark .pd-quick { color: #aebcd0; }
+        .pd-dark .pd-quick:hover { background: #17253c; color: #fff; }
+        .pd-dark .pd-money-card,
+        .pd-dark .pd-glance-card,
+        .pd-dark .pd-recap-card,
+        .pd-dark .pd-pkg,
+        .pd-dark .pd-list,
+        .pd-dark .pd-comp-item,
+        .pd-dark .pd-contact { background: #13203a; border-color: #22314c; }
+        .pd-dark .pd-money-val,
+        .pd-dark .pd-glance-val,
+        .pd-dark .pd-h,
+        .pd-dark .pd-card h3,
+        .pd-dark .pd-pkg-name,
+        .pd-dark .pd-row-t,
+        .pd-dark .pd-comp-k,
+        .pd-dark .pd-contact-btn.ghost { color: #eef3fa; }
+        .pd-dark .pd-recap span:last-child { color: #eef3fa; }
+        .pd-dark .pd-money-label,
+        .pd-dark .pd-money-sub,
+        .pd-dark .pd-note,
+        .pd-dark .pd-glance-lbl,
+        .pd-dark .pd-row-s,
+        .pd-dark .pd-comp-d,
+        .pd-dark .pd-incl-ul li,
+        .pd-dark .pd-recap span:first-child,
+        .pd-dark .pd-contact-lead,
+        .pd-dark .pd-office-a { color: #93a3b8; }
+        .pd-dark .pd-recap { border-color: #22314c; }
+        .pd-dark .pd-row { border-color: #1e2c45; }
+        .pd-dark .pd-count { background: #22314c; color: #c7d6ea; }
+        .pd-dark .pd-glance-go, .pd-dark .pd-report, .pd-dark .pd-contact-links a { color: #6ea8fe; }
+        .pd-dark .pd-empty { background: #13203a; border-color: #2b3c58; color: #93a3b8; }
+        .pd-dark .pd-comp-note.ok { background: #10281b; color: #7fdba0; border-color: #204a31; }
+        .pd-dark .pd-comp-note.warn { background: #101f38; color: #93b4f5; border-color: #24406c; }
+        .pd-dark .pd-office { background: #0f1a2f; border-color: #22314c; }
+        .pd-dark .pd-contact-btn { background: #1d4ed8; }
+        .pd-dark .pd-contact-btn.ghost { background: #13203a; border-color: #2b3c58; }
 
         @media (max-width: 820px) {
           .pd-shell { grid-template-columns: 1fr; padding: 16px 18px 48px; gap: 16px; }

@@ -71,7 +71,7 @@ export default function PortalPackagesPage() {
       </section>
 
       <style>{`
-        .lpk { min-height: 100vh; background: #f4f6fb; font-family: 'Poppins', sans-serif; color: #0a162f; }
+        .lpk { margin-top: -72px; min-height: 100vh; background: #f4f6fb; font-family: 'Poppins', sans-serif; color: #0a162f; }
         .lpk-wrap { max-width: 1080px; margin: 0 auto; padding-left: 28px; padding-right: 28px; }
         .lpk-hero { background: linear-gradient(135deg,#0a162f,#14294f 60%,#c0392b 200%); color: #fff; }
         .lpk-hero .lpk-wrap { padding-top: 26px; padding-bottom: 30px; }

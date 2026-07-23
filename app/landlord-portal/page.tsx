@@ -124,7 +124,7 @@ export default function LandlordPortal() {
               <span className="lp-nav-ico">{n.icon}</span>{n.label}
             </button>
           ))}
-          <Link href="/maintenance" className="lp-side-cta">+ Report maintenance</Link>
+          <Link href="/landlord-portal/maintenance" className="lp-side-cta">+ Report maintenance</Link>
         </aside>
 
         {/* Main */}

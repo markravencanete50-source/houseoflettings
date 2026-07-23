@@ -76,11 +76,19 @@ async function loadTab(sheetId: string, gid: string): Promise<string[][]> {
   const hit = cache.get(key);
   if (hit && Date.now() - hit.at < TTL) return hit.rows;
   const url = `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv&gid=${gid}`;
-  const res = await fetch(url, { redirect: 'follow', cache: 'no-store' });
-  if (!res.ok) throw new Error(`sheet fetch ${res.status}`);
-  const rows = parseCsv(await res.text());
-  cache.set(key, { at: Date.now(), rows });
-  return rows;
+  try {
+    const res = await fetch(url, { redirect: 'follow', cache: 'no-store' });
+    if (!res.ok) throw new Error(`sheet fetch ${res.status}`);
+    const rows = parseCsv(await res.text());
+    cache.set(key, { at: Date.now(), rows });
+    return rows;
+  } catch (e) {
+    // The bank sheet updates daily; a transient fetch failure must not blank a
+    // landlord's account, so fall back to the last successful read if we have
+    // one. The next request (once the source recovers) refreshes it.
+    if (hit) return hit.rows;
+    throw e;
+  }
 }
 
 // Pull this-year transactions matching the postcode out of one tab's rows.

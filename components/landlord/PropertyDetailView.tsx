@@ -226,7 +226,7 @@ export default function PropertyDetailView({ prop, applications, maintenance }: 
           {tab === 'compliance' && (
             <div className="pd-section">
               <h3 className="pd-h">Compliance documents</h3>
-              <CompliancePanel propertyId={prop.id} propertyLabel={prop.label} postcode={prop.postcode || ''} managed={managed} />
+              <CompliancePanel propertyId={prop.id} propertyLabel={prop.label} postcode={prop.postcode || ''} managed={managed} agreementId={prop.id.replace(/-\d+$/, '')} />
             </div>
           )}
 

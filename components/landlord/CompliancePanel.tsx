@@ -129,9 +129,9 @@ function ComplianceRow({
 }
 
 export default function CompliancePanel({
-  propertyId, propertyLabel, postcode, managed,
+  propertyId, propertyLabel, postcode, managed, agreementId,
 }: {
-  propertyId: string; propertyLabel: string; postcode: string; managed: boolean;
+  propertyId: string; propertyLabel: string; postcode: string; managed: boolean; agreementId?: string;
 }) {
   const [loading, setLoading] = useState(true);
   const [docs, setDocs] = useState<DocMap>({});
@@ -172,6 +172,11 @@ export default function CompliancePanel({
               <span className="cp-badge" style={{ background: '#e8f0ff', color: '#2563eb' }}>Held by House of Lettings</span>
             </div>
             <p className="cp-auto-note">This is added automatically — it is the agreement between you and House of Lettings, so there is nothing for you to upload.</p>
+            {agreementId && (
+              <a className="cp-agreement-btn" href={`/api/landlord/agreement-pdf?agreementId=${encodeURIComponent(agreementId)}`} target="_blank" rel="noopener noreferrer">
+                📄 View your signed agreement
+              </a>
+            )}
           </div>
         </div>
       )}
@@ -202,6 +207,9 @@ export default function CompliancePanel({
         .cp-msg.ok { color: #15803d; }
         .cp-msg.err { color: #b3261e; }
         .cp-auto-note { font-size: 12.5px; color: #6b7280; line-height: 1.6; margin: 12px 0 0; }
+        .cp-agreement-btn { display: inline-block; margin-top: 12px; background: #0a162f; color: #fff; text-decoration: none; font-size: 12.5px; font-weight: 700; padding: 9px 16px; border-radius: 9px; }
+        .cp-agreement-btn:hover { background: #14294f; }
+        :root[data-portal-theme="dark"] .cp-agreement-btn { background: #1d4ed8; }
 
         /* dark mode (driven by the portal layout's data-portal-theme) */
         :root[data-portal-theme="dark"] .cp-card { background: #13203a; border-color: #22314c; }

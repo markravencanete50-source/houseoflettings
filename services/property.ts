@@ -85,23 +85,26 @@ export async function deleteProperty(id: string): Promise<void> {
 }
 
 // ── Get Single Property ───────────────────────────────────────
+// Reads through the server route (Admin SDK) so it never hits client-side
+// Firestore rules — see app/api/properties/route.ts.
 export async function getProperty(id: string): Promise<Property | null> {
-  const snap = await getDoc(doc(db, 'properties', id));
-  if (!snap.exists()) return null;
-  return { id: snap.id, ...snap.data() } as Property;
+  try {
+    const res = await fetch(`/api/properties?id=${encodeURIComponent(id)}`, { cache: 'no-store' });
+    if (!res.ok) return null;
+    const json = await res.json().catch(() => ({}));
+    return (json.property ?? null) as Property | null;
+  } catch {
+    return null;
+  }
 }
 
 // ── Get All Active Properties (with filters) ──────────────────
 export async function getProperties(filters?: SearchFilters): Promise<Property[]> {
-  // Use simple query to avoid composite index requirement
-  // Sorting and extra filtering done client-side
-  let q: Query = query(
-    collection(db, 'properties'),
-    where('status', '==', 'active')
-  );
-
-  const snap = await getDocs(q);
-  let properties = snap.docs.map(d => ({ id: d.id, ...d.data() })) as Property[];
+  // Read active listings from the server route (bypasses client Firestore
+  // rules); sorting and filtering stay client-side.
+  const res = await fetch('/api/properties', { cache: 'no-store' });
+  const json = await res.json().catch(() => ({ properties: [] }));
+  let properties = (json.properties || []) as Property[];
 
   // Sort by createdAt descending client-side (avoids composite index)
   properties.sort((a: any, b: any) => {
@@ -148,15 +151,17 @@ export function subscribeToProperties(
   filters: SearchFilters,
   callback: (props: Property[]) => void
 ) {
-  let q: Query = query(
-    collection(db, 'properties'),
-    where('status', '==', 'active')
-  );
-
-  return onSnapshot(q, (snap) => {
-    let properties = snap.docs.map(d => ({ id: d.id, ...d.data() })) as Property[];
-    // Sort client-side to avoid composite index
-    properties.sort((a: any, b: any) => (b.createdAt?.seconds ?? 0) - (a.createdAt?.seconds ?? 0));
+  // Fetch active listings from the server route (Admin SDK) instead of a client
+  // Firestore listener, so browsing works regardless of client-side rules. The
+  // signature (returns an unsubscribe) is preserved for callers.
+  let cancelled = false;
+  fetch('/api/properties', { cache: 'no-store' })
+    .then(r => (r.ok ? r.json() : { properties: [] }))
+    .then((json: any) => {
+      if (cancelled) return;
+      let properties = (json.properties || []) as Property[];
+      // Sort client-side to avoid composite index
+      properties.sort((a: any, b: any) => (b.createdAt?.seconds ?? 0) - (a.createdAt?.seconds ?? 0));
 
     // Synchronous client-side filters. (The radius filter is applied in the
     // listings page after geocoding, since it needs async coordinate lookups.)
@@ -197,8 +202,10 @@ export function subscribeToProperties(
       );
     }
 
-    callback(properties);
-  });
+      callback(properties);
+    })
+    .catch(() => { if (!cancelled) callback([]); });
+  return () => { cancelled = true; };
 }
 
 // ── Toggle property status (Admin) ───────────────────────────

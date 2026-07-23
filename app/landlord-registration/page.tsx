@@ -450,7 +450,7 @@ export default function LandlordRegistrationPage() {
       {modal === 'terms' && (
         <Modal label="Property management terms" onClose={close} maxWidth={640}>
           <p className="lr-dialog-kicker">The Terms</p>
-          <h3 className="lr-dialog-title">Property management terms, in plain English</h3>
+          <h3 className="lr-dialog-title">Property management terms</h3>
           <ol className="lr-dialog-terms">
             {TERMS_FULL.map((t) => (
               <li key={t.title}>
@@ -669,6 +669,10 @@ const PAGE_CSS = `
     .lr-grid3 { grid-template-columns:1fr; }
     .lr-hero-cta { flex-direction:column; align-items:stretch; }
     .lr-hero-cta .lr-btn { width:100%; }
+    /* Keep the three hero trust chips on a single row (no 2+1 wrap). */
+    .lr-hero-copy .lr-chips { flex-wrap:nowrap; gap:9px; }
+    .lr-hero-copy .lr-chips li { white-space:nowrap; font-size:11px; gap:4px; }
+    .lr-hero-copy .lr-chips li svg { width:12px; height:12px; }
     /* Give the hero step card clear separation + extra glow on mobile so it
        reads as a distinct, bright panel against the navy hero. */
     .lr-steps-card { margin-top:6px; box-shadow:0 0 0 1px rgba(37,99,235,.14), 0 20px 48px rgba(0,0,0,.55), 0 6px 18px rgba(37,99,235,.3); }

@@ -103,6 +103,20 @@ export default function PortalPackagesPage() {
         .lpk-note-actions { display: flex; flex-wrap: wrap; gap: 10px; }
         .lpk-btn { display: inline-flex; align-items: center; gap: 7px; background: #0a162f; color: #fff; text-decoration: none; font-size: 13.5px; font-weight: 700; padding: 11px 18px; border-radius: 10px; }
         .lpk-btn.ghost { background: #fff; color: #0a162f; border: 1px solid #d9dfec; }
+        /* ── DARK MODE (driven by the portal layout's data-portal-theme) ── */
+        :root[data-portal-theme="dark"] .lpk { background: #0a1120; color: #e6ebf3; }
+        :root[data-portal-theme="dark"] .lpk-card,
+        :root[data-portal-theme="dark"] .lpk-note { background: #13203a; border-color: #22314c; }
+        :root[data-portal-theme="dark"] .lpk-card.current { border-color: #2563eb; }
+        :root[data-portal-theme="dark"] .lpk-name,
+        :root[data-portal-theme="dark"] .lpk-note-h { color: #eef3fa; }
+        :root[data-portal-theme="dark"] .lpk-blurb,
+        :root[data-portal-theme="dark"] .lpk-incl-ul li,
+        :root[data-portal-theme="dark"] .lpk-note p { color: #93a3b8; }
+        :root[data-portal-theme="dark"] .lpk-fee { color: #aebcd0; }
+        :root[data-portal-theme="dark"] .lpk-fee b { color: #4ade80; }
+        :root[data-portal-theme="dark"] .lpk-btn.ghost { background: #13203a; color: #eef3fa; border-color: #2b3c58; }
+
         @media (max-width: 900px) { .lpk-grid { grid-template-columns: 1fr 1fr; } }
         @media (max-width: 640px) {
           .lpk-grid { grid-template-columns: 1fr; }

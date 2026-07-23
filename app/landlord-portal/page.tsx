@@ -488,6 +488,33 @@ function PortalStyles() {
       .lp-msg { padding: 11px 14px; border-radius: 9px; font-size: 13px; margin-bottom: 14px; }
       .lp-msg.ok { background: #e8f5e9; color: #2e7d32; }
       .lp-msg.err { background: #fdecea; color: #b3261e; }
+      /* ── DARK MODE (driven by the portal layout's data-portal-theme) ── */
+      :root[data-portal-theme="dark"] .lp { background: #0a1120; color: #e6ebf3; }
+      :root[data-portal-theme="dark"] .lp-top { background: rgba(5,10,22,.98); }
+      :root[data-portal-theme="dark"] .lp-side { background: #0a1120; }
+      :root[data-portal-theme="dark"] .lp-sub,
+      :root[data-portal-theme="dark"] .lp-stat-label,
+      :root[data-portal-theme="dark"] .lp-row-s,
+      :root[data-portal-theme="dark"] .lp-empty p { color: #93a3b8; }
+      :root[data-portal-theme="dark"] .lp-h2,
+      :root[data-portal-theme="dark"] .lp-panel-h { color: #eef3fa; }
+      :root[data-portal-theme="dark"] .lp-stat,
+      :root[data-portal-theme="dark"] .lp-panel,
+      :root[data-portal-theme="dark"] .lp-prop,
+      :root[data-portal-theme="dark"] .lp-empty,
+      :root[data-portal-theme="dark"] .lp-modal { background: #13203a; border-color: #22314c; }
+      :root[data-portal-theme="dark"] .lp-stat-bar { background: #22314c; }
+      :root[data-portal-theme="dark"] .lp-row { border-color: #1e2c45; }
+      :root[data-portal-theme="dark"] .lp-table th { background: #101c30; color: #93a3b8; border-color: #22314c; }
+      :root[data-portal-theme="dark"] .lp-table td { border-color: #1e2c45; }
+      :root[data-portal-theme="dark"] .lp-table tr:hover td { background: #16233b; }
+      :root[data-portal-theme="dark"] .lp-prop-meta span { background: #1b2942; color: #aebcd0; }
+      :root[data-portal-theme="dark"] .lp-prop--btn:hover { border-color: #3a4c6e; }
+      :root[data-portal-theme="dark"] .lp-empty { border-color: #2b3c58; }
+      :root[data-portal-theme="dark"] .lp-input { background: #101c30; border-color: #2b3c58; color: #eef3fa; }
+      :root[data-portal-theme="dark"] .lp-modal h2 { color: #eef3fa; }
+      :root[data-portal-theme="dark"] .lp-modal p { color: #93a3b8; }
+
       @media (max-width: 900px) {
         .lp-two { grid-template-columns: 1fr; }
         .lp-main { padding: 26px 18px; }

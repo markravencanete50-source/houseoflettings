@@ -10,7 +10,7 @@ import { findBundle } from '@/lib/agreementContent';
 import CompliancePanel from '@/components/landlord/CompliancePanel';
 import AccountPanel from '@/components/landlord/AccountPanel';
 
-export type PDProp = { id: string; label: string; postcode?: string; city?: string; type?: string; bedrooms?: string; bathrooms?: string; furnishing?: string; rent?: string; occupancy?: string; availableFrom?: string; tenancyStart?: string; packageId?: string; packageLabel?: string };
+export type PDProp = { id: string; agreementId?: string; label: string; postcode?: string; city?: string; type?: string; bedrooms?: string; bathrooms?: string; furnishing?: string; rent?: string; occupancy?: string; availableFrom?: string; tenancyStart?: string; packageId?: string; packageLabel?: string };
 export type PDApplication = { id: string; fullName: string; propertyAddress: string; postcode?: string; rent: string; leaseTerm: string; status: string; submittedAt: string | null };
 export type PDMaintenance = { id: string; fullName: string; propertyAddress: string; postcode?: string; issueDescription: string; status: string; submittedAt: string | null };
 
@@ -235,7 +235,7 @@ export default function PropertyDetailView({ prop, applications, maintenance }: 
           {tab === 'compliance' && (
             <div className="pd-section">
               <h3 className="pd-h">Compliance documents</h3>
-              <CompliancePanel propertyId={prop.id} propertyLabel={prop.label} postcode={prop.postcode || ''} managed={managed} agreementId={prop.id.replace(/-\d+$/, '')} />
+              <CompliancePanel propertyId={prop.id} propertyLabel={prop.label} postcode={prop.postcode || ''} managed={managed} agreementId={prop.agreementId ?? prop.id.replace(/-\d+$/, '')} />
             </div>
           )}
 

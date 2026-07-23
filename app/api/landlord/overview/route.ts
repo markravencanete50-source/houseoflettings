@@ -73,11 +73,40 @@ export async function GET(request: Request) {
       });
     }
 
-    // ── Live listings (properties collection) that match, or were posted for this landlord ──
+    // ── Properties posted FOR this landlord (properties collection, landlordId
+    //    === this account) are the landlord's real properties, so promote them
+    //    into "My Properties" (full property page + Account tab), not just a
+    //    read-only listing. Deduped by postcode against any registered ones. ──
     const listingSnap = await db.collection('properties').orderBy('createdAt', 'desc').limit(200).get();
-    const listings = listingSnap.docs
-      .map(doc => ({ id: doc.id, ...(doc.data() as any) }))
-      .filter(p => p.landlordId === auth.uid || belongs(p.location))
+    const allListings = listingSnap.docs.map(doc => ({ id: doc.id, ...(doc.data() as any) }));
+    const seenPostcodes = new Set(properties.map(p => p.postcode).filter(Boolean));
+    const promotedIds = new Set<string>();
+    for (const p of allListings) {
+      if (p.landlordId !== auth.uid) continue;
+      const pc = normalisePostcode(String(p.location || '')) || '';
+      if (pc && seenPostcodes.has(pc)) continue; // already shown as a registered property
+      promotedIds.add(p.id);
+      if (pc) seenPostcodes.add(pc);
+      const avail = resolveAvailability(p);
+      const occ = avail === 'let-agreed' ? 'Let' : avail === 'available' ? 'Available' : avail === 'pending' ? 'Pending' : undefined;
+      properties.push({
+        id: p.id,
+        agreementId: '',
+        label: p.location || p.title || 'Property',
+        postcode: pc,
+        type: p.propertyType === 'room' ? 'Room' : undefined,
+        bedrooms: p.bedrooms != null ? String(p.bedrooms) : undefined,
+        bathrooms: p.bathrooms != null ? String(p.bathrooms) : undefined,
+        furnishing: p.furnished,
+        rent: p.price != null ? String(p.price) : undefined,
+        occupancy: occ,
+        packageId: '', packageLabel: '',
+      });
+    }
+
+    // ── Live listings: matched listings NOT already promoted to a property ──
+    const listings = allListings
+      .filter(p => (p.landlordId === auth.uid || belongs(p.location)) && !promotedIds.has(p.id))
       .map(p => ({
         id: p.id,
         title: p.title || 'Listing',

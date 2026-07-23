@@ -7,6 +7,8 @@
 import { NextResponse } from 'next/server';
 import { requireLandlord } from '@/lib/landlordAuth';
 import { ledgerForPostcode } from '@/lib/landlordLedger';
+import { getAdminDb } from '@/lib/staffApiAuth';
+import { normalisePostcode } from '@/lib/portalMatch';
 
 export const dynamic = 'force-dynamic';
 
@@ -19,9 +21,20 @@ export async function GET(request: Request) {
   const target = norm(postcode);
   if (!target) return NextResponse.json({ message: 'Missing postcode.' }, { status: 400 });
 
-  // Scope to the caller's own postcodes.
-  const owned = auth.postcodes.map(norm);
-  if (!owned.includes(target)) {
+  // Scope to the caller's own postcodes: their registered ones, plus the
+  // postcodes of any listings posted FOR them (properties.landlordId === uid) —
+  // those are their real properties too, so their Account tab must resolve.
+  const allowed = new Set(auth.postcodes.map(norm));
+  if (!allowed.has(target)) {
+    try {
+      const snap = await getAdminDb().collection('properties').where('landlordId', '==', auth.uid).get();
+      snap.docs.forEach(d => {
+        const pc = norm(normalisePostcode(String((d.data() as any)?.location || '')) || '');
+        if (pc) allowed.add(pc);
+      });
+    } catch { /* fall through to the 403 below */ }
+  }
+  if (!allowed.has(target)) {
     return NextResponse.json({ message: 'Not authorised for that property.' }, { status: 403 });
   }
 

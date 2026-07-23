@@ -8,12 +8,13 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { findBundle } from '@/lib/agreementContent';
 import CompliancePanel from '@/components/landlord/CompliancePanel';
+import AccountPanel from '@/components/landlord/AccountPanel';
 
 export type PDProp = { id: string; label: string; postcode?: string; city?: string; type?: string; bedrooms?: string; bathrooms?: string; furnishing?: string; rent?: string; occupancy?: string; availableFrom?: string; tenancyStart?: string; packageId?: string; packageLabel?: string };
 export type PDApplication = { id: string; fullName: string; propertyAddress: string; postcode?: string; rent: string; leaseTerm: string; status: string; submittedAt: string | null };
 export type PDMaintenance = { id: string; fullName: string; propertyAddress: string; postcode?: string; issueDescription: string; status: string; submittedAt: string | null };
 
-type Tab = 'overview' | 'package' | 'applications' | 'maintenance' | 'compliance' | 'contact';
+type Tab = 'overview' | 'account' | 'package' | 'applications' | 'maintenance' | 'compliance' | 'contact';
 
 const fmtDate = (s: string | null) => s ? new Date(s).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : '—';
 const MAINT_META: Record<string, { label: string; bg: string; color: string }> = {
@@ -67,6 +68,7 @@ export default function PropertyDetailView({ prop, applications, maintenance }: 
 
   const NAV: { id: Tab; icon: string; label: string; count?: number; dot?: boolean }[] = [
     { id: 'overview', icon: '📊', label: 'Overview' },
+    { id: 'account', icon: '💷', label: 'Account' },
     { id: 'package', icon: '📦', label: 'Your package' },
     { id: 'applications', icon: '👥', label: 'Applications', count: apps.length },
     { id: 'maintenance', icon: '🔧', label: 'Maintenance', count: maint.length, dot: openMaint > 0 },
@@ -220,6 +222,13 @@ export default function PropertyDetailView({ prop, applications, maintenance }: 
                 </div>
               )}
               <Link href={maintHref} className="pd-report">+ Report maintenance for this property</Link>
+            </div>
+          )}
+
+          {tab === 'account' && (
+            <div className="pd-section">
+              <h3 className="pd-h">Account</h3>
+              <AccountPanel postcode={prop.postcode || ''} />
             </div>
           )}
 

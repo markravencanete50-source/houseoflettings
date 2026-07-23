@@ -12,6 +12,20 @@ function prefersReducedMotion() {
 
 const easeOutCubic = (t: number) => 1 - Math.pow(1 - t, 3);
 
+/** Tracks the portal-wide dark theme (data-portal-theme on <html>, set by the
+ *  landlord-portal layout). Re-renders when it flips so charts recolour live. */
+function useIsDark() {
+  const [dark, setDark] = useState(false);
+  useEffect(() => {
+    const read = () => setDark(document.documentElement.getAttribute('data-portal-theme') === 'dark');
+    read();
+    const obs = new MutationObserver(read);
+    obs.observe(document.documentElement, { attributes: true, attributeFilter: ['data-portal-theme'] });
+    return () => obs.disconnect();
+  }, []);
+  return dark;
+}
+
 /** Count-up number. Animates from 0 → value on first reveal. */
 export function AnimatedNumber({
   value, duration = 1400, prefix = '', suffix = '', decimals = 0, className, style,
@@ -82,6 +96,7 @@ export function BarPairChart({
   months,
 }: { months: { label: string; applications: number; maintenance: number }[] }) {
   const [grown, setGrown] = useState(false);
+  const dark = useIsDark();
   const wrap = useRef<HTMLDivElement>(null);
   useEffect(() => {
     const el = wrap.current;
@@ -92,6 +107,9 @@ export function BarPairChart({
   }, []);
   const max = Math.max(1, ...months.map(m => Math.max(m.applications, m.maintenance)));
   const H = 150;
+  // The "maintenance" navy vanishes on the dark background — lighten it there.
+  const maintBar = dark ? 'linear-gradient(180deg,#4b6ea8,#7d9bd0)' : 'linear-gradient(180deg,#0a162f,#22406f)';
+  const maintLegend = dark ? '#7d9bd0' : '#0a162f';
   return (
     <div ref={wrap}>
       <div style={{ display: 'flex', alignItems: 'flex-end', gap: 18, height: H, padding: '0 4px' }}>
@@ -108,7 +126,7 @@ export function BarPairChart({
                       width: 16, borderRadius: '6px 6px 0 0',
                       background: k === 'applications'
                         ? 'linear-gradient(180deg,#c0392b,#e05648)'
-                        : 'linear-gradient(180deg,#0a162f,#22406f)',
+                        : maintBar,
                       height: grown ? Math.max(target, m[k] > 0 ? 6 : 2) : 2,
                       transition: `height .9s cubic-bezier(.22,1,.36,1) ${i * 90 + j * 45}ms`,
                     }}
@@ -120,9 +138,9 @@ export function BarPairChart({
           </div>
         ))}
       </div>
-      <div style={{ display: 'flex', gap: 20, marginTop: 16, fontSize: 12, color: '#6b7280' }}>
+      <div style={{ display: 'flex', gap: 20, marginTop: 16, fontSize: 12, color: dark ? '#93a3b8' : '#6b7280' }}>
         <Legend color="#c0392b" label="Applications" />
-        <Legend color="#0a162f" label="Maintenance" />
+        <Legend color={maintLegend} label="Maintenance" />
       </div>
     </div>
   );
@@ -141,6 +159,7 @@ function Legend({ color, label }: { color: string; label: string }) {
 export function DonutChart({ data }: { data: { label: string; value: number; color: string }[] }) {
   const total = data.reduce((s, d) => s + d.value, 0);
   const [draw, setDraw] = useState(false);
+  const dark = useIsDark();
   const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
     const el = ref.current;
@@ -155,7 +174,7 @@ export function DonutChart({ data }: { data: { label: string; value: number; col
     <div ref={ref} style={{ display: 'flex', alignItems: 'center', gap: 28, flexWrap: 'wrap' }}>
       <div style={{ position: 'relative', width: 140, height: 140 }}>
         <svg width="140" height="140" viewBox="0 0 140 140" style={{ transform: 'rotate(-90deg)' }}>
-          <circle cx="70" cy="70" r={R} fill="none" stroke="#eef1f6" strokeWidth="16" />
+          <circle cx="70" cy="70" r={R} fill="none" stroke={dark ? '#22314c' : '#eef1f6'} strokeWidth="16" />
           {total > 0 && data.map((d) => {
             const frac = d.value / total;
             const len = frac * C;
@@ -173,7 +192,7 @@ export function DonutChart({ data }: { data: { label: string; value: number; col
           })}
         </svg>
         <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-          <div style={{ fontSize: 30, fontWeight: 800, color: '#0a162f', lineHeight: 1 }}>
+          <div style={{ fontSize: 30, fontWeight: 800, color: dark ? '#eef3fa' : '#0a162f', lineHeight: 1 }}>
             <AnimatedNumber value={total} />
           </div>
           <div style={{ fontSize: 11, color: '#8a94a3', marginTop: 2 }}>total</div>
@@ -183,7 +202,7 @@ export function DonutChart({ data }: { data: { label: string; value: number; col
         {data.map(d => (
           <div key={d.label} style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 13 }}>
             <span style={{ width: 11, height: 11, borderRadius: 3, background: d.color }} />
-            <span style={{ color: '#374151', fontWeight: 600, minWidth: 92 }}>{d.label}</span>
+            <span style={{ color: dark ? '#c7d2e6' : '#374151', fontWeight: 600, minWidth: 92 }}>{d.label}</span>
             <span style={{ color: '#8a94a3' }}>{d.value}</span>
           </div>
         ))}

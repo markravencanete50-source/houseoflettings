@@ -309,9 +309,9 @@ export default function LandlordPortal() {
 
 function Field({ label, value }: { label: string; value: string }) {
   return (
-    <div style={{ display: 'flex', justifyContent: 'space-between', padding: '12px 0', borderBottom: '1px solid #f0f2f7' }}>
-      <span style={{ color: '#8a94a3', fontSize: 14 }}>{label}</span>
-      <span style={{ color: '#0a162f', fontWeight: 600, fontSize: 14 }}>{value}</span>
+    <div className="lp-field">
+      <span className="lp-field-l">{label}</span>
+      <span className="lp-field-v">{value}</span>
     </div>
   );
 }
@@ -480,6 +480,10 @@ function PortalStyles() {
       .lp-empty { background: #fff; border: 1px dashed #d9dfec; border-radius: 18px; padding: 56px 24px; text-align: center; }
       .lp-empty-ico { font-size: 44px; margin-bottom: 12px; }
       .lp-empty p { color: #8a94a3; font-size: 15px; margin: 0; }
+      .lp-field { display: flex; justify-content: space-between; gap: 16px; padding: 12px 0; border-bottom: 1px solid #f0f2f7; }
+      .lp-field:last-child { border-bottom: none; }
+      .lp-field-l { color: #8a94a3; font-size: 14px; }
+      .lp-field-v { color: #0a162f; font-weight: 600; font-size: 14px; text-align: right; }
       .lp-input { width: 100%; box-sizing: border-box; padding: 12px 14px; border: 1.5px solid #e2e7f0; border-radius: 10px; font-size: 14px; margin-bottom: 12px; outline: none; font-family: inherit; transition: border-color .2s, box-shadow .2s; }
       .lp-input:focus { border-color: #c0392b; box-shadow: 0 0 0 4px rgba(192,57,43,.10); }
       .lp-btn-solid { width: 100%; padding: 13px; border: none; border-radius: 10px; background: linear-gradient(135deg,#c0392b,#a12f22); color: #fff; font-weight: 700; font-size: 14px; cursor: pointer; font-family: inherit; margin-top: 4px; transition: transform .15s; }
@@ -512,8 +516,20 @@ function PortalStyles() {
       :root[data-portal-theme="dark"] .lp-prop--btn:hover { border-color: #3a4c6e; }
       :root[data-portal-theme="dark"] .lp-empty { border-color: #2b3c58; }
       :root[data-portal-theme="dark"] .lp-input { background: #101c30; border-color: #2b3c58; color: #eef3fa; }
+      :root[data-portal-theme="dark"] .lp-input::placeholder { color: #6f7f95; }
       :root[data-portal-theme="dark"] .lp-modal h2 { color: #eef3fa; }
       :root[data-portal-theme="dark"] .lp-modal p { color: #93a3b8; }
+      /* Text/data that does not inherit the light colour (buttons reset colour,
+         table cells, headings and inline-styled values) — force it light. */
+      :root[data-portal-theme="dark"] .lp-title,
+      :root[data-portal-theme="dark"] .lp-stat-val,
+      :root[data-portal-theme="dark"] .lp-prop--btn,
+      :root[data-portal-theme="dark"] .lp-prop-title,
+      :root[data-portal-theme="dark"] .lp-row-t,
+      :root[data-portal-theme="dark"] .lp-user-name,
+      :root[data-portal-theme="dark"] .lp-field-v { color: #eef3fa; }
+      :root[data-portal-theme="dark"] .lp-table td { color: #dbe3ee; }
+      :root[data-portal-theme="dark"] .lp-field { border-color: #22314c; }
 
       @media (max-width: 900px) {
         .lp-two { grid-template-columns: 1fr; }

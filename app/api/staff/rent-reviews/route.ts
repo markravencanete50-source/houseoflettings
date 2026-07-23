@@ -5,6 +5,7 @@
 import { NextResponse } from 'next/server';
 import { FieldValue } from 'firebase-admin/firestore';
 import { requireStaff, getAdminDb } from '@/lib/staffApiAuth';
+import { logAction } from '@/lib/activityLog';
 
 export async function GET(request: Request) {
   try {
@@ -54,6 +55,7 @@ export async function PATCH(request: Request) {
       lastStatusBy: auth.uid,
     });
 
+    await logAction(auth, 'PATCH', '/api/staff/rent-reviews', { id, status });
     return NextResponse.json({ ok: true }, { status: 200 });
   } catch (e) {
     console.error('staff/rent-reviews PATCH error:', e);

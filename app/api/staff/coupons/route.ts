@@ -14,6 +14,7 @@
 import { NextResponse } from 'next/server';
 import { FieldValue } from 'firebase-admin/firestore';
 import { requireStaff, getAdminDb } from '@/lib/staffApiAuth';
+import { logAction } from '@/lib/activityLog';
 import { BUNDLES } from '@/lib/bundles';
 import { setupFeeAmount } from '@/lib/agreementContent';
 
@@ -83,6 +84,7 @@ export async function POST(request: Request) {
         createdAt: FieldValue.serverTimestamp(),
       };
       await ref.set(coupon);
+      await logAction(auth, 'POST', '/api/staff/coupons', { id: code });
       return NextResponse.json({ coupon: { ...coupon, code, createdAt: new Date().toISOString() } }, { status: 201 });
     }
     return NextResponse.json({ message: 'Could not generate a unique code. Please try again.' }, { status: 500 });
@@ -108,6 +110,7 @@ export async function PATCH(request: Request) {
       return NextResponse.json({ message: 'Only unused coupons can be deactivated.' }, { status: 400 });
     }
     await ref.update({ status: 'cancelled', cancelledBy: auth.uid, cancelledAt: FieldValue.serverTimestamp() });
+    await logAction(auth, 'PATCH', '/api/staff/coupons', { id: code, status: 'cancelled' });
     return NextResponse.json({ ok: true }, { status: 200 });
   } catch (e) {
     console.error('staff/coupons PATCH error:', e);

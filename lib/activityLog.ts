@@ -118,6 +118,19 @@ export function describeAction(
   return { action: 'Updated', summary: `Updated a ${noun}` };
 }
 
+// Convenience for the /api/staff/* write handlers: log one write action from
+// the server, where the actor is already verified. Awaited by callers so the
+// entry is committed before the serverless response returns (a fire-and-forget
+// write can be frozen by Vercel after the response). Never throws.
+export async function logAction(
+  actor: StaffAuth,
+  method: 'POST' | 'PATCH' | 'DELETE',
+  path: string,
+  meta?: Record<string, unknown>,
+): Promise<void> {
+  await recordActivity(actor, { type: 'action', method, path, meta });
+}
+
 export type ActivityInput = {
   type?: string;            // 'action' | 'view' | 'login'
   method?: string;          // POST | PATCH | DELETE

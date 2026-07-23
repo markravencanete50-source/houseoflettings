@@ -6,6 +6,7 @@ import { NextResponse } from 'next/server';
 import { FieldValue } from 'firebase-admin/firestore';
 import { requireStaff, getAdminDb } from '@/lib/staffApiAuth';
 import { softDeleteDoc } from '@/lib/softDelete';
+import { logAction } from '@/lib/activityLog';
 
 export async function GET(request: Request) {
   try {
@@ -55,6 +56,7 @@ export async function PATCH(request: Request) {
       lastStatusBy: auth.uid,
     });
 
+    await logAction(auth, 'PATCH', '/api/staff/maintenance', { id, status });
     return NextResponse.json({ ok: true }, { status: 200 });
   } catch (e) {
     console.error('staff/maintenance PATCH error:', e);
@@ -75,6 +77,7 @@ export async function DELETE(request: Request) {
 
     const result = await softDeleteDoc({ collection: 'maintenanceRequests', docId: id, actor: auth, typeLabel: 'Maintenance request' });
     if (!result.ok) return NextResponse.json({ message: 'Request not found' }, { status: 404 });
+    await logAction(auth, 'DELETE', '/api/staff/maintenance', { id });
     return NextResponse.json({ ok: true }, { status: 200 });
   } catch (e) {
     console.error('staff/maintenance DELETE error:', e);

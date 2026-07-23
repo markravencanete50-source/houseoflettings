@@ -11,6 +11,7 @@ import { NextResponse } from 'next/server';
 import { FieldValue } from 'firebase-admin/firestore';
 import { requireStaff, getAdminDb } from '@/lib/staffApiAuth';
 import { softDeleteDoc } from '@/lib/softDelete';
+import { logAction } from '@/lib/activityLog';
 import { htmlEscapeDeep, sanitizeUploadUrlFieldsDeep } from '@/lib/security';
 import { findBundle } from '@/lib/agreementContent';
 import { issueAgreementDocuments, sendAgreementEmail, propertyLine, feeLine } from '@/lib/agreementDocuments';
@@ -146,6 +147,7 @@ export async function PATCH(request: Request) {
           subject: `Please review and re-sign your ${bundle.label} agreement | House of Lettings`,
           html: reissueEmailHtml(emailData, bundle, link),
         }).catch(() => { /* non-fatal */ });
+        await logAction(auth, 'PATCH', '/api/staff/agreements', { id, action: 'reissue' });
         return NextResponse.json({ ok: true, status: 'awaiting-signature' }, { status: 200 });
       }
 
@@ -161,6 +163,7 @@ export async function PATCH(request: Request) {
         const emailData = htmlEscapeDeep(merged);
         await issueAgreementDocuments({ data: merged, bundle, ref: id, template, emailData, corrected: true });
       }
+      await logAction(auth, 'PATCH', '/api/staff/agreements', { id, action: 'edit' });
       return NextResponse.json({ ok: true }, { status: 200 });
     }
 
@@ -170,6 +173,7 @@ export async function PATCH(request: Request) {
       return NextResponse.json({ message: 'Invalid status.' }, { status: 400 });
     }
     await ref.update({ status, updatedAt: FieldValue.serverTimestamp(), lastStatusBy: auth.uid });
+    await logAction(auth, 'PATCH', '/api/staff/agreements', { id, status });
     return NextResponse.json({ ok: true }, { status: 200 });
   } catch (e) {
     console.error('staff/agreements PATCH error:', e);
@@ -190,6 +194,7 @@ export async function DELETE(request: Request) {
 
     const result = await softDeleteDoc({ collection: 'landlordAgreements', docId: id, actor: auth, typeLabel: 'Landlord registration' });
     if (!result.ok) return NextResponse.json({ message: 'Registration not found' }, { status: 404 });
+    await logAction(auth, 'DELETE', '/api/staff/agreements', { id });
     return NextResponse.json({ ok: true }, { status: 200 });
   } catch (e) {
     console.error('staff/agreements DELETE error:', e);

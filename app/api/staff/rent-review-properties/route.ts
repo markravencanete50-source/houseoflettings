@@ -6,6 +6,7 @@ import { NextResponse } from 'next/server';
 import { FieldValue } from 'firebase-admin/firestore';
 import { requireStaff, getAdminDb } from '@/lib/staffApiAuth';
 import { softDeleteDoc } from '@/lib/softDelete';
+import { logAction } from '@/lib/activityLog';
 import { extractPostcode } from '@/lib/rentReviewProperties';
 
 export async function GET(request: Request) {
@@ -42,6 +43,7 @@ export async function POST(request: Request) {
       createdByUid: auth.uid,
     };
     const ref = await getAdminDb().collection('rentReviewProperties').add(doc);
+    await logAction(auth, 'POST', '/api/staff/rent-review-properties', { id: ref.id, address });
     return NextResponse.json({ id: ref.id, ...doc, createdAt: null }, { status: 201 });
   } catch (e) {
     console.error('staff/rent-review-properties POST error:', e);
@@ -68,6 +70,7 @@ export async function PATCH(request: Request) {
     updates.updatedAt = FieldValue.serverTimestamp();
 
     await getAdminDb().collection('rentReviewProperties').doc(id).update(updates);
+    await logAction(auth, 'PATCH', '/api/staff/rent-review-properties', { id, active: updates.active, address: updates.address });
     return NextResponse.json({ ok: true }, { status: 200 });
   } catch (e) {
     console.error('staff/rent-review-properties PATCH error:', e);
@@ -91,6 +94,7 @@ export async function DELETE(request: Request) {
     // Soft-delete into the 24h recycle bin so an admin can restore it.
     const result = await softDeleteDoc({ collection: 'rentReviewProperties', docId: id, actor: auth, typeLabel: 'Rent-review property' });
     if (!result.ok) return NextResponse.json({ message: 'Property not found' }, { status: 404 });
+    await logAction(auth, 'DELETE', '/api/staff/rent-review-properties', { id });
     return NextResponse.json({ ok: true }, { status: 200 });
   } catch (e) {
     console.error('staff/rent-review-properties DELETE error:', e);

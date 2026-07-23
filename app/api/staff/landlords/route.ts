@@ -5,6 +5,7 @@
 // and everything of theirs, and is ADMIN-ONLY (Kasra / Mark).
 import { getAuth } from 'firebase-admin/auth';
 import { requireStaff, getAdminDb } from '@/lib/staffApiAuth';
+import { logAction } from '@/lib/activityLog';
 
 const iso = (v: any) => v?.toDate?.()?.toISOString?.() || null;
 
@@ -96,6 +97,7 @@ export async function DELETE(request: Request) {
       if (e?.code !== 'auth/user-not-found') console.error('deleteUser failed:', e);
     }
 
+    await logAction(auth, 'DELETE', '/api/staff/landlords', { id: uid });
     return Response.json({ ok: true, deleted }, { status: 200 });
   } catch (e) {
     console.error('staff/landlords DELETE error:', e);

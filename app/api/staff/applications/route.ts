@@ -3,6 +3,7 @@
 // delete (DELETE, soft-deletes into the 24h recycle bin).
 import { requireStaff, getAdminDb } from '@/lib/staffApiAuth';
 import { softDeleteDoc } from '@/lib/softDelete';
+import { logAction } from '@/lib/activityLog';
 
 export async function GET(request: Request) {
   try {
@@ -44,6 +45,7 @@ export async function DELETE(request: Request) {
 
     const result = await softDeleteDoc({ collection: 'tenantApplications', docId: id, actor: auth, typeLabel: 'Application' });
     if (!result.ok) return Response.json({ message: 'Application not found' }, { status: 404 });
+    await logAction(auth, 'DELETE', '/api/staff/applications', { id });
     return Response.json({ ok: true }, { status: 200 });
   } catch (e) {
     console.error('staff/applications DELETE error:', e);

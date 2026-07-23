@@ -6,6 +6,7 @@
 import { FieldValue } from 'firebase-admin/firestore';
 import { requireStaff, getAdminDb } from '@/lib/staffApiAuth';
 import { softDeleteDoc } from '@/lib/softDelete';
+import { logAction } from '@/lib/activityLog';
 
 export async function GET(request: Request) {
   try {
@@ -56,6 +57,7 @@ export async function POST(request: Request) {
       createdAt: FieldValue.serverTimestamp(),
     });
 
+    await logAction(auth, 'POST', '/api/staff/reviews', { id: docRef.id, author_name, rating });
     return Response.json({
       review: { id: docRef.id, author_name, text, rating, location, relative_time_description, profile_photo_url, createdAt: new Date().toISOString() },
     }, { status: 201 });
@@ -82,6 +84,7 @@ export async function DELETE(request: Request) {
     // Soft-delete into the 24h recycle bin so an admin can restore it.
     const result = await softDeleteDoc({ collection: 'google_reviews', docId: id, actor: auth, typeLabel: 'Review' });
     if (!result.ok) return Response.json({ message: 'Review not found.' }, { status: 404 });
+    await logAction(auth, 'DELETE', '/api/staff/reviews', { id });
     return Response.json({ ok: true }, { status: 200 });
   } catch (e) {
     console.error('staff/reviews DELETE error:', e);

@@ -11,6 +11,7 @@
 import { FieldValue } from 'firebase-admin/firestore';
 import { requireStaff, getAdminDb } from '@/lib/staffApiAuth';
 import { softDeleteDoc } from '@/lib/softDelete';
+import { logAction } from '@/lib/activityLog';
 
 export async function POST(request: Request) {
   try {
@@ -47,6 +48,7 @@ export async function POST(request: Request) {
       createdByRole: auth.role,
     });
 
+    await logAction(auth, 'POST', '/api/staff/properties', { id: docRef.id, title });
     return Response.json({ id: docRef.id }, { status: 201 });
   } catch (e) {
     console.error('staff/properties POST error:', e);
@@ -82,6 +84,7 @@ export async function PATCH(request: Request) {
     updates.updatedByUid = auth.uid;
 
     await getAdminDb().collection('properties').doc(String(id)).update(updates);
+    await logAction(auth, 'PATCH', '/api/staff/properties', { id: String(id), availability: updates.availability, status: updates.status });
     return Response.json({ ok: true }, { status: 200 });
   } catch (e) {
     console.error('staff/properties PATCH error:', e);
@@ -107,6 +110,7 @@ export async function DELETE(request: Request) {
     // can restore it from the Deleted tab.
     const result = await softDeleteDoc({ collection: 'properties', docId: id, actor: auth, typeLabel: 'Property' });
     if (!result.ok) return Response.json({ message: 'Property not found' }, { status: 404 });
+    await logAction(auth, 'DELETE', '/api/staff/properties', { id });
     return Response.json({ ok: true }, { status: 200 });
   } catch (e) {
     console.error('staff/properties DELETE error:', e);

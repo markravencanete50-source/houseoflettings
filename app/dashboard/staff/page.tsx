@@ -371,30 +371,15 @@ function StaffDashboardInner() {
     } catch { /* logging is best-effort */ }
   };
 
-  // Pull only the meaningful, non-sensitive fields out of a write body so the log
-  // can say exactly what changed (the server also whitelists these).
-  const metaFromBody = (body: unknown): Record<string, unknown> => {
-    if (typeof body !== 'string') return {};
-    try {
-      const b = JSON.parse(body);
-      const out: Record<string, unknown> = {};
-      for (const k of ['id', 'status', 'availability', 'letAgreed', 'action', 'mode', 'title', 'location', 'address', 'author_name', 'rating', 'active']) {
-        if (b && k in b) out[k] = b[k];
-      }
-      return out;
-    } catch { return {}; }
-  };
-
   const authedFetch = async (path: string, init?: RequestInit) => {
     const headers = await authHeaders(init?.headers as Record<string, string> | undefined);
-    const res = await fetch(path, { ...init, headers, credentials: 'same-origin' });
-    // Log writes only — GETs are reads, and never log the logging endpoint.
-    const method = (init?.method || 'GET').toUpperCase();
-    if (method !== 'GET' && !path.startsWith('/api/staff/activity-log')) {
-      void logActivity({ type: 'action', method, path, status: res.status, meta: metaFromBody(init?.body) });
-    }
-    return res;
+    return fetch(path, { ...init, headers, credentials: 'same-origin' });
   };
+  // NOTE: write actions (posts, edits, status changes, deletes) are logged
+  // SERVER-SIDE in the /api/staff/* write handlers via recordActivity — not here.
+  // A client wrapper missed writes made by components with their own fetch (e.g.
+  // PropertyForm's createVia/updateVia), so posts never showed up. logActivity
+  // above is now only used for section-view clicks and the login event.
 
   // Record one "signed in" entry per dashboard load, so admins can see when each
   // staff member started a session (not just what they changed).

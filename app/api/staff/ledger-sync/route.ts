@@ -6,18 +6,19 @@ import { NextResponse } from 'next/server';
 import { requireStaff, getAdminDb } from '@/lib/staffApiAuth';
 import { logAction } from '@/lib/activityLog';
 import { syncSheetToLedger, getReconciliation, getUnassigned, resolveUnassigned } from '@/lib/sheetLedgerSync';
+import { getLedgerReadMode, setLedgerReadMode } from '@/lib/ledgerConfig';
 
 export const dynamic = 'force-dynamic';
 
-// Reconciliation + the unassigned queue.
+// Reconciliation + the unassigned queue + the current statement read mode.
 export async function GET(request: Request) {
   try {
     const auth = await requireStaff(request, 'properties');
     if (auth instanceof Response) return auth;
     if (auth.role !== 'admin') return NextResponse.json({ message: 'Admin only.' }, { status: 403 });
     const db = getAdminDb();
-    const [reconciliation, unassigned] = await Promise.all([getReconciliation(db), getUnassigned(db)]);
-    return NextResponse.json({ reconciliation, unassigned }, { status: 200 });
+    const [reconciliation, unassigned, mode] = await Promise.all([getReconciliation(db), getUnassigned(db), getLedgerReadMode(db)]);
+    return NextResponse.json({ reconciliation, unassigned, mode }, { status: 200 });
   } catch (e) {
     console.error('staff/ledger-sync GET error:', e);
     return NextResponse.json({ message: 'Internal server error' }, { status: 500 });
@@ -32,6 +33,22 @@ export async function POST(request: Request) {
 
     const body = await request.json().catch(() => ({}));
     const db = getAdminDb();
+
+    // Cutover toggle: switch the statement source. Moving to 'ledger' is guarded
+    // by reconciliation being balanced (override with force), so we never cut
+    // over while sheet rows are still unaccounted for. Reverting is always allowed.
+    if (body.action === 'set-mode') {
+      const mode = body.mode === 'ledger' ? 'ledger' : 'sheet';
+      if (mode === 'ledger' && !body.force) {
+        const recon = await getReconciliation(db);
+        if (!recon.balanced) {
+          return NextResponse.json({ message: 'Reconciliation is not balanced yet — clear the unassigned queue before cutting over (or pass force).', balanced: false }, { status: 400 });
+        }
+      }
+      await setLedgerReadMode(db, mode);
+      await logAction(auth, 'POST', '/api/staff/ledger-sync', { action: 'set-mode', mode });
+      return NextResponse.json({ ok: true, mode }, { status: 200 });
+    }
 
     // Assign a queued row (optionally all with the same address) to a property.
     if (body.action === 'resolve') {

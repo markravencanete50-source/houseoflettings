@@ -11,6 +11,7 @@ import { ledgerForProperty, type LedgerResult } from '@/lib/landlordLedger';
 import { getAdminDb } from '@/lib/staffApiAuth';
 import { normalisePostcode } from '@/lib/portalMatch';
 import { signedAmount, typeLabel } from '@/lib/ledgerEntries';
+import { getLedgerReadMode } from '@/lib/ledgerConfig';
 
 export const dynamic = 'force-dynamic';
 
@@ -45,13 +46,14 @@ function groupForType(type: string, direction: string): Group {
   return direction === 'in' ? 'received' : 'deduction'; // adjustment / other
 }
 
-async function internalEntries(db: ReturnType<typeof getAdminDb>, propertyId: string, fromMs: number, toMs: number): Promise<Txn[]> {
+async function internalEntries(db: ReturnType<typeof getAdminDb>, propertyId: string, fromMs: number, toMs: number, includeSheet = false): Promise<Txn[]> {
   if (!propertyId) return [];
   const snap = await db.collection('ledgerEntries').where('propertyId', '==', propertyId).limit(500).get();
   return snap.docs.map(d => d.data() as any)
-    // Sheet-mirrored entries are excluded: the statement still live-reads the
-    // sheet, so counting them here would double-count (until the step-4 cutover).
-    .filter(e => e.source !== 'sheet')
+    // In 'sheet' mode the statement live-reads the sheet, so mirrored rows are
+    // excluded to avoid double-counting. In 'ledger' mode (cutover) they ARE the
+    // statement, so they're included.
+    .filter(e => includeSheet || e.source !== 'sheet')
     .filter(e => {
       const t = new Date(`${String(e.date || '').slice(0, 10)}T00:00:00`).getTime();
       return Number.isFinite(t) && t >= fromMs && t <= toMs;
@@ -158,9 +160,18 @@ export async function GET(request: Request) {
     try { resolved = await resolveOwnProperty(db, auth, id); }
     catch (e) { console.error('ledger resolve error:', e); return NextResponse.json({ message: 'Could not load your account.' }, { status: 500 }); }
     if (!resolved) return NextResponse.json({ message: 'Not authorised for that property.' }, { status: 403 });
+
+    const mode = await getLedgerReadMode(db);
+    if (mode === 'ledger') {
+      // Cutover: the internal ledger (incl. mirrored sheet rows) IS the statement.
+      const entries = await internalEntries(db, id, fromMs, toMs, true);
+      const emptySheet = { configured: true, transactions: [], totals: { moneyIn: 0, moneyOut: 0, net: 0 } };
+      return NextResponse.json(mergeStatement(emptySheet, entries), { status: 200 });
+    }
+    // Default: live sheet + internal entries (excluding the mirror).
     const [sheet, entries] = await Promise.all([
       ledgerForProperty({ ...resolved, fromMs, toMs }),
-      internalEntries(db, id, fromMs, toMs),
+      internalEntries(db, id, fromMs, toMs, false),
     ]);
     return NextResponse.json(mergeStatement(sheet, entries), { status: 200 });
   }

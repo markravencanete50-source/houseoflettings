@@ -22,6 +22,7 @@ export default function LedgerSyncPanel({ authedFetch }: { authedFetch: (path: s
   const [recon, setRecon] = useState<Recon | null>(null);
   const [rows, setRows] = useState<Row[]>([]);
   const [props, setProps] = useState<Prop[]>([]);
+  const [mode, setMode] = useState<'sheet' | 'ledger'>('sheet');
   const [assign, setAssign] = useState<Record<string, string>>({});   // rowId → propertyId
   const [applyAll, setApplyAll] = useState<Record<string, boolean>>({});
   const [busy, setBusy] = useState<string | null>(null);
@@ -31,7 +32,7 @@ export default function LedgerSyncPanel({ authedFetch }: { authedFetch: (path: s
     try {
       const res = await authedFetch('/api/staff/ledger-sync');
       const j = await res.json().catch(() => ({}));
-      if (res.ok) { setRecon(j.reconciliation || null); setRows(j.unassigned || []); }
+      if (res.ok) { setRecon(j.reconciliation || null); setRows(j.unassigned || []); if (j.mode) setMode(j.mode); }
       else setMsg(j.message || 'Could not load.');
     } catch { setMsg('Network error.'); }
   }, [authedFetch]);
@@ -48,6 +49,20 @@ export default function LedgerSyncPanel({ authedFetch }: { authedFetch: (path: s
       const j = await res.json().catch(() => ({}));
       setMsg(res.ok ? (j.configured === false ? 'Bank sheet not connected.' : `Imported ${j.imported}, already in ledger ${j.skipped}, unassigned ${j.unassigned}.`) : (j.message || 'Sync failed.'));
       await load();
+    } finally { setBusy(null); }
+  };
+
+  const switchMode = async (target: 'sheet' | 'ledger') => {
+    if (target === 'ledger' && !recon?.balanced && !confirm('Reconciliation isn’t balanced — some sheet rows aren’t in the ledger, so those landlords’ statements could be incomplete. Cut over anyway?')) return;
+    if (!confirm(target === 'ledger'
+      ? 'Switch statements to read the internal ledger ONLY (retire the bank sheet as the read source)? Reversible.'
+      : 'Revert statements to read the live bank sheet + ledger?')) return;
+    setBusy('mode'); setMsg('');
+    try {
+      const res = await authedFetch('/api/staff/ledger-sync', { method: 'POST', body: JSON.stringify({ action: 'set-mode', mode: target, force: target === 'ledger' && !recon?.balanced }) });
+      const j = await res.json().catch(() => ({}));
+      if (res.ok) { setMode(j.mode); setMsg(`Statement source is now ${j.mode === 'ledger' ? 'the internal ledger only' : 'the live sheet + ledger'}.`); }
+      else setMsg(j.message || 'Could not switch.');
     } finally { setBusy(null); }
   };
 
@@ -107,6 +122,30 @@ export default function LedgerSyncPanel({ authedFetch }: { authedFetch: (path: s
           </div>
         </>
       )}
+
+      {/* Statement source / cutover */}
+      <div style={{ ...card, marginBottom: 24, display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 14, flexWrap: 'wrap' }}>
+        <div>
+          <div style={{ fontSize: 13, fontWeight: 800, color: '#0a162f' }}>Statement source</div>
+          <div style={{ fontSize: 13, color: '#475569', marginTop: 3 }}>
+            Landlord statements currently read from <strong>{mode === 'ledger' ? 'the internal ledger only (sheet retired)' : 'the live bank sheet + ledger'}</strong>.
+          </div>
+        </div>
+        {mode === 'sheet' ? (
+          <button
+            onClick={() => switchMode('ledger')}
+            disabled={busy === 'mode'}
+            title={recon?.balanced ? 'Cut over to ledger-only' : 'Clear the unassigned queue first (balance reconciliation)'}
+            style={{ background: recon?.balanced ? '#0a162f' : '#e5e7eb', color: recon?.balanced ? '#fff' : '#9ca3af', border: 'none', borderRadius: 8, padding: '10px 16px', fontSize: 13, fontWeight: 700, cursor: busy ? 'default' : 'pointer' }}
+          >
+            {busy === 'mode' ? 'Switching…' : '→ Cut over to ledger-only'}
+          </button>
+        ) : (
+          <button onClick={() => switchMode('sheet')} disabled={busy === 'mode'} style={{ background: '#fff', color: '#c62828', border: '1px solid #f5c6c0', borderRadius: 8, padding: '10px 16px', fontSize: 13, fontWeight: 700, cursor: busy ? 'default' : 'pointer' }}>
+            {busy === 'mode' ? 'Reverting…' : '← Revert to sheet + ledger'}
+          </button>
+        )}
+      </div>
 
       <h2 style={{ fontSize: 16, fontWeight: 800, color: '#0a162f', margin: '0 0 12px' }}>Unassigned queue ({rows.length})</h2>
       {rows.length === 0 ? (

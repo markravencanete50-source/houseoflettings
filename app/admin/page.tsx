@@ -19,6 +19,7 @@ import ApplicationAssign from '@/components/dashboard/ApplicationAssign';
 import LedgerManager from '@/components/dashboard/LedgerManager';
 import DemoPanel from '@/components/dashboard/DemoPanel';
 import ManagePortalPanel from '@/components/dashboard/ManagePortalPanel';
+import ManagePortalLanding from '@/components/dashboard/ManagePortalLanding';
 import LedgerSyncPanel from '@/components/dashboard/LedgerSyncPanel';
 import ServicePricingEditor from '@/components/dashboard/ServicePricingEditor';
 import { useAuth } from '@/hooks/useAuth';
@@ -839,6 +840,7 @@ export default function AdminDashboard() {
     { id: 'applications', icon: '📝', label: `Applications (${applications.length})` },
     { id: 'agreements', icon: '📄', label: `Landlord Registration (${agreements.length})` },
     { id: 'landlords',  icon: '👤', label: 'Landlords' },
+    { id: 'manage',     icon: '⚙️', label: 'Manage Portal' },
     { id: 'rent-reviews', icon: '🔁', label: `Rent Reviews (${rentReviews.length})` },
     { id: 'orders',     icon: '🛒', label: `Orders (${orders.length})` },
     { id: 'maintenance', icon: '🔧', label: `Maintenance (${maintenance.length})` },
@@ -848,7 +850,6 @@ export default function AdminDashboard() {
     { id: 'deleted',    icon: '🗑️', label: `Deleted${deletedItems.length ? ` (${deletedItems.length})` : ''}` },
     { id: 'post',       icon: '➕', label: 'Post Property' },
     ...(editingProperty ? [{ id: 'edit' as Tab, icon: '✏️', label: 'Edit Property' }] : []),
-    ...(managingProperty ? [{ id: 'manage' as Tab, icon: '⚙️', label: 'Manage Portal' }] : []),
   ];
 
   const statusColor: Record<Valuation['status'], { bg: string; color: string }> = {
@@ -1963,14 +1964,16 @@ export default function AdminDashboard() {
 
           {tab === 'ledger-sync' && <LedgerSyncPanel authedFetch={authedFetch} />}
 
-          {tab === 'manage' && managingProperty && (
+          {tab === 'manage' && (managingProperty ? (
             <ManagePortalPanel
               property={managingProperty}
               authedFetch={authedFetch}
-              onBack={() => { setManagingProperty(null); setTab('properties'); }}
+              onBack={() => setManagingProperty(null)}
               onSaved={() => getAllProperties().then(p => setProperties(p))}
             />
-          )}
+          ) : (
+            <ManagePortalLanding authedFetch={authedFetch} onSelect={p => setManagingProperty(p)} />
+          ))}
 
           {/* ── Rent Reviews ── */}
           {tab === 'rent-reviews' && (

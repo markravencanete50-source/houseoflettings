@@ -22,6 +22,7 @@ import MaintenanceTicketForm from '@/components/dashboard/MaintenanceTicketForm'
 import ApplicationAssign from '@/components/dashboard/ApplicationAssign';
 import LedgerManager from '@/components/dashboard/LedgerManager';
 import ManagePortalPanel from '@/components/dashboard/ManagePortalPanel';
+import ManagePortalLanding from '@/components/dashboard/ManagePortalLanding';
 import AgreementExtraDetails from '@/components/dashboard/AgreementExtraDetails';
 import { useAuth } from '@/hooks/useAuth';
 import { signOut } from '@/services/auth';
@@ -701,6 +702,11 @@ function StaffDashboardInner() {
               {item.label}
             </button>
           ))}
+          {perms.includes('properties') && (
+            <button className={`dash-nav-item ${tab === 'manage' ? 'active' : ''}`} onClick={() => { setManagingProperty(null); setTab('manage'); }}>
+              <span>⚙️</span> Manage Portal
+            </button>
+          )}
 
           <button className="dash-nav-item" onClick={handleSignOut} style={{ marginTop: 18 }}>
             <span>🚪</span> Sign Out
@@ -1332,14 +1338,16 @@ function StaffDashboardInner() {
           )}
 
           {/* ── Manage Portal ── */}
-          {tab === 'manage' && managingProperty && perms.includes('properties') && (
+          {tab === 'manage' && perms.includes('properties') && (managingProperty ? (
             <ManagePortalPanel
               property={managingProperty}
               authedFetch={authedFetch}
-              onBack={() => { setManagingProperty(null); setTab('properties'); }}
+              onBack={() => setManagingProperty(null)}
               onSaved={reloadProperties}
             />
-          )}
+          ) : (
+            <ManagePortalLanding authedFetch={authedFetch} onSelect={p => setManagingProperty(p as any)} />
+          ))}
 
           {/* ── Rent Reviews ── */}
           {tab === 'rent-reviews' && perms.includes('rent-reviews') && (

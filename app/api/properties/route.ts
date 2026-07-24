@@ -37,7 +37,9 @@ export async function GET(request: Request) {
     const db = getAdminDb();
     if (id) {
       const snap = await db.collection('properties').doc(id).get();
-      if (!snap.exists || (snap.data() as any)?.demo === true) return Response.json({ property: null }, { status: 404 });
+      const pd = snap.data() as any;
+      // Not public: missing, demo, or not an active advert (e.g. status 'unlisted').
+      if (!snap.exists || pd?.demo === true || (pd?.status && pd.status !== 'active')) return Response.json({ property: null }, { status: 404 });
       return Response.json({ property: serialize(snap.id, snap.data()) }, { status: 200 });
     }
     const snap = await db.collection('properties').where('status', '==', 'active').get();

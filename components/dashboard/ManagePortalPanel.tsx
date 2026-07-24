@@ -62,7 +62,7 @@ export default function ManagePortalPanel({
   return (
     <div>
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8, flexWrap: 'wrap' }}>
-        <button onClick={onBack} style={{ padding: '6px 12px', background: 'transparent', border: '1px solid var(--gray-200)', borderRadius: 6, fontSize: 12, cursor: 'pointer', color: 'var(--gray-600)' }}>← Back to Properties</button>
+        <button onClick={onBack} style={{ padding: '6px 12px', background: 'transparent', border: '1px solid var(--gray-200)', borderRadius: 6, fontSize: 12, cursor: 'pointer', color: 'var(--gray-600)' }}>← Back to search</button>
       </div>
       <h1 className="dash-section-title" style={{ margin: '0 0 2px' }}>Manage portal</h1>
       <p style={{ color: 'var(--gray-600)', margin: '0 0 18px', fontSize: 14 }}>

@@ -8,6 +8,7 @@
 // until the sheet is connected; shows a friendly note otherwise.
 import { useState, useEffect, useCallback } from 'react';
 import { auth as fbAuth } from '@/lib/firebase';
+import { STATEMENT_FLOOR_ISO } from '@/lib/statementFloor';
 
 type Txn = { date: string; description: string; amount: number; category?: string; group?: 'received' | 'deduction' | 'payment' };
 type Ledger = { configured: boolean; error?: boolean; unmatched?: boolean; transactions: Txn[]; totals: { moneyIn: number; moneyOut: number; net: number } };
@@ -39,7 +40,8 @@ export default function AccountPanel({
 }) {
   const now = new Date();
   const year = now.getFullYear();
-  const [from, setFrom] = useState(`${year}-01-01`);
+  const clampFrom = (d: string) => (d < STATEMENT_FLOOR_ISO ? STATEMENT_FLOOR_ISO : d);
+  const [from, setFrom] = useState(clampFrom(`${year}-01-01`));
   const [to, setTo] = useState(iso(now));
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState<Ledger | null>(null);
@@ -58,12 +60,13 @@ export default function AccountPanel({
   }, [propertyId, postcode, from, to]);
   useEffect(() => { load(); }, [load]);
 
-  const preset = (which: 'ytd' | 'last-year' | '12m' | 'all') => {
+  // Periods are floored at go-live (June 2026); anything earlier isn't held.
+  const preset = (which: 'all' | '3m' | '12m' | 'ytd') => {
     const t = new Date();
-    if (which === 'ytd') { setFrom(`${t.getFullYear()}-01-01`); setTo(iso(t)); }
-    else if (which === 'last-year') { setFrom(`${t.getFullYear() - 1}-01-01`); setTo(`${t.getFullYear() - 1}-12-31`); }
-    else if (which === '12m') { const s = new Date(t); s.setFullYear(s.getFullYear() - 1); setFrom(iso(s)); setTo(iso(t)); }
-    else { setFrom('2000-01-01'); setTo(iso(t)); }
+    if (which === 'all') { setFrom(STATEMENT_FLOOR_ISO); setTo(iso(t)); }
+    else if (which === 'ytd') { setFrom(clampFrom(`${t.getFullYear()}-01-01`)); setTo(iso(t)); }
+    else if (which === '3m') { const s = new Date(t); s.setMonth(s.getMonth() - 3); setFrom(clampFrom(iso(s))); setTo(iso(t)); }
+    else { const s = new Date(t); s.setFullYear(s.getFullYear() - 1); setFrom(clampFrom(iso(s))); setTo(iso(t)); }
   };
 
   const t = data?.totals;
@@ -84,12 +87,12 @@ export default function AccountPanel({
   const periodPicker = (
     <div className="ac-period">
       <div className="ac-presets">
-        {[['ytd', 'This year'], ['last-year', 'Last year'], ['12m', 'Last 12 months'], ['all', 'All time']].map(([k, label]) => (
+        {[['all', 'Since June 2026'], ['ytd', 'This year'], ['3m', 'Last 3 months'], ['12m', 'Last 12 months']].map(([k, label]) => (
           <button key={k} type="button" className="ac-preset" onClick={() => preset(k as any)}>{label}</button>
         ))}
       </div>
       <div className="ac-dates">
-        <label>From <input type="date" value={from} max={to} onChange={e => setFrom(e.target.value)} /></label>
+        <label>From <input type="date" value={from} min={STATEMENT_FLOOR_ISO} max={to} onChange={e => setFrom(e.target.value ? clampFrom(e.target.value) : STATEMENT_FLOOR_ISO)} /></label>
         <label>To <input type="date" value={to} min={from} onChange={e => setTo(e.target.value)} /></label>
       </div>
     </div>

@@ -11,6 +11,7 @@
 import { FieldValue } from 'firebase-admin/firestore';
 import { readAllSheetTransactions } from './landlordLedger';
 import { normalisePostcode } from './portalMatch';
+import { STATEMENT_FLOOR_ISO } from './statementFloor';
 import type { getAdminDb } from './staffApiAuth';
 
 const norm = (s: string) => (s || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
@@ -92,26 +93,29 @@ export async function getReconciliation(db: ReturnType<typeof getAdminDb>): Prom
     in: rows.reduce((s, r) => s + (r.amount > 0 ? r.amount : 0), 0),
     out: rows.reduce((s, r) => s + (r.amount < 0 ? -r.amount : 0), 0),
   };
+  const onOrAfterFloor = (isoDay: string) => !isoDay || isoDay >= STATEMENT_FLOOR_ISO;
   const led = await db.collection('ledgerEntries').where('source', '==', 'sheet').get();
+  // Count only entries on/after the go-live floor (matches the floored sheet read).
+  const ledDocs = led.docs.filter(d => onOrAfterFloor(String((d.data() as any).date || '')));
   let lIn = 0, lOut = 0;
-  led.docs.forEach(d => { const e = d.data() as any; const a = Math.abs(Number(e.amount) || 0); if (e.direction === 'in') lIn += a; else lOut += a; });
+  ledDocs.forEach(d => { const e = d.data() as any; const a = Math.abs(Number(e.amount) || 0); if (e.direction === 'in') lIn += a; else lOut += a; });
   const un = await db.collection('sheetSyncUnassigned').get();
-  const unresolved = un.docs.filter(d => !(d.data() as any).resolved);
+  const unresolved = un.docs.filter(d => !(d.data() as any).resolved && onOrAfterFloor(isoDate(String((d.data() as any).date || ''))));
   let uIn = 0, uOut = 0;
   unresolved.forEach(d => { const e = d.data() as any; const a = Math.abs(Number(e.amount) || 0); if ((e.amount || 0) > 0) uIn += a; else uOut += a; });
   return {
     configured,
     sheet,
-    ledger: { count: led.size, in: lIn, out: lOut },
+    ledger: { count: ledDocs.length, in: lIn, out: lOut },
     unassigned: { count: unresolved.length, in: uIn, out: uOut },
-    balanced: sheet.count === led.size + unresolved.length,
+    balanced: sheet.count === ledDocs.length + unresolved.length,
   };
 }
 
 export async function getUnassigned(db: ReturnType<typeof getAdminDb>) {
   const snap = await db.collection('sheetSyncUnassigned').limit(500).get();
   return snap.docs
-    .filter(d => !(d.data() as any).resolved)
+    .filter(d => { const iso = isoDate(String((d.data() as any).date || '')); return !(d.data() as any).resolved && (!iso || iso >= STATEMENT_FLOOR_ISO); })
     .map(d => { const e = d.data() as any; return { id: d.id, date: e.date || '', amount: Number(e.amount) || 0, description: e.description || '', address: e.address || '' }; })
     .sort((a, b) => String(b.date).localeCompare(String(a.date)));
 }

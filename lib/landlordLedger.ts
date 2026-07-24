@@ -11,6 +11,7 @@
 // reference, Property address). The sheet must be readable by the server —
 // either "Anyone with the link -> Viewer" (this CSV export works) or, better,
 // shared with the Google service account and read via the Sheets API.
+import { STATEMENT_FLOOR_MS } from './statementFloor';
 
 export type LedgerTxn = { date: string; description: string; amount: number; category?: string; group?: 'received' | 'deduction' | 'payment' };
 export type LedgerResult = {
@@ -148,7 +149,9 @@ export async function ledgerForProperty(q: LedgerQuery): Promise<LedgerResult> {
   if (!matcher) return { configured: true, unmatched: true, transactions: [], totals: { ...EMPTY } };
 
   const now = new Date();
-  const fromMs = Number.isFinite(q.fromMs as number) ? (q.fromMs as number) : new Date(now.getFullYear(), 0, 1).getTime();
+  // Never read below the go-live floor (June 2026), whatever period is requested.
+  const requestedFrom = Number.isFinite(q.fromMs as number) ? (q.fromMs as number) : new Date(now.getFullYear(), 0, 1).getTime();
+  const fromMs = Math.max(requestedFrom, STATEMENT_FLOOR_MS);
   const toMs = Number.isFinite(q.toMs as number) ? (q.toMs as number) : new Date(now.getFullYear(), 11, 31, 23, 59, 59, 999).getTime();
 
   const txns: LedgerTxn[] = [];
@@ -204,6 +207,9 @@ export async function readAllSheetTransactions(): Promise<{ configured: boolean;
         const amount = parseAmount(r[colAmount]);
         const description = (colRef >= 0 ? r[colRef] : '') || '';
         if (isNaN(amount) || amount === 0 || !address.trim()) continue;
+        // Go-live floor: ignore anything before June 2026 entirely.
+        const k = dateKey(date);
+        if (k && k < STATEMENT_FLOOR_MS) continue;
         const base = `${gid}|${date}|${amount}|${norm(address)}|${norm(description)}`;
         const n = (occ.get(base) || 0) + 1; occ.set(base, n);
         rows.push({ date, amount, description, address, sheetKey: `${base}#${n}` });

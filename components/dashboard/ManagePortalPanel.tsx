@@ -10,11 +10,13 @@ import PropertyForm from '@/components/property/PropertyForm';
 import LedgerManager from '@/components/dashboard/LedgerManager';
 import MaintenanceTicketForm from '@/components/dashboard/MaintenanceTicketForm';
 import ApplicationAssign from '@/components/dashboard/ApplicationAssign';
+import TenancyDetailsForm from '@/components/dashboard/TenancyDetailsForm';
 import { stageLabel } from '@/lib/applicationStages';
 
-type Section = 'property' | 'account' | 'maintenance' | 'applications';
+type Section = 'property' | 'tenancy' | 'account' | 'maintenance' | 'applications';
 const SECTIONS: { key: Section; label: string; icon: string }[] = [
-  { key: 'property', label: 'Property & tenancy', icon: '🏠' },
+  { key: 'property', label: 'Property', icon: '🏠' },
+  { key: 'tenancy', label: 'Tenancy details', icon: '📋' },
   { key: 'account', label: 'Account', icon: '💷' },
   { key: 'maintenance', label: 'Maintenance', icon: '🔧' },
   { key: 'applications', label: 'Applications', icon: '👥' },
@@ -78,7 +80,7 @@ export default function ManagePortalPanel({
         ))}
       </div>
 
-      {/* Property & tenancy */}
+      {/* Property (listing) */}
       {section === 'property' && (
         <div className="dash-card">
           <PropertyForm
@@ -91,6 +93,11 @@ export default function ManagePortalPanel({
             onCancel={onBack}
           />
         </div>
+      )}
+
+      {/* Tenancy details (its own feature) */}
+      {section === 'tenancy' && (
+        <TenancyDetailsForm property={property} authedFetch={authedFetch} onSaved={onSaved} />
       )}
 
       {/* Account */}

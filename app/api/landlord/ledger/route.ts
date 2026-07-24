@@ -12,6 +12,7 @@ import { getAdminDb } from '@/lib/staffApiAuth';
 import { normalisePostcode } from '@/lib/portalMatch';
 import { signedAmount, typeLabel } from '@/lib/ledgerEntries';
 import { getLedgerReadMode } from '@/lib/ledgerConfig';
+import { STATEMENT_FLOOR_MS } from '@/lib/statementFloor';
 
 export const dynamic = 'force-dynamic';
 
@@ -148,7 +149,9 @@ export async function GET(request: Request) {
   // Effective window (mirror the lib default of the current calendar year) so the
   // Sheet and internal entries use exactly the same period.
   const now = new Date();
-  const fromMs = parseDay(url.searchParams.get('from'), false) ?? new Date(now.getFullYear(), 0, 1).getTime();
+  // Clamp to the go-live floor (June 2026) so no pre-June record ever appears,
+  // regardless of the requested period or read mode.
+  const fromMs = Math.max(parseDay(url.searchParams.get('from'), false) ?? new Date(now.getFullYear(), 0, 1).getTime(), STATEMENT_FLOOR_MS);
   const toMs = parseDay(url.searchParams.get('to'), true) ?? new Date(now.getFullYear(), 11, 31, 23, 59, 59, 999).getTime();
 
   // Preferred path: resolve the property from the caller's own data by id. This

@@ -21,6 +21,7 @@ import { LandlordProgressBadge, LandlordProgressPanel } from '@/components/dashb
 import MaintenanceTicketForm from '@/components/dashboard/MaintenanceTicketForm';
 import ApplicationAssign from '@/components/dashboard/ApplicationAssign';
 import LedgerManager from '@/components/dashboard/LedgerManager';
+import ManagePortalPanel from '@/components/dashboard/ManagePortalPanel';
 import AgreementExtraDetails from '@/components/dashboard/AgreementExtraDetails';
 import { useAuth } from '@/hooks/useAuth';
 import { signOut } from '@/services/auth';
@@ -29,7 +30,7 @@ import { STAFF_FEATURES, staffPermissions, type StaffFeature } from '@/lib/staff
 import { safeLinkHref } from '@/lib/security';
 
 // 'edit' is a transient tab (hosts the property editor), not a grantable feature.
-type Tab = StaffFeature | 'edit';
+type Tab = StaffFeature | 'edit' | 'manage';
 
 const AVAILABILITY_META: Record<'available' | 'pending' | 'let-agreed', { label: string; bg: string; color: string }> = {
   'available':  { label: 'Available',  bg: '#e8f5e9', color: '#2e7d32' },
@@ -318,6 +319,7 @@ function StaffDashboardInner() {
   const [maintenance, setMaintenance] = useState<MaintenanceRequest[]>([]);
   const [ticketForm, setTicketForm] = useState<null | 'new' | MaintenanceRequest>(null);
   const [ledgerProp, setLedgerProp] = useState<{ id: string; label: string; landlordId?: string } | null>(null);
+  const [managingProperty, setManagingProperty] = useState<Property | null>(null);
   const [orders, setOrders] = useState<ServiceOrder[]>([]);
   const [agreements, setAgreements] = useState<Agreement[]>([]);
   const [expandedAgreement, setExpandedAgreement] = useState<string | null>(null);
@@ -424,7 +426,7 @@ function StaffDashboardInner() {
   }, [ready, profile]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
-    if (!profile || tab === 'edit' || !perms.includes(tab)) return;
+    if (!profile || tab === 'edit' || tab === 'manage' || !perms.includes(tab as StaffFeature)) return;
     const load = async (path: string, key: string, apply: (j: any) => void) => {
       try {
         const res = await authedFetch(path);
@@ -796,6 +798,7 @@ function StaffDashboardInner() {
                               <option value="pending">Pending</option>
                               <option value="let-agreed">Let Agreed</option>
                             </select>
+                            <button onClick={() => { setManagingProperty(p); setTab('manage'); }} title="Manage everything this landlord sees for this property" style={{ padding: '5px 10px', background: '#fff', border: '1px solid #0a162f', color: '#0a162f', borderRadius: 4, fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>⚙ Manage</button>
                             <button onClick={() => setLedgerProp({ id: p.id!, label: p.location || p.title || 'Property', landlordId: (p as any).landlordId })} title="Account entries (merge into landlord statement)" style={{ padding: '5px 10px', background: '#fff', border: '1px solid #2563eb', color: '#2563eb', borderRadius: 4, fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>£ Account</button>
                             {isAdmin && <button onClick={() => handleDeleteProperty(p)} style={{ padding: '5px 10px', background: 'transparent', border: '1px solid #c62828', color: '#c62828', borderRadius: 4, fontSize: 11, cursor: 'pointer' }}>Delete</button>}
                           </div>
@@ -1326,6 +1329,16 @@ function StaffDashboardInner() {
                 />
               </div>
             </div>
+          )}
+
+          {/* ── Manage Portal ── */}
+          {tab === 'manage' && managingProperty && perms.includes('properties') && (
+            <ManagePortalPanel
+              property={managingProperty}
+              authedFetch={authedFetch}
+              onBack={() => { setManagingProperty(null); setTab('properties'); }}
+              onSaved={reloadProperties}
+            />
           )}
 
           {/* ── Rent Reviews ── */}

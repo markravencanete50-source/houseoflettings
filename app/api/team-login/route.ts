@@ -49,11 +49,17 @@ export async function POST(request: Request) {
     const signIn = await signInRes.json().catch(() => ({}));
     if (!signInRes.ok) {
       const code = signIn?.error?.message || '';
-      const msg = /EMAIL_NOT_FOUND|INVALID_PASSWORD|INVALID_LOGIN_CREDENTIALS/.test(code)
+      // Surface the real reason (and log it) instead of a generic failure, so a
+      // misconfiguration (e.g. Email/Password sign-in disabled, or a bad API key)
+      // is diagnosable rather than looking like a wrong password.
+      console.error('team-login: firebase sign-in rejected', signInRes.status, code);
+      const msg = /EMAIL_NOT_FOUND|INVALID_PASSWORD|INVALID_LOGIN_CREDENTIALS|MISSING_PASSWORD/.test(code)
         ? 'Invalid email or password.'
         : /USER_DISABLED/.test(code) ? 'This account has been disabled.'
         : /TOO_MANY_ATTEMPTS/.test(code) ? 'Too many attempts. Please try again later.'
-        : 'Sign in failed. Please try again.';
+        : /OPERATION_NOT_ALLOWED|PASSWORD_LOGIN_DISABLED/.test(code) ? 'Email/Password sign-in is turned off for this project. Enable it in Firebase → Authentication → Sign-in method.'
+        : /API[_ ]?KEY|API key/i.test(code) ? 'Login is misconfigured (Firebase API key). Please contact support.'
+        : `Sign in failed${code ? ` (${code})` : ''}. Please try again.`;
       return NextResponse.json({ message: msg }, { status: 401 });
     }
 
@@ -99,6 +105,6 @@ export async function POST(request: Request) {
     return res;
   } catch (e) {
     console.error('team-login error:', e);
-    return NextResponse.json({ message: 'Sign in failed. Please try again.' }, { status: 500 });
+    return NextResponse.json({ message: 'Sign in failed due to a server error. Please try again, or contact support if it persists.' }, { status: 500 });
   }
 }

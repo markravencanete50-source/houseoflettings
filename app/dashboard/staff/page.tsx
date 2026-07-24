@@ -23,6 +23,7 @@ import ApplicationAssign from '@/components/dashboard/ApplicationAssign';
 import LedgerManager from '@/components/dashboard/LedgerManager';
 import ManagePortalPanel from '@/components/dashboard/ManagePortalPanel';
 import ManagePortalLanding from '@/components/dashboard/ManagePortalLanding';
+import { useDashTheme } from '@/hooks/useDashTheme';
 import AgreementExtraDetails from '@/components/dashboard/AgreementExtraDetails';
 import { useAuth } from '@/hooks/useAuth';
 import { signOut } from '@/services/auth';
@@ -300,6 +301,7 @@ const EMPTY_REVIEW_FORM = {
 
 function StaffDashboardInner() {
   const router = useRouter();
+  const { dark, toggle: toggleTheme } = useDashTheme();
   const { user, profile: clientProfile, loading: authLoading } = useAuth();
   // Session-cookie fallback: when the Firebase client SDK has no user (the
   // browser can't reach Google, so login went through our server) we identify
@@ -675,7 +677,7 @@ function StaffDashboardInner() {
   return (
     <>
       <Navbar />
-      <div className="dash-layout">
+      <div className="dash-layout" data-dash-theme={dark ? 'dark' : undefined}>
 
         {/* ── Sidebar ── */}
         <aside className="dash-sidebar">
@@ -708,7 +710,10 @@ function StaffDashboardInner() {
             </button>
           )}
 
-          <button className="dash-nav-item" onClick={handleSignOut} style={{ marginTop: 18 }}>
+          <button className="dash-theme-toggle" onClick={toggleTheme} style={{ marginTop: 10 }}>
+            <span>{dark ? '☀️' : '🌙'}</span> {dark ? 'Light mode' : 'Dark mode'}
+          </button>
+          <button className="dash-nav-item" onClick={handleSignOut} style={{ marginTop: 8 }}>
             <span>🚪</span> Sign Out
           </button>
         </aside>

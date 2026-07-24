@@ -20,6 +20,7 @@ import LedgerManager from '@/components/dashboard/LedgerManager';
 import DemoPanel from '@/components/dashboard/DemoPanel';
 import ManagePortalPanel from '@/components/dashboard/ManagePortalPanel';
 import ManagePortalLanding from '@/components/dashboard/ManagePortalLanding';
+import { useDashTheme } from '@/hooks/useDashTheme';
 import LedgerSyncPanel from '@/components/dashboard/LedgerSyncPanel';
 import ServicePricingEditor from '@/components/dashboard/ServicePricingEditor';
 import { useAuth } from '@/hooks/useAuth';
@@ -398,6 +399,7 @@ function RentReviewDetail({ r }: { r: RentReview }) {
 
 export default function AdminDashboard() {
   const router = useRouter();
+  const { dark, toggle: toggleTheme } = useDashTheme();
   const { user, profile, loading: authLoading } = useAuth();
   // Authenticated fetch for the shared staff APIs (admins pass the staff gate).
   const authedFetch = async (path: string, init?: RequestInit) => {
@@ -862,7 +864,7 @@ export default function AdminDashboard() {
   return (
     <>
       <Navbar />
-      <div className="dash-layout">
+      <div className="dash-layout" data-dash-theme={dark ? 'dark' : undefined}>
 
         {/* ── Sidebar ── */}
         <aside className="dash-sidebar">
@@ -893,6 +895,9 @@ export default function AdminDashboard() {
               {item.label}
             </button>
           ))}
+          <button className="dash-theme-toggle" onClick={toggleTheme} style={{ marginTop: 10, borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+            <span>{dark ? '☀️' : '🌙'}</span> {dark ? 'Light mode' : 'Dark mode'}
+          </button>
         </aside>
 
         {/* ── Main Content ── */}

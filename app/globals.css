@@ -276,6 +276,45 @@ ul, ol { list-style: none; }
   to { transform: rotate(360deg); }
 }
 
+/* ── Dashboard dark mode (admin & staff) ─────────────────────────────────────
+   The dashboards mix shared classes with a lot of inline light colours, so a
+   scoped inversion of the CONTENT area is what guarantees every element — cards,
+   tables, forms, badges, numbers, the custom panels — stays legible in dark mode
+   without editing each component. invert + hue-rotate(180) flips lightness while
+   keeping hues roughly intact (blue stays blue, green green, red red). Media is
+   re-inverted so photos and logos render normally. The sidebar sits OUTSIDE
+   .dash-content, so it keeps its own dark navy. Set via `data-dash-theme` on the
+   .dash-layout wrapper (see hooks/useDashTheme). */
+.dash-layout[data-dash-theme="dark"] { background: #0b1220; }
+.dash-layout[data-dash-theme="dark"] .dash-content {
+  background: #ffffff;
+  filter: invert(1) hue-rotate(180deg);
+}
+.dash-layout[data-dash-theme="dark"] .dash-content img,
+.dash-layout[data-dash-theme="dark"] .dash-content video,
+.dash-layout[data-dash-theme="dark"] .dash-content .no-invert {
+  filter: invert(1) hue-rotate(180deg);
+}
+
+/* Theme toggle button, living in the (already-dark) sidebar. */
+.dash-theme-toggle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 12px 28px;
+  color: rgba(255, 255, 255, 0.55);
+  font-size: 14px;
+  font-family: 'Poppins', sans-serif;
+  font-weight: 500;
+  text-align: left;
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.dash-theme-toggle:hover { color: #fff; background: rgba(255, 255, 255, 0.07); }
+
 /* ── Branch / location pages ─────────────────────────────────
    Sized to the site-standard CTA, as components/layout/ServiceHero.module.css
    (.btn). The transparent border keeps the solid variants exactly the same

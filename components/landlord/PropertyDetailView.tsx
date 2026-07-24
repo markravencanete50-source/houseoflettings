@@ -70,10 +70,8 @@ export default function PropertyDetailView({ prop, applications, maintenance }: 
   const apps = applications.filter(a => (a.propertyId && a.propertyId === prop.id) || (a.postcode && prop.postcode && a.postcode === prop.postcode));
   const maint = maintenance.filter(m => (m.propertyId && m.propertyId === prop.id) || (m.postcode && prop.postcode && m.postcode === prop.postcode));
   const openMaint = maint.filter(m => m.status === 'open' || m.status === 'in-progress').length;
-  // Completed, billable jobs become deductions on the landlord's statement.
-  const billableMaint = maint
-    .filter(m => m.billToLandlord && (m.cost || 0) > 0 && m.status === 'resolved')
-    .map(m => ({ date: m.submittedAt, description: m.title || m.issueDescription || 'Maintenance', cost: m.cost || 0 }));
+  // Completed + billed jobs reach the statement via the ledger (auto-posted
+  // server-side), so the Account tab no longer needs them passed in here.
   const managed = bundle?.kind === 'Management';
 
   // In-portal destinations (keep landlords inside the login, not the public site).
@@ -312,7 +310,6 @@ export default function PropertyDetailView({ prop, applications, maintenance }: 
                 mgmtPct={mgmtPct}
                 tenancyStart={prop.tenancyStart}
                 tenancyEnd={prop.tenancyEnd}
-                maintenance={billableMaint}
               />
             </div>
           )}

@@ -2218,7 +2218,21 @@ export default function AdminDashboard() {
             <div>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12, flexWrap: 'wrap' }}>
                 <h1 className="dash-section-title" style={{ margin: 0 }}>Maintenance</h1>
-                <button onClick={() => setTicketForm('new')} style={{ background: '#2563eb', color: '#fff', border: 'none', borderRadius: 8, padding: '9px 16px', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>+ New ticket</button>
+                <div style={{ display: 'flex', gap: 10 }}>
+                  <button
+                    onClick={async () => {
+                      if (!confirm('Post all billed, completed tickets to the landlord statements? Safe to run any time.')) return;
+                      const res = await authedFetch('/api/staff/maintenance', { method: 'POST', body: JSON.stringify({ action: 'reconcile-all' }) });
+                      const j = await res.json().catch(() => ({}));
+                      alert(res.ok ? `Synced ${j.reconciled ?? 0} tickets to statements.` : (j.message || 'Sync failed.'));
+                    }}
+                    title="Backfill: post billed+completed tickets to landlord statements"
+                    style={{ background: '#eff5ff', color: '#2563eb', border: '1px solid #dbe4ff', borderRadius: 8, padding: '9px 14px', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}
+                  >
+                    ↻ Sync to statements
+                  </button>
+                  <button onClick={() => setTicketForm('new')} style={{ background: '#2563eb', color: '#fff', border: 'none', borderRadius: 8, padding: '9px 16px', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>+ New ticket</button>
+                </div>
               </div>
               <p style={{ color: 'var(--gray-600)', margin: '8px 0 24px', fontSize: 15 }}>
                 Tenant-reported issues plus staff tickets. Raise a ticket against a property, add its cost, and it appears as a deduction on that landlord&rsquo;s statement once completed and billed.

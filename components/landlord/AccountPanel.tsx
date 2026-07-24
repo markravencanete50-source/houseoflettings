@@ -9,7 +9,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { auth as fbAuth } from '@/lib/firebase';
 
-type Txn = { date: string; description: string; amount: number };
+type Txn = { date: string; description: string; amount: number; category?: string };
 type Ledger = { configured: boolean; error?: boolean; unmatched?: boolean; transactions: Txn[]; totals: { moneyIn: number; moneyOut: number; net: number } };
 
 async function authedFetch(path: string) {
@@ -27,7 +27,7 @@ const prettyDay = (s: string) => {
 };
 
 export default function AccountPanel({
-  propertyId, postcode, propertyLabel, rent = 0, mgmtPct = 0, tenancyStart, tenancyEnd, maintenance = [],
+  propertyId, postcode, propertyLabel, rent = 0, mgmtPct = 0, tenancyStart, tenancyEnd,
 }: {
   propertyId: string;
   postcode?: string;
@@ -36,7 +36,6 @@ export default function AccountPanel({
   mgmtPct?: number;
   tenancyStart?: string;
   tenancyEnd?: string;
-  maintenance?: { date: string | null; description: string; cost: number }[];
 }) {
   const now = new Date();
   const year = now.getFullYear();
@@ -70,12 +69,14 @@ export default function AccountPanel({
   const t = data?.totals;
   const monthlyMgmt = rent && mgmtPct ? Math.round((rent * mgmtPct) / 100) : 0;
   const netMonthly = rent ? Math.max(0, Math.round(rent - monthlyMgmt)) : 0;
-  const received = (data?.transactions || []).filter(x => x.amount > 0);
-  const paidOut = (data?.transactions || []).filter(x => x.amount < 0);
-  // Maintenance jobs charged to the landlord, within the selected period.
-  const maintInPeriod = (maintenance || []).filter(m => { const d = (m.date || '').slice(0, 10); return d && d >= from && d <= to; });
-  const maintTotal = maintInPeriod.reduce((s, m) => s + (m.cost || 0), 0);
-  const afterMaint = (t?.net || 0) - maintTotal;
+  // Maintenance now arrives as tagged ledger transactions (source of truth), so
+  // it's split out of Paid out into its own section but already counted in totals.
+  const txns = data?.transactions || [];
+  const received = txns.filter(x => x.amount > 0);
+  const paidOut = txns.filter(x => x.amount < 0 && x.category !== 'maintenance');
+  const maintTxns = txns.filter(x => x.category === 'maintenance');
+  const paidOutTotal = paidOut.reduce((s, x) => s + -x.amount, 0);
+  const maintTotal = maintTxns.reduce((s, x) => s + -x.amount, 0);
 
   const periodPicker = (
     <div className="ac-period">
@@ -179,25 +180,25 @@ export default function AccountPanel({
                       <td style={{ textAlign: 'right', color: '#c62828', fontWeight: 600 }}>{money(-x.amount)}</td>
                     </tr>
                   ))}
-                  <tr className="ac-total-row"><td /><td style={{ textAlign: 'right', fontWeight: 700 }}>Total paid out</td><td style={{ textAlign: 'right', fontWeight: 800 }}>{money(t!.moneyOut)}</td></tr>
+                  <tr className="ac-total-row"><td /><td style={{ textAlign: 'right', fontWeight: 700 }}>Total paid out</td><td style={{ textAlign: 'right', fontWeight: 800 }}>{money(paidOutTotal)}</td></tr>
                 </tbody>
               </table>
             </div>
           )}
 
           {/* Maintenance & works (charged to the landlord) */}
-          {maintInPeriod.length > 0 && (
+          {maintTxns.length > 0 && (
             <>
-              <div className="ac-sec-h">Maintenance &amp; works <span>{maintInPeriod.length}</span></div>
+              <div className="ac-sec-h">Maintenance &amp; works <span>{maintTxns.length}</span></div>
               <div className="ac-table-wrap">
                 <table className="ac-table">
                   <thead><tr><th>Date</th><th>Job</th><th style={{ textAlign: 'right' }}>Cost</th></tr></thead>
                   <tbody>
-                    {maintInPeriod.map((m, i) => (
+                    {maintTxns.map((m, i) => (
                       <tr key={i}>
-                        <td style={{ whiteSpace: 'nowrap' }}>{m.date ? prettyDay(m.date.slice(0, 10)) : '—'}</td>
+                        <td style={{ whiteSpace: 'nowrap' }}>{m.date || '—'}</td>
                         <td>{m.description || '—'}</td>
-                        <td style={{ textAlign: 'right', color: '#c62828', fontWeight: 600 }}>{money(m.cost)}</td>
+                        <td style={{ textAlign: 'right', color: '#c62828', fontWeight: 600 }}>{money(-m.amount)}</td>
                       </tr>
                     ))}
                     <tr className="ac-total-row"><td /><td style={{ textAlign: 'right', fontWeight: 700 }}>Total maintenance</td><td style={{ textAlign: 'right', fontWeight: 800 }}>{money(maintTotal)}</td></tr>
@@ -210,9 +211,8 @@ export default function AccountPanel({
           {/* Summary */}
           <div className="ac-summary">
             <div><span>Balance brought forward</span><b>{money(0)}</b></div>
-            <div><span>Statement balance (bank)</span><b>{money(t!.net)}</b></div>
-            {maintTotal > 0 && <div><span>Maintenance charged</span><b style={{ color: '#c62828' }}>-{money(maintTotal)}</b></div>}
-            {maintTotal > 0 && <div><span>Balance after maintenance</span><b>{money(afterMaint)}</b></div>}
+            {maintTotal > 0 && <div><span>of which maintenance</span><b style={{ color: '#c62828' }}>-{money(maintTotal)}</b></div>}
+            <div><span>Statement balance</span><b>{money(t!.net)}</b></div>
             <div><span>Float balance</span><b>{money(0)}</b></div>
           </div>
           <p className="ac-disc">This statement is a running record of transactions on your account for this property. The statement balance can differ from any final settlement figure. Contact your agent with any query.</p>

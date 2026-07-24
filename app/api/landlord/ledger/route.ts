@@ -31,8 +31,9 @@ const toDMY = (isoDay: string): string => {
 };
 
 // Internal ledger entries for a property within the period, as statement rows.
-async function internalEntries(db: ReturnType<typeof getAdminDb>, propertyId: string, fromMs: number, toMs: number) {
-  if (!propertyId) return [] as { date: string; description: string; amount: number }[];
+type Txn = { date: string; description: string; amount: number; category?: string };
+async function internalEntries(db: ReturnType<typeof getAdminDb>, propertyId: string, fromMs: number, toMs: number): Promise<Txn[]> {
+  if (!propertyId) return [];
   const snap = await db.collection('ledgerEntries').where('propertyId', '==', propertyId).limit(500).get();
   return snap.docs.map(d => d.data() as any)
     .filter(e => {
@@ -43,11 +44,12 @@ async function internalEntries(db: ReturnType<typeof getAdminDb>, propertyId: st
       date: toDMY(String(e.date || '')),
       description: [typeLabel(e.type), e.description].filter(Boolean).join(' — ') || 'Adjustment',
       amount: signedAmount(e),
+      category: e.type === 'maintenance' ? 'maintenance' : undefined,
     }));
 }
 
 // Merge the live Sheet result with internal entries into one statement.
-function mergeStatement(sheet: LedgerResult, entries: { date: string; description: string; amount: number }[]): LedgerResult {
+function mergeStatement(sheet: LedgerResult, entries: Txn[]): LedgerResult {
   if (sheet.error && !entries.length) return sheet;
   const txns = [...(sheet.transactions || []), ...entries].sort((a, b) => txnDateKey(b.date) - txnDateKey(a.date));
   let moneyIn = 0, moneyOut = 0;

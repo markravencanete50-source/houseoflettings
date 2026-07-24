@@ -19,6 +19,43 @@ function cleanBreakdown(raw: any): { label: string; amount: number }[] {
     .slice(0, 40);
 }
 
+// Keep the internal ledger in sync with a maintenance ticket: a completed
+// (resolved) + billed ticket with a cost gets ONE 'maintenance' ledger entry
+// (linked by linkId=ticketId), which flows into the landlord's statement as a
+// deduction. Anything else → remove the linked entry. Idempotent; never throws.
+async function reconcileMaintenanceLedger(db: ReturnType<typeof getAdminDb>, ticketId: string) {
+  try {
+    const snap = await db.collection('maintenanceRequests').doc(ticketId).get();
+    const t = snap.exists ? (snap.data() as any) : null;
+    const existing = await db.collection('ledgerEntries').where('linkId', '==', ticketId).get();
+    const billable = !!t && t.status === 'resolved' && !!t.billToLandlord && Number(t.cost) > 0 && !!t.propertyId;
+
+    if (billable) {
+      const day = new Date().toISOString().slice(0, 10);
+      const entry = {
+        propertyId: t.propertyId,
+        landlordId: t.landlordId || '',
+        propertyLabel: t.propertyLabel || t.propertyAddress || '',
+        type: 'maintenance', direction: 'out',
+        amount: Math.round(Number(t.cost) * 100) / 100,
+        date: existing.empty ? day : (existing.docs[0].data().date || day), // keep original billed date
+        description: t.title || t.issueDescription || 'Maintenance',
+        source: 'maintenance', linkId: ticketId,
+        updatedAt: FieldValue.serverTimestamp(),
+      };
+      if (existing.empty) await db.collection('ledgerEntries').add({ ...entry, createdAt: FieldValue.serverTimestamp() });
+      else {
+        await existing.docs[0].ref.set(entry, { merge: true });
+        for (let i = 1; i < existing.docs.length; i++) await existing.docs[i].ref.delete(); // drop dupes
+      }
+    } else {
+      for (const d of existing.docs) await d.ref.delete();
+    }
+  } catch (e) {
+    console.error('reconcileMaintenanceLedger failed:', e);
+  }
+}
+
 // Fields a staff ticket can carry / be edited with (never the client's id/dates).
 function pickTicketFields(raw: any): Record<string, unknown> {
   const b = sanitizeUploadUrlFieldsDeep(raw || {});
@@ -73,6 +110,18 @@ export async function POST(request: Request) {
     if (auth instanceof Response) return auth;
 
     const body = await request.json().catch(() => ({}));
+
+    // One-time backfill: reconcile every ticket into the ledger (for tickets
+    // billed before auto-posting existed). Admin-only.
+    if (body.action === 'reconcile-all') {
+      if (auth.role !== 'admin') return NextResponse.json({ message: 'Admin only.' }, { status: 403 });
+      const db = getAdminDb();
+      const snap = await db.collection('maintenanceRequests').limit(1000).get();
+      for (const d of snap.docs) await reconcileMaintenanceLedger(db, d.id);
+      await logAction(auth, 'POST', '/api/staff/maintenance', { action: 'reconcile-all', count: snap.size });
+      return NextResponse.json({ ok: true, reconciled: snap.size }, { status: 200 });
+    }
+
     const fields = pickTicketFields(body);
     const desc = String(fields.issueDescription || fields.title || '').trim();
     if (!desc) return NextResponse.json({ message: 'A description of the job is required.' }, { status: 400 });
@@ -81,7 +130,8 @@ export async function POST(request: Request) {
     }
 
     const status = MAINT_STATUSES.includes(body.status) ? body.status : 'open';
-    const docRef = await getAdminDb().collection('maintenanceRequests').add({
+    const db = getAdminDb();
+    const docRef = await db.collection('maintenanceRequests').add({
       ...fields,
       status,
       source: 'staff-ticket',
@@ -89,6 +139,7 @@ export async function POST(request: Request) {
       createdAt: FieldValue.serverTimestamp(),
       updatedAt: FieldValue.serverTimestamp(),
     });
+    await reconcileMaintenanceLedger(db, docRef.id);
 
     await logAction(auth, 'POST', '/api/staff/maintenance', { id: docRef.id, title: fields.title || desc.slice(0, 60) });
     return NextResponse.json({ id: docRef.id }, { status: 201 });
@@ -118,7 +169,9 @@ export async function PATCH(request: Request) {
     }
     if (Object.keys(updates).length <= 2) return NextResponse.json({ message: 'No fields to update.' }, { status: 400 });
 
-    await getAdminDb().collection('maintenanceRequests').doc(id).update(updates);
+    const db = getAdminDb();
+    await db.collection('maintenanceRequests').doc(id).update(updates);
+    await reconcileMaintenanceLedger(db, id); // keep the statement deduction in sync
     await logAction(auth, 'PATCH', '/api/staff/maintenance', { id, status: updates.status });
     return NextResponse.json({ ok: true }, { status: 200 });
   } catch (e) {
@@ -140,6 +193,7 @@ export async function DELETE(request: Request) {
 
     const result = await softDeleteDoc({ collection: 'maintenanceRequests', docId: id, actor: auth, typeLabel: 'Maintenance request' });
     if (!result.ok) return NextResponse.json({ message: 'Request not found' }, { status: 404 });
+    await reconcileMaintenanceLedger(getAdminDb(), id); // ticket gone → remove its statement deduction
     await logAction(auth, 'DELETE', '/api/staff/maintenance', { id });
     return NextResponse.json({ ok: true }, { status: 200 });
   } catch (e) {

@@ -12,7 +12,7 @@
 // either "Anyone with the link -> Viewer" (this CSV export works) or, better,
 // shared with the Google service account and read via the Sheets API.
 
-export type LedgerTxn = { date: string; description: string; amount: number };
+export type LedgerTxn = { date: string; description: string; amount: number; category?: string };
 export type LedgerResult = {
   configured: boolean;
   error?: boolean;

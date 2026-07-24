@@ -52,7 +52,7 @@ export default function ApplicationAssign({
     <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }} onClick={e => e.stopPropagation()}>
       <select value={application.propertyId || ''} disabled={busy} onChange={e => onProperty(e.target.value)} style={sel} title="Assign to property">
         <option value="">— Assign property —</option>
-        {props.map(p => <option key={p.id} value={p.id}>{(p.location || p.title || p.id).slice(0, 40)}{p.landlordName ? ` · ${p.landlordName}` : ''}</option>)}
+        {props.map(p => <option key={p.id} value={p.id}>{(p.location || p.title || p.id).slice(0, 48)}</option>)}
       </select>
       <select value={application.stage || 'new'} disabled={busy} onChange={e => patch({ stage: e.target.value })} style={sel} title="Stage (landlord sees this)">
         {APPLICATION_PIPELINE.map(s => <option key={s.key} value={s.key}>{s.label}</option>)}

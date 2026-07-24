@@ -98,7 +98,7 @@ export default function MaintenanceTicketForm({
             <label style={labelStyle}>Property *</label>
             <select value={propertyId} onChange={e => setPropertyId(e.target.value)} style={inputStyle}>
               <option value="">— Select a property —</option>
-              {props.map(p => <option key={p.id} value={p.id}>{p.location || p.title || p.id}{p.landlordName ? ` — ${p.landlordName}` : ''}</option>)}
+              {props.map(p => <option key={p.id} value={p.id}>{p.location || p.title || p.id}</option>)}
             </select>
             {selected && !selected.landlordId && <div style={{ fontSize: 12, color: '#b45309', marginTop: 4 }}>This property has no landlord assigned, so it won&rsquo;t show on a landlord portal. Assign one in Properties first.</div>}
           </div>

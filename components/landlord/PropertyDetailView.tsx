@@ -40,6 +40,7 @@ const CONTACT = {
 
 export default function PropertyDetailView({ prop, applications, maintenance }: { prop: PDProp; applications: PDApplication[]; maintenance: PDMaintenance[] }) {
   const [tab, setTab] = useState<Tab>('overview');
+  const [openTicket, setOpenTicket] = useState<string | null>(null);
 
   // Live landlord balance for the Accounts overview, from the bank-sheet ledger.
   const [ledgerNet, setLedgerNet] = useState<number | null>(null);
@@ -281,15 +282,56 @@ export default function PropertyDetailView({ prop, applications, maintenance }: 
                 <div className="pd-list">
                   {maint.map(m => {
                     const meta = MAINT_META[m.status] || MAINT_META['open'];
-                    const sub = [m.title ? m.fullName : (m.fullName || m.category), m.category && m.title ? m.category : ''].filter(Boolean).join(' · ');
+                    const open = openTicket === m.id;
+                    const details: [string, string][] = ([
+                      ['Category', m.category],
+                      ['Reported by', m.fullName],
+                      ['Status', meta.label],
+                      ['Cost', (m.cost || 0) > 0 ? `${money(m.cost || 0)}${m.billToLandlord ? ' (charged to you)' : ' (not charged to you)'}` : '—'],
+                      ['Date', fmtDate(m.submittedAt)],
+                    ] as [string, string | undefined][]).filter((r): r is [string, string] => Boolean(r[1]));
                     return (
-                      <div key={m.id} className="pd-row">
-                        <div style={{ minWidth: 0 }}><div className="pd-row-t" style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{m.title || m.issueDescription}</div><div className="pd-row-s">{sub || '—'}</div></div>
-                        <div style={{ textAlign: 'right' }}>
-                          {(m.cost || 0) > 0 && <div className="pd-row-t" title={m.billToLandlord ? 'Charged to your account' : 'Not charged to you'} style={{ color: m.billToLandlord ? '#c62828' : 'var(--gray-400)' }}>{money(m.cost || 0)}</div>}
-                          <span className="pd-badge" style={{ background: meta.bg, color: meta.color }}>{meta.label}</span>
-                          <div className="pd-row-s">{fmtDate(m.submittedAt)}</div>
-                        </div>
+                      <div key={m.id} style={{ borderBottom: '1px solid #f2f4f9' }}>
+                        <button
+                          type="button"
+                          onClick={() => setOpenTicket(open ? null : m.id)}
+                          style={{ display: 'flex', justifyContent: 'space-between', gap: 14, alignItems: 'center', width: '100%', background: 'none', border: 'none', cursor: 'pointer', padding: '14px 18px', textAlign: 'left', font: 'inherit', color: 'inherit' }}
+                        >
+                          <div style={{ minWidth: 0 }}>
+                            <div className="pd-row-t">{m.title || m.issueDescription}</div>
+                            <div className="pd-row-s">{m.category || 'Maintenance'} · {open ? 'Hide details ▲' : 'View details ▼'}</div>
+                          </div>
+                          <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                            {(m.cost || 0) > 0 && <div className="pd-row-t" style={{ color: m.billToLandlord ? '#c62828' : 'var(--gray-400)' }}>{money(m.cost || 0)}</div>}
+                            <span className="pd-badge" style={{ background: meta.bg, color: meta.color }}>{meta.label}</span>
+                            <div className="pd-row-s">{fmtDate(m.submittedAt)}</div>
+                          </div>
+                        </button>
+                        {open && (
+                          <div style={{ padding: '0 18px 16px' }}>
+                            {m.status === 'resolved' && (
+                              <div style={{ background: '#e8f5e9', color: '#256a3a', border: '1px solid #bfe3c6', borderRadius: 10, padding: '10px 14px', fontSize: 13, fontWeight: 600, marginBottom: 12 }}>
+                                ✓ This issue has been resolved{(m.cost || 0) > 0 && m.billToLandlord ? ` — ${money(m.cost || 0)} was charged to your account.` : '. No further action needed.'}
+                              </div>
+                            )}
+                            {m.issueDescription && <div style={{ fontSize: 13.5, color: '#374151', lineHeight: 1.6, marginBottom: 10 }}>{m.issueDescription}</div>}
+                            <div className="pd-recap-card">
+                              {details.map(([k, v], i) => (
+                                <div key={k} className="pd-recap" style={i === details.length - 1 ? { borderBottom: 'none' } : undefined}><span>{k}</span><span>{v}</span></div>
+                              ))}
+                            </div>
+                            {Array.isArray(m.breakdown) && m.breakdown.length > 0 && (
+                              <div style={{ marginTop: 10 }}>
+                                <div style={{ fontSize: 12, fontWeight: 700, color: '#0a162f', marginBottom: 6 }}>Cost breakdown</div>
+                                <div className="pd-recap-card">
+                                  {m.breakdown.map((b, i) => (
+                                    <div key={i} className="pd-recap" style={i === m.breakdown!.length - 1 ? { borderBottom: 'none' } : undefined}><span>{b.label}</span><span>{money(b.amount)}</span></div>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        )}
                       </div>
                     );
                   })}

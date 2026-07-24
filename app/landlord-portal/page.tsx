@@ -464,13 +464,14 @@ function PortalStyles() {
       .lp-badge[data-k="available"] { background: #e8f5e9; color: #2e7d32; }
       .lp-badge[data-k="let-agreed"] { background: #fdecea; color: #c62828; }
       .lp-badge[data-k="pending"], .lp-badge[data-k="new"] { background: #fff3e0; color: #ef6c00; }
-      .lp-prop-grid { display: grid; grid-template-columns: repeat(auto-fill,minmax(240px,1fr)); gap: 18px; }
-      .lp-prop { background: #fff; border: 1px solid #e9edf5; border-radius: 16px; padding: 20px; transition: transform .2s, box-shadow .2s; }
+      .lp-prop-grid { display: grid; grid-template-columns: repeat(auto-fill,minmax(240px,1fr)); gap: 18px; align-items: stretch; }
+      .lp-prop-grid > * { height: 100%; }
+      .lp-prop { background: #fff; border: 1px solid #e9edf5; border-radius: 16px; padding: 20px; transition: transform .2s, box-shadow .2s; display: flex; flex-direction: column; height: 100%; box-sizing: border-box; }
       .lp-prop:hover { transform: translateY(-3px); box-shadow: 0 18px 40px rgba(10,22,47,.10); }
-      .lp-prop--btn { display: block; width: 100%; text-align: left; cursor: pointer; font-family: inherit; }
+      .lp-prop--btn { display: flex; flex-direction: column; width: 100%; text-align: left; cursor: pointer; font-family: inherit; }
       .lp-prop--btn:hover { border-color: #c7d2e6; }
       .lp-prop--btn:hover .lp-prop-cta { color: #c0392b; }
-      .lp-prop-cta { margin-top: 14px; font-size: 12.5px; font-weight: 700; color: #94a3b8; transition: color .2s; }
+      .lp-prop-cta { margin-top: auto; padding-top: 14px; font-size: 12.5px; font-weight: 700; color: #94a3b8; transition: color .2s; }
       .lp-prop-top { width: 44px; height: 44px; border-radius: 12px; background: linear-gradient(135deg,#0a162f,#22406f); display: flex; align-items: center; justify-content: center; font-size: 20px; margin-bottom: 14px; }
       .lp-prop-title { font-weight: 700; font-size: 14.5px; line-height: 1.4; margin-bottom: 10px; }
       .lp-prop-meta { display: flex; flex-wrap: wrap; gap: 6px; }

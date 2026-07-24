@@ -131,9 +131,9 @@ export async function POST(request: Request) {
     //    year so the statement shows a full picture (prop1 has no bank-sheet rows).
     const ledger: { date: string; type: string; direction: 'in' | 'out'; amount: number; description: string }[] = [];
     for (let mo = 1; mo <= Math.min(now.getMonth() + 1, 12); mo++) {
-      ledger.push({ date: day(mo, 3), type: 'rent_in', direction: 'in', amount: 1100, description: 'Rent received — A. Majeed' });
-      ledger.push({ date: day(mo, 4), type: 'management_fee', direction: 'out', amount: 110, description: 'Management fee 10%' });
-      ledger.push({ date: day(mo, 5), type: 'payment_to_landlord', direction: 'out', amount: 990, description: 'Payment to landlord' });
+      ledger.push({ date: day(mo, 3), type: 'rent_in', direction: 'in', amount: 1100, description: 'Rent — A. Majeed (tenant)' });
+      ledger.push({ date: day(mo, 4), type: 'management_fee', direction: 'out', amount: 110, description: 'Management fee (10%)' });
+      ledger.push({ date: day(mo, 5), type: 'payment_to_landlord', direction: 'out', amount: 990, description: 'Paid to landlord' });
     }
     let batch = db.batch(); let ops = 0;
     for (const l of ledger) {

@@ -9,7 +9,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { auth as fbAuth } from '@/lib/firebase';
 
-type Txn = { date: string; description: string; amount: number; category?: string };
+type Txn = { date: string; description: string; amount: number; category?: string; group?: 'received' | 'deduction' | 'payment' };
 type Ledger = { configured: boolean; error?: boolean; unmatched?: boolean; transactions: Txn[]; totals: { moneyIn: number; moneyOut: number; net: number } };
 
 async function authedFetch(path: string) {
@@ -69,14 +69,17 @@ export default function AccountPanel({
   const t = data?.totals;
   const monthlyMgmt = rent && mgmtPct ? Math.round((rent * mgmtPct) / 100) : 0;
   const netMonthly = rent ? Math.max(0, Math.round(rent - monthlyMgmt)) : 0;
-  // Maintenance now arrives as tagged ledger transactions (source of truth), so
-  // it's split out of Paid out into its own section but already counted in totals.
+  // Landlord statement model: rent is collected FOR the landlord (received), the
+  // agent's fees + repairs are deductions, and money paid out to the landlord is
+  // a payment. Balance held for the landlord = received − deductions − payments.
   const txns = data?.transactions || [];
-  const received = txns.filter(x => x.amount > 0);
-  const paidOut = txns.filter(x => x.amount < 0 && x.category !== 'maintenance');
-  const maintTxns = txns.filter(x => x.category === 'maintenance');
-  const paidOutTotal = paidOut.reduce((s, x) => s + -x.amount, 0);
-  const maintTotal = maintTxns.reduce((s, x) => s + -x.amount, 0);
+  const received = txns.filter(x => x.group === 'received');
+  const deductions = txns.filter(x => x.group === 'deduction');
+  const payments = txns.filter(x => x.group === 'payment');
+  const receivedTotal = received.reduce((s, x) => s + Math.abs(x.amount), 0);
+  const deductionTotal = deductions.reduce((s, x) => s + Math.abs(x.amount), 0);
+  const paymentTotal = payments.reduce((s, x) => s + Math.abs(x.amount), 0);
+  const balance = receivedTotal - deductionTotal - paymentTotal;
 
   const periodPicker = (
     <div className="ac-period">
@@ -118,16 +121,16 @@ export default function AccountPanel({
           {/* Accounts overview */}
           <div className="ac-cards">
             <div className="ac-card in">
-              <div className="ac-card-l">Received <span>rent in</span></div>
-              <div className="ac-card-v">{money(t!.moneyIn)}</div>
+              <div className="ac-card-l">Rent received <span>collected for you</span></div>
+              <div className="ac-card-v">{money(receivedTotal)}</div>
             </div>
             <div className="ac-card out">
-              <div className="ac-card-l">Paid out <span>to you / fees</span></div>
-              <div className="ac-card-v">{money(t!.moneyOut)}</div>
+              <div className="ac-card-l">Deductions <span>fees &amp; repairs</span></div>
+              <div className="ac-card-v">{money(deductionTotal)}</div>
             </div>
             <div className="ac-card net">
-              <div className="ac-card-l">Statement balance <span>in − out</span></div>
-              <div className="ac-card-v">{money(t!.net)}</div>
+              <div className="ac-card-l">Paid to you <span>this period</span></div>
+              <div className="ac-card-v">{money(paymentTotal)}</div>
             </div>
           </div>
 
@@ -140,12 +143,12 @@ export default function AccountPanel({
             </div>
           )}
 
-          <p className="ac-sub">Figures come from your account records for the period above and refresh automatically when the account is updated.</p>
+          <p className="ac-sub">The tenant pays their rent to House of Lettings; we take the management fee (and any agreed costs), then pay the balance to you. Figures refresh automatically when your account is updated.</p>
 
           {/* Received */}
           <div className="ac-sec-h">Received <span>{received.length}</span></div>
           {received.length === 0 ? (
-            <div className="ac-empty">No money received for this property in this period.</div>
+            <div className="ac-empty">No rent received for this property in this period.</div>
           ) : (
             <div className="ac-table-wrap">
               <table className="ac-table">
@@ -155,67 +158,67 @@ export default function AccountPanel({
                     <tr key={i}>
                       <td style={{ whiteSpace: 'nowrap' }}>{x.date || '—'}</td>
                       <td>{x.description || '—'}</td>
-                      <td style={{ textAlign: 'right', color: '#15803d', fontWeight: 600 }}>{money(x.amount)}</td>
+                      <td style={{ textAlign: 'right', color: '#15803d', fontWeight: 600 }}>{money(Math.abs(x.amount))}</td>
                     </tr>
                   ))}
-                  <tr className="ac-total-row"><td /><td style={{ textAlign: 'right', fontWeight: 700 }}>Total received</td><td style={{ textAlign: 'right', fontWeight: 800 }}>{money(t!.moneyIn)}</td></tr>
+                  <tr className="ac-total-row"><td /><td style={{ textAlign: 'right', fontWeight: 700 }}>Total received</td><td style={{ textAlign: 'right', fontWeight: 800 }}>{money(receivedTotal)}</td></tr>
                 </tbody>
               </table>
             </div>
           )}
 
-          {/* Paid out */}
-          <div className="ac-sec-h">Paid out <span>{paidOut.length}</span></div>
-          {paidOut.length === 0 ? (
-            <div className="ac-empty">No money paid out for this property in this period.</div>
+          {/* Deductions (management fee, maintenance, other charges) */}
+          <div className="ac-sec-h">Deductions <span>{deductions.length}</span></div>
+          {deductions.length === 0 ? (
+            <div className="ac-empty">No deductions for this property in this period.</div>
           ) : (
             <div className="ac-table-wrap">
               <table className="ac-table">
                 <thead><tr><th>Date</th><th>Description</th><th style={{ textAlign: 'right' }}>Amount</th></tr></thead>
                 <tbody>
-                  {paidOut.map((x, i) => (
+                  {deductions.map((x, i) => (
                     <tr key={i}>
                       <td style={{ whiteSpace: 'nowrap' }}>{x.date || '—'}</td>
-                      <td>{x.description || '—'}</td>
-                      <td style={{ textAlign: 'right', color: '#c62828', fontWeight: 600 }}>{money(-x.amount)}</td>
+                      <td>{x.description || '—'}{x.category === 'maintenance' ? ' · maintenance' : ''}</td>
+                      <td style={{ textAlign: 'right', color: '#c62828', fontWeight: 600 }}>{money(Math.abs(x.amount))}</td>
                     </tr>
                   ))}
-                  <tr className="ac-total-row"><td /><td style={{ textAlign: 'right', fontWeight: 700 }}>Total paid out</td><td style={{ textAlign: 'right', fontWeight: 800 }}>{money(paidOutTotal)}</td></tr>
+                  <tr className="ac-total-row"><td /><td style={{ textAlign: 'right', fontWeight: 700 }}>Total deductions</td><td style={{ textAlign: 'right', fontWeight: 800 }}>{money(deductionTotal)}</td></tr>
                 </tbody>
               </table>
             </div>
           )}
 
-          {/* Maintenance & works (charged to the landlord) */}
-          {maintTxns.length > 0 && (
-            <>
-              <div className="ac-sec-h">Maintenance &amp; works <span>{maintTxns.length}</span></div>
-              <div className="ac-table-wrap">
-                <table className="ac-table">
-                  <thead><tr><th>Date</th><th>Job</th><th style={{ textAlign: 'right' }}>Cost</th></tr></thead>
-                  <tbody>
-                    {maintTxns.map((m, i) => (
-                      <tr key={i}>
-                        <td style={{ whiteSpace: 'nowrap' }}>{m.date || '—'}</td>
-                        <td>{m.description || '—'}</td>
-                        <td style={{ textAlign: 'right', color: '#c62828', fontWeight: 600 }}>{money(-m.amount)}</td>
-                      </tr>
-                    ))}
-                    <tr className="ac-total-row"><td /><td style={{ textAlign: 'right', fontWeight: 700 }}>Total maintenance</td><td style={{ textAlign: 'right', fontWeight: 800 }}>{money(maintTotal)}</td></tr>
-                  </tbody>
-                </table>
-              </div>
-            </>
+          {/* Payments to the landlord */}
+          <div className="ac-sec-h">Payments to you <span>{payments.length}</span></div>
+          {payments.length === 0 ? (
+            <div className="ac-empty">No payments made to you in this period.</div>
+          ) : (
+            <div className="ac-table-wrap">
+              <table className="ac-table">
+                <thead><tr><th>Date</th><th>Description</th><th style={{ textAlign: 'right' }}>Amount</th></tr></thead>
+                <tbody>
+                  {payments.map((x, i) => (
+                    <tr key={i}>
+                      <td style={{ whiteSpace: 'nowrap' }}>{x.date || '—'}</td>
+                      <td>{x.description || '—'}</td>
+                      <td style={{ textAlign: 'right', color: '#0a162f', fontWeight: 600 }}>{money(Math.abs(x.amount))}</td>
+                    </tr>
+                  ))}
+                  <tr className="ac-total-row"><td /><td style={{ textAlign: 'right', fontWeight: 700 }}>Total paid to you</td><td style={{ textAlign: 'right', fontWeight: 800 }}>{money(paymentTotal)}</td></tr>
+                </tbody>
+              </table>
+            </div>
           )}
 
           {/* Summary */}
           <div className="ac-summary">
-            <div><span>Balance brought forward</span><b>{money(0)}</b></div>
-            {maintTotal > 0 && <div><span>of which maintenance</span><b style={{ color: '#c62828' }}>-{money(maintTotal)}</b></div>}
-            <div><span>Statement balance</span><b>{money(t!.net)}</b></div>
-            <div><span>Float balance</span><b>{money(0)}</b></div>
+            <div><span>Rent received</span><b>{money(receivedTotal)}</b></div>
+            <div><span>Less deductions</span><b style={{ color: '#c62828' }}>-{money(deductionTotal)}</b></div>
+            <div><span>Less paid to you</span><b>-{money(paymentTotal)}</b></div>
+            <div><span>Balance held for you</span><b>{money(balance)}</b></div>
           </div>
-          <p className="ac-disc">This statement is a running record of transactions on your account for this property. The statement balance can differ from any final settlement figure. Contact your agent with any query.</p>
+          <p className="ac-disc">This statement is a running record of transactions on your account for this property. “Balance held for you” is rent received less deductions and payments already made to you. Contact your agent with any query.</p>
         </>
       )}
 

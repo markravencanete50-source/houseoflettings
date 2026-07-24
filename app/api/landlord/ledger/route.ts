@@ -31,7 +31,20 @@ const toDMY = (isoDay: string): string => {
 };
 
 // Internal ledger entries for a property within the period, as statement rows.
-type Txn = { date: string; description: string; amount: number; category?: string };
+// Landlord statement grouping: money the agent collected for them (received),
+// what the agent kept/spent (deductions: fees + maintenance), and what was paid
+// out to the landlord (payments). Statement balance = received − deductions −
+// payments = what the agent still holds for the landlord.
+type Group = 'received' | 'deduction' | 'payment';
+type Txn = { date: string; description: string; amount: number; category?: string; group: Group };
+
+function groupForType(type: string, direction: string): Group {
+  if (type === 'rent_in' || type === 'credit') return 'received';
+  if (type === 'payment_to_landlord') return 'payment';
+  if (type === 'management_fee' || type === 'finders_fee' || type === 'maintenance' || type === 'charge') return 'deduction';
+  return direction === 'in' ? 'received' : 'deduction'; // adjustment / other
+}
+
 async function internalEntries(db: ReturnType<typeof getAdminDb>, propertyId: string, fromMs: number, toMs: number): Promise<Txn[]> {
   if (!propertyId) return [];
   const snap = await db.collection('ledgerEntries').where('propertyId', '==', propertyId).limit(500).get();
@@ -45,16 +58,21 @@ async function internalEntries(db: ReturnType<typeof getAdminDb>, propertyId: st
     })
     .map(e => ({
       date: toDMY(String(e.date || '')),
-      description: [typeLabel(e.type), e.description].filter(Boolean).join(' — ') || 'Adjustment',
+      // Clean label: the section header already conveys the type, so don't repeat it.
+      description: (e.description && String(e.description).trim()) || typeLabel(e.type),
       amount: signedAmount(e),
       category: e.type === 'maintenance' ? 'maintenance' : undefined,
+      group: groupForType(String(e.type || ''), String(e.direction || (signedAmount(e) >= 0 ? 'in' : 'out'))),
     }));
 }
 
-// Merge the live Sheet result with internal entries into one statement.
+// Merge the live Sheet result with internal entries into one statement. Sheet
+// rows carry no type: money-in is rent received, money-out is treated as paid to
+// the landlord.
 function mergeStatement(sheet: LedgerResult, entries: Txn[]): LedgerResult {
   if (sheet.error && !entries.length) return sheet;
-  const txns = [...(sheet.transactions || []), ...entries].sort((a, b) => txnDateKey(b.date) - txnDateKey(a.date));
+  const sheetTxns: Txn[] = (sheet.transactions || []).map(t => ({ ...t, group: t.amount > 0 ? 'received' : 'payment' as Group }));
+  const txns = [...sheetTxns, ...entries].sort((a, b) => txnDateKey(b.date) - txnDateKey(a.date));
   let moneyIn = 0, moneyOut = 0;
   for (const t of txns) { if (t.amount > 0) moneyIn += t.amount; else moneyOut += -t.amount; }
   return {

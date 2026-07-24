@@ -189,17 +189,17 @@ function PartyBlock({
 }: {
   agreementId: string;
   p: Party;
-  onRemind?: (id: string, party: string) => Promise<{ ok: boolean; message?: string }>;
+  onRemind?: (id: string, party: string, kind: 'forms' | 'agreement') => Promise<{ ok: boolean; message?: string }>;
 }) {
   const c = pctColor(p.pct);
   const [state, setState] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle');
   const [msg, setMsg] = useState('');
 
-  const remind = async () => {
+  const remind = async (kind: 'forms' | 'agreement') => {
     if (!onRemind || state === 'sending') return;
     setState('sending'); setMsg('');
     try {
-      const r = await onRemind(agreementId, p.party);
+      const r = await onRemind(agreementId, p.party, kind);
       if (r.ok) setState('sent');
       else { setState('error'); setMsg(r.message || 'Could not send the reminder.'); }
     } catch {
@@ -231,10 +231,11 @@ function PartyBlock({
 
       {p.portal && <PortalStatus portal={p.portal} />}
 
+      {/* Post-agreement FORM reminder — signatory has signed, forms outstanding. */}
       {onRemind && p.canRemind && (
         <div style={{ marginTop: 12 }}>
           <button
-            onClick={remind}
+            onClick={() => remind('forms')}
             disabled={state === 'sending' || state === 'sent'}
             style={{
               display: 'inline-flex', alignItems: 'center', gap: 7,
@@ -257,9 +258,38 @@ function PartyBlock({
       {p.complete && (
         <div style={{ marginTop: 10, fontSize: 12.5, color: '#2e7d32', fontWeight: 600 }}>✓ All onboarding documents signed.</div>
       )}
+      {/* AGREEMENT (signing) reminder — signatory hasn't responded/signed yet.
+          Only the joint landlord and company directors can be chased (the primary
+          landlord signs on submission, so is never pending). */}
       {p.pending && (
-        <div style={{ marginTop: 10, fontSize: 12, color: '#9ca3af' }}>
-          Waiting for this signatory to sign the agreement — their forms are issued automatically once they do.
+        <div style={{ marginTop: 10 }}>
+          {onRemind && p.party !== 'first' ? (
+            <>
+              <button
+                onClick={() => remind('agreement')}
+                disabled={state === 'sending' || state === 'sent'}
+                style={{
+                  display: 'inline-flex', alignItems: 'center', gap: 7,
+                  background: state === 'sent' ? '#e8f5e9' : '#ef6c00',
+                  color: state === 'sent' ? '#2e7d32' : '#fff',
+                  border: 'none', borderRadius: 8, padding: '8px 15px',
+                  fontSize: 13, fontWeight: 700,
+                  cursor: state === 'sending' || state === 'sent' ? 'default' : 'pointer',
+                  opacity: state === 'sending' ? 0.7 : 1,
+                }}
+              >
+                {state === 'sending' ? 'Sending…' : state === 'sent' ? '✓ Reminder sent' : '✉ Send signing reminder'}
+              </button>
+              <div style={{ fontSize: 11.5, color: '#9ca3af', marginTop: 6 }}>
+                Re-sends {p.name.split(' ')[0] || 'them'} their secure link to review and sign the agreement. Their forms follow automatically once they sign.
+              </div>
+              {state === 'error' && msg && <div style={{ fontSize: 12, color: '#c62828', marginTop: 4 }}>{msg}</div>}
+            </>
+          ) : (
+            <div style={{ fontSize: 12, color: '#9ca3af' }}>
+              Waiting for this signatory to sign the agreement — their forms are issued automatically once they do.
+            </div>
+          )}
         </div>
       )}
     </div>
@@ -272,7 +302,7 @@ export function LandlordProgressPanel({
   onRemind,
 }: {
   a: Agreement;
-  onRemind?: (id: string, party: string) => Promise<{ ok: boolean; message?: string }>;
+  onRemind?: (id: string, party: string, kind: 'forms' | 'agreement') => Promise<{ ok: boolean; message?: string }>;
 }) {
   const parties = collectParties(a);
   const doneCount = parties.filter(p => p.complete).length;

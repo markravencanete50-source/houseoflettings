@@ -17,6 +17,8 @@ import { findBundle } from '@/lib/agreementContent';
 import { issueAgreementDocuments, sendAgreementEmail, propertyLine, feeLine } from '@/lib/agreementDocuments';
 import { loadAgreementTemplate } from '@/lib/agreementTemplateStore';
 import { sendPostSignFormsInvite, generateFormsToken, POST_SIGN_FORMS_TTL_MS } from '@/lib/postSignForms';
+import { generateSecondLandlordToken, secondLandlordInviteHtml, sendEmail as sendSecondEmail, SECOND_LANDLORD_TTL_MS } from '@/lib/secondLandlord';
+import { generateCoSignerToken, sendCoSignerInvites, CO_SIGNER_TTL_MS } from '@/lib/companyCoSigners';
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.houseoflettings.uk';
 const REISSUE_TTL_MS = 14 * 24 * 60 * 60 * 1000; // 14 days
@@ -198,6 +200,77 @@ export async function PATCH(request: Request) {
 
       await sendPostSignFormsInvite({ id, token, party, name, email, propertyAddress: propertyLine(existing) || '' });
       await logAction(auth, 'PATCH', '/api/staff/agreements', { id, action: 'remind-forms', party });
+      return NextResponse.json({ ok: true }, { status: 200 });
+    }
+
+    // ── Signing reminder path ──
+    // Nudge a signatory who hasn't yet SIGNED THE AGREEMENT: the joint (second)
+    // landlord, or a company director co-signer still "awaiting their response".
+    // Re-mints their one-time signing token and re-sends the invite email. Only
+    // valid while they're still pending (already accepted/declined → nothing to do).
+    if (body.action === 'remind-agreement') {
+      const party = (body.party || '').toString().trim();
+      if (!/^(second|cs\d+)$/.test(party)) {
+        return NextResponse.json({ message: 'Only the joint landlord or a company director can be chased to sign.' }, { status: 400 });
+      }
+      const snap = await ref.get();
+      const existing = snap.data();
+      if (!snap.exists || !existing) return NextResponse.json({ message: 'Registration not found.' }, { status: 404 });
+
+      if (party === 'second') {
+        if (existing.secondLandlordStatus && existing.secondLandlordStatus !== 'pending') {
+          return NextResponse.json({ message: 'The joint landlord has already responded, so there is nothing to chase.' }, { status: 400 });
+        }
+        const email = String(existing.landlord2Email || '').trim();
+        if (!email.includes('@')) return NextResponse.json({ message: 'This joint landlord has no email to send to.' }, { status: 400 });
+        const token = generateSecondLandlordToken();
+        await ref.update({
+          secondLandlordToken: token,
+          secondLandlordExpires: Date.now() + SECOND_LANDLORD_TTL_MS,
+          secondLandlordStatus: existing.secondLandlordStatus || 'pending',
+          agreementReminderAt: FieldValue.serverTimestamp(),
+          updatedAt: FieldValue.serverTimestamp(),
+        });
+        await sendSecondEmail({
+          to: email,
+          subject: '👥 Reminder: your joint landlord agreement is waiting | House of Lettings',
+          html: secondLandlordInviteHtml({
+            secondName: existing.landlord2Name || '',
+            firstName: existing.fullName || 'the primary landlord',
+            packageLabel: existing.selectedPackage || '',
+            propertyAddress: propertyLine(existing) || '',
+            link: `${SITE_URL}/landlord-registration/joint?id=${id}&token=${token}`,
+          }),
+        });
+      } else {
+        const coSigners: any[] = Array.isArray(existing.coSigners) ? existing.coSigners : [];
+        const idx = coSigners.findIndex(c => c?.id === party);
+        if (idx < 0) return NextResponse.json({ message: 'That director was not found on this registration.' }, { status: 404 });
+        const cs = coSigners[idx];
+        if (cs.status && cs.status !== 'pending') {
+          return NextResponse.json({ message: 'This director has already responded, so there is nothing to chase.' }, { status: 400 });
+        }
+        const email = String(cs.email || '').trim();
+        if (!email.includes('@')) return NextResponse.json({ message: 'This director has no email to send to.' }, { status: 400 });
+        const token = generateCoSignerToken();
+        const updated = coSigners.map((c, i) => i === idx ? { ...c, token } : c);
+        await ref.update({
+          coSigners: updated,
+          coSignersExpires: Date.now() + CO_SIGNER_TTL_MS,
+          agreementReminderAt: FieldValue.serverTimestamp(),
+          updatedAt: FieldValue.serverTimestamp(),
+        });
+        const bundle = findBundle(existing.selectedPackageId) || findBundle(existing.selectedPackage);
+        await sendCoSignerInvites({
+          id, coSigners: [updated[idx]],
+          companyName: existing.companyName || '',
+          managingDirector: existing.fullName || '',
+          packageLabel: bundle?.label || existing.selectedPackage || '',
+          propertyAddress: propertyLine(existing) || '',
+        });
+      }
+
+      await logAction(auth, 'PATCH', '/api/staff/agreements', { id, action: 'remind-agreement', party });
       return NextResponse.json({ ok: true }, { status: 200 });
     }
 

@@ -10,7 +10,7 @@ import { findBundle } from '@/lib/agreementContent';
 import CompliancePanel from '@/components/landlord/CompliancePanel';
 import AccountPanel from '@/components/landlord/AccountPanel';
 
-export type PDProp = { id: string; agreementId?: string; label: string; postcode?: string; city?: string; type?: string; bedrooms?: string; bathrooms?: string; furnishing?: string; rent?: string; occupancy?: string; availableFrom?: string; tenancyStart?: string; packageId?: string; packageLabel?: string };
+export type PDProp = { id: string; agreementId?: string; label: string; postcode?: string; city?: string; type?: string; bedrooms?: string; bathrooms?: string; furnishing?: string; rent?: string; occupancy?: string; availableFrom?: string; tenancyStart?: string; tenancyEnd?: string; packageId?: string; packageLabel?: string };
 export type PDApplication = { id: string; fullName: string; propertyAddress: string; postcode?: string; rent: string; leaseTerm: string; status: string; submittedAt: string | null };
 export type PDMaintenance = { id: string; fullName: string; propertyAddress: string; postcode?: string; issueDescription: string; status: string; submittedAt: string | null };
 
@@ -133,7 +133,34 @@ export default function PropertyDetailView({ prop, applications, maintenance }: 
                   <div className="pd-money-sub">{money(netMonthly * 12)} / year</div>
                 </div>
               </div>
-              <p className="pd-note">Figures are estimates based on your expected rent and package — not a statement of account.</p>
+              <p className="pd-note">Figures are estimates based on your expected rent and package — see the Account tab for your live statement.</p>
+
+              {/* Tenancy details — the CRM-style summary of this tenancy */}
+              {(() => {
+                const tenancy: [string, string][] = ([
+                  ['Property', prop.label],
+                  ['Service', managed ? 'Managed' : bundle ? bundle.label : (prop.packageLabel || '—')],
+                  ['Rent', rent ? `${money(rent)} / month` : '—'],
+                  ['Management fee', mgmtPct ? `${money(monthlyMgmt)} / month (${mgmtPct}%)` : (bundle ? 'No management fee' : '—')],
+                  ['Net to you', rent ? `${money(netMonthly)} / month` : '—'],
+                  ['Tenancy start', prop.tenancyStart || '—'],
+                  ['Tenancy end', prop.tenancyEnd || '—'],
+                  ['Furnishing', prop.furnishing || '—'],
+                  ['Status', prop.occupancy || '—'],
+                ] as [string, string][]);
+                return (
+                  <div className="pd-section" style={{ marginTop: 22 }}>
+                    <h3 className="pd-h">Tenancy details</h3>
+                    <div className="pd-recap-card">
+                      {tenancy.map(([k, v], i) => (
+                        <div key={k} className="pd-recap" style={i === tenancy.length - 1 ? { borderBottom: 'none' } : undefined}>
+                          <span>{k}</span><span>{v}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })()}
 
               {/* At a glance — quick jumps into the other sections */}
               <div className="pd-glance">
@@ -227,8 +254,16 @@ export default function PropertyDetailView({ prop, applications, maintenance }: 
 
           {tab === 'account' && (
             <div className="pd-section">
-              <h3 className="pd-h">Account</h3>
-              <AccountPanel propertyId={prop.id} postcode={prop.postcode || ''} />
+              <h3 className="pd-h">Account statement</h3>
+              <AccountPanel
+                propertyId={prop.id}
+                postcode={prop.postcode || ''}
+                propertyLabel={prop.label}
+                rent={rent}
+                mgmtPct={mgmtPct}
+                tenancyStart={prop.tenancyStart}
+                tenancyEnd={prop.tenancyEnd}
+              />
             </div>
           )}
 

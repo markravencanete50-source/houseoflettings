@@ -67,6 +67,15 @@ export async function GET(request: Request) {
   const id = (url.searchParams.get('id') || '').trim();
   const db = getAdminDb();
 
+  // Optional statement period (yyyy-mm-dd). Absent → the lib defaults to the
+  // current calendar year.
+  const parseDay = (v: string | null, end: boolean): number | undefined => {
+    if (!v || !/^\d{4}-\d{2}-\d{2}$/.test(v)) return undefined;
+    const t = new Date(`${v}T${end ? '23:59:59.999' : '00:00:00'}`).getTime();
+    return Number.isFinite(t) ? t : undefined;
+  };
+  const period = { fromMs: parseDay(url.searchParams.get('from'), false), toMs: parseDay(url.searchParams.get('to'), true) };
+
   // Preferred path: resolve the property from the caller's own data by id. This
   // is authoritative (postcode + address come from our records, not the client)
   // and secure (the id must belong to the caller).
@@ -75,7 +84,7 @@ export async function GET(request: Request) {
     try { resolved = await resolveOwnProperty(db, auth, id); }
     catch (e) { console.error('ledger resolve error:', e); return NextResponse.json({ message: 'Could not load your account.' }, { status: 500 }); }
     if (!resolved) return NextResponse.json({ message: 'Not authorised for that property.' }, { status: 403 });
-    const result = await ledgerForProperty(resolved);
+    const result = await ledgerForProperty({ ...resolved, ...period });
     return NextResponse.json(result, { status: 200 });
   }
 
@@ -99,6 +108,6 @@ export async function GET(request: Request) {
     return NextResponse.json({ message: 'Not authorised for that property.' }, { status: 403 });
   }
 
-  const result = await ledgerForProperty({ postcode });
+  const result = await ledgerForProperty({ postcode, ...period });
   return NextResponse.json(result, { status: 200 });
 }

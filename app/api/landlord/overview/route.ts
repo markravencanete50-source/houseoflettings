@@ -48,7 +48,7 @@ export async function GET(request: Request) {
     type Prop = {
       id: string; agreementId: string; label: string; postcode: string;
       city?: string; type?: string; bedrooms?: string; bathrooms?: string; furnishing?: string; rent?: string;
-      tenancyStart?: string; availableFrom?: string; occupancy?: string;
+      tenancyStart?: string; tenancyEnd?: string; availableFrom?: string; occupancy?: string;
       packageId?: string; packageLabel?: string;
     };
     const properties: Prop[] = [];
@@ -67,7 +67,7 @@ export async function GET(request: Request) {
           label,
           postcode: normalisePostcode(String(p.postcode || label)) || '',
           city: p.city, type: p.propertyType, bedrooms: p.bedrooms, bathrooms: p.bathrooms, furnishing: p.furnishing, rent: p.currentRent,
-          tenancyStart: p.tenancyStart, availableFrom: p.availableFrom, occupancy: p.occupancy,
+          tenancyStart: p.tenancyStart, tenancyEnd: p.tenancyEnd, availableFrom: p.availableFrom, occupancy: p.occupancy,
           packageId: d.selectedPackageId || '', packageLabel: d.selectedPackage || '',
         });
       });

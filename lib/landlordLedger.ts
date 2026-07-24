@@ -24,7 +24,9 @@ export type LedgerResult = {
 // How a property is matched against the "Property address" column of the sheet.
 // Postcode is the reliable key; the address line is a fallback for properties
 // registered/listed without a postcode (so their Account still resolves).
-export type LedgerQuery = { postcode?: string; addressLine?: string };
+// fromMs/toMs bound the statement period (epoch ms); default is the current
+// calendar year.
+export type LedgerQuery = { postcode?: string; addressLine?: string; fromMs?: number; toMs?: number };
 
 const norm = (s: string) => (s || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
 
@@ -58,13 +60,6 @@ function dateKey(d: string): number {
   if (!m) return 0;
   const yr = m[3].length === 2 ? 2000 + Number(m[3]) : Number(m[3]);
   return new Date(yr, Number(m[2]) - 1, Number(m[1])).getTime() || 0;
-}
-
-// dd/mm/yyyy -> 4-digit year (0 if unparseable).
-function yearOf(d: string): number {
-  const m = String(d || '').match(/\/(\d{2,4})\s*$/);
-  if (!m) return 0;
-  return m[1].length === 2 ? 2000 + Number(m[1]) : Number(m[1]);
 }
 
 // In-process cache per tab so repeated Account-tab opens don't refetch.
@@ -111,8 +106,8 @@ function buildMatcher(q: LedgerQuery): ((addressCell: string) => boolean) | null
   return null;
 }
 
-// Pull this-year transactions matching the property out of one tab's rows.
-function extractTab(rows: string[][], match: (addressCell: string) => boolean, thisYear: number): { txns: LedgerTxn[]; moneyIn: number; moneyOut: number } {
+// Pull the property's transactions within [fromMs, toMs] out of one tab's rows.
+function extractTab(rows: string[][], match: (addressCell: string) => boolean, fromMs: number, toMs: number): { txns: LedgerTxn[]; moneyIn: number; moneyOut: number } {
   const out = { txns: [] as LedgerTxn[], moneyIn: 0, moneyOut: 0 };
   if (!rows.length) return out;
   let hi = 0;
@@ -130,7 +125,8 @@ function extractTab(rows: string[][], match: (addressCell: string) => boolean, t
     const r = rows[i];
     if (!match(r[colAddr] || '')) continue;
     const date = (colDate >= 0 ? r[colDate] : '') || '';
-    if (yearOf(date) !== thisYear) continue; // this year only
+    const k = dateKey(date);
+    if (!k || k < fromMs || k > toMs) continue; // within the statement period only
     const amount = parseAmount(r[colAmount]);
     if (isNaN(amount) || amount === 0) continue;
     if (amount > 0) out.moneyIn += amount; else out.moneyOut += -amount;
@@ -141,8 +137,8 @@ function extractTab(rows: string[][], match: (addressCell: string) => boolean, t
 
 const EMPTY: LedgerResult['totals'] = { moneyIn: 0, moneyOut: 0, net: 0 };
 
-// This year's money in / out for one property, matched by postcode or (fallback)
-// address line against the bank sheet.
+// Money in / out for one property over the statement period (default: current
+// calendar year), matched by postcode or (fallback) address line.
 export async function ledgerForProperty(q: LedgerQuery): Promise<LedgerResult> {
   const sheetId = process.env.LANDLORD_LEDGER_SHEET_ID;
   if (!sheetId) return { configured: false, transactions: [], totals: { ...EMPTY } };
@@ -150,14 +146,17 @@ export async function ledgerForProperty(q: LedgerQuery): Promise<LedgerResult> {
   // No postcode and no usable address → nothing to match on. Signal it clearly
   // so the UI can ask the landlord to have the address/postcode corrected.
   if (!matcher) return { configured: true, unmatched: true, transactions: [], totals: { ...EMPTY } };
-  const thisYear = new Date().getFullYear();
+
+  const now = new Date();
+  const fromMs = Number.isFinite(q.fromMs as number) ? (q.fromMs as number) : new Date(now.getFullYear(), 0, 1).getTime();
+  const toMs = Number.isFinite(q.toMs as number) ? (q.toMs as number) : new Date(now.getFullYear(), 11, 31, 23, 59, 59, 999).getTime();
 
   const txns: LedgerTxn[] = [];
   let moneyIn = 0, moneyOut = 0;
   try {
     for (const gid of gids()) {
       const rows = await loadTab(sheetId, gid);
-      const t = extractTab(rows, matcher, thisYear);
+      const t = extractTab(rows, matcher, fromMs, toMs);
       txns.push(...t.txns); moneyIn += t.moneyIn; moneyOut += t.moneyOut;
     }
   } catch {

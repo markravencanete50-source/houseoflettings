@@ -21,6 +21,7 @@ import { generateSecondLandlordToken, secondLandlordInviteHtml, sendEmail as sen
 import { generateFormsToken, formsLink, POST_SIGN_FORMS_TTL_MS } from '@/lib/postSignForms';
 import { buildCoSigners, sendCoSignerInvites, CO_SIGNER_TTL_MS } from '@/lib/companyCoSigners';
 import { applyPricingOverride, sanitizePricingOverrides } from '@/lib/pricingOverrides';
+import { valuateRegistration, registrationValuationEmailHtml } from '@/lib/valuation/registrationValuation';
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.houseoflettings.uk';
 
@@ -572,6 +573,24 @@ export async function POST(request: Request) {
         html: adminNotificationHtml(emailData, bundle),
         attachments: attachments.length ? attachments : undefined,
       }),
+      // Automatic AI property valuation for the OFFICE ONLY — never sent to the
+      // landlord. Lets the team sanity-check the figures (and compare against the
+      // landlord's stated rent) before any valuation is shared. Fully self-
+      // contained: an unrecognised postcode, a missing GROQ_API_KEY or a Groq
+      // timeout just produces a partial/fallback email, never an error.
+      (async () => {
+        try {
+          const { valuations, skipped } = await valuateRegistration(data);
+          if (!valuations.length && !skipped.length) return;
+          await sendEmail({
+            to: process.env.ADMIN_EMAIL || "admin@houseoflettings.co.uk",
+            subject: `📈 AI valuation (internal review): ${data.companyName || data.fullName} — ${primaryAddress(data)}`,
+            html: registrationValuationEmailHtml(data, valuations, skipped),
+          });
+        } catch (e) {
+          console.error("registration valuation email failed:", e);
+        }
+      })(),
       // Backup only, and never throws: a Drive outage must not lose a landlord.
       // A company registration is filed under the company, an individual under
       // their own name, matching how the office refers to them.

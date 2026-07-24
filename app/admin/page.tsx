@@ -50,7 +50,7 @@ const AVAILABILITY_META: Record<'available' | 'pending' | 'let-agreed', { label:
 import { format } from 'date-fns';
 import { db } from '@/lib/firebase';
 import {
-  collection, getDocs, orderBy, query, doc,
+  collection, getDocs, orderBy, query, doc, limit,
   updateDoc, addDoc, serverTimestamp, Timestamp,
 } from 'firebase/firestore';
 
@@ -567,12 +567,12 @@ export default function AdminDashboard() {
       safe(getAllUsers()),
       safe(getAllProperties()),
       safe(getAnalytics()),
-      safe(getDocs(query(collection(db, 'valuationRequests'), orderBy('createdAt', 'desc')))),
-      safe(getDocs(query(collection(db, 'google_reviews'), orderBy('createdAt', 'desc')))),
-      safe(getDocs(query(collection(db, 'tenantApplications'), orderBy('createdAt', 'desc')))),
-      safe(getDocs(query(collection(db, 'serviceOrders'), orderBy('createdAt', 'desc')))),
-      safe(getDocs(query(collection(db, 'maintenanceRequests'), orderBy('createdAt', 'desc')))),
-      safe(getDocs(query(collection(db, 'rentReviews'), orderBy('createdAt', 'desc')))),
+      safe(getDocs(query(collection(db, 'valuationRequests'), orderBy('createdAt', 'desc'), limit(150)))),
+      safe(getDocs(query(collection(db, 'google_reviews'), orderBy('createdAt', 'desc'), limit(150)))),
+      safe(getDocs(query(collection(db, 'tenantApplications'), orderBy('createdAt', 'desc'), limit(150)))),
+      safe(getDocs(query(collection(db, 'serviceOrders'), orderBy('createdAt', 'desc'), limit(150)))),
+      safe(getDocs(query(collection(db, 'maintenanceRequests'), orderBy('createdAt', 'desc'), limit(150)))),
+      safe(getDocs(query(collection(db, 'rentReviews'), orderBy('createdAt', 'desc'), limit(150)))),
     ]).then(([u, p, a, valSnap, revSnap, appSnap, orderSnap, maintSnap, rrSnap]) => {
       if (u) setUsers(u);
       if (p) setProperties(p);

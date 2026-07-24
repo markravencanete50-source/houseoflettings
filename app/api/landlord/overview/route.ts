@@ -21,12 +21,24 @@ export const dynamic = 'force-dynamic';
 const iso = (v: any) => v?.toDate?.()?.toISOString?.() || null;
 const monthKey = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
 
+// Per-landlord response cache. The overview scans several collections, and a
+// landlord clicking between the portal home and their property pages would
+// otherwise re-run all of it each time. A short TTL keeps reads down (important
+// on the Firestore free tier) while staying fresh enough for a portal.
+const overviewCache = new Map<string, { at: number; body: any }>();
+const OVERVIEW_TTL = 45_000;
+
 export async function GET(request: Request) {
   const limited = rateLimit(request, 'landlord-overview', 60, 10 * 60 * 1000);
   if (limited) return limited;
 
   const auth = await requireLandlord(request);
   if (auth instanceof Response) return auth;
+
+  const cached = overviewCache.get(auth.uid);
+  if (cached && Date.now() - cached.at < OVERVIEW_TTL) {
+    return NextResponse.json(cached.body, { status: 200 });
+  }
 
   try {
     const db = getAdminDb();
@@ -184,7 +196,7 @@ export async function GET(request: Request) {
     for (const a of applications) if (a.submittedAt) { const m = bucket.get(monthKey(new Date(a.submittedAt))); if (m) m.applications++; }
     for (const m2 of maintenance) if (m2.submittedAt) { const m = bucket.get(monthKey(new Date(m2.submittedAt))); if (m) m.maintenance++; }
 
-    return NextResponse.json({
+    const payload = {
       properties,
       listings,
       applications,
@@ -199,7 +211,9 @@ export async function GET(request: Request) {
         estAnnualRent: Math.round(monthlyRent * 12),
       },
       charts: { months, maintByStatus },
-    }, { status: 200 });
+    };
+    overviewCache.set(auth.uid, { at: Date.now(), body: payload });
+    return NextResponse.json(payload, { status: 200 });
   } catch (e) {
     console.error('landlord-overview error:', e);
     return NextResponse.json({ message: 'Could not load your portal data.' }, { status: 500 });

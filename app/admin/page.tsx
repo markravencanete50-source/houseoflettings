@@ -419,6 +419,11 @@ export default function AdminDashboard() {
   const [reviewSuccess, setReviewSuccess] = useState('');
   const [reviewFilter, setReviewFilter] = useState<'all' | 'leeds' | 'manchester'>('all');
   const [loading, setLoading] = useState(true);
+  // Set when a client-side Firestore read fails because the project's daily
+  // free-tier quota is exhausted. Shown as a banner so the owner knows why
+  // data is blank and why staff can't sign in (their login also reads
+  // Firestore) — rather than mistaking it for a bug or a password problem.
+  const [quotaExhausted, setQuotaExhausted] = useState(false);
   const [searchUser, setSearchUser] = useState('');
   const [searchProp, setSearchProp] = useState('');
   const [assignFilter, setAssignFilter] = useState<'all' | 'unassigned' | 'review'>('all');
@@ -562,7 +567,12 @@ export default function AdminDashboard() {
     if (!isAdminProfile(profile)) return;
     // Load each collection independently: if one read is denied (e.g. a new
     // collection without a matching Firestore rule) it must not blank the rest.
-    const safe = <T,>(p: Promise<T>): Promise<T | null> => p.catch(() => null);
+    const safe = <T,>(p: Promise<T>): Promise<T | null> => p.catch((e: any) => {
+      // Firestore raises code 'resource-exhausted' once the daily free-tier
+      // quota is spent; flag it so the banner can explain the blank data.
+      if (e?.code === 'resource-exhausted') setQuotaExhausted(true);
+      return null;
+    });
     Promise.all([
       safe(getAllUsers()),
       safe(getAllProperties()),
@@ -902,6 +912,20 @@ export default function AdminDashboard() {
 
         {/* ── Main Content ── */}
         <main className="dash-content">
+
+          {/* Daily Firestore quota exhausted — data below may be blank and staff
+              sign-in also fails until the free-tier limit resets (~8am UK). */}
+          {quotaExhausted && (
+            <div className="no-invert" role="alert" style={{
+              background: '#fff4e5', border: '1px solid #f0b25b', color: '#7a4b00',
+              borderRadius: 8, padding: '14px 18px', marginBottom: 24, fontSize: 14, lineHeight: 1.5,
+            }}>
+              <strong>⚠️ Firebase daily limit reached.</strong> The free plan's daily
+              database quota is used up, so some data below may be blank and your staff
+              can't sign in until it resets (around 8am UK time). Upgrading Firebase to
+              the Blaze pay-as-you-go plan removes this daily cap.
+            </div>
+          )}
 
           {/* ── Analytics ── */}
           {tab === 'analytics' && analytics && (

@@ -20,6 +20,7 @@ import CoSignersDetails from '@/components/dashboard/CoSignersDetails';
 import { LandlordProgressBadge, LandlordProgressPanel } from '@/components/dashboard/LandlordProgress';
 import MaintenanceTicketForm from '@/components/dashboard/MaintenanceTicketForm';
 import ApplicationAssign from '@/components/dashboard/ApplicationAssign';
+import LedgerManager from '@/components/dashboard/LedgerManager';
 import AgreementExtraDetails from '@/components/dashboard/AgreementExtraDetails';
 import { useAuth } from '@/hooks/useAuth';
 import { signOut } from '@/services/auth';
@@ -316,6 +317,7 @@ function StaffDashboardInner() {
   const [applications, setApplications] = useState<TenantApplication[]>([]);
   const [maintenance, setMaintenance] = useState<MaintenanceRequest[]>([]);
   const [ticketForm, setTicketForm] = useState<null | 'new' | MaintenanceRequest>(null);
+  const [ledgerProp, setLedgerProp] = useState<{ id: string; label: string; landlordId?: string } | null>(null);
   const [orders, setOrders] = useState<ServiceOrder[]>([]);
   const [agreements, setAgreements] = useState<Agreement[]>([]);
   const [expandedAgreement, setExpandedAgreement] = useState<string | null>(null);
@@ -759,6 +761,7 @@ function StaffDashboardInner() {
                               <option value="pending">Pending</option>
                               <option value="let-agreed">Let Agreed</option>
                             </select>
+                            <button onClick={() => setLedgerProp({ id: p.id!, label: p.location || p.title || 'Property', landlordId: (p as any).landlordId })} title="Account entries (merge into landlord statement)" style={{ padding: '5px 10px', background: '#fff', border: '1px solid #2563eb', color: '#2563eb', borderRadius: 4, fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>£ Account</button>
                             {isAdmin && <button onClick={() => handleDeleteProperty(p)} style={{ padding: '5px 10px', background: 'transparent', border: '1px solid #c62828', color: '#c62828', borderRadius: 4, fontSize: 11, cursor: 'pointer' }}>Delete</button>}
                           </div>
                         </td>
@@ -773,6 +776,7 @@ function StaffDashboardInner() {
                   <div style={{ padding: 40, textAlign: 'center', color: 'var(--gray-400)' }}>No properties found.</div>
                 ) : null}
               </div>
+              {ledgerProp && <LedgerManager authedFetch={authedFetch} property={ledgerProp} onClose={() => setLedgerProp(null)} />}
             </div>
           )}
 

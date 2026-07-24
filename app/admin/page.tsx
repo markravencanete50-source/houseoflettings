@@ -415,6 +415,24 @@ export default function AdminDashboard() {
   const [loading, setLoading] = useState(true);
   const [searchUser, setSearchUser] = useState('');
   const [searchProp, setSearchProp] = useState('');
+  const [assignFilter, setAssignFilter] = useState<'all' | 'unassigned' | 'review'>('all');
+  // Set of real landlord account uids, to flag properties assigned to a
+  // non-landlord (staff/poster) account or to nobody.
+  const [landlordUids, setLandlordUids] = useState<Set<string> | null>(null);
+  useEffect(() => {
+    if (!user) return;
+    authedFetch('/api/staff/landlords')
+      .then(r => (r.ok ? r.json() : null))
+      .then(j => { if (j?.landlords) setLandlordUids(new Set(j.landlords.map((l: any) => l.uid))); })
+      .catch(() => {});
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user]);
+  const assignState = (p: Property): 'ok' | 'unassigned' | 'review' => {
+    const lid = (p as any).landlordId as string | undefined;
+    if (!lid) return 'unassigned';
+    if (landlordUids && !landlordUids.has(lid)) return 'review';
+    return 'ok';
+  };
   const [editingProperty, setEditingProperty] = useState<Property | null>(null);
   const [applications, setApplications] = useState<TenantApplication[]>([]);
   const [appFilter, setAppFilter] = useState<'all' | 'pending' | 'reviewing' | 'approved' | 'rejected'>('all');
@@ -789,9 +807,14 @@ export default function AdminDashboard() {
   );
 
   const filteredProps = properties.filter(p =>
-    p.title.toLowerCase().includes(searchProp.toLowerCase()) ||
-    p.location.toLowerCase().includes(searchProp.toLowerCase())
+    (p.title.toLowerCase().includes(searchProp.toLowerCase()) ||
+      p.location.toLowerCase().includes(searchProp.toLowerCase())) &&
+    (assignFilter === 'all' || assignState(p) === assignFilter)
   );
+  const assignCounts = {
+    unassigned: properties.filter(p => assignState(p) === 'unassigned').length,
+    review: properties.filter(p => assignState(p) === 'review').length,
+  };
 
   const filteredReviews = reviews.filter(r =>
     reviewFilter === 'all' ? true : r.location === reviewFilter
@@ -1198,6 +1221,22 @@ export default function AdminDashboard() {
                   </button>
                 </div>
               </div>
+              {/* Assignment filter — surface properties on no landlord or on a
+                  non-landlord (staff/poster) account so they can be reassigned. */}
+              <div style={{ display: 'flex', gap: 10, marginBottom: 18, flexWrap: 'wrap', alignItems: 'center' }}>
+                {([
+                  ['all', `All (${properties.length})`, '#374151'],
+                  ['unassigned', `Unassigned (${assignCounts.unassigned})`, '#b45309'],
+                  ['review', `Needs review (${assignCounts.review})`, '#c62828'],
+                ] as [typeof assignFilter, string, string][]).map(([key, label, color]) => (
+                  <button key={key} onClick={() => setAssignFilter(key)} style={{
+                    padding: '7px 14px', borderRadius: 20, fontSize: 12.5, fontWeight: 700, cursor: 'pointer',
+                    border: `1px solid ${color}`, background: assignFilter === key ? color : '#fff', color: assignFilter === key ? '#fff' : color,
+                  }}>{label}</button>
+                ))}
+                {(assignFilter === 'review') && <span style={{ fontSize: 12, color: 'var(--gray-400)' }}>These are on a non-landlord account — Edit → “Assign to landlord”.</span>}
+                {(assignFilter === 'unassigned') && <span style={{ fontSize: 12, color: 'var(--gray-400)' }}>Public-only listings — assign a landlord to show them in a portal.</span>}
+              </div>
               <div className="dash-card" style={{ padding: 0, overflow: 'hidden' }}>
                 <table className="data-table">
                   <thead>
@@ -1236,7 +1275,11 @@ export default function AdminDashboard() {
                             </div>
                           </div>
                         </td>
-                        <td style={{ fontSize: 13, color: 'var(--gray-600)' }}>{p.location}</td>
+                        <td style={{ fontSize: 13, color: 'var(--gray-600)' }}>
+                          {p.location}
+                          {assignState(p) === 'unassigned' && <span style={{ display: 'inline-block', marginLeft: 8, fontSize: 10, fontWeight: 700, background: '#fff7ed', color: '#b45309', border: '1px solid #fcd9a5', borderRadius: 3, padding: '1px 6px' }}>UNASSIGNED</span>}
+                          {assignState(p) === 'review' && <span style={{ display: 'inline-block', marginLeft: 8, fontSize: 10, fontWeight: 700, background: '#fdecea', color: '#c62828', border: '1px solid #f5c6c0', borderRadius: 3, padding: '1px 6px' }}>NOT A LANDLORD</span>}
+                        </td>
                         <td style={{ fontWeight: 700, color: 'var(--red)' }}>£{p.price.toLocaleString()}</td>
                         <td>
                           <span className={`status-badge ${p.status}`}>{p.status}</span>

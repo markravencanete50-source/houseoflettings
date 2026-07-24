@@ -334,6 +334,14 @@ function StaffDashboardInner() {
   const [loaded, setLoaded] = useState<Record<string, boolean>>({});
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [searchProp, setSearchProp] = useState('');
+  const [assignFilter, setAssignFilter] = useState<'all' | 'unassigned' | 'review'>('all');
+  const [landlordUids, setLandlordUids] = useState<Set<string> | null>(null);
+  const assignState = (p: Property): 'ok' | 'unassigned' | 'review' => {
+    const lid = (p as any).landlordId as string | undefined;
+    if (!lid) return 'unassigned';
+    if (landlordUids && !landlordUids.has(lid)) return 'review';
+    return 'ok';
+  };
   const [maintFilter, setMaintFilter] = useState<MaintFilter>('all');
   const [expandedOrder, setExpandedOrder] = useState<string | null>(null);
   const [reviewForm, setReviewForm] = useState(EMPTY_REVIEW_FORM);
@@ -432,6 +440,10 @@ function StaffDashboardInner() {
       }
     };
     if (tab === 'properties' && !loaded.properties) load('/api/staff/properties', 'properties', j => setProperties(j.properties || []));
+    // Real landlord uids, to flag properties on a non-landlord/empty account.
+    if (tab === 'properties' && landlordUids === null) {
+      authedFetch('/api/staff/landlords').then(r => (r.ok ? r.json() : null)).then(j => { if (j?.landlords) setLandlordUids(new Set(j.landlords.map((l: any) => l.uid))); }).catch(() => {});
+    }
     // The Rent Review tool prefills from the same property list.
     if (tab === 'rent-reviews' && !loaded.properties) load('/api/staff/properties', 'properties', j => setProperties(j.properties || []));
     if (tab === 'applications' && !loaded.applications) load('/api/staff/applications', 'applications', j => setApplications(j.applications || []));
@@ -617,9 +629,14 @@ function StaffDashboardInner() {
   }
 
   const filteredProps = properties.filter(p =>
-    p.title?.toLowerCase().includes(searchProp.toLowerCase()) ||
-    p.location?.toLowerCase().includes(searchProp.toLowerCase())
+    (p.title?.toLowerCase().includes(searchProp.toLowerCase()) ||
+      p.location?.toLowerCase().includes(searchProp.toLowerCase())) &&
+    (assignFilter === 'all' || assignState(p) === assignFilter)
   );
+  const assignCounts = {
+    unassigned: properties.filter(p => assignState(p) === 'unassigned').length,
+    review: properties.filter(p => assignState(p) === 'review').length,
+  };
 
   const counts: Record<StaffFeature, number | null> = {
     properties: properties.length,
@@ -728,6 +745,20 @@ function StaffDashboardInner() {
                   )}
                 </div>
               </div>
+              <div style={{ display: 'flex', gap: 10, marginBottom: 18, flexWrap: 'wrap', alignItems: 'center' }}>
+                {([
+                  ['all', `All (${properties.length})`, '#374151'],
+                  ['unassigned', `Unassigned (${assignCounts.unassigned})`, '#b45309'],
+                  ['review', `Needs review (${assignCounts.review})`, '#c62828'],
+                ] as [typeof assignFilter, string, string][]).map(([key, label, color]) => (
+                  <button key={key} onClick={() => setAssignFilter(key)} style={{
+                    padding: '7px 14px', borderRadius: 20, fontSize: 12.5, fontWeight: 700, cursor: 'pointer',
+                    border: `1px solid ${color}`, background: assignFilter === key ? color : '#fff', color: assignFilter === key ? '#fff' : color,
+                  }}>{label}</button>
+                ))}
+                {assignFilter === 'review' && <span style={{ fontSize: 12, color: 'var(--gray-400)' }}>On a non-landlord account — Edit → “Assign to landlord”.</span>}
+                {assignFilter === 'unassigned' && <span style={{ fontSize: 12, color: 'var(--gray-400)' }}>Public-only listings — assign a landlord to show them in a portal.</span>}
+              </div>
               <div className="dash-card" style={{ padding: 0, overflow: 'hidden' }}>
                 <table className="data-table">
                   <thead>
@@ -745,7 +776,11 @@ function StaffDashboardInner() {
                             <div style={{ fontWeight: 600, fontSize: 14 }}>{p.title}</div>
                           </div>
                         </td>
-                        <td style={{ fontSize: 13, color: 'var(--gray-600)' }}>{p.location}</td>
+                        <td style={{ fontSize: 13, color: 'var(--gray-600)' }}>
+                          {p.location}
+                          {assignState(p) === 'unassigned' && <span style={{ display: 'inline-block', marginLeft: 8, fontSize: 10, fontWeight: 700, background: '#fff7ed', color: '#b45309', border: '1px solid #fcd9a5', borderRadius: 3, padding: '1px 6px' }}>UNASSIGNED</span>}
+                          {assignState(p) === 'review' && <span style={{ display: 'inline-block', marginLeft: 8, fontSize: 10, fontWeight: 700, background: '#fdecea', color: '#c62828', border: '1px solid #f5c6c0', borderRadius: 3, padding: '1px 6px' }}>NOT A LANDLORD</span>}
+                        </td>
                         <td style={{ fontWeight: 700, color: 'var(--red)' }}>£{p.price?.toLocaleString()}</td>
                         <td>
                           <StatusBadge status={p.status} />

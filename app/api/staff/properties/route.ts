@@ -40,7 +40,11 @@ export async function POST(request: Request) {
       location,
       price,
       images: Array.isArray(body.images) ? body.images : [],
-      landlordId: body.landlordId || auth.uid,
+      // A staff/admin-posted listing must NOT default to the poster's own uid:
+      // that silently makes it "their" property and leaks it (and its bank
+      // ledger) into the poster's landlord portal. Unassigned unless a real
+      // landlord is chosen; the office assigns one via the form's picker.
+      landlordId: body.landlordId || '',
       landlordName: body.landlordName || '',
       status: body.status || 'active',
       createdAt: FieldValue.serverTimestamp(),

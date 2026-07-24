@@ -1214,8 +1214,8 @@ function StaffDashboardInner() {
               <p style={{ color: 'var(--gray-600)', marginBottom: 24, fontSize: 15 }}>Add a new property listing to the website.</p>
               <div className="dash-card">
                 <PropertyForm
-                  landlordId={profile.uid}
-                  landlordName={profile.name}
+                  landlordId={''}
+                  landlordName={''}
                   onSuccess={reloadProperties}
                   onCancel={() => setTab('properties')}
                   // Save server-side, like every other staff feature: a
@@ -1234,8 +1234,8 @@ function StaffDashboardInner() {
               <p style={{ color: 'var(--gray-600)', marginBottom: 24, fontSize: 15 }}>Update this listing&rsquo;s details, photos and features.</p>
               <div className="dash-card">
                 <PropertyForm
-                  landlordId={editingProperty.landlordId || profile.uid}
-                  landlordName={(editingProperty as any).landlordName || profile.name}
+                  landlordId={editingProperty.landlordId || ''}
+                  landlordName={(editingProperty as any).landlordName || ''}
                   existing={editingProperty}
                   onSuccess={handleEditSuccess}
                   onCancel={handleEditCancel}

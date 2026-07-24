@@ -97,6 +97,30 @@ export default function PropertyForm({
   landlordId, landlordName, existing, onSuccess, onCancel, adminOverride, createVia, updateVia,
 }: PropertyFormProps) {
 
+  // ── Landlord assignment (staff/admin only) ──────────────────────────────
+  // A staff/admin post (createVia/updateVia) can attach the listing to a
+  // landlord's portal — but ONLY if the office explicitly picks one. Leaving it
+  // unassigned keeps it a public-site-only listing. This is what prevents a
+  // listing from silently landing in the poster's own portal (and leaking its
+  // bank ledger). A landlord posting their own property (no createVia) keeps the
+  // landlordId they were given and never sees this picker.
+  const canAssignLandlord = !!createVia || !!updateVia;
+  const [assignedLandlordId, setAssignedLandlordId] = useState<string>(existing?.landlordId ?? landlordId ?? '');
+  const [landlordOptions, setLandlordOptions] = useState<{ uid: string; name: string; email: string }[]>([]);
+
+  useEffect(() => {
+    if (!canAssignLandlord) return;
+    (async () => {
+      try {
+        const headers: Record<string, string> = {};
+        const u = auth?.currentUser;
+        if (u) { try { headers['Authorization'] = `Bearer ${await u.getIdToken()}`; } catch { /* cookie */ } }
+        const res = await fetch('/api/staff/landlords', { headers, credentials: 'same-origin' });
+        if (res.ok) { const j = await res.json(); setLandlordOptions(Array.isArray(j.landlords) ? j.landlords : []); }
+      } catch { /* non-fatal: the picker just shows what we have */ }
+    })();
+  }, [canAssignLandlord]);
+
   // ── Core fields ─────────────────────────────────────────────────────────
   const [title, setTitle]               = useState(existing?.title || '');
   const [description, setDescription]   = useState(existing?.description || '');
@@ -284,8 +308,12 @@ export default function PropertyForm({
         furnished: furnished as Property['furnished'],
         availableFrom,
         images: allImages,
-        landlordId,
-        landlordName,
+        // In the staff/admin context the office chooses the owner (or leaves it
+        // unassigned); elsewhere the passed-in landlord stands.
+        landlordId: canAssignLandlord ? assignedLandlordId : landlordId,
+        landlordName: canAssignLandlord
+          ? (landlordOptions.find(l => l.uid === assignedLandlordId)?.name || (assignedLandlordId ? (existing?.landlordName || landlordName || '') : ''))
+          : landlordName,
         status: 'active',
         propertyType,
         depositAmount: depositAmount ? Number(depositAmount) : null,
@@ -359,6 +387,32 @@ export default function PropertyForm({
         }}>
           {error}
         </div>
+      )}
+
+      {/* ── 0. Landlord (staff/admin only) ────────────────────────────────── */}
+      {canAssignLandlord && (
+        <>
+          <SectionHeader icon="👤" title="Landlord" subtitle="Who owns this property. Only the chosen landlord sees it (and its account figures) in their portal — leave unassigned for a public-site-only listing." />
+          <div className="form-group" style={{ marginBottom: 20 }}>
+            <label className="form-label">Assign to landlord</label>
+            <select
+              value={assignedLandlordId}
+              onChange={e => setAssignedLandlordId(e.target.value)}
+              style={{ width: '100%', padding: '11px 13px', border: '1.5px solid var(--gray-200)', borderRadius: 8, fontSize: 14, background: '#fff', marginTop: 6 }}
+            >
+              <option value="">— No landlord (public listing only) —</option>
+              {assignedLandlordId && !landlordOptions.some(l => l.uid === assignedLandlordId) && (
+                <option value={assignedLandlordId}>{existing?.landlordName || 'Currently assigned'} — unrecognised, reassign below</option>
+              )}
+              {landlordOptions.map(l => (
+                <option key={l.uid} value={l.uid}>{l.name || l.email}{l.email ? ` (${l.email})` : ''}</option>
+              ))}
+            </select>
+            <div style={{ fontSize: 12, color: 'var(--gray-400)', marginTop: 6 }}>
+              Tip: an unrecognised or wrong assignment here is what makes a property show under the wrong account. Pick the real landlord, or “No landlord”.
+            </div>
+          </div>
+        </>
       )}
 
       {/* ── 1. Listing Basics ─────────────────────────────────────────────── */}

@@ -2414,8 +2414,8 @@ export default function AdminDashboard() {
               </div>
               <div className="dash-card">
                 <PropertyForm
-                  landlordId={profile.uid}
-                  landlordName={profile.name}
+                  landlordId={''}
+                  landlordName={''}
                   adminOverride={{ featured: true }}
                   createVia="/api/staff/properties"
                   onSuccess={handlePostSuccess}
@@ -2457,8 +2457,8 @@ export default function AdminDashboard() {
               </div>
               <div className="dash-card">
                 <PropertyForm
-                  landlordId={editingProperty.landlordId || profile.uid}
-                  landlordName={editingProperty.landlordName || profile.name}
+                  landlordId={editingProperty.landlordId || ''}
+                  landlordName={editingProperty.landlordName || ''}
                   existing={editingProperty}
                   adminOverride={{ featured: editingProperty.featured }}
                   createVia="/api/staff/properties"

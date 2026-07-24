@@ -144,14 +144,22 @@ export async function GET(request: Request) {
     const maintSnap = await db.collection('maintenanceRequests').orderBy('createdAt', 'desc').limit(200).get();
     const maintenance = maintSnap.docs
       .map(doc => ({ id: doc.id, ...(doc.data() as any) }))
-      .filter(m => belongs(m.propertyAddress))
+      // Tenant-reported requests match by postcode; staff tickets also match by
+      // the landlordId/propertyId the office assigned.
+      .filter(m => belongs(m.propertyAddress || m.propertyLabel) || m.landlordId === auth.uid)
       .map(m => ({
         id: m.id,
         fullName: m.fullName || '',
-        propertyAddress: m.propertyAddress || '',
-        postcode: normalisePostcode(String(m.propertyAddress || '')) || '',
+        propertyAddress: m.propertyAddress || m.propertyLabel || '',
+        postcode: normalisePostcode(String(m.propertyAddress || m.propertyLabel || '')) || '',
+        propertyId: m.propertyId || '',
+        title: m.title || '',
+        category: m.category || '',
         issueDescription: m.issueDescription || '',
         status: m.status || 'open',
+        cost: typeof m.cost === 'number' ? m.cost : (m.cost ? Number(m.cost) || 0 : 0),
+        billToLandlord: !!m.billToLandlord,
+        breakdown: Array.isArray(m.breakdown) ? m.breakdown : [],
         submittedAt: iso(m.createdAt),
       }));
 

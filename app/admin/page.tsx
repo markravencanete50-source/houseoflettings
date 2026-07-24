@@ -14,6 +14,7 @@ import SecondLandlordDetails from '@/components/dashboard/SecondLandlordDetails'
 import CoSignersDetails from '@/components/dashboard/CoSignersDetails';
 import AgreementExtraDetails from '@/components/dashboard/AgreementExtraDetails';
 import { LandlordProgressBadge, LandlordProgressPanel } from '@/components/dashboard/LandlordProgress';
+import MaintenanceTicketForm from '@/components/dashboard/MaintenanceTicketForm';
 import ServicePricingEditor from '@/components/dashboard/ServicePricingEditor';
 import { useAuth } from '@/hooks/useAuth';
 import { isDualAccessEmail } from '@/lib/dualAccess';
@@ -276,6 +277,15 @@ interface MaintenanceRequest {
   videoUrls?: string[];
   status: 'open' | 'in-progress' | 'resolved' | 'cancelled';
   createdAt: any;
+  title?: string;
+  category?: string;
+  contractor?: string;
+  propertyId?: string;
+  landlordId?: string;
+  cost?: number;
+  billToLandlord?: boolean;
+  breakdown?: { label: string; amount: number }[];
+  source?: string;
 }
 
 interface RentReview {
@@ -409,6 +419,9 @@ export default function AdminDashboard() {
   const [orders, setOrders] = useState<ServiceOrder[]>([]);
   const [expandedOrder, setExpandedOrder] = useState<string | null>(null);
   const [maintenance, setMaintenance] = useState<MaintenanceRequest[]>([]);
+  const [ticketForm, setTicketForm] = useState<null | 'new' | MaintenanceRequest>(null);
+  const reloadMaintenance = () =>
+    authedFetch('/api/staff/maintenance').then(r => r.json()).then(j => setMaintenance((j.requests || []) as MaintenanceRequest[])).catch(() => {});
   const [expandedMaint, setExpandedMaint] = useState<string | null>(null);
   const [rentReviews, setRentReviews] = useState<RentReview[]>([]);
   const [expandedRR, setExpandedRR] = useState<string | null>(null);
@@ -2144,10 +2157,21 @@ export default function AdminDashboard() {
           {/* ── Maintenance ── */}
           {tab === 'maintenance' && (
             <div>
-              <h1 className="dash-section-title">Maintenance Requests</h1>
-              <p style={{ color: 'var(--gray-600)', marginBottom: 24, fontSize: 15 }}>
-                Repair and maintenance issues reported through the website form.
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12, flexWrap: 'wrap' }}>
+                <h1 className="dash-section-title" style={{ margin: 0 }}>Maintenance</h1>
+                <button onClick={() => setTicketForm('new')} style={{ background: '#2563eb', color: '#fff', border: 'none', borderRadius: 8, padding: '9px 16px', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>+ New ticket</button>
+              </div>
+              <p style={{ color: 'var(--gray-600)', margin: '8px 0 24px', fontSize: 15 }}>
+                Tenant-reported issues plus staff tickets. Raise a ticket against a property, add its cost, and it appears as a deduction on that landlord&rsquo;s statement once completed and billed.
               </p>
+              {ticketForm && (
+                <MaintenanceTicketForm
+                  authedFetch={authedFetch}
+                  existing={ticketForm === 'new' ? null : (ticketForm as Record<string, any>)}
+                  onSaved={() => { setTicketForm(null); reloadMaintenance(); }}
+                  onCancel={() => setTicketForm(null)}
+                />
+              )}
               {maintenance.length === 0 ? (
                 <div className="dash-card" style={{ textAlign: 'center', padding: 60 }}>
                   <div style={{ fontSize: 52, marginBottom: 16 }}>🔧</div>
@@ -2171,16 +2195,20 @@ export default function AdminDashboard() {
                         <div style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '16px 20px', flexWrap: 'wrap' }}>
                           <div style={{ minWidth: 0, flex: 1 }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-                              <strong style={{ fontSize: 15, color: 'var(--navy)' }}>{m.fullName}</strong>
+                              <strong style={{ fontSize: 15, color: 'var(--navy)' }}>{m.title || m.fullName || (m.source === 'staff-ticket' ? 'Office ticket' : '—')}</strong>
                               <span style={{ display: 'inline-block', padding: '3px 10px', borderRadius: 20, fontSize: 11, fontWeight: 700, textTransform: 'uppercase', background: mc.bg, color: mc.color }}>{m.status}</span>
+                              {(m.cost || 0) > 0 && <span style={{ fontSize: 12, fontWeight: 800, color: m.billToLandlord ? '#c62828' : 'var(--gray-600)' }}>£{m.cost}{m.billToLandlord ? ' · billed' : ''}</span>}
                             </div>
                             <div style={{ fontSize: 12.5, color: 'var(--gray-400)', marginTop: 3 }}>
-                              {m.propertyAddress} · {m.email} · {m.contactNumber}{when ? ` · ${when}` : ''}
+                              {m.propertyAddress} · {m.email || m.category || '—'}{m.contactNumber ? ` · ${m.contactNumber}` : ''}{when ? ` · ${when}` : ''}
                             </div>
                           </div>
                           <select value={m.status} onChange={e => handleMaintenanceStatus(m.id, e.target.value as MaintenanceRequest['status'])} className="form-select" style={{ width: 150 }} onClick={e => e.stopPropagation()}>
                             {(['open', 'in-progress', 'resolved', 'cancelled'] as const).map(s => <option key={s} value={s}>{s[0].toUpperCase() + s.slice(1)}</option>)}
                           </select>
+                          <button onClick={() => setTicketForm(m)} style={{ background: 'none', border: '1px solid var(--gray-200)', borderRadius: 6, padding: '5px 12px', cursor: 'pointer', color: '#2563eb', fontSize: 13, fontWeight: 600 }}>
+                            Cost / edit
+                          </button>
                           <button onClick={() => setExpandedMaint(isOpen ? null : m.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--gray-600)', fontSize: 13, fontWeight: 600 }}>
                             {isOpen ? 'Hide ▲' : 'Details ▼'}
                           </button>

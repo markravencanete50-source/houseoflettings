@@ -18,6 +18,7 @@ import LandlordsPanel from '@/components/dashboard/LandlordsPanel';
 import SecondLandlordDetails from '@/components/dashboard/SecondLandlordDetails';
 import CoSignersDetails from '@/components/dashboard/CoSignersDetails';
 import { LandlordProgressBadge, LandlordProgressPanel } from '@/components/dashboard/LandlordProgress';
+import MaintenanceTicketForm from '@/components/dashboard/MaintenanceTicketForm';
 import AgreementExtraDetails from '@/components/dashboard/AgreementExtraDetails';
 import { useAuth } from '@/hooks/useAuth';
 import { signOut } from '@/services/auth';
@@ -80,6 +81,15 @@ interface MaintenanceRequest {
   status: string;
   photoUrls?: string[];
   submittedAt: string | null;
+  title?: string;
+  category?: string;
+  contractor?: string;
+  propertyId?: string;
+  landlordId?: string;
+  cost?: number;
+  billToLandlord?: boolean;
+  breakdown?: { label: string; amount: number }[];
+  source?: string;
 }
 
 interface ServiceOrderLine {
@@ -302,6 +312,7 @@ function StaffDashboardInner() {
   const [properties, setProperties] = useState<Property[]>([]);
   const [applications, setApplications] = useState<TenantApplication[]>([]);
   const [maintenance, setMaintenance] = useState<MaintenanceRequest[]>([]);
+  const [ticketForm, setTicketForm] = useState<null | 'new' | MaintenanceRequest>(null);
   const [orders, setOrders] = useState<ServiceOrder[]>([]);
   const [agreements, setAgreements] = useState<Agreement[]>([]);
   const [expandedAgreement, setExpandedAgreement] = useState<string | null>(null);
@@ -558,6 +569,9 @@ function StaffDashboardInner() {
     }
   };
 
+  const reloadMaintenance = () =>
+    authedFetch('/api/staff/maintenance').then(r => r.json()).then(j => setMaintenance(j.requests || [])).catch(() => {});
+
   const submitReview = async () => {
     setReviewMsg(null);
     if (!reviewForm.author_name.trim()) { setReviewMsg({ kind: 'err', text: 'Reviewer name is required.' }); return; }
@@ -794,10 +808,23 @@ function StaffDashboardInner() {
           {/* ── Maintenance ── */}
           {tab === 'maintenance' && perms.includes('maintenance') && (
             <div>
-              <h1 className="dash-section-title">Maintenance Requests</h1>
-              <p style={{ color: 'var(--gray-600)', marginBottom: 20, fontSize: 15 }}>
-                Repair and maintenance issues reported through the website form. Use the status dropdown on each row to keep the team up to date.
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12, flexWrap: 'wrap' }}>
+                <h1 className="dash-section-title" style={{ margin: 0 }}>Maintenance</h1>
+                <button onClick={() => setTicketForm('new')} style={{ background: '#2563eb', color: '#fff', border: 'none', borderRadius: 8, padding: '9px 16px', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
+                  + New ticket
+                </button>
+              </div>
+              <p style={{ color: 'var(--gray-600)', margin: '8px 0 20px', fontSize: 15 }}>
+                Tenant-reported issues plus staff tickets. Raise a ticket against a property, add its cost, and it appears as a deduction on that landlord&rsquo;s statement once completed and billed.
               </p>
+              {ticketForm && (
+                <MaintenanceTicketForm
+                  authedFetch={authedFetch}
+                  existing={ticketForm === 'new' ? null : (ticketForm as Record<string, any>)}
+                  onSaved={() => { setTicketForm(null); reloadMaintenance(); }}
+                  onCancel={() => setTicketForm(null)}
+                />
+              )}
 
               {/* Status filter chips */}
               <div style={{ display: 'flex', gap: 10, marginBottom: 24, flexWrap: 'wrap' }}>
@@ -827,17 +854,19 @@ function StaffDashboardInner() {
               <div className="dash-card" style={{ padding: 0, overflow: 'hidden' }}>
                 <table className="data-table">
                   <thead>
-                    <tr><th>Reported by</th><th>Property</th><th>Issue</th><th>Contact</th><th>Photos</th><th>Submitted</th><th>Status</th></tr>
+                    <tr><th>Reported by</th><th>Property</th><th>Issue</th><th>Cost</th><th>Photos</th><th>Submitted</th><th>Status</th><th></th></tr>
                   </thead>
                   <tbody>
                     {filteredMaint.map(m => (
                       <tr key={m.id}>
-                        <td style={{ fontWeight: 600, fontSize: 14 }}>{m.fullName}</td>
+                        <td style={{ fontWeight: 600, fontSize: 14 }}>{m.fullName || (m.source === 'staff-ticket' ? 'Office ticket' : '—')}</td>
                         <td style={{ fontSize: 13, color: 'var(--gray-600)', maxWidth: 180 }}>{m.propertyAddress}</td>
-                        <td style={{ fontSize: 13, color: 'var(--gray-600)', maxWidth: 240 }}>{m.issueDescription}</td>
-                        <td style={{ fontSize: 12, color: 'var(--gray-400)' }}>
-                          <div>{m.email}</div>
-                          <div>{m.contactNumber}</div>
+                        <td style={{ fontSize: 13, color: 'var(--gray-600)', maxWidth: 240 }}>{m.title || m.issueDescription}</td>
+                        <td style={{ fontSize: 13, whiteSpace: 'nowrap' }}>
+                          {(m.cost || 0) > 0
+                            ? <span style={{ fontWeight: 700, color: m.billToLandlord ? '#c62828' : 'var(--gray-600)' }}>£{m.cost}{m.billToLandlord ? '' : ''}</span>
+                            : <span style={{ color: 'var(--gray-400)' }}>-</span>}
+                          {m.billToLandlord && (m.cost || 0) > 0 && <div style={{ fontSize: 10.5, color: '#c62828' }}>billed</div>}
                         </td>
                         <td style={{ fontSize: 13 }}>
                           {m.photoUrls?.length
@@ -857,6 +886,11 @@ function StaffDashboardInner() {
                           >
                             {MAINT_STATUSES.map(s => <option key={s} value={s}>{s.replace('-', ' ')}</option>)}
                           </select>
+                        </td>
+                        <td>
+                          <button onClick={() => setTicketForm(m)} style={{ background: 'none', border: '1px solid var(--gray-200)', borderRadius: 6, padding: '5px 10px', cursor: 'pointer', color: '#2563eb', fontSize: 12.5, fontWeight: 600 }}>
+                            Cost / edit
+                          </button>
                         </td>
                       </tr>
                     ))}

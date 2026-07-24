@@ -15,7 +15,7 @@ import TenancyOverview from '@/components/landlord/TenancyOverview';
 
 export type PDProp = { id: string; agreementId?: string; label: string; postcode?: string; city?: string; type?: string; bedrooms?: string; bathrooms?: string; furnishing?: string; rent?: string; occupancy?: string; availableFrom?: string; tenancyStart?: string; tenancyEnd?: string; packageId?: string; packageLabel?: string; tenancy?: Record<string, any> };
 export type PDApplication = { id: string; fullName: string; propertyAddress: string; postcode?: string; rent: string; leaseTerm: string; status: string; submittedAt: string | null };
-export type PDMaintenance = { id: string; fullName: string; propertyAddress: string; postcode?: string; issueDescription: string; status: string; submittedAt: string | null };
+export type PDMaintenance = { id: string; fullName: string; propertyAddress: string; postcode?: string; propertyId?: string; title?: string; category?: string; issueDescription: string; status: string; cost?: number; billToLandlord?: boolean; breakdown?: { label: string; amount: number }[]; submittedAt: string | null };
 
 type Tab = 'overview' | 'account' | 'package' | 'applications' | 'maintenance' | 'compliance' | 'contact';
 
@@ -67,8 +67,12 @@ export default function PropertyDetailView({ prop, applications, maintenance }: 
   const money = (n: number) => `£${n.toLocaleString('en-GB')}`;
 
   const apps = applications.filter(a => a.postcode && prop.postcode && a.postcode === prop.postcode);
-  const maint = maintenance.filter(m => m.postcode && prop.postcode && m.postcode === prop.postcode);
+  const maint = maintenance.filter(m => (m.propertyId && m.propertyId === prop.id) || (m.postcode && prop.postcode && m.postcode === prop.postcode));
   const openMaint = maint.filter(m => m.status === 'open' || m.status === 'in-progress').length;
+  // Completed, billable jobs become deductions on the landlord's statement.
+  const billableMaint = maint
+    .filter(m => m.billToLandlord && (m.cost || 0) > 0 && m.status === 'resolved')
+    .map(m => ({ date: m.submittedAt, description: m.title || m.issueDescription || 'Maintenance', cost: m.cost || 0 }));
   const managed = bundle?.kind === 'Management';
 
   // In-portal destinations (keep landlords inside the login, not the public site).
@@ -275,10 +279,15 @@ export default function PropertyDetailView({ prop, applications, maintenance }: 
                 <div className="pd-list">
                   {maint.map(m => {
                     const meta = MAINT_META[m.status] || MAINT_META['open'];
+                    const sub = [m.title ? m.fullName : (m.fullName || m.category), m.category && m.title ? m.category : ''].filter(Boolean).join(' · ');
                     return (
                       <div key={m.id} className="pd-row">
-                        <div style={{ minWidth: 0 }}><div className="pd-row-t" style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{m.issueDescription}</div><div className="pd-row-s">{m.fullName}</div></div>
-                        <div style={{ textAlign: 'right' }}><span className="pd-badge" style={{ background: meta.bg, color: meta.color }}>{meta.label}</span><div className="pd-row-s">{fmtDate(m.submittedAt)}</div></div>
+                        <div style={{ minWidth: 0 }}><div className="pd-row-t" style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{m.title || m.issueDescription}</div><div className="pd-row-s">{sub || '—'}</div></div>
+                        <div style={{ textAlign: 'right' }}>
+                          {(m.cost || 0) > 0 && <div className="pd-row-t" title={m.billToLandlord ? 'Charged to your account' : 'Not charged to you'} style={{ color: m.billToLandlord ? '#c62828' : 'var(--gray-400)' }}>{money(m.cost || 0)}</div>}
+                          <span className="pd-badge" style={{ background: meta.bg, color: meta.color }}>{meta.label}</span>
+                          <div className="pd-row-s">{fmtDate(m.submittedAt)}</div>
+                        </div>
                       </div>
                     );
                   })}
@@ -299,6 +308,7 @@ export default function PropertyDetailView({ prop, applications, maintenance }: 
                 mgmtPct={mgmtPct}
                 tenancyStart={prop.tenancyStart}
                 tenancyEnd={prop.tenancyEnd}
+                maintenance={billableMaint}
               />
             </div>
           )}

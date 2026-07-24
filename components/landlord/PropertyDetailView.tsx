@@ -4,13 +4,16 @@
 // the dashboard sidebar) lets the landlord switch between Overview (money in/
 // out), their package, tenant applications and maintenance for THIS property.
 // Rendered as a page (not a modal) at /landlord-portal/property/[id].
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { findBundle } from '@/lib/agreementContent';
+import { auth as fbAuth } from '@/lib/firebase';
+import { hasTenancyData } from '@/lib/tenancyFields';
 import CompliancePanel from '@/components/landlord/CompliancePanel';
 import AccountPanel from '@/components/landlord/AccountPanel';
+import TenancyOverview from '@/components/landlord/TenancyOverview';
 
-export type PDProp = { id: string; agreementId?: string; label: string; postcode?: string; city?: string; type?: string; bedrooms?: string; bathrooms?: string; furnishing?: string; rent?: string; occupancy?: string; availableFrom?: string; tenancyStart?: string; tenancyEnd?: string; packageId?: string; packageLabel?: string };
+export type PDProp = { id: string; agreementId?: string; label: string; postcode?: string; city?: string; type?: string; bedrooms?: string; bathrooms?: string; furnishing?: string; rent?: string; occupancy?: string; availableFrom?: string; tenancyStart?: string; tenancyEnd?: string; packageId?: string; packageLabel?: string; tenancy?: Record<string, any> };
 export type PDApplication = { id: string; fullName: string; propertyAddress: string; postcode?: string; rent: string; leaseTerm: string; status: string; submittedAt: string | null };
 export type PDMaintenance = { id: string; fullName: string; propertyAddress: string; postcode?: string; issueDescription: string; status: string; submittedAt: string | null };
 
@@ -36,6 +39,25 @@ const CONTACT = {
 
 export default function PropertyDetailView({ prop, applications, maintenance }: { prop: PDProp; applications: PDApplication[]; maintenance: PDMaintenance[] }) {
   const [tab, setTab] = useState<Tab>('overview');
+
+  // Live landlord balance for the Accounts overview, from the bank-sheet ledger.
+  const [ledgerNet, setLedgerNet] = useState<number | null>(null);
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const headers: Record<string, string> = {};
+        const u = fbAuth?.currentUser;
+        if (u) { try { headers['Authorization'] = `Bearer ${await u.getIdToken()}`; } catch { /* cookie */ } }
+        const res = await fetch(`/api/landlord/ledger?id=${encodeURIComponent(prop.id)}`, { headers, credentials: 'same-origin' });
+        if (!cancelled && res.ok) {
+          const j = await res.json();
+          if (typeof j?.totals?.net === 'number' && !j?.unmatched && j?.configured !== false) setLedgerNet(j.totals.net);
+        }
+      } catch { /* leave as — */ }
+    })();
+    return () => { cancelled = true; };
+  }, [prop.id]);
 
   const rent = parseFloat(String(prop.rent || '').replace(/[^\d.]/g, '')) || 0;
   const bundle = findBundle(prop.packageId || prop.packageLabel || '');
@@ -135,8 +157,22 @@ export default function PropertyDetailView({ prop, applications, maintenance }: 
               </div>
               <p className="pd-note">Figures are estimates based on your expected rent and package — see the Account tab for your live statement.</p>
 
-              {/* Tenancy details — the CRM-style summary of this tenancy */}
-              {(() => {
+              {/* Tenancy summary — full Gnomen-style view when the office has
+                  entered tenancy details, otherwise a concise fallback. */}
+              {hasTenancyData(prop.tenancy) ? (
+                <TenancyOverview
+                  t={prop.tenancy as Record<string, any>}
+                  propertyLabel={prop.label}
+                  rentFallback={rent}
+                  mgmtPct={mgmtPct}
+                  monthlyMgmt={monthlyMgmt}
+                  netMonthly={netMonthly}
+                  furnishing={prop.furnishing}
+                  occupancy={prop.occupancy}
+                  serviceFallback={managed ? 'Managed' : bundle?.label || prop.packageLabel}
+                  ledgerNet={ledgerNet}
+                />
+              ) : (() => {
                 const tenancy: [string, string][] = ([
                   ['Property', prop.label],
                   ['Service', managed ? 'Managed' : bundle ? bundle.label : (prop.packageLabel || '—')],

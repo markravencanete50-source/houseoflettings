@@ -6,6 +6,8 @@ import { Property } from '@/lib/types';
 import { createProperty, updateProperty } from '@/services/property';
 import { CLOUDINARY_FOLDERS } from '@/lib/cloudinaryFolders';
 import { auth } from '@/lib/firebase';
+import TenancyFields from '@/components/property/TenancyFields';
+import { TENANCY_KEYS } from '@/lib/tenancyFields';
 
 // Headers for a createVia/updateVia server post. Staff are cookie-authenticated
 // (no Firebase client user), so their write relies on the hol_session cookie;
@@ -107,6 +109,15 @@ export default function PropertyForm({
   const canAssignLandlord = !!createVia || !!updateVia;
   const [assignedLandlordId, setAssignedLandlordId] = useState<string>(existing?.landlordId ?? landlordId ?? '');
   const [landlordOptions, setLandlordOptions] = useState<{ uid: string; name: string; email: string }[]>([]);
+
+  // Tenancy/deposit/accounts details shown to the landlord in their portal
+  // (staff/admin only). One flat object; initialised from the existing property.
+  const [tenancy, setTenancy] = useState<Record<string, any>>(() => {
+    const init: Record<string, any> = {};
+    for (const k of TENANCY_KEYS) { const v = (existing as any)?.[k]; if (v !== undefined) init[k] = v; }
+    return init;
+  });
+  const setTenancyField = (k: string, v: any) => setTenancy(s => ({ ...s, [k]: v }));
 
   useEffect(() => {
     if (!canAssignLandlord) return;
@@ -314,6 +325,8 @@ export default function PropertyForm({
         landlordName: canAssignLandlord
           ? (landlordOptions.find(l => l.uid === assignedLandlordId)?.name || (assignedLandlordId ? (existing?.landlordName || landlordName || '') : ''))
           : landlordName,
+        // Tenancy/deposit/accounts details (staff/admin context only).
+        ...(canAssignLandlord ? tenancy : {}),
         status: 'active',
         propertyType,
         depositAmount: depositAmount ? Number(depositAmount) : null,
@@ -411,6 +424,11 @@ export default function PropertyForm({
             <div style={{ fontSize: 12, color: 'var(--gray-400)', marginTop: 6 }}>
               Tip: an unrecognised or wrong assignment here is what makes a property show under the wrong account. Pick the real landlord, or “No landlord”.
             </div>
+          </div>
+
+          <SectionHeader icon="📋" title="Tenancy details" subtitle="Tenancy, guarantor, contract, deposit and account details shown to the landlord in their portal. Leave blank if not applicable." />
+          <div style={{ marginBottom: 8 }}>
+            <TenancyFields value={tenancy} onChange={setTenancyField} />
           </div>
         </>
       )}

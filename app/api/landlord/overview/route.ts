@@ -12,6 +12,7 @@ import { NextResponse } from 'next/server';
 import { requireLandlord } from '@/lib/landlordAuth';
 import { getAdminDb } from '@/lib/staffApiAuth';
 import { normalisePostcode, resolveAvailability } from '@/lib/portalMatch';
+import { pluckTenancy } from '@/lib/tenancyFields';
 import { rateLimit } from '@/lib/rateLimit';
 
 export const dynamic = 'force-dynamic';
@@ -49,7 +50,7 @@ export async function GET(request: Request) {
       id: string; agreementId: string; label: string; postcode: string;
       city?: string; type?: string; bedrooms?: string; bathrooms?: string; furnishing?: string; rent?: string;
       tenancyStart?: string; tenancyEnd?: string; availableFrom?: string; occupancy?: string;
-      packageId?: string; packageLabel?: string;
+      packageId?: string; packageLabel?: string; tenancy?: Record<string, any>;
     };
     const properties: Prop[] = [];
     for (const s of agreementDocs) {
@@ -69,6 +70,7 @@ export async function GET(request: Request) {
           city: p.city, type: p.propertyType, bedrooms: p.bedrooms, bathrooms: p.bathrooms, furnishing: p.furnishing, rent: p.currentRent,
           tenancyStart: p.tenancyStart, tenancyEnd: p.tenancyEnd, availableFrom: p.availableFrom, occupancy: p.occupancy,
           packageId: d.selectedPackageId || '', packageLabel: d.selectedPackage || '',
+          tenancy: pluckTenancy(p),
         });
       });
     }
@@ -101,6 +103,10 @@ export async function GET(request: Request) {
         rent: p.price != null ? String(p.price) : undefined,
         occupancy: occ,
         packageId: '', packageLabel: '',
+        // Staff-entered tenancy/deposit/accounts details (Gnomen-style) for the portal.
+        tenancy: pluckTenancy(p),
+        tenancyStart: p.contractStart || undefined,
+        tenancyEnd: p.contractEnd || undefined,
       });
     }
 

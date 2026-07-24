@@ -17,6 +17,7 @@ import { LandlordProgressBadge, LandlordProgressPanel } from '@/components/dashb
 import MaintenanceTicketForm from '@/components/dashboard/MaintenanceTicketForm';
 import ApplicationAssign from '@/components/dashboard/ApplicationAssign';
 import LedgerManager from '@/components/dashboard/LedgerManager';
+import DemoPanel from '@/components/dashboard/DemoPanel';
 import ServicePricingEditor from '@/components/dashboard/ServicePricingEditor';
 import { useAuth } from '@/hooks/useAuth';
 import { isDualAccessEmail } from '@/lib/dualAccess';
@@ -49,7 +50,7 @@ import {
   updateDoc, addDoc, serverTimestamp, Timestamp,
 } from 'firebase/firestore';
 
-type Tab = 'analytics' | 'users' | 'properties' | 'post' | 'edit' | 'valuations' | 'reviews' | 'applications' | 'orders' | 'maintenance' | 'rent-reviews' | 'agreements' | 'landlords' | 'activity' | 'deleted';
+type Tab = 'analytics' | 'users' | 'properties' | 'post' | 'edit' | 'valuations' | 'reviews' | 'applications' | 'orders' | 'maintenance' | 'rent-reviews' | 'agreements' | 'landlords' | 'activity' | 'deleted' | 'demo';
 
 interface DeletedItem {
   id: string;
@@ -839,6 +840,7 @@ export default function AdminDashboard() {
     { id: 'orders',     icon: '🛒', label: `Orders (${orders.length})` },
     { id: 'maintenance', icon: '🔧', label: `Maintenance (${maintenance.length})` },
     { id: 'activity',   icon: '🕵️', label: 'Activity Logs' },
+    { id: 'demo',       icon: '🧪', label: 'Demo / Test' },
     { id: 'deleted',    icon: '🗑️', label: `Deleted${deletedItems.length ? ` (${deletedItems.length})` : ''}` },
     { id: 'post',       icon: '➕', label: 'Post Property' },
     ...(editingProperty ? [{ id: 'edit' as Tab, icon: '✏️', label: 'Edit Property' }] : []),
@@ -1948,6 +1950,8 @@ export default function AdminDashboard() {
 
           {/* ── Landlords ── */}
           {tab === 'landlords' && <LandlordsPanel canDelete />}
+
+          {tab === 'demo' && <DemoPanel authedFetch={authedFetch} />}
 
           {/* ── Rent Reviews ── */}
           {tab === 'rent-reviews' && (

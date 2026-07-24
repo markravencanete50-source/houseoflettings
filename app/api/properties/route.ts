@@ -37,11 +37,12 @@ export async function GET(request: Request) {
     const db = getAdminDb();
     if (id) {
       const snap = await db.collection('properties').doc(id).get();
-      if (!snap.exists) return Response.json({ property: null }, { status: 404 });
+      if (!snap.exists || (snap.data() as any)?.demo === true) return Response.json({ property: null }, { status: 404 });
       return Response.json({ property: serialize(snap.id, snap.data()) }, { status: 200 });
     }
     const snap = await db.collection('properties').where('status', '==', 'active').get();
-    const properties = snap.docs.map(d => serialize(d.id, d.data()));
+    // Demo/test properties are portal-only — never surface them on the public site.
+    const properties = snap.docs.filter(d => (d.data() as any)?.demo !== true).map(d => serialize(d.id, d.data()));
     return Response.json({ properties }, { status: 200 });
   } catch (e) {
     console.error('GET /api/properties failed:', e);

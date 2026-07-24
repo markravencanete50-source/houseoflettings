@@ -16,9 +16,15 @@ export type LedgerTxn = { date: string; description: string; amount: number };
 export type LedgerResult = {
   configured: boolean;
   error?: boolean;
+  unmatched?: boolean; // no postcode AND no usable address to match the sheet on
   transactions: LedgerTxn[];
   totals: { moneyIn: number; moneyOut: number; net: number };
 };
+
+// How a property is matched against the "Property address" column of the sheet.
+// Postcode is the reliable key; the address line is a fallback for properties
+// registered/listed without a postcode (so their Account still resolves).
+export type LedgerQuery = { postcode?: string; addressLine?: string };
 
 const norm = (s: string) => (s || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
 
@@ -91,8 +97,22 @@ async function loadTab(sheetId: string, gid: string): Promise<string[][]> {
   }
 }
 
-// Pull this-year transactions matching the postcode out of one tab's rows.
-function extractTab(rows: string[][], target: string, thisYear: number): { txns: LedgerTxn[]; moneyIn: number; moneyOut: number } {
+// Build the row matcher for a query. Postcode → the sheet's address cell must
+// contain it (reliable, order-independent). No postcode → fall back to the
+// property's address line, matched per comma/newline segment on a leading
+// boundary so "6 Browning Road" never matches "16 Browning Road".
+function buildMatcher(q: LedgerQuery): ((addressCell: string) => boolean) | null {
+  const pc = norm(q.postcode || '');
+  if (pc) return (cell) => norm(cell).includes(pc);
+  const al = norm(q.addressLine || '');
+  if (al.length >= 6) {
+    return (cell) => String(cell || '').split(/[,\n]/).map(norm).some(seg => seg.length >= 6 && seg.startsWith(al));
+  }
+  return null;
+}
+
+// Pull this-year transactions matching the property out of one tab's rows.
+function extractTab(rows: string[][], match: (addressCell: string) => boolean, thisYear: number): { txns: LedgerTxn[]; moneyIn: number; moneyOut: number } {
   const out = { txns: [] as LedgerTxn[], moneyIn: 0, moneyOut: 0 };
   if (!rows.length) return out;
   let hi = 0;
@@ -108,7 +128,7 @@ function extractTab(rows: string[][], target: string, thisYear: number): { txns:
   if (colAmount < 0 || colAddr < 0) return out;
   for (let i = hi + 1; i < rows.length; i++) {
     const r = rows[i];
-    if (!norm(r[colAddr] || '').includes(target)) continue;
+    if (!match(r[colAddr] || '')) continue;
     const date = (colDate >= 0 ? r[colDate] : '') || '';
     if (yearOf(date) !== thisYear) continue; // this year only
     const amount = parseAmount(r[colAmount]);
@@ -121,11 +141,15 @@ function extractTab(rows: string[][], target: string, thisYear: number): { txns:
 
 const EMPTY: LedgerResult['totals'] = { moneyIn: 0, moneyOut: 0, net: 0 };
 
-export async function ledgerForPostcode(postcode: string): Promise<LedgerResult> {
+// This year's money in / out for one property, matched by postcode or (fallback)
+// address line against the bank sheet.
+export async function ledgerForProperty(q: LedgerQuery): Promise<LedgerResult> {
   const sheetId = process.env.LANDLORD_LEDGER_SHEET_ID;
   if (!sheetId) return { configured: false, transactions: [], totals: { ...EMPTY } };
-  const target = norm(postcode);
-  if (!target) return { configured: true, transactions: [], totals: { ...EMPTY } };
+  const matcher = buildMatcher(q);
+  // No postcode and no usable address → nothing to match on. Signal it clearly
+  // so the UI can ask the landlord to have the address/postcode corrected.
+  if (!matcher) return { configured: true, unmatched: true, transactions: [], totals: { ...EMPTY } };
   const thisYear = new Date().getFullYear();
 
   const txns: LedgerTxn[] = [];
@@ -133,7 +157,7 @@ export async function ledgerForPostcode(postcode: string): Promise<LedgerResult>
   try {
     for (const gid of gids()) {
       const rows = await loadTab(sheetId, gid);
-      const t = extractTab(rows, target, thisYear);
+      const t = extractTab(rows, matcher, thisYear);
       txns.push(...t.txns); moneyIn += t.moneyIn; moneyOut += t.moneyOut;
     }
   } catch {
@@ -141,4 +165,9 @@ export async function ledgerForPostcode(postcode: string): Promise<LedgerResult>
   }
   txns.sort((a, b) => dateKey(b.date) - dateKey(a.date));
   return { configured: true, transactions: txns, totals: { moneyIn, moneyOut, net: moneyIn - moneyOut } };
+}
+
+// Back-compat convenience: match by postcode only.
+export async function ledgerForPostcode(postcode: string): Promise<LedgerResult> {
+  return ledgerForProperty({ postcode });
 }

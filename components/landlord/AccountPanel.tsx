@@ -8,7 +8,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { auth as fbAuth } from '@/lib/firebase';
 
 type Txn = { date: string; description: string; amount: number };
-type Ledger = { configured: boolean; error?: boolean; transactions: Txn[]; totals: { moneyIn: number; moneyOut: number; net: number } };
+type Ledger = { configured: boolean; error?: boolean; unmatched?: boolean; transactions: Txn[]; totals: { moneyIn: number; moneyOut: number; net: number } };
 
 async function authedFetch(path: string) {
   const headers: Record<string, string> = {};
@@ -19,18 +19,25 @@ async function authedFetch(path: string) {
 
 const money = (n: number) => `${n < 0 ? '-' : ''}£${Math.abs(n).toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
-export default function AccountPanel({ postcode }: { postcode: string }) {
+// `propertyId` is the overview property id — the server resolves this property
+// from the caller's own records and matches the sheet by postcode OR address, so
+// even a property with no postcode on file still shows its figures. `postcode`
+// is passed through only as a legacy fallback.
+export default function AccountPanel({ propertyId, postcode }: { propertyId: string; postcode?: string }) {
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState<Ledger | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await authedFetch(`/api/landlord/ledger?postcode=${encodeURIComponent(postcode)}`);
+      const qs = propertyId
+        ? `id=${encodeURIComponent(propertyId)}`
+        : `postcode=${encodeURIComponent(postcode || '')}`;
+      const res = await authedFetch(`/api/landlord/ledger?${qs}`);
       setData(res.ok ? await res.json() : null);
     } catch { setData(null); }
     setLoading(false);
-  }, [postcode]);
+  }, [propertyId, postcode]);
   useEffect(() => { load(); }, [load]);
 
   const year = new Date().getFullYear();
@@ -40,8 +47,8 @@ export default function AccountPanel({ postcode }: { postcode: string }) {
     <div className="ac">
       {loading ? (
         <div className="ac-loading">Loading your account…</div>
-      ) : !postcode ? (
-        <div className="ac-note">We could not read a postcode for this property, so live figures aren&apos;t available. Please contact your agent.</div>
+      ) : data?.unmatched ? (
+        <div className="ac-note">We don&apos;t have a postcode or full address on file for this property yet, so we can&apos;t match your account records to it. Please contact your agent to add the property&apos;s postcode.</div>
       ) : !data || data.configured === false ? (
         <div className="ac-note">Your live account statement isn&apos;t connected yet. Once it is, your money in and out for this property will appear here automatically.</div>
       ) : data.error ? (

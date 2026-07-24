@@ -228,7 +228,7 @@ export default function PropertyDetailView({ prop, applications, maintenance }: 
           {tab === 'account' && (
             <div className="pd-section">
               <h3 className="pd-h">Account</h3>
-              <AccountPanel postcode={prop.postcode || ''} />
+              <AccountPanel propertyId={prop.id} postcode={prop.postcode || ''} />
             </div>
           )}
 

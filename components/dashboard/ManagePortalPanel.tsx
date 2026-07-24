@@ -6,16 +6,16 @@
 // Launched from the admin Properties list.
 import { useEffect, useState, useCallback } from 'react';
 import type { Property } from '@/lib/types';
-import PropertyForm from '@/components/property/PropertyForm';
 import LedgerManager from '@/components/dashboard/LedgerManager';
 import MaintenanceTicketForm from '@/components/dashboard/MaintenanceTicketForm';
 import ApplicationAssign from '@/components/dashboard/ApplicationAssign';
 import TenancyDetailsForm from '@/components/dashboard/TenancyDetailsForm';
+import LandlordAssignForm from '@/components/dashboard/LandlordAssignForm';
 import { stageLabel } from '@/lib/applicationStages';
 
-type Section = 'property' | 'tenancy' | 'account' | 'maintenance' | 'applications';
+type Section = 'landlord' | 'tenancy' | 'account' | 'maintenance' | 'applications';
 const SECTIONS: { key: Section; label: string; icon: string }[] = [
-  { key: 'property', label: 'Property', icon: '🏠' },
+  { key: 'landlord', label: 'Landlord', icon: '👤' },
   { key: 'tenancy', label: 'Tenancy details', icon: '📋' },
   { key: 'account', label: 'Account', icon: '💷' },
   { key: 'maintenance', label: 'Maintenance', icon: '🔧' },
@@ -37,7 +37,7 @@ export default function ManagePortalPanel({
   onBack: () => void;
   onSaved?: () => void;
 }) {
-  const [section, setSection] = useState<Section>('property');
+  const [section, setSection] = useState<Section>('landlord');
   const [maint, setMaint] = useState<any[]>([]);
   const [apps, setApps] = useState<any[]>([]);
   const [ticketForm, setTicketForm] = useState<null | 'new' | any>(null);
@@ -80,19 +80,9 @@ export default function ManagePortalPanel({
         ))}
       </div>
 
-      {/* Property (listing) */}
-      {section === 'property' && (
-        <div className="dash-card">
-          <PropertyForm
-            existing={property}
-            landlordId={property.landlordId || ''}
-            landlordName={(property as any).landlordName || ''}
-            createVia="/api/staff/properties"
-            updateVia="/api/staff/properties"
-            onSuccess={() => { onSaved?.(); }}
-            onCancel={onBack}
-          />
-        </div>
+      {/* Landlord assignment (its own feature — not the public advert) */}
+      {section === 'landlord' && (
+        <LandlordAssignForm property={property} authedFetch={authedFetch} onSaved={onSaved} />
       )}
 
       {/* Tenancy details (its own feature) */}

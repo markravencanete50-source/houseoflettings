@@ -2535,8 +2535,8 @@ export default function AdminDashboard() {
             <div>
               <h1 className="dash-section-title">Post a Property</h1>
               <p style={{ color: 'var(--gray-600)', marginBottom: 8, fontSize: 15 }}>
-                Post a listing as admin. It will appear publicly and automatically marked as{' '}
-                <strong style={{ color: 'var(--red)' }}>Featured</strong>.
+                Post a public advert. It appears on the website and is marked{' '}
+                <strong style={{ color: 'var(--red)' }}>Featured</strong>. To attach it to a landlord’s portal, use <strong>⚙ Manage</strong> on the property afterwards.
               </p>
               <div style={{
                 display: 'flex', alignItems: 'center', gap: 10,
@@ -2546,7 +2546,7 @@ export default function AdminDashboard() {
               }}>
                 <span style={{ fontSize: 18 }}>⭐</span>
                 <p style={{ fontSize: 13, color: 'var(--gray-600)', margin: 0 }}>
-                  This listing will be saved under your admin account and pinned as{' '}
+                  This is a public advert only — it isn’t attached to any landlord. Pinned as{' '}
                   <strong>Featured</strong> at the top of search results.
                 </p>
               </div>

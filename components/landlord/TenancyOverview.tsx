@@ -15,6 +15,14 @@ const money = (v: any): string => {
 };
 const val = (v: any): string => (v === undefined || v === null || String(v).trim() === '' ? '—' : String(v));
 const bool = (v: any): string => (v === true ? 'Yes' : 'No');
+// yyyy-mm-dd → "24 Jul 2026"; leaves anything else (or empty) as-is/em-dash.
+const fmtDate = (v: any): string => {
+  const s = String(v ?? '').trim();
+  if (!s) return '—';
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
+  const d = new Date(`${s}T00:00:00`);
+  return isNaN(d.getTime()) ? s : d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+};
 
 function Card({ title, rows }: { title: string; rows: [string, string][] }) {
   const shown = rows.filter(([, v]) => v !== undefined);
@@ -67,7 +75,7 @@ export default function TenancyOverview({
         <h3 className="pd-h">Accounts overview</h3>
         <div className="pd-recap-card">
           <div className="pd-recap"><span>Rent outstanding</span><span>{money(t.rentOutstanding || 0)}</span></div>
-          <div className="pd-recap"><span>Rent due on</span><span>{val(t.rentDueOn)}{t.rentFrequency ? ` (every ${t.rentFrequency})` : ''}</span></div>
+          <div className="pd-recap"><span>Rent due on</span><span>{t.rentDueOn ? fmtDate(t.rentDueOn) : '—'}{t.rentFrequency ? ` (every ${t.rentFrequency})` : ''}</span></div>
           <div className="pd-recap"><span>Deposit status</span><span>{depositStatus}</span></div>
           <div className="pd-recap"><span>Landlord balance for this tenancy</span><span>{ledgerNet === null ? '—' : money(ledgerNet)}</span></div>
           <div className="pd-recap" style={{ borderBottom: 'none' }}><span>Landlord float balance</span><span>{money(t.floatBalance || 0)}</span></div>
@@ -105,9 +113,9 @@ export default function TenancyOverview({
       ] : []} />
 
       <Card title="Contract" rows={[
-        ['Contract period', (t.contractStart || t.contractEnd) ? `${val(t.contractStart)} → ${val(t.contractEnd)}` : '—'],
+        ['Contract period', (t.contractStart || t.contractEnd) ? `${fmtDate(t.contractStart)} → ${fmtDate(t.contractEnd)}` : '—'],
         ['Renewal status', val(t.renewalStatus)],
-        ['Date to vacate', val(t.dateToVacate)],
+        ['Date to vacate', fmtDate(t.dateToVacate)],
         ['Contract end action', val(t.contractEndAction)],
       ]} />
 

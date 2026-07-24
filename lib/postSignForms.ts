@@ -250,7 +250,7 @@ export function formOfficeHtml(opts: { landlordName: string; formLabel: string; 
 // Mint a token, build both links and email them to a landlord after they sign
 // the agreement. Best-effort — the caller wraps it in Promise.allSettled.
 export async function sendPostSignFormsInvite(opts: {
-  id: string; token: string; party: 'first' | 'second';
+  id: string; token: string; party: 'first' | 'second' | string;
   name: string; email: string; propertyAddress: string;
 }) {
   if (!opts.email || !opts.email.includes('@')) return;

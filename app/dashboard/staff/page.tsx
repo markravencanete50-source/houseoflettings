@@ -520,9 +520,9 @@ function StaffDashboardInner() {
 
   // Re-send the two post-agreement forms (Authorisation + Bank/AML) to the
   // landlord. Returns a result the progress panel renders inline.
-  const remindLandlordForms = async (id: string): Promise<{ ok: boolean; message?: string }> => {
+  const remindLandlordForms = async (id: string, party: string): Promise<{ ok: boolean; message?: string }> => {
     try {
-      const res = await authedFetch('/api/staff/agreements', { method: 'PATCH', body: JSON.stringify({ id, action: 'remind-forms' }) });
+      const res = await authedFetch('/api/staff/agreements', { method: 'PATCH', body: JSON.stringify({ id, action: 'remind-forms', party }) });
       const j = await res.json().catch(() => ({}));
       if (!res.ok) return { ok: false, message: j.message || `HTTP ${res.status}` };
       return { ok: true };

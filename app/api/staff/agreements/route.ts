@@ -49,7 +49,8 @@ export async function GET(request: Request) {
       // Never leak signing tokens to the dashboard client.
       const { reissueToken, secondLandlordToken, firstFormsToken, secondFormsToken, ...rest } = data;
       if (Array.isArray(rest.coSigners)) {
-        rest.coSigners = rest.coSigners.map((c: any) => { const { token, ...c2 } = c || {}; return c2; });
+        // Never leak signing OR post-agreement-forms tokens to the client.
+        rest.coSigners = rest.coSigners.map((c: any) => { const { token, formsToken, ...c2 } = c || {}; return c2; });
       }
       return {
         id: doc.id,
@@ -59,20 +60,31 @@ export async function GET(request: Request) {
       };
     });
 
-    // Enrich each registration with its landlord's PORTAL status (whether they've
+    // Enrich each registration with each landlord's PORTAL status (whether they've
     // signed in yet, and whether they've set their own password) — these live on
-    // the users doc, keyed by the agreement's landlordUid. One batched read.
-    const uids = Array.from(new Set(agreements.map(a => (a as any).landlordUid).filter(Boolean))) as string[];
+    // the users doc, keyed by the agreement's landlordUid / secondLandlordUid.
+    // One batched read covers every landlord across all registrations.
+    const uids = Array.from(new Set(
+      agreements.flatMap(a => [(a as any).landlordUid, (a as any).secondLandlordUid]).filter(Boolean),
+    )) as string[];
     if (uids.length) {
       const userSnaps = await db.getAll(...uids.map(uid => db.collection('users').doc(uid)));
       const byUid = new Map<string, any>();
       userSnaps.forEach(s => { if (s.exists) byUid.set(s.id, s.data() || {}); });
+      const portal = (uid?: string) => {
+        const u = uid ? byUid.get(uid) : null;
+        if (!u) return null;
+        return {
+          accessed: !!(u.lastLoginAt || u.firstLoginAt),
+          passwordReset: u.mustResetPassword === false,
+          lastLoginAt: u.lastLoginAt?.toDate?.()?.toISOString?.() || null,
+        };
+      };
       for (const a of agreements as any[]) {
-        const u = a.landlordUid ? byUid.get(a.landlordUid) : null;
-        if (!u) continue;
-        a.portalAccessed = !!(u.lastLoginAt || u.firstLoginAt);
-        a.passwordReset = u.mustResetPassword === false;
-        a.portalLastLoginAt = u.lastLoginAt?.toDate?.()?.toISOString?.() || null;
+        const p1 = portal(a.landlordUid);
+        if (p1) { a.portalAccessed = p1.accessed; a.passwordReset = p1.passwordReset; a.portalLastLoginAt = p1.lastLoginAt; }
+        const p2 = portal(a.secondLandlordUid);
+        if (p2) { a.secondPortalAccessed = p2.accessed; a.secondPasswordReset = p2.passwordReset; a.secondPortalLastLoginAt = p2.lastLoginAt; }
       }
     }
 
@@ -134,30 +146,58 @@ export async function PATCH(request: Request) {
     const ref = db.collection('landlordAgreements').doc(id);
 
     // ── Form reminder path ──
-    // Re-send the two post-agreement forms (Authorised Rep + Bank/AML) to the
-    // first landlord. Mints a fresh 30-day token so the emailed links are valid
-    // even if the original invite has long expired.
+    // Re-send the two post-agreement forms (Authorised Rep + Bank/AML) to a
+    // signatory: the first landlord, the joint second landlord, or a named
+    // company director (party 'cs0', 'cs1', …). Mints a fresh 30-day token so the
+    // emailed links are valid even if the original invite has long expired. A
+    // second/director can only be reminded once they've signed the agreement
+    // (that's when their details — and the form auto-fill — exist).
     if (body.action === 'remind-forms') {
+      const party = (body.party || 'first').toString().trim() || 'first';
+      if (!/^(first|second|cs\d+)$/.test(party)) {
+        return NextResponse.json({ message: 'Unknown signatory.' }, { status: 400 });
+      }
       const snap = await ref.get();
       const existing = snap.data();
       if (!snap.exists || !existing) return NextResponse.json({ message: 'Registration not found.' }, { status: 404 });
-      const email = String(existing.email || '').trim();
-      if (!email.includes('@')) return NextResponse.json({ message: 'This registration has no landlord email to send to.' }, { status: 400 });
 
       const token = generateFormsToken();
-      await ref.update({
-        firstFormsToken: token,
-        firstFormsExpires: Date.now() + POST_SIGN_FORMS_TTL_MS,
-        formsReminderAt: FieldValue.serverTimestamp(),
-        updatedAt: FieldValue.serverTimestamp(),
-      });
-      await sendPostSignFormsInvite({
-        id, token, party: 'first',
-        name: existing.fullName || existing.companyName || '',
-        email,
-        propertyAddress: propertyLine(existing) || '',
-      });
-      await logAction(auth, 'PATCH', '/api/staff/agreements', { id, action: 'remind-forms' });
+      const expires = Date.now() + POST_SIGN_FORMS_TTL_MS;
+      let email = '';
+      let name = '';
+
+      if (party === 'first') {
+        email = String(existing.email || '').trim();
+        name = existing.fullName || existing.companyName || '';
+        if (!email.includes('@')) return NextResponse.json({ message: 'This registration has no landlord email to send to.' }, { status: 400 });
+        await ref.update({ firstFormsToken: token, firstFormsExpires: expires, formsReminderAt: FieldValue.serverTimestamp(), updatedAt: FieldValue.serverTimestamp() });
+      } else if (party === 'second') {
+        if (existing.secondLandlordStatus !== 'completed') {
+          return NextResponse.json({ message: 'The joint landlord has not signed the agreement yet, so there are no forms to complete.' }, { status: 400 });
+        }
+        const s = existing.secondLandlord || {};
+        email = String(s.email || existing.landlord2Email || '').trim();
+        name = s.fullName || existing.landlord2Name || '';
+        if (!email.includes('@')) return NextResponse.json({ message: 'This joint landlord has no email to send to.' }, { status: 400 });
+        await ref.update({ secondFormsToken: token, secondFormsExpires: expires, formsReminderAt: FieldValue.serverTimestamp(), updatedAt: FieldValue.serverTimestamp() });
+      } else {
+        // Company director co-signer — the forms token lives on their array entry.
+        const coSigners: any[] = Array.isArray(existing.coSigners) ? existing.coSigners : [];
+        const idx = coSigners.findIndex(c => c?.id === party);
+        if (idx < 0) return NextResponse.json({ message: 'That signatory was not found on this registration.' }, { status: 404 });
+        const cs = coSigners[idx];
+        if (cs.status !== 'completed') {
+          return NextResponse.json({ message: 'This director has not signed the agreement yet, so there are no forms to complete.' }, { status: 400 });
+        }
+        email = String(cs.email || '').trim();
+        name = cs.fullName || cs.name || '';
+        if (!email.includes('@')) return NextResponse.json({ message: 'This director has no email to send to.' }, { status: 400 });
+        const updated = coSigners.map((c, i) => i === idx ? { ...c, formsToken: token, formsExpires: expires } : c);
+        await ref.update({ coSigners: updated, formsReminderAt: FieldValue.serverTimestamp(), updatedAt: FieldValue.serverTimestamp() });
+      }
+
+      await sendPostSignFormsInvite({ id, token, party, name, email, propertyAddress: propertyLine(existing) || '' });
+      await logAction(auth, 'PATCH', '/api/staff/agreements', { id, action: 'remind-forms', party });
       return NextResponse.json({ ok: true }, { status: 200 });
     }
 

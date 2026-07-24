@@ -36,6 +36,9 @@ async function internalEntries(db: ReturnType<typeof getAdminDb>, propertyId: st
   if (!propertyId) return [];
   const snap = await db.collection('ledgerEntries').where('propertyId', '==', propertyId).limit(500).get();
   return snap.docs.map(d => d.data() as any)
+    // Sheet-mirrored entries are excluded: the statement still live-reads the
+    // sheet, so counting them here would double-count (until the step-4 cutover).
+    .filter(e => e.source !== 'sheet')
     .filter(e => {
       const t = new Date(`${String(e.date || '').slice(0, 10)}T00:00:00`).getTime();
       return Number.isFinite(t) && t >= fromMs && t <= toMs;

@@ -170,3 +170,47 @@ export async function ledgerForProperty(q: LedgerQuery): Promise<LedgerResult> {
 export async function ledgerForPostcode(postcode: string): Promise<LedgerResult> {
   return ledgerForProperty({ postcode });
 }
+
+// ── Whole-sheet read (for the ledger mirror sync) ────────────────────────────
+export type RawSheetTxn = { date: string; amount: number; description: string; address: string; sheetKey: string };
+
+// Every transaction row across all tabs, with a stable dedupe key. The key
+// includes an occurrence index so genuine duplicates (same date/amount/address
+// on one tab) are not collapsed. Read-only; never touches the sheet.
+export async function readAllSheetTransactions(): Promise<{ configured: boolean; error?: boolean; rows: RawSheetTxn[] }> {
+  const sheetId = process.env.LANDLORD_LEDGER_SHEET_ID;
+  if (!sheetId) return { configured: false, rows: [] };
+  const rows: RawSheetTxn[] = [];
+  const occ = new Map<string, number>();
+  try {
+    for (const gid of gids()) {
+      const tab = await loadTab(sheetId, gid);
+      if (!tab.length) continue;
+      let hi = 0;
+      for (let i = 0; i < Math.min(tab.length, 6); i++) {
+        const h = tab[i].map(x => x.toLowerCase());
+        if (h.some(x => x.includes('property address')) && h.some(x => x.trim() === 'amount')) { hi = i; break; }
+      }
+      const header = tab[hi].map(x => x.trim().toLowerCase());
+      const colDate = header.findIndex(x => x === 'date');
+      const colAmount = header.findIndex(x => x === 'amount');
+      const colRef = header.findIndex(x => x.includes('payment reference'));
+      const colAddr = header.findIndex(x => x.includes('property address'));
+      if (colAmount < 0 || colAddr < 0) continue;
+      for (let i = hi + 1; i < tab.length; i++) {
+        const r = tab[i];
+        const address = (colAddr >= 0 ? r[colAddr] : '') || '';
+        const date = (colDate >= 0 ? r[colDate] : '') || '';
+        const amount = parseAmount(r[colAmount]);
+        const description = (colRef >= 0 ? r[colRef] : '') || '';
+        if (isNaN(amount) || amount === 0 || !address.trim()) continue;
+        const base = `${gid}|${date}|${amount}|${norm(address)}|${norm(description)}`;
+        const n = (occ.get(base) || 0) + 1; occ.set(base, n);
+        rows.push({ date, amount, description, address, sheetKey: `${base}#${n}` });
+      }
+    }
+  } catch {
+    return { configured: true, error: true, rows: [] };
+  }
+  return { configured: true, rows };
+}

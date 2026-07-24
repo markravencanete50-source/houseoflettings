@@ -1210,6 +1210,20 @@ export default function AdminDashboard() {
                     onChange={e => setSearchProp(e.target.value)}
                   />
                   <button
+                    onClick={async () => {
+                      if (!confirm('Import the bank Google Sheet into the internal ledger? Read-only on the sheet; safe to run any time.')) return;
+                      const res = await authedFetch('/api/staff/ledger-sync', { method: 'POST' });
+                      const j = await res.json().catch(() => ({}));
+                      if (!res.ok) { alert(j.message || 'Sync failed.'); return; }
+                      if (j.configured === false) { alert('The bank sheet isn’t connected (LANDLORD_LEDGER_SHEET_ID not set).'); return; }
+                      alert(`Bank sheet synced.\nImported: ${j.imported}\nAlready in ledger: ${j.skipped}\nUnassigned (no matching property): ${j.unassigned}`);
+                    }}
+                    title="Mirror the bank sheet into the internal ledger"
+                    style={{ padding: '10px 16px', background: '#eff5ff', color: '#2563eb', border: '1px solid #dbe4ff', borderRadius: 6, fontSize: 13, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }}
+                  >
+                    ↻ Sync bank sheet
+                  </button>
+                  <button
                     onClick={() => setTab('post')}
                     style={{
                       padding: '10px 18px', background: 'var(--red)', color: '#fff',

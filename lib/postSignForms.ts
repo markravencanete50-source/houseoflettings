@@ -252,9 +252,9 @@ export function formOfficeHtml(opts: { landlordName: string; formLabel: string; 
 export async function sendPostSignFormsInvite(opts: {
   id: string; token: string; party: 'first' | 'second' | string;
   name: string; email: string; propertyAddress: string;
-}) {
-  if (!opts.email || !opts.email.includes('@')) return;
-  await sendAgreementEmail({
+}): Promise<{ ok: boolean; error?: string }> {
+  if (!opts.email || !opts.email.includes('@')) return { ok: false, error: 'No valid email address on file.' };
+  return sendAgreementEmail({
     to: opts.email,
     subject: '📝 Two quick forms to finish your House of Lettings setup',
     html: postSignFormsInviteHtml({

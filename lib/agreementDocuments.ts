@@ -21,17 +21,34 @@ export type Attachment = { filename: string; content: string };
 // landlord and office receive already carries the Agent's signature.
 const AGENT_SIGNATORY = 'KASRA BELYANI';
 
-export async function sendAgreementEmail({ to, subject, html, attachments }: { to: string | string[]; subject: string; html: string; attachments?: Attachment[] }) {
-  const res = await fetch('https://api.resend.com/emails', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${process.env.RESEND_API_KEY}` },
-    body: JSON.stringify({
-      from: process.env.FROM_EMAIL || 'onboarding@resend.dev',
-      to, subject, html,
-      ...(attachments?.length ? { attachments } : {}),
-    }),
-  });
-  if (!res.ok) console.error('Agreement email failed:', await res.json().catch(() => ({})));
+// Returns { ok, error } so callers that need to confirm delivery (e.g. the
+// dashboard "send reminder" buttons) can surface a real failure instead of
+// reporting a false success. Fire-and-forget callers can still ignore the result.
+export async function sendAgreementEmail({ to, subject, html, attachments }: { to: string | string[]; subject: string; html: string; attachments?: Attachment[] }): Promise<{ ok: boolean; error?: string }> {
+  if (!process.env.RESEND_API_KEY) {
+    console.error('Agreement email skipped: RESEND_API_KEY missing');
+    return { ok: false, error: 'Email service is not configured (missing API key).' };
+  }
+  try {
+    const res = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${process.env.RESEND_API_KEY}` },
+      body: JSON.stringify({
+        from: process.env.FROM_EMAIL || 'onboarding@resend.dev',
+        to, subject, html,
+        ...(attachments?.length ? { attachments } : {}),
+      }),
+    });
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({}));
+      console.error('Agreement email failed:', body);
+      return { ok: false, error: (body?.message || body?.error || `Email provider returned ${res.status}`).toString() };
+    }
+    return { ok: true };
+  } catch (e: any) {
+    console.error('Agreement email threw:', e);
+    return { ok: false, error: 'Could not reach the email service.' };
+  }
 }
 
 export function propertyLine(data: any): string {

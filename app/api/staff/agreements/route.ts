@@ -198,8 +198,11 @@ export async function PATCH(request: Request) {
         await ref.update({ coSigners: updated, formsReminderAt: FieldValue.serverTimestamp(), updatedAt: FieldValue.serverTimestamp() });
       }
 
-      await sendPostSignFormsInvite({ id, token, party, name, email, propertyAddress: propertyLine(existing) || '' });
-      await logAction(auth, 'PATCH', '/api/staff/agreements', { id, action: 'remind-forms', party });
+      const sent = await sendPostSignFormsInvite({ id, token, party, name, email, propertyAddress: propertyLine(existing) || '' });
+      await logAction(auth, 'PATCH', '/api/staff/agreements', { id, action: 'remind-forms', party, emailOk: sent.ok });
+      if (!sent.ok) {
+        return NextResponse.json({ message: `Could not email ${email}: ${sent.error || 'the email provider rejected it.'}` }, { status: 502 });
+      }
       return NextResponse.json({ ok: true }, { status: 200 });
     }
 
@@ -217,12 +220,15 @@ export async function PATCH(request: Request) {
       const existing = snap.data();
       if (!snap.exists || !existing) return NextResponse.json({ message: 'Registration not found.' }, { status: 404 });
 
+      let sent: { ok: boolean; error?: string };
+      let recipient = '';
       if (party === 'second') {
         if (existing.secondLandlordStatus && existing.secondLandlordStatus !== 'pending') {
           return NextResponse.json({ message: 'The joint landlord has already responded, so there is nothing to chase.' }, { status: 400 });
         }
         const email = String(existing.landlord2Email || '').trim();
         if (!email.includes('@')) return NextResponse.json({ message: 'This joint landlord has no email to send to.' }, { status: 400 });
+        recipient = email;
         const token = generateSecondLandlordToken();
         await ref.update({
           secondLandlordToken: token,
@@ -231,7 +237,7 @@ export async function PATCH(request: Request) {
           agreementReminderAt: FieldValue.serverTimestamp(),
           updatedAt: FieldValue.serverTimestamp(),
         });
-        await sendSecondEmail({
+        sent = await sendSecondEmail({
           to: email,
           subject: '👥 Reminder: your joint landlord agreement is waiting | House of Lettings',
           html: secondLandlordInviteHtml({
@@ -252,6 +258,7 @@ export async function PATCH(request: Request) {
         }
         const email = String(cs.email || '').trim();
         if (!email.includes('@')) return NextResponse.json({ message: 'This director has no email to send to.' }, { status: 400 });
+        recipient = email;
         const token = generateCoSignerToken();
         const updated = coSigners.map((c, i) => i === idx ? { ...c, token } : c);
         await ref.update({
@@ -261,7 +268,7 @@ export async function PATCH(request: Request) {
           updatedAt: FieldValue.serverTimestamp(),
         });
         const bundle = findBundle(existing.selectedPackageId) || findBundle(existing.selectedPackage);
-        await sendCoSignerInvites({
+        sent = await sendCoSignerInvites({
           id, coSigners: [updated[idx]],
           companyName: existing.companyName || '',
           managingDirector: existing.fullName || '',
@@ -270,7 +277,10 @@ export async function PATCH(request: Request) {
         });
       }
 
-      await logAction(auth, 'PATCH', '/api/staff/agreements', { id, action: 'remind-agreement', party });
+      await logAction(auth, 'PATCH', '/api/staff/agreements', { id, action: 'remind-agreement', party, emailOk: sent.ok });
+      if (!sent.ok) {
+        return NextResponse.json({ message: `Could not email ${recipient}: ${sent.error || 'the email provider rejected it.'}` }, { status: 502 });
+      }
       return NextResponse.json({ ok: true }, { status: 200 });
     }
 

@@ -78,11 +78,13 @@ export function coSignerDeclinedHtml(opts: { toDirector: string; signerName: str
   `);
 }
 
-// Email every co-signer their invite. Best-effort; wrap in Promise.allSettled.
+// Email every co-signer their invite. Returns { ok, error }: ok only if every
+// invite was accepted by the provider, so a single-director reminder can surface
+// a real delivery failure. Bulk callers (registration) can ignore the result.
 export async function sendCoSignerInvites(opts: {
   id: string; coSigners: CoSigner[]; companyName: string; managingDirector: string; packageLabel: string; propertyAddress: string;
-}) {
-  await Promise.allSettled(opts.coSigners.map(cs =>
+}): Promise<{ ok: boolean; error?: string }> {
+  const results = await Promise.all(opts.coSigners.map(cs =>
     sendAgreementEmail({
       to: cs.email,
       subject: `✍️ Please review and sign — ${opts.companyName || 'company'} registration | House of Lettings`,
@@ -90,6 +92,8 @@ export async function sendCoSignerInvites(opts: {
         signerName: cs.name, companyName: opts.companyName, managingDirector: opts.managingDirector,
         packageLabel: opts.packageLabel, propertyAddress: opts.propertyAddress, link: coSignerLink(opts.id, cs.token),
       }),
-    }),
+    }).catch((e): { ok: boolean; error?: string } => ({ ok: false, error: e?.message || 'Email send failed.' })),
   ));
+  const failed = results.find(r => !r.ok);
+  return failed ? { ok: false, error: failed.error } : { ok: true };
 }

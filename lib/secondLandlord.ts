@@ -16,14 +16,27 @@ export function generateSecondLandlordToken(): string {
   return randomBytes(24).toString('hex');
 }
 
-export async function sendEmail({ to, subject, html, attachments }: { to: string | string[]; subject: string; html: string; attachments?: Attachment[] }) {
-  if (!process.env.RESEND_API_KEY) { console.warn('secondLandlord: RESEND_API_KEY missing, email skipped'); return; }
-  const res = await fetch('https://api.resend.com/emails', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${process.env.RESEND_API_KEY}` },
-    body: JSON.stringify({ from: process.env.FROM_EMAIL || 'onboarding@resend.dev', to, subject, html, ...(attachments?.length ? { attachments } : {}) }),
-  });
-  if (!res.ok) console.error('secondLandlord email failed:', await res.json().catch(() => ({})));
+export async function sendEmail({ to, subject, html, attachments }: { to: string | string[]; subject: string; html: string; attachments?: Attachment[] }): Promise<{ ok: boolean; error?: string }> {
+  if (!process.env.RESEND_API_KEY) {
+    console.warn('secondLandlord: RESEND_API_KEY missing, email skipped');
+    return { ok: false, error: 'Email service is not configured (missing API key).' };
+  }
+  try {
+    const res = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${process.env.RESEND_API_KEY}` },
+      body: JSON.stringify({ from: process.env.FROM_EMAIL || 'onboarding@resend.dev', to, subject, html, ...(attachments?.length ? { attachments } : {}) }),
+    });
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({}));
+      console.error('secondLandlord email failed:', body);
+      return { ok: false, error: (body?.message || body?.error || `Email provider returned ${res.status}`).toString() };
+    }
+    return { ok: true };
+  } catch (e) {
+    console.error('secondLandlord email threw:', e);
+    return { ok: false, error: 'Could not reach the email service.' };
+  }
 }
 
 function shell(headline: string, inner: string): string {

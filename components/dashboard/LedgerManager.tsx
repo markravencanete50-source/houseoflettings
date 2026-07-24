@@ -14,11 +14,12 @@ const iso = (d: Date) => d.toISOString().slice(0, 10);
 const inputStyle: React.CSSProperties = { width: '100%', padding: '8px 10px', border: '1.5px solid var(--gray-200)', borderRadius: 8, fontSize: 13, background: '#fff' };
 
 export default function LedgerManager({
-  authedFetch, property, onClose,
+  authedFetch, property, onClose, embedded = false,
 }: {
   authedFetch: (path: string, init?: RequestInit) => Promise<Response>;
   property: { id: string; label: string; landlordId?: string };
   onClose: () => void;
+  embedded?: boolean; // render inline (no modal overlay), for the Manage page
 }) {
   const [entries, setEntries] = useState<Entry[]>([]);
   const [loading, setLoading] = useState(true);
@@ -74,17 +75,18 @@ export default function LedgerManager({
     try { await authedFetch(`/api/staff/ledger?id=${encodeURIComponent(id)}`, { method: 'DELETE' }); } catch { load(); }
   };
 
-  return (
-    <div style={{ position: 'fixed', inset: 0, zIndex: 4000, background: 'rgba(10,22,47,.55)', display: 'flex', alignItems: 'flex-start', justifyContent: 'center', padding: 20, overflowY: 'auto' }} onClick={() => !saving && onClose()}>
-      <div onClick={e => e.stopPropagation()} style={{ width: '100%', maxWidth: 640, background: '#fff', borderRadius: 16, padding: '24px 26px', margin: '24px 0', boxShadow: '0 30px 80px rgba(0,0,0,.4)' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12 }}>
-          <div>
-            <h2 style={{ margin: '0 0 3px', fontSize: 18, fontWeight: 800, color: '#0a162f' }}>Account entries</h2>
-            <p style={{ margin: 0, fontSize: 12.5, color: '#6b7280' }}>{property.label}</p>
+  const card = (
+    <div onClick={e => e.stopPropagation()} style={{ width: '100%', maxWidth: embedded ? undefined : 640, background: '#fff', borderRadius: embedded ? 0 : 16, padding: embedded ? 0 : '24px 26px', margin: embedded ? 0 : '24px 0', boxShadow: embedded ? 'none' : '0 30px 80px rgba(0,0,0,.4)' }}>
+        {!embedded && (
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12 }}>
+            <div>
+              <h2 style={{ margin: '0 0 3px', fontSize: 18, fontWeight: 800, color: '#0a162f' }}>Account entries</h2>
+              <p style={{ margin: 0, fontSize: 12.5, color: '#6b7280' }}>{property.label}</p>
+            </div>
+            <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: 22, cursor: 'pointer', color: '#9aa4b2', lineHeight: 1 }}>×</button>
           </div>
-          <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: 22, cursor: 'pointer', color: '#9aa4b2', lineHeight: 1 }}>×</button>
-        </div>
-        <p style={{ fontSize: 12.5, color: '#9aa4b2', margin: '10px 0 16px', lineHeight: 1.5 }}>
+        )}
+        <p style={{ fontSize: 12.5, color: '#9aa4b2', margin: embedded ? '0 0 16px' : '10px 0 16px', lineHeight: 1.5 }}>
           These merge into the landlord&rsquo;s statement alongside the bank sheet. Use for anything not already in the sheet.
         </p>
 
@@ -125,7 +127,13 @@ export default function LedgerManager({
             </div>
           )}
         </div>
-      </div>
+    </div>
+  );
+
+  if (embedded) return card;
+  return (
+    <div style={{ position: 'fixed', inset: 0, zIndex: 4000, background: 'rgba(10,22,47,.55)', display: 'flex', alignItems: 'flex-start', justifyContent: 'center', padding: 20, overflowY: 'auto' }} onClick={() => !saving && onClose()}>
+      {card}
     </div>
   );
 }

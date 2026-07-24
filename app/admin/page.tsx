@@ -18,6 +18,7 @@ import MaintenanceTicketForm from '@/components/dashboard/MaintenanceTicketForm'
 import ApplicationAssign from '@/components/dashboard/ApplicationAssign';
 import LedgerManager from '@/components/dashboard/LedgerManager';
 import DemoPanel from '@/components/dashboard/DemoPanel';
+import ManagePortalPanel from '@/components/dashboard/ManagePortalPanel';
 import ServicePricingEditor from '@/components/dashboard/ServicePricingEditor';
 import { useAuth } from '@/hooks/useAuth';
 import { isDualAccessEmail } from '@/lib/dualAccess';
@@ -50,7 +51,7 @@ import {
   updateDoc, addDoc, serverTimestamp, Timestamp,
 } from 'firebase/firestore';
 
-type Tab = 'analytics' | 'users' | 'properties' | 'post' | 'edit' | 'valuations' | 'reviews' | 'applications' | 'orders' | 'maintenance' | 'rent-reviews' | 'agreements' | 'landlords' | 'activity' | 'deleted' | 'demo';
+type Tab = 'analytics' | 'users' | 'properties' | 'post' | 'edit' | 'manage' | 'valuations' | 'reviews' | 'applications' | 'orders' | 'maintenance' | 'rent-reviews' | 'agreements' | 'landlords' | 'activity' | 'deleted' | 'demo';
 
 interface DeletedItem {
   id: string;
@@ -444,6 +445,7 @@ export default function AdminDashboard() {
   const [maintenance, setMaintenance] = useState<MaintenanceRequest[]>([]);
   const [ticketForm, setTicketForm] = useState<null | 'new' | MaintenanceRequest>(null);
   const [ledgerProp, setLedgerProp] = useState<{ id: string; label: string; landlordId?: string } | null>(null);
+  const [managingProperty, setManagingProperty] = useState<Property | null>(null);
   const reloadMaintenance = () =>
     authedFetch('/api/staff/maintenance').then(r => r.json()).then(j => setMaintenance((j.requests || []) as MaintenanceRequest[])).catch(() => {});
   const [expandedMaint, setExpandedMaint] = useState<string | null>(null);
@@ -844,6 +846,7 @@ export default function AdminDashboard() {
     { id: 'deleted',    icon: '🗑️', label: `Deleted${deletedItems.length ? ` (${deletedItems.length})` : ''}` },
     { id: 'post',       icon: '➕', label: 'Post Property' },
     ...(editingProperty ? [{ id: 'edit' as Tab, icon: '✏️', label: 'Edit Property' }] : []),
+    ...(managingProperty ? [{ id: 'manage' as Tab, icon: '⚙️', label: 'Manage Portal' }] : []),
   ];
 
   const statusColor: Record<Valuation['status'], { bg: string; color: string }> = {
@@ -1353,6 +1356,9 @@ export default function AdminDashboard() {
                               <option value="pending">Pending</option>
                               <option value="let-agreed">Let Agreed</option>
                             </select>
+                            <button onClick={() => { setManagingProperty(p); setTab('manage'); }} title="Manage everything this landlord sees for this property" style={{ padding: '5px 10px', border: '1px solid #0a162f', color: '#0a162f', background: '#fff', borderRadius: 4, fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>
+                              ⚙ Manage
+                            </button>
                             <button onClick={() => setLedgerProp({ id: p.id!, label: p.location || p.title || 'Property', landlordId: (p as any).landlordId })} title="Account entries (merge into landlord statement)" style={{ padding: '5px 10px', border: '1px solid #2563eb', color: '#2563eb', background: '#fff', borderRadius: 4, fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>
                               £ Account
                             </button>
@@ -1952,6 +1958,15 @@ export default function AdminDashboard() {
           {tab === 'landlords' && <LandlordsPanel canDelete />}
 
           {tab === 'demo' && <DemoPanel authedFetch={authedFetch} />}
+
+          {tab === 'manage' && managingProperty && (
+            <ManagePortalPanel
+              property={managingProperty}
+              authedFetch={authedFetch}
+              onBack={() => { setManagingProperty(null); setTab('properties'); }}
+              onSaved={() => getAllProperties().then(p => setProperties(p))}
+            />
+          )}
 
           {/* ── Rent Reviews ── */}
           {tab === 'rent-reviews' && (

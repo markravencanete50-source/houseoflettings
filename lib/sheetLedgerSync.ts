@@ -75,3 +75,87 @@ export async function syncSheetToLedger(db: ReturnType<typeof getAdminDb>): Prom
   await flush();
   return { configured: true, imported, skipped, unassigned, total: rows.length };
 }
+
+// ── Reconciliation: does the mirror account for every sheet row? ─────────────
+export type Reconciliation = {
+  configured: boolean;
+  sheet: { count: number; in: number; out: number };
+  ledger: { count: number; in: number; out: number };
+  unassigned: { count: number; in: number; out: number };
+  balanced: boolean; // every sheet row is either mirrored or queued
+};
+
+export async function getReconciliation(db: ReturnType<typeof getAdminDb>): Promise<Reconciliation> {
+  const { configured, rows } = await readAllSheetTransactions();
+  const sheet = {
+    count: rows.length,
+    in: rows.reduce((s, r) => s + (r.amount > 0 ? r.amount : 0), 0),
+    out: rows.reduce((s, r) => s + (r.amount < 0 ? -r.amount : 0), 0),
+  };
+  const led = await db.collection('ledgerEntries').where('source', '==', 'sheet').get();
+  let lIn = 0, lOut = 0;
+  led.docs.forEach(d => { const e = d.data() as any; const a = Math.abs(Number(e.amount) || 0); if (e.direction === 'in') lIn += a; else lOut += a; });
+  const un = await db.collection('sheetSyncUnassigned').get();
+  const unresolved = un.docs.filter(d => !(d.data() as any).resolved);
+  let uIn = 0, uOut = 0;
+  unresolved.forEach(d => { const e = d.data() as any; const a = Math.abs(Number(e.amount) || 0); if ((e.amount || 0) > 0) uIn += a; else uOut += a; });
+  return {
+    configured,
+    sheet,
+    ledger: { count: led.size, in: lIn, out: lOut },
+    unassigned: { count: unresolved.length, in: uIn, out: uOut },
+    balanced: sheet.count === led.size + unresolved.length,
+  };
+}
+
+export async function getUnassigned(db: ReturnType<typeof getAdminDb>) {
+  const snap = await db.collection('sheetSyncUnassigned').limit(500).get();
+  return snap.docs
+    .filter(d => !(d.data() as any).resolved)
+    .map(d => { const e = d.data() as any; return { id: d.id, date: e.date || '', amount: Number(e.amount) || 0, description: e.description || '', address: e.address || '' }; })
+    .sort((a, b) => String(b.date).localeCompare(String(a.date)));
+}
+
+// Assign one queued row (optionally every queued row with the same address) to a
+// property: create its 'sheet' ledger entry and remove it from the queue.
+export async function resolveUnassigned(db: ReturnType<typeof getAdminDb>, opts: { id: string; propertyId: string; applyToAddress?: boolean }): Promise<{ resolved: number; error?: string }> {
+  const propSnap = await db.collection('properties').doc(opts.propertyId).get();
+  if (!propSnap.exists) return { resolved: 0, error: 'Property not found.' };
+  const p = propSnap.data() as any;
+  const match = { id: propSnap.id, landlordId: p.landlordId || '', label: p.location || p.title || '' };
+
+  const first = await db.collection('sheetSyncUnassigned').doc(opts.id).get();
+  if (!first.exists) return { resolved: 0, error: 'That queued row no longer exists.' };
+
+  let targets = [first];
+  if (opts.applyToAddress) {
+    const addrNorm = norm((first.data() as any).address || '');
+    const all = await db.collection('sheetSyncUnassigned').get();
+    targets = all.docs.filter(d => !(d.data() as any).resolved && norm((d.data() as any).address || '') === addrNorm);
+  }
+
+  const existing = await db.collection('ledgerEntries').where('source', '==', 'sheet').get();
+  const seen = new Set<string>(existing.docs.map(d => (d.data() as any).sheetKey).filter(Boolean));
+
+  let resolved = 0;
+  let batch = db.batch(); let ops = 0;
+  const flush = async () => { if (ops) { await batch.commit(); batch = db.batch(); ops = 0; } };
+  for (const t of targets) {
+    const r = t.data() as any;
+    if (!seen.has(r.sheetKey)) {
+      const direction = r.amount >= 0 ? 'in' : 'out';
+      const ref = db.collection('ledgerEntries').doc();
+      batch.set(ref, {
+        source: 'sheet', sheetKey: r.sheetKey, propertyId: match.id, landlordId: match.landlordId, propertyLabel: match.label,
+        type: direction === 'in' ? 'rent_in' : 'payment_to_landlord', direction,
+        amount: Math.abs(r.amount), date: isoDate(r.date), description: r.description || '', reference: r.description || '',
+        createdAt: FieldValue.serverTimestamp(), updatedAt: FieldValue.serverTimestamp(),
+      });
+      seen.add(r.sheetKey); ops++;
+    }
+    batch.delete(t.ref); ops++; resolved++;
+    if (ops >= 400) await flush();
+  }
+  await flush();
+  return { resolved };
+}

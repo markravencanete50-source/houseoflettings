@@ -19,6 +19,7 @@ import ApplicationAssign from '@/components/dashboard/ApplicationAssign';
 import LedgerManager from '@/components/dashboard/LedgerManager';
 import DemoPanel from '@/components/dashboard/DemoPanel';
 import ManagePortalPanel from '@/components/dashboard/ManagePortalPanel';
+import LedgerSyncPanel from '@/components/dashboard/LedgerSyncPanel';
 import ServicePricingEditor from '@/components/dashboard/ServicePricingEditor';
 import { useAuth } from '@/hooks/useAuth';
 import { isDualAccessEmail } from '@/lib/dualAccess';
@@ -51,7 +52,7 @@ import {
   updateDoc, addDoc, serverTimestamp, Timestamp,
 } from 'firebase/firestore';
 
-type Tab = 'analytics' | 'users' | 'properties' | 'post' | 'edit' | 'manage' | 'valuations' | 'reviews' | 'applications' | 'orders' | 'maintenance' | 'rent-reviews' | 'agreements' | 'landlords' | 'activity' | 'deleted' | 'demo';
+type Tab = 'analytics' | 'users' | 'properties' | 'post' | 'edit' | 'manage' | 'valuations' | 'reviews' | 'applications' | 'orders' | 'maintenance' | 'rent-reviews' | 'agreements' | 'landlords' | 'activity' | 'deleted' | 'demo' | 'ledger-sync';
 
 interface DeletedItem {
   id: string;
@@ -842,6 +843,7 @@ export default function AdminDashboard() {
     { id: 'orders',     icon: '🛒', label: `Orders (${orders.length})` },
     { id: 'maintenance', icon: '🔧', label: `Maintenance (${maintenance.length})` },
     { id: 'activity',   icon: '🕵️', label: 'Activity Logs' },
+    { id: 'ledger-sync', icon: '🏦', label: 'Bank sync' },
     { id: 'demo',       icon: '🧪', label: 'Demo / Test' },
     { id: 'deleted',    icon: '🗑️', label: `Deleted${deletedItems.length ? ` (${deletedItems.length})` : ''}` },
     { id: 'post',       icon: '➕', label: 'Post Property' },
@@ -1958,6 +1960,8 @@ export default function AdminDashboard() {
           {tab === 'landlords' && <LandlordsPanel canDelete />}
 
           {tab === 'demo' && <DemoPanel authedFetch={authedFetch} />}
+
+          {tab === 'ledger-sync' && <LedgerSyncPanel authedFetch={authedFetch} />}
 
           {tab === 'manage' && managingProperty && (
             <ManagePortalPanel

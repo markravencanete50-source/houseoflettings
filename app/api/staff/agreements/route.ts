@@ -16,6 +16,7 @@ import { htmlEscapeDeep, sanitizeUploadUrlFieldsDeep } from '@/lib/security';
 import { findBundle } from '@/lib/agreementContent';
 import { issueAgreementDocuments, sendAgreementEmail, propertyLine, feeLine } from '@/lib/agreementDocuments';
 import { loadAgreementTemplate } from '@/lib/agreementTemplateStore';
+import { sendPostSignFormsInvite, generateFormsToken, POST_SIGN_FORMS_TTL_MS } from '@/lib/postSignForms';
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.houseoflettings.uk';
 const REISSUE_TTL_MS = 14 * 24 * 60 * 60 * 1000; // 14 days
@@ -37,7 +38,8 @@ export async function GET(request: Request) {
     const auth = await requireStaff(request, 'agreements');
     if (auth instanceof Response) return auth;
 
-    const snapshot = await getAdminDb().collection('landlordAgreements')
+    const db = getAdminDb();
+    const snapshot = await db.collection('landlordAgreements')
       .orderBy('createdAt', 'desc')
       .limit(100)
       .get();
@@ -56,6 +58,23 @@ export async function GET(request: Request) {
         createdAt: data.createdAt?.toDate?.()?.toISOString() || null,
       };
     });
+
+    // Enrich each registration with its landlord's PORTAL status (whether they've
+    // signed in yet, and whether they've set their own password) — these live on
+    // the users doc, keyed by the agreement's landlordUid. One batched read.
+    const uids = Array.from(new Set(agreements.map(a => (a as any).landlordUid).filter(Boolean))) as string[];
+    if (uids.length) {
+      const userSnaps = await db.getAll(...uids.map(uid => db.collection('users').doc(uid)));
+      const byUid = new Map<string, any>();
+      userSnaps.forEach(s => { if (s.exists) byUid.set(s.id, s.data() || {}); });
+      for (const a of agreements as any[]) {
+        const u = a.landlordUid ? byUid.get(a.landlordUid) : null;
+        if (!u) continue;
+        a.portalAccessed = !!(u.lastLoginAt || u.firstLoginAt);
+        a.passwordReset = u.mustResetPassword === false;
+        a.portalLastLoginAt = u.lastLoginAt?.toDate?.()?.toISOString?.() || null;
+      }
+    }
 
     return NextResponse.json({ agreements }, { status: 200 });
   } catch (e) {
@@ -113,6 +132,34 @@ export async function PATCH(request: Request) {
 
     const db = getAdminDb();
     const ref = db.collection('landlordAgreements').doc(id);
+
+    // ── Form reminder path ──
+    // Re-send the two post-agreement forms (Authorised Rep + Bank/AML) to the
+    // first landlord. Mints a fresh 30-day token so the emailed links are valid
+    // even if the original invite has long expired.
+    if (body.action === 'remind-forms') {
+      const snap = await ref.get();
+      const existing = snap.data();
+      if (!snap.exists || !existing) return NextResponse.json({ message: 'Registration not found.' }, { status: 404 });
+      const email = String(existing.email || '').trim();
+      if (!email.includes('@')) return NextResponse.json({ message: 'This registration has no landlord email to send to.' }, { status: 400 });
+
+      const token = generateFormsToken();
+      await ref.update({
+        firstFormsToken: token,
+        firstFormsExpires: Date.now() + POST_SIGN_FORMS_TTL_MS,
+        formsReminderAt: FieldValue.serverTimestamp(),
+        updatedAt: FieldValue.serverTimestamp(),
+      });
+      await sendPostSignFormsInvite({
+        id, token, party: 'first',
+        name: existing.fullName || existing.companyName || '',
+        email,
+        propertyAddress: propertyLine(existing) || '',
+      });
+      await logAction(auth, 'PATCH', '/api/staff/agreements', { id, action: 'remind-forms' });
+      return NextResponse.json({ ok: true }, { status: 200 });
+    }
 
     // ── Edit path ──
     if (body.action === 'edit') {

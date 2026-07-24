@@ -29,6 +29,8 @@ export async function GET(request: Request) {
         properties: postcodes.length,
         registrations: agreementIds.length,
         activated: d.mustResetPassword === false, // they've set their own password
+        signedIn: !!(d.lastLoginAt || d.firstLoginAt), // used their credentials at least once
+        lastLoginAt: iso(d.lastLoginAt),
         createdAt: iso(d.accountProvisionedAt) || iso(d.createdAt),
       };
     }).sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''));
@@ -38,6 +40,7 @@ export async function GET(request: Request) {
       count: landlords.length,
       totalProperties: landlords.reduce((s, l) => s + l.properties, 0),
       activatedCount: landlords.filter(l => l.activated).length,
+      signedInCount: landlords.filter(l => l.signedIn).length,
     }, { status: 200 });
   } catch (e) {
     console.error('staff/landlords error:', e);

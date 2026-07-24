@@ -13,7 +13,8 @@ import { auth } from '@/lib/firebase';
 
 interface Landlord {
   uid: string; name: string; email: string; phone: string;
-  properties: number; registrations: number; activated: boolean; createdAt: string | null;
+  properties: number; registrations: number; activated: boolean;
+  signedIn?: boolean; lastLoginAt?: string | null; createdAt: string | null;
 }
 
 async function authedFetch(path: string, init?: RequestInit) {
@@ -25,7 +26,7 @@ async function authedFetch(path: string, init?: RequestInit) {
 
 export default function LandlordsPanel({ canDelete = false }: { canDelete?: boolean }) {
   const [landlords, setLandlords] = useState<Landlord[]>([]);
-  const [stats, setStats] = useState({ count: 0, totalProperties: 0, activatedCount: 0 });
+  const [stats, setStats] = useState({ count: 0, totalProperties: 0, activatedCount: 0, signedInCount: 0 });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [target, setTarget] = useState<Landlord | null>(null); // deletion confirmation
@@ -40,7 +41,7 @@ export default function LandlordsPanel({ canDelete = false }: { canDelete?: bool
         const json = await res.json().catch(() => ({}));
         if (!res.ok) throw new Error(json.message || `HTTP ${res.status}`);
         setLandlords(json.landlords || []);
-        setStats({ count: json.count || 0, totalProperties: json.totalProperties || 0, activatedCount: json.activatedCount || 0 });
+        setStats({ count: json.count || 0, totalProperties: json.totalProperties || 0, activatedCount: json.activatedCount || 0, signedInCount: json.signedInCount || 0 });
       } catch (e: any) {
         setError(e.message || 'Failed to load landlords');
       } finally {
@@ -63,6 +64,7 @@ export default function LandlordsPanel({ canDelete = false }: { canDelete?: bool
         count: Math.max(0, s.count - 1),
         totalProperties: Math.max(0, s.totalProperties - (target.properties || 0)),
         activatedCount: Math.max(0, s.activatedCount - (target.activated ? 1 : 0)),
+        signedInCount: Math.max(0, s.signedInCount - (target.signedIn ? 1 : 0)),
       }));
       setTarget(null); setConfirmText('');
     } catch (e: any) {
@@ -83,7 +85,8 @@ export default function LandlordsPanel({ canDelete = false }: { canDelete?: bool
         {[
           { label: 'Total landlords', value: stats.count, icon: '👤' },
           { label: 'Registered properties', value: stats.totalProperties, icon: '🏠' },
-          { label: 'Activated logins', value: stats.activatedCount, icon: '✅' },
+          { label: 'Signed in at least once', value: stats.signedInCount, icon: '🔓' },
+          { label: 'Own password set', value: stats.activatedCount, icon: '✅' },
         ].map(s => (
           <div key={s.label} className="dash-card" style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 0 }}>
             <div style={{ fontSize: 30 }}>{s.icon}</div>
@@ -108,7 +111,7 @@ export default function LandlordsPanel({ canDelete = false }: { canDelete?: bool
         <div className="dash-card" style={{ padding: 0, overflow: 'hidden' }}>
           <table className="data-table">
             <thead>
-              <tr><th>Landlord</th><th>Email</th><th>Phone</th><th>Properties</th><th>Registrations</th><th>Status</th><th>Since</th>{canDelete && <th></th>}</tr>
+              <tr><th>Landlord</th><th>Email</th><th>Phone</th><th>Properties</th><th>Registrations</th><th>Portal access</th><th>Status</th><th>Since</th>{canDelete && <th></th>}</tr>
             </thead>
             <tbody>
               {landlords.map(l => (
@@ -119,10 +122,18 @@ export default function LandlordsPanel({ canDelete = false }: { canDelete?: bool
                   <td>{l.properties}</td>
                   <td>{l.registrations}</td>
                   <td>
+                    <span className="status-badge" style={l.signedIn
+                      ? { background: '#e8f0fe', color: '#1a56db' }
+                      : { background: '#f3f4f6', color: '#6b7280' }}
+                      title={l.signedIn && l.lastLoginAt ? `Last signed in ${fmtDate(l.lastLoginAt)}` : 'Credentials emailed — not signed in yet'}>
+                      {l.signedIn ? '🔓 Signed in' : 'Not signed in'}
+                    </span>
+                  </td>
+                  <td>
                     <span className="status-badge" style={l.activated
                       ? { background: '#e8f5e9', color: '#2e7d32' }
                       : { background: '#fff8e1', color: '#f57f17' }}>
-                      {l.activated ? 'Active' : 'Pending reset'}
+                      {l.activated ? 'Own password' : 'Temp password'}
                     </span>
                   </td>
                   <td style={{ color: 'var(--gray-600)', fontSize: 13 }}>{fmtDate(l.createdAt)}</td>

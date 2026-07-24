@@ -6,6 +6,7 @@
 // cookie the /api/landlord/* routes accept.
 import { NextResponse } from 'next/server';
 import { getAuth } from 'firebase-admin/auth';
+import { FieldValue } from 'firebase-admin/firestore';
 import { getAdminDb } from '@/lib/staffApiAuth';
 import { rateLimit } from '@/lib/rateLimit';
 import { getLockState, registerFailure, clearLockout } from '@/lib/loginLockout';
@@ -87,6 +88,18 @@ export async function POST(request: Request) {
     // reach the portal with the same account they use for the admin dashboard.
     if (data.role !== 'landlord' && data.role !== 'admin') {
       return NextResponse.json({ message: 'This login is for registered landlords. Staff should use the team login.' }, { status: 403 });
+    }
+
+    // Record portal access so the dashboards can show that this landlord has
+    // actually signed in (i.e. used the temporary credentials at least once).
+    // Best-effort: a write failure must never block a valid sign-in.
+    try {
+      await getAdminDb().collection('users').doc(uid).set({
+        lastLoginAt: FieldValue.serverTimestamp(),
+        ...(data.firstLoginAt ? {} : { firstLoginAt: FieldValue.serverTimestamp() }),
+      }, { merge: true });
+    } catch (e) {
+      console.error('landlord-login: could not record login time', e);
     }
 
     // 3. Mint a Firebase session cookie from the fresh ID token.

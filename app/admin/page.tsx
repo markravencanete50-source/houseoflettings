@@ -13,6 +13,7 @@ import LandlordsPanel from '@/components/dashboard/LandlordsPanel';
 import SecondLandlordDetails from '@/components/dashboard/SecondLandlordDetails';
 import CoSignersDetails from '@/components/dashboard/CoSignersDetails';
 import AgreementExtraDetails from '@/components/dashboard/AgreementExtraDetails';
+import { LandlordProgressBadge, LandlordProgressPanel } from '@/components/dashboard/LandlordProgress';
 import ServicePricingEditor from '@/components/dashboard/ServicePricingEditor';
 import { useAuth } from '@/hooks/useAuth';
 import { isDualAccessEmail } from '@/lib/dualAccess';
@@ -94,6 +95,13 @@ interface Agreement {
   landlord2Phone?: string;
   status: string;
   createdAt: string | null;
+  postSignForms?: Record<string, any>;
+  landlordUid?: string;
+  accountProvisioned?: boolean;
+  portalAccessed?: boolean;
+  passwordReset?: boolean;
+  portalLastLoginAt?: string | null;
+  ownerType?: string; companyName?: string;
 }
 
 const AGREEMENT_STATUSES = ['signed', 'countersigned', 'active', 'completed', 'cancelled'] as const;
@@ -729,6 +737,18 @@ export default function AdminDashboard() {
     } catch (e) {
       console.error('agreement edit failed:', e);
       return false;
+    }
+  };
+
+  // Re-send the two post-agreement forms (Authorisation + Bank/AML) to the landlord.
+  const remindLandlordForms = async (id: string): Promise<{ ok: boolean; message?: string }> => {
+    try {
+      const res = await authedFetch('/api/staff/agreements', { method: 'PATCH', body: JSON.stringify({ id, action: 'remind-forms' }) });
+      const j = await res.json().catch(() => ({}));
+      if (!res.ok) return { ok: false, message: j.message || `HTTP ${res.status}` };
+      return { ok: true };
+    } catch {
+      return { ok: false, message: 'Network error — please try again.' };
     }
   };
 
@@ -1963,6 +1983,7 @@ export default function AdminDashboard() {
                                   👥 {a.secondLandlordStatus === 'completed' ? 'Joint signed' : a.secondLandlordStatus === 'declined' ? 'Joint declined' : 'Joint pending'}
                                 </span>
                               )}
+                              <LandlordProgressBadge a={a as Record<string, any>} />
                             </div>
                             <div style={{ fontSize: 12.5, color: 'var(--gray-400)', marginTop: 3 }}>
                               {a.selectedPackage || 'Package not set'} · {propLine || 'No property'} · {when}
@@ -2028,6 +2049,7 @@ export default function AdminDashboard() {
                                 )}
                               </div>
                             )}
+                            <LandlordProgressPanel a={a as Record<string, any>} onRemind={remindLandlordForms} />
                             <SecondLandlordDetails a={a as Record<string, any>} />
                             <CoSignersDetails a={a as Record<string, any>} />
                             <AgreementExtraDetails a={a as Record<string, any>} />

@@ -12,9 +12,10 @@ import { hasTenancyData } from '@/lib/tenancyFields';
 import CompliancePanel from '@/components/landlord/CompliancePanel';
 import AccountPanel from '@/components/landlord/AccountPanel';
 import TenancyOverview from '@/components/landlord/TenancyOverview';
+import ApplicationPipeline from '@/components/landlord/ApplicationPipeline';
 
 export type PDProp = { id: string; agreementId?: string; label: string; postcode?: string; city?: string; type?: string; bedrooms?: string; bathrooms?: string; furnishing?: string; rent?: string; occupancy?: string; availableFrom?: string; tenancyStart?: string; tenancyEnd?: string; packageId?: string; packageLabel?: string; tenancy?: Record<string, any> };
-export type PDApplication = { id: string; fullName: string; propertyAddress: string; postcode?: string; rent: string; leaseTerm: string; status: string; submittedAt: string | null };
+export type PDApplication = { id: string; fullName: string; propertyAddress: string; postcode?: string; propertyId?: string; rent: string; leaseTerm: string; status: string; stage?: string; submittedAt: string | null };
 export type PDMaintenance = { id: string; fullName: string; propertyAddress: string; postcode?: string; propertyId?: string; title?: string; category?: string; issueDescription: string; status: string; cost?: number; billToLandlord?: boolean; breakdown?: { label: string; amount: number }[]; submittedAt: string | null };
 
 type Tab = 'overview' | 'account' | 'package' | 'applications' | 'maintenance' | 'compliance' | 'contact';
@@ -66,7 +67,7 @@ export default function PropertyDetailView({ prop, applications, maintenance }: 
   const netMonthly = Math.max(0, Math.round(rent - monthlyMgmt));
   const money = (n: number) => `£${n.toLocaleString('en-GB')}`;
 
-  const apps = applications.filter(a => a.postcode && prop.postcode && a.postcode === prop.postcode);
+  const apps = applications.filter(a => (a.propertyId && a.propertyId === prop.id) || (a.postcode && prop.postcode && a.postcode === prop.postcode));
   const maint = maintenance.filter(m => (m.propertyId && m.propertyId === prop.id) || (m.postcode && prop.postcode && m.postcode === prop.postcode));
   const openMaint = maint.filter(m => m.status === 'open' || m.status === 'in-progress').length;
   // Completed, billable jobs become deductions on the landlord's statement.
@@ -262,9 +263,12 @@ export default function PropertyDetailView({ prop, applications, maintenance }: 
               {apps.length === 0 ? <div className="pd-empty">No applications for this property yet.</div> : (
                 <div className="pd-list">
                   {apps.map(a => (
-                    <div key={a.id} className="pd-row">
-                      <div><div className="pd-row-t">{a.fullName || 'Applicant'}</div><div className="pd-row-s">{a.leaseTerm || ''}{a.rent ? ` · ${a.rent}` : ''}</div></div>
-                      <div style={{ textAlign: 'right' }}><span className="pd-badge">{a.status}</span><div className="pd-row-s">{fmtDate(a.submittedAt)}</div></div>
+                    <div key={a.id} className="pd-row" style={{ alignItems: 'flex-start', flexWrap: 'wrap', gap: 10 }}>
+                      <div style={{ minWidth: 160 }}>
+                        <div className="pd-row-t">{a.fullName || 'Applicant'}</div>
+                        <div className="pd-row-s">{a.leaseTerm || ''}{a.rent ? ` · ${a.rent}` : ''} · {fmtDate(a.submittedAt)}</div>
+                      </div>
+                      <div style={{ marginLeft: 'auto' }}><ApplicationPipeline stage={a.stage} /></div>
                     </div>
                   ))}
                 </div>

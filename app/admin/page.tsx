@@ -15,6 +15,7 @@ import CoSignersDetails from '@/components/dashboard/CoSignersDetails';
 import AgreementExtraDetails from '@/components/dashboard/AgreementExtraDetails';
 import { LandlordProgressBadge, LandlordProgressPanel } from '@/components/dashboard/LandlordProgress';
 import MaintenanceTicketForm from '@/components/dashboard/MaintenanceTicketForm';
+import ApplicationAssign from '@/components/dashboard/ApplicationAssign';
 import ServicePricingEditor from '@/components/dashboard/ServicePricingEditor';
 import { useAuth } from '@/hooks/useAuth';
 import { isDualAccessEmail } from '@/lib/dualAccess';
@@ -256,6 +257,8 @@ interface TenantApplication {
   paymentReference?: string;
   carPark?: string;
   status: 'pending' | 'reviewing' | 'approved' | 'rejected';
+  stage?: string;
+  landlordId?: string;
   createdAt: any;
 }
 
@@ -1688,6 +1691,13 @@ export default function AdminDashboard() {
                               </div>
                               <div style={{ fontSize: 13, color: 'var(--gray-400)', marginTop: 2 }}>
                                 {a.email} · {a.phone} · Move-in: {a.moveInDate ? new Date(a.moveInDate).toLocaleDateString('en-GB') : '-'}
+                              </div>
+                              <div style={{ marginTop: 8 }}>
+                                <ApplicationAssign
+                                  authedFetch={authedFetch}
+                                  application={a as any}
+                                  onUpdated={fields => setApplications(prev => prev.map(x => x.id === a.id ? { ...x, ...fields } : x))}
+                                />
                               </div>
                             </div>
 

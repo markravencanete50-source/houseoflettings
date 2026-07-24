@@ -19,6 +19,7 @@ import SecondLandlordDetails from '@/components/dashboard/SecondLandlordDetails'
 import CoSignersDetails from '@/components/dashboard/CoSignersDetails';
 import { LandlordProgressBadge, LandlordProgressPanel } from '@/components/dashboard/LandlordProgress';
 import MaintenanceTicketForm from '@/components/dashboard/MaintenanceTicketForm';
+import ApplicationAssign from '@/components/dashboard/ApplicationAssign';
 import AgreementExtraDetails from '@/components/dashboard/AgreementExtraDetails';
 import { useAuth } from '@/hooks/useAuth';
 import { signOut } from '@/services/auth';
@@ -68,6 +69,8 @@ interface TenantApplication {
   phone: string;
   propertyAddress: string;
   status: string;
+  stage?: string;
+  propertyId?: string;
   submittedAt: string | null;
 }
 
@@ -777,20 +780,25 @@ function StaffDashboardInner() {
           {tab === 'applications' && perms.includes('applications') && (
             <div>
               <h1 className="dash-section-title">Tenancy Applications</h1>
-              <p style={{ color: 'var(--gray-600)', marginBottom: 24, fontSize: 15 }}>All tenancy applications submitted via the website.</p>
+              <p style={{ color: 'var(--gray-600)', marginBottom: 24, fontSize: 15 }}>All applications. Assign each to a property and set its stage — the landlord sees the stage on their portal.</p>
               <div className="dash-card" style={{ padding: 0, overflow: 'hidden' }}>
                 <table className="data-table">
                   <thead>
-                    <tr><th>Applicant</th><th>Property</th><th>Email</th><th>Phone</th><th>Status</th><th>Submitted</th></tr>
+                    <tr><th>Applicant</th><th>Property</th><th>Contact</th><th>Assign / stage</th><th>Submitted</th></tr>
                   </thead>
                   <tbody>
                     {applications.map(a => (
                       <tr key={a.id}>
                         <td style={{ fontWeight: 600, fontSize: 14 }}>{a.fullName}</td>
-                        <td style={{ fontSize: 13, color: 'var(--gray-600)', maxWidth: 220 }}>{a.propertyAddress}</td>
-                        <td style={{ fontSize: 13, color: 'var(--gray-600)' }}>{a.email}</td>
-                        <td style={{ fontSize: 13, color: 'var(--gray-600)' }}>{a.phone}</td>
-                        <td><StatusBadge status={a.status} /></td>
+                        <td style={{ fontSize: 13, color: 'var(--gray-600)', maxWidth: 200 }}>{a.propertyAddress}</td>
+                        <td style={{ fontSize: 12, color: 'var(--gray-400)' }}><div>{a.email}</div><div>{a.phone}</div></td>
+                        <td>
+                          <ApplicationAssign
+                            authedFetch={authedFetch}
+                            application={a as any}
+                            onUpdated={fields => setApplications(prev => prev.map(x => x.id === a.id ? { ...x, ...fields } : x))}
+                          />
+                        </td>
                         <td style={{ fontSize: 13, color: 'var(--gray-400)' }}>{fmtDate(a.submittedAt)}</td>
                       </tr>
                     ))}

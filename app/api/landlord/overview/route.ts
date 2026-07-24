@@ -13,6 +13,7 @@ import { requireLandlord } from '@/lib/landlordAuth';
 import { getAdminDb } from '@/lib/staffApiAuth';
 import { normalisePostcode, resolveAvailability } from '@/lib/portalMatch';
 import { pluckTenancy } from '@/lib/tenancyFields';
+import { stageFromStatus } from '@/lib/applicationStages';
 import { rateLimit } from '@/lib/rateLimit';
 
 export const dynamic = 'force-dynamic';
@@ -127,16 +128,19 @@ export async function GET(request: Request) {
     const appSnap = await db.collection('tenantApplications').orderBy('createdAt', 'desc').limit(200).get();
     const applications = appSnap.docs
       .map(doc => ({ id: doc.id, ...(doc.data() as any) }))
-      .filter(a => belongs(a.propertyAddress))
+      // Postcode-matched OR explicitly assigned to this landlord/property.
+      .filter(a => belongs(a.propertyAddress || a.assignedPropertyAddress) || a.landlordId === auth.uid)
       .map(a => ({
         id: a.id,
         fullName: a.fullName || '',
-        propertyAddress: a.propertyAddress || '',
-        postcode: normalisePostcode(String(a.propertyAddress || '')) || '',
+        propertyAddress: a.assignedPropertyAddress || a.propertyAddress || '',
+        postcode: normalisePostcode(String(a.assignedPropertyAddress || a.propertyAddress || '')) || '',
+        propertyId: a.propertyId || '',
         rent: a.rent || '',
         moveInDate: a.moveInDate || '',
         leaseTerm: a.leaseTerm || '',
         status: a.status || 'new',
+        stage: a.stage || stageFromStatus(a.status),
         submittedAt: iso(a.createdAt),
       }));
 
